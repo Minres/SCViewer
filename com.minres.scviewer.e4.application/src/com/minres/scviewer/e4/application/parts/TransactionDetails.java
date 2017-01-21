@@ -36,7 +36,7 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.eclipse.jface.viewers.ViewerSorter;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -125,7 +125,7 @@ public class TransactionDetails {
 		treeViewer.setLabelProvider(new TxPropertiesLabelProvider());
 		treeViewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
 		treeViewer.addFilter(attributeFilter);
-		treeViewer.setSorter(viewSorter);
+		treeViewer.setComparator(viewSorter);
 		treeViewer.setAutoExpandLevel(2);
 
 		// Set up the table
@@ -138,7 +138,7 @@ public class TransactionDetails {
 		col1.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(AttributeLabelProvider.NAME)));
 		col1.getColumn().addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {
-				((TxAttributeViewerSorter) treeViewer.getSorter()).doSort(COLUMN_FIRST);
+				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_FIRST);
 				treeViewer.refresh();
 			}
 		});
@@ -149,7 +149,7 @@ public class TransactionDetails {
 		col2.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(AttributeLabelProvider.TYPE)));
 		col2.getColumn().addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {
-				((TxAttributeViewerSorter) treeViewer.getSorter()).doSort(COLUMN_SECOND);
+				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_SECOND);
 				treeViewer.refresh();
 			}
 		});
@@ -160,7 +160,7 @@ public class TransactionDetails {
 		col3.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(AttributeLabelProvider.VALUE)));
 		col3.getColumn().addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {
-				((TxAttributeViewerSorter) treeViewer.getSorter()).doSort(COLUMN_SECOND);
+				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_SECOND);
 				treeViewer.refresh();
 			}
 		});
@@ -290,7 +290,7 @@ public class TransactionDetails {
 	/**
 	 * The Class TxAttributeViewerSorter.
 	 */
-	class TxAttributeViewerSorter extends ViewerSorter {
+	class TxAttributeViewerSorter extends ViewerComparator {
 		
 		/** The Constant ASCENDING. */
 		private static final int ASCENDING = 0;
@@ -345,7 +345,7 @@ public class TransactionDetails {
 					rc = getComparator().compare(p1.getDataType().name(), p2.getDataType().name());
 					break;
 				case COLUMN_THIRD:
-					rc = getComparator().compare(p1.getValue(), p2.getValue());
+					rc = getComparator().compare(p1.getValue().toString(), p2.getValue().toString());
 					break;
 				}
 				// If descending order, flip the direction
