@@ -33,12 +33,12 @@
 		<repository>
 			<id>mars</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/releases/mars</url>
+			<url>http://download.eclipse.org/releases/neon</url>
 		</repository>
 		<repository>
 			<id>GRECLIPSE</id>
 			<layout>p2</layout>
-			<url>http://dist.springsource.org/snapshot/GRECLIPSE/e4.5</url>
+			<url>http://dist.springsource.org/snapshot/GRECLIPSE/e4.6</url>
 		</repository>
 	</repositories>
 
