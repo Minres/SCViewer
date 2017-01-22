@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="1.1.0.qualifier" useFeatures="false" includeLaunchers="true">
-
+<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="1.2.0.qualifier" useFeatures="false" includeLaunchers="true">
 
    <configIni use="default">
    </configIni>
@@ -16,11 +15,11 @@
 
    <windowImages/>
 
-
    <launcher name="scviewer">
       <linux icon="icons/SCViewer_512x512.xpm"/>
       <macosx icon="icons/SCViewer.icns"/>
-      <win useIco="false">
+      <win useIco="true">
+         <ico path="icons/SCViewer.ico"/>
          <bmp
             winSmallHigh="icons/SCViewer_16x16@32.bmp"
             winSmallLow="icons/SCViewer_16x16@8.bmp"
@@ -32,10 +31,8 @@
       </win>
    </launcher>
 
-
    <vm>
    </vm>
-
 
    <plugins>
       <plugin id="com.ibm.icu"/>
