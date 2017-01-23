@@ -10,7 +10,12 @@
  *******************************************************************************/
 package com.minres.scviewer.database.text;
 
+import java.nio.charset.CharsetDecoder;
 import java.util.Collection;
+import java.util.zip.GZIPInputStream
+import org.apache.jdbm.DB
+import org.apache.jdbm.DBMaker
+import groovy.io.FileType
 
 import com.minres.scviewer.database.AssociationType
 import com.minres.scviewer.database.DataType
@@ -26,11 +31,13 @@ public class TextDbLoader implements IWaveformDbLoader{
 	private Long maxTime;
 
 	IWaveformDb db;
-		
+
+	DB backingDb;
+
 	def streams = []
-	
+
 	def relationTypes=[:]
-	
+
 	public TextDbLoader() {
 	}
 
@@ -56,16 +63,52 @@ public class TextDbLoader implements IWaveformDbLoader{
 	boolean load(IWaveformDb db, File file) throws Exception {
 		this.db=db
 		this.streams=[]
-		FileInputStream fis = new FileInputStream(file)
-        byte[] buffer = new byte[x.size()]
-        def readCnt = fis.read(buffer, 0, x.size())
-        fis.close()
-        if(readCnt==x.size())
-        	for(int i=0; i<x.size(); i++)
-        		if(buffer[i]!=x[i]) return false
-		parseInput(file)
-		calculateConcurrencyIndicees()
+		def gzipped = isGzipped(file)
+		if(isTxfile(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))){
+			if(true) {
+				def parentDir=file.absoluteFile.parent
+				def filename=file.name
+				new File(parentDir).eachFileRecurse (FileType.FILES) { f -> if(f.name=~/^\.${filename}/) f.delete() }
+				this.backingDb = DBMaker.openFile(parentDir+File.separator+"."+filename+"_bdb")
+						.deleteFilesAfterClose()
+						.useRandomAccessFile()
+						.setMRUCacheSize(4096) 
+						//.disableTransactions()
+						.disableLocking()
+						.make();
+			} else {
+				this.backingDb = DBMaker.openMemory().disableLocking().make()
+			}
+			parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
+			calculateConcurrencyIndicees()
+			return true
+		}
+		return false;
+	}
+
+	private static boolean isTxfile(InputStream istream) {
+		byte[] buffer = new byte[x.size()]
+		def readCnt = istream.read(buffer, 0, x.size())
+		istream.close()
+		if(readCnt==x.size()){
+			for(int i=0; i<x.size(); i++)
+				if(buffer[i]!=x[i]) return false
+		}
 		return true
+	}
+
+	private static boolean isGzipped(File f) {
+		InputStream is = null;
+		try {
+			is = new FileInputStream(f);
+			byte [] signature = new byte[2];
+			int nread = is.read( signature ); //read the gzip signature
+			return nread == 2 && signature[ 0 ] == (byte) 0x1f && signature[ 1 ] == (byte) 0x8b;
+		} catch (IOException e) {
+			return false;
+		} finally {
+			is.close()
+		}
 	}
 
 	private stringToScale(String scale){
@@ -78,7 +121,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 			case "s": return 1000000000000000L
 		}
 	}
-	private def parseInput(File input){
+	private def parseInput(InputStream inputStream){
 		def streamsById = [:]
 		def generatorsById = [:]
 		def transactionsById = [:]
@@ -86,7 +129,9 @@ public class TextDbLoader implements IWaveformDbLoader{
 		Tx transaction
 		boolean endTransaction=false
 		def matcher
-		input.eachLine { line ->
+		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+		long lineCnt=0;
+		reader.eachLine { line ->
 			def tokens = line.split(/\s+/)
 			switch(tokens[0]){
 				case "scv_tr_stream":
@@ -95,7 +140,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				case "end_attribute":
 					if ((matcher = line =~ /^scv_tr_stream\s+\(ID (\d+),\s+name\s+"([^"]+)",\s+kind\s+"([^"]+)"\)$/)) {
 						def id = Integer.parseInt(matcher[0][1])
-						def stream = new TxStream(db, id, matcher[0][2], matcher[0][3])
+						def stream = new TxStream(db, id, matcher[0][2], matcher[0][3], backingDb)
 						streams<<stream
 						streamsById[id]=stream
 					} else if ((matcher = line =~ /^scv_tr_generator\s+\(ID\s+(\d+),\s+name\s+"([^"]+)",\s+scv_tr_stream\s+(\d+),$/)) {
@@ -156,16 +201,21 @@ public class TextDbLoader implements IWaveformDbLoader{
 					println "Don't know what to do with: '$line'"
 
 			}
+			lineCnt++
+			if((lineCnt%1000) == 0) {
+				backingDb.commit()
+			}
 		}
 	}
 
 	private def calculateConcurrencyIndicees(){
 		streams.each{ TxStream  stream -> stream.getMaxConcurrency() }
 	}
-	
-	
+
+
 	public Collection<RelationType> getAllRelationTypes(){
 		return relationTypes.values();
 	}
 
 }
+

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="1.1.0.qualifier" useFeatures="false" includeLaunchers="true">
+<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="1.2.0.qualifier" useFeatures="false" includeLaunchers="true">
 
    <configIni use="default">
    </configIni>
@@ -13,13 +13,13 @@
       </vmArgsMac>
    </launcherArgs>
 
-   <windowImages i16="/com.minres.scviewer.e4.application/icons/SCViewer_16x32.png" i32="/com.minres.scviewer.e4.application/icons/SCViewer_32x32.png" i48="/com.minres.scviewer.e4.application/icons/SCViewer_48x32.png" i64="/com.minres.scviewer.e4.application/icons/SCViewer_64x32.png" i128="/com.minres.scviewer.e4.application/icons/SCViewer_128x32.png" i256="/com.minres.scviewer.e4.application/icons/SCViewer_256x32.png"/>
+   <windowImages/>
 
    <launcher name="scviewer">
       <linux icon="icons/SCViewer_512x512.xpm"/>
       <macosx icon="icons/SCViewer.icns"/>
-      <solaris/>
-      <win useIco="false">
+      <win useIco="true">
+         <ico path="icons/SCViewer.ico"/>
          <bmp
             winSmallHigh="icons/SCViewer_16x16@32.bmp"
             winSmallLow="icons/SCViewer_16x16@8.bmp"
@@ -33,6 +33,10 @@
 
    <vm>
    </vm>
+
+   <license>
+        <url>http://www.eclipse.org/legal/epl-v10.html</url>
+   </license>
 
    <plugins>
       <plugin id="com.ibm.icu"/>
@@ -64,7 +68,6 @@
       <plugin id="org.eclipse.core.jobs"/>
       <plugin id="org.eclipse.core.resources"/>
       <plugin id="org.eclipse.core.runtime"/>
-      <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
       <plugin id="org.eclipse.e4.core.commands"/>
       <plugin id="org.eclipse.e4.core.contexts"/>
       <plugin id="org.eclipse.e4.core.di"/>

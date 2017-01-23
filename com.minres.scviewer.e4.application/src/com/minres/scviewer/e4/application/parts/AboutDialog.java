@@ -54,8 +54,10 @@ public class AboutDialog extends Dialog {
 					"\n"+
 					"All rights reserved. MINRES and the MINRES logo are trademarks of MINRES Technologies GmbH, http://www.minres.com/ . "+
 					"This program and the accompanying materials are made available under the terms of the Eclipse Public License v1.0 "+
-					"which accompanies this distribution, and is available at http://www.eclipse.org/legal/epl-v10.html\n"+
-					"\n\nSources code is hosted at GitHub: https://github.com/eyck/txviewer\n";
+					"which accompanies this distribution, and is available at http://www.eclipse.org/legal/epl-v10.html\n\n"+
+					"Parts of the software are governed by the Apache License Version 2.0 available at http://www.apache.org/licenses/. "+
+					"These are namely org.apache.jdbm and org.sqlite JDBC driver\n"+
+					"\n\nSources code is hosted at GitHub: https://github.com/minres/SCViewer\n";
 
 	/**
 	 * Create the dialog.

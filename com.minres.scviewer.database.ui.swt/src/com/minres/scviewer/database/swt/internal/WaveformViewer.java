@@ -724,10 +724,12 @@ public class WaveformViewer implements IWaveformViewer  {
 	public void moveCursor(GotoDirection direction) {
 		long time = getCursorTime();
 		NavigableMap<Long, ?> map=null;
-		if(currentWaveformSelection.isStream()){
-			map=currentWaveformSelection.getStream().getEvents();
-		} else if(currentWaveformSelection.isSignal()){
-			map=currentWaveformSelection.getSignal().getEvents();
+		if(currentWaveformSelection!=null) {
+			if(currentWaveformSelection.isStream()){
+				map=currentWaveformSelection.getStream().getEvents();
+			} else if(currentWaveformSelection.isSignal()){
+				map=currentWaveformSelection.getSignal().getEvents();
+			}
 		}
 		if(map!=null){
 			Entry<Long, ?> entry=direction==GotoDirection.PREV?map.lowerEntry(time):map.higherEntry(time);
