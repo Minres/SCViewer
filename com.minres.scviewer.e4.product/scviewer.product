@@ -34,6 +34,10 @@
    <vm>
    </vm>
 
+   <license>
+        <url>http://www.eclipse.org/legal/epl-v10.html</url>
+   </license>
+
    <plugins>
       <plugin id="com.ibm.icu"/>
       <plugin id="com.minres.scviewer.database"/>
