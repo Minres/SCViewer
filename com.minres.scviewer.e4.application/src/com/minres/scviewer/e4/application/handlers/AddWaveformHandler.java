@@ -29,8 +29,8 @@ import com.minres.scviewer.e4.application.parts.DesignBrowser;
 
 public class AddWaveformHandler {
 
-	public final static String PARAM_WHERE_ID="com.minres.scviewer.e4.application.command.addwaveform.where";
-	public final static String PARAM_ALL_ID="com.minres.scviewer.e4.application.command.addwaveform.all";
+	public final static String PARAM_WHERE_ID="com.minres.scviewer.e4.application.command.addwaveform.where"; //$NON-NLS-1$
+	public final static String PARAM_ALL_ID="com.minres.scviewer.e4.application.command.addwaveform.all"; //$NON-NLS-1$
 	
 	@Inject @Optional DesignBrowser designBrowser;
 	
@@ -40,8 +40,8 @@ public class AddWaveformHandler {
 			@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection) {
 		if(designBrowser==null) designBrowser = getListPart( partService);
 		if(designBrowser==null || designBrowser.getActiveWaveformViewerPart()==null) return false;
-		Boolean before = "before".equalsIgnoreCase(where);
-		if("true".equalsIgnoreCase(all)) 
+		Boolean before = "before".equalsIgnoreCase(where); //$NON-NLS-1$
+		if("true".equalsIgnoreCase(all))  //$NON-NLS-1$
 			return designBrowser.getFilteredChildren().length>0 && 
 					(!before || ((IStructuredSelection)designBrowser.getActiveWaveformViewerPart().getSelection()).size()>0);
 		else
@@ -57,7 +57,7 @@ public class AddWaveformHandler {
 		if(designBrowser!=null && selection.size()>0){
 			List<?> sel=selection.toList();
 			designBrowser.getActiveWaveformViewerPart().addStreamsToList(sel.toArray(new IWaveform<?>[]{}),
-					"before".equalsIgnoreCase(where));
+					"before".equalsIgnoreCase(where)); //$NON-NLS-1$
 		}
 	}
 

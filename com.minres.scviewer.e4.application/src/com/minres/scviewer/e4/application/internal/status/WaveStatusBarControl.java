@@ -27,22 +27,24 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
+import com.minres.scviewer.e4.application.Messages;
+
 /**
  * The Class WaveStatusBarControl.
  */
 public class WaveStatusBarControl extends StatusBarControl {
 
 	/** The Constant ZOOM_LEVEL. */
-	public static final String ZOOM_LEVEL="ZoomLevelUpdate";
+	public static final String ZOOM_LEVEL="ZoomLevelUpdate"; //$NON-NLS-1$
 	
 	/** The Constant CURSOR_TIME. */
-	public static final String CURSOR_TIME="CursorPosUpdate";
+	public static final String CURSOR_TIME="CursorPosUpdate"; //$NON-NLS-1$
 	
 	/** The Constant MARKER_TIME. */
-	public static final String MARKER_TIME="MarkerPosUpdate";
+	public static final String MARKER_TIME="MarkerPosUpdate"; //$NON-NLS-1$
 	
 	/** The Constant MARKER_DIFF. */
-	public static final String MARKER_DIFF="MarlerDiffUpdate";
+	public static final String MARKER_DIFF="MarlerDiffUpdate"; //$NON-NLS-1$
 
 	/** The model service. */
 	@Inject
@@ -75,7 +77,7 @@ public class WaveStatusBarControl extends StatusBarControl {
 			super();
 			this.labelString = labelString;
 			this.width=width;
-			content="";
+			content=""; //$NON-NLS-1$
 		}
 
 		/* (non-Javadoc)
@@ -124,10 +126,10 @@ public class WaveStatusBarControl extends StatusBarControl {
 	@Inject
 	public WaveStatusBarControl(UISynchronize sync) {
 		super(sync);
-		cursorContribution = new TextContributionItem("C:", 80);
-		markerContribution = new TextContributionItem("M:", 80);
-		markerDiffContribution = new TextContributionItem("C-M:", 80);
-		zoomContribution = new TextContributionItem("Z:", 80);
+		cursorContribution = new TextContributionItem(Messages.WaveStatusBarControl_5, 80);
+		markerContribution = new TextContributionItem(Messages.WaveStatusBarControl_6, 80);
+		markerDiffContribution = new TextContributionItem(Messages.WaveStatusBarControl_7, 80);
+		zoomContribution = new TextContributionItem(Messages.WaveStatusBarControl_8, 80);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,cursorContribution);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,markerContribution);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,markerDiffContribution);
@@ -144,13 +146,13 @@ public class WaveStatusBarControl extends StatusBarControl {
 		if(manager!=null && selection!=null){
 			switch(selection.size()){
 			case 0:
-				manager.setMessage("");
+				manager.setMessage(""); //$NON-NLS-1$
 				break;
 			case 1:
-				manager.setMessage(selection.getFirstElement().getClass().getSimpleName()+" selected");
+				manager.setMessage(selection.getFirstElement().getClass().getSimpleName()+Messages.WaveStatusBarControl_10);
 				break;
 			default:
-				manager.setMessage(""+selection.size()+" Elements");
+				manager.setMessage(""+selection.size()+Messages.WaveStatusBarControl_12); //$NON-NLS-1$
 				break;
 			}
 		}

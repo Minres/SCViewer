@@ -13,6 +13,8 @@ package com.minres.scviewer.e4.application.preferences;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 
+import com.minres.scviewer.e4.application.Messages;
+
 
 /**
  * The Class SCViewerPreferencesPage showing the SCViewer top preferences.
@@ -32,7 +34,7 @@ public class SCViewerPreferencesPage extends FieldEditorPreferencePage {
 	@Override
 	protected void createFieldEditors() {
 
-		addField(new BooleanFieldEditor(PreferenceConstants.DATABASE_RELOAD, "Check for changed database",
+		addField(new BooleanFieldEditor(PreferenceConstants.DATABASE_RELOAD, Messages.SCViewerPreferencesPage_0,
 				getFieldEditorParent()));
 
 	}

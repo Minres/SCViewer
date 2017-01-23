@@ -21,7 +21,7 @@ public class AboutHandler {
 
 	@Execute
 	public void execute(Shell shell, MApplication app, MWindow window, EModelService ms /*@Named("mdialog01.dialog.0") MDialog dialog*/) {
-		MDialog dialog = (MDialog) ms.find("com.minres.scviewer.e4.application.dialog.aboutscviewer", app);
+		MDialog dialog = (MDialog) ms.find("com.minres.scviewer.e4.application.dialog.aboutscviewer", app); //$NON-NLS-1$
 		dialog.setToBeRendered(true);
 		dialog.setToBeRendered(false);
 	}

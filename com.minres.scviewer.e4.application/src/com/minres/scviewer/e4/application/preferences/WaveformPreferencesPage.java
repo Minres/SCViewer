@@ -14,6 +14,7 @@ import org.eclipse.jface.preference.ColorFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 
 import com.minres.scviewer.database.ui.WaveformColors;
+import com.minres.scviewer.e4.application.Messages;
 
 /**
  *  The WaveformView preference page to show the colors to use.
@@ -34,7 +35,7 @@ public class WaveformPreferencesPage extends FieldEditorPreferencePage {
 	protected void createFieldEditors() {
 
 		for (WaveformColors c : WaveformColors.values()) {
-			addField(new ColorFieldEditor(c.name() + "_COLOR", "Color for " + c.name().toLowerCase(),
+			addField(new ColorFieldEditor(c.name() + "_COLOR", Messages.WaveformPreferencesPage_1 + c.name().toLowerCase(), //$NON-NLS-1$
 					getFieldEditorParent()));
 		}
 	}

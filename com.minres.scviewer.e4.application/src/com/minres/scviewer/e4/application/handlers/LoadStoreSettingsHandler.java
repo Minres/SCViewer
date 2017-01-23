@@ -22,10 +22,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 
+import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 public class LoadStoreSettingsHandler {
 
-	static final String PARAMETER_ID="com.minres.scviewer.e4.application.commandparameter.loadStore";
+	static final String PARAMETER_ID="com.minres.scviewer.e4.application.commandparameter.loadStore"; //$NON-NLS-1$
 
 	@CanExecute
 	public boolean canExecute(EPartService partService) {
@@ -37,10 +38,10 @@ public class LoadStoreSettingsHandler {
 	@Execute
 	public void execute(@Named(PARAMETER_ID) String param, Shell shell, MApplication app, EModelService modelService, 
 			EPartService partService){
-		boolean load = "load".equals(param);
+		boolean load = "load".equals(param); //$NON-NLS-1$
 		FileDialog dialog = new FileDialog(shell, load?SWT.OPEN:SWT.SAVE);
-		dialog.setFilterExtensions (new String []{"*.scview"});
-		if(!load) dialog.setFileName("SCViewer.scview");
+		dialog.setFilterExtensions (new String []{Messages.LoadStoreSettingsHandler_2});
+		if(!load) dialog.setFileName(Messages.LoadStoreSettingsHandler_3);
 		String res = dialog.open();
 		MPart part = partService.getActivePart();
 		if(res!=null && part!=null){
