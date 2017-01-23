@@ -51,7 +51,7 @@ public class AttributeProperty extends AbstractPropertySection implements ISelec
 
 	private final String[] titles = { "Location", "Name", "Type", "Value" };
 
-	private ListenerList listeners = new ListenerList();
+	private ListenerList<ISelectionChangedListener> listeners = new ListenerList<ISelectionChangedListener>();
 
 	private ITx iTr;
 

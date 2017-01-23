@@ -331,7 +331,6 @@ public class TransactionDetails {
 		 * @param e2 the e2
 		 * @return the int
 		 */
-		@SuppressWarnings("unchecked")
 		public int compare(Viewer viewer, Object e1, Object e2) {
 			int rc = 0;
 			if(e1 instanceof ITxAttribute && e2 instanceof ITxAttribute){

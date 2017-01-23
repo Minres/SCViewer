@@ -88,7 +88,7 @@ import com.minres.scviewer.database.ui.WaveformColors;
 
 public class WaveformViewer implements IWaveformViewer  {
 
-	private ListenerList selectionChangedListeners = new ListenerList();
+	private ListenerList<ISelectionChangedListener> selectionChangedListeners = new ListenerList<ISelectionChangedListener>();
 
 	private PropertyChangeSupport pcs;
 

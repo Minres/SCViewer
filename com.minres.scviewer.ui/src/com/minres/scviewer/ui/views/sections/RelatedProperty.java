@@ -55,7 +55,7 @@ public class RelatedProperty extends AbstractPropertySection implements ISelecti
 
 	private final String[] titles = { "Relation type", "Relation Name", "Tx Id" };
 
-	private ListenerList listeners = new ListenerList();
+	private ListenerList<ISelectionChangedListener> listeners = new ListenerList<ISelectionChangedListener>();
 
 	private ITx iTr;
 
