@@ -40,24 +40,18 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.wb.swt.ResourceManager;
 import org.eclipse.wb.swt.SWTResourceManager;
 
+import com.minres.scviewer.e4.application.Messages;
+
 /**
  * The Class AboutDialog.
  */
 public class AboutDialog extends Dialog {
 
 	/** The product title. */
-	private String productTitle=
-			"\nSCViewer - a SystemC waveform viewer\n\nVersion: 1.0\n";
+	private String productTitle=Messages.AboutDialog_0;
 	
 	/** The copyright text. */
-	private String copyrightText="\nCopyright (c) 2015 MINRES Technologies GmbH and others.\n"+
-					"\n"+
-					"All rights reserved. MINRES and the MINRES logo are trademarks of MINRES Technologies GmbH, http://www.minres.com/ . "+
-					"This program and the accompanying materials are made available under the terms of the Eclipse Public License v1.0 "+
-					"which accompanies this distribution, and is available at http://www.eclipse.org/legal/epl-v10.html\n\n"+
-					"Parts of the software are governed by the Apache License Version 2.0 available at http://www.apache.org/licenses/. "+
-					"These are namely org.apache.jdbm and org.sqlite JDBC driver\n"+
-					"\n\nSources code is hosted at GitHub: https://github.com/minres/SCViewer\n";
+	private String copyrightText=Messages.AboutDialog_1;
 
 	/**
 	 * Create the dialog.
@@ -86,8 +80,8 @@ public class AboutDialog extends Dialog {
 		composite.setLayout(new GridLayout(2, false));
 		
 		final Color white=SWTResourceManager.getColor(SWT.COLOR_WHITE);
-		final Image scviewerLogo=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/SCViewer_logo.png");
-		final Image minresLogo=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/Minres_logo.png");
+		final Image scviewerLogo=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/SCViewer_logo.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		final Image minresLogo=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/Minres_logo.png"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Canvas canvas = new Canvas(composite,SWT.NO_REDRAW_RESIZE);
 		GridData gd_canvas = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
@@ -117,7 +111,7 @@ public class AboutDialog extends Dialog {
 		styleRange.fontStyle = SWT.BOLD;
 		styledText.setStyleRange(styleRange);
 		///^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
-	    Pattern pattern = Pattern.compile("https?:\\/\\/([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w\\.-]*)*\\/?");
+	    Pattern pattern = Pattern.compile("https?:\\/\\/([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w\\.-]*)*\\/?"); //$NON-NLS-1$
 	    // in case you would like to ignore case sensitivity,
 	    // you could use this statement:
 	    // Pattern pattern = Pattern.compile("\\s+", Pattern.CASE_INSENSITIVE);

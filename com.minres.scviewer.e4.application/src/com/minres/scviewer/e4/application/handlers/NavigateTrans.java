@@ -26,7 +26,7 @@ import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
 public class NavigateTrans {
 
-	final static String PARAMTER_ID="com.minres.scviewer.e4.application.command.navigateTransCommand.parameter.dir";
+	final static String PARAMTER_ID="com.minres.scviewer.e4.application.command.navigateTransCommand.parameter.dir"; //$NON-NLS-1$
 	
 	@CanExecute
 	public Boolean canExecute(ESelectionService selectionService){
@@ -43,9 +43,9 @@ public class NavigateTrans {
 		MPart part = partService.getActivePart();
 		Object obj = part.getObject();
 		if(obj instanceof WaveformViewer){
-			if("next".equalsIgnoreCase(param))
+			if("next".equalsIgnoreCase(param)) //$NON-NLS-1$
 				((WaveformViewer)obj).moveSelection(GotoDirection.NEXT);
-			else if("prev".equalsIgnoreCase(param))
+			else if("prev".equalsIgnoreCase(param)) //$NON-NLS-1$
 				((WaveformViewer)obj).moveSelection(GotoDirection.PREV);
 		}
 	}

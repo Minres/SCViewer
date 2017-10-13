@@ -20,7 +20,7 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
 public class SetRelationTypeHandler {
-	final static String PARAMTER_ID="com.minres.scviewer.e4.application.commandparameter.relationName";
+	final static String PARAMTER_ID="com.minres.scviewer.e4.application.commandparameter.relationName"; //$NON-NLS-1$
 
 	@Execute
 	public void execute(@Named(PARAMTER_ID) String relationName, EPartService partService) {

@@ -23,13 +23,15 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
+
+import com.minres.scviewer.e4.application.Messages;
 public class OpenHandler {
 
 	@Execute
 	public void execute(Shell shell, MApplication app, EModelService modelService, EPartService partService){
 		FileDialog dialog = new FileDialog(shell, SWT.OPEN | SWT.MULTI);
 //		dialog.setFilterExtensions (new String []{"vcd", "txdb", "txlog"});
-		dialog.setFilterExtensions (new String []{"*.vcd;*.txdb;*.txlog"});
+		dialog.setFilterExtensions (new String []{Messages.OpenHandler_0});
 		dialog.open();
 		String path = dialog.getFilterPath();
 		for(String fileName: dialog.getFileNames()){
@@ -38,19 +40,19 @@ public class OpenHandler {
 //				MPart part = MBasicFactory.INSTANCE.createPart();
 //				part.setLabel(fileName);
 //				part.setContributionURI("bundleclass://com.minres.scviewer.e4.application/"+ WaveformViewerPart.class.getName());
-				MPart part = partService .createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer");
+				MPart part = partService .createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
 				part.setLabel(file.getName());
 								
 
-				MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app);
+				MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
 				partStack.getChildren().add(part);
 				partService.showPart(part, PartState.ACTIVATE);
 //				Object o = part.getObject();
 //				if(o instanceof WaveformViewerPart)
 //					((WaveformViewerPart)o).setPartInput(file);
 				IEclipseContext ctx=part.getContext();
-				ctx.modify("input", file);
-				ctx.declareModifiable("input");
+				ctx.modify("input", file); //$NON-NLS-1$
+				ctx.declareModifiable("input"); //$NON-NLS-1$
 
 				
 			}

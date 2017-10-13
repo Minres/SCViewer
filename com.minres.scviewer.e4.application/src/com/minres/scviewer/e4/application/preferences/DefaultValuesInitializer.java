@@ -65,7 +65,7 @@ public class DefaultValuesInitializer extends AbstractPreferenceInitializer {
 
 		store.setDefault(PreferenceConstants.DATABASE_RELOAD, true);
         for (WaveformColors c : WaveformColors.values()) {
-        	 store.setDefault(c.name()+"_COLOR", StringConverter.asString(colors[c.ordinal()].getRGB()));
+        	 store.setDefault(c.name()+"_COLOR", StringConverter.asString(colors[c.ordinal()].getRGB())); //$NON-NLS-1$
         }
 	}
 

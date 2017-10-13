@@ -42,12 +42,12 @@ public class TxDbLabelProvider implements ILabelProvider {
 	 */
 	public TxDbLabelProvider() {
 		super();
-		loadinDatabase=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database_go.png");
-		database=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database.png");
-		stream=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/stream.png");
-		folder=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/folder.png");
-		signal=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/signal.png");
-		wave=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/wave.png");
+		loadinDatabase=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database_go.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		database=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		stream=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/stream.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		folder=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/folder.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		signal=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/signal.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		wave=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/wave.png"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)

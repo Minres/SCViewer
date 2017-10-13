@@ -10,10 +10,11 @@ import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.e4.application.Messages;
 
 public class LoadingWaveformDb implements IWaveformDb {
 
-	private final String label = "Database loading..."; 
+	private final String label = Messages.LoadingWaveformDb_0; 
 
 	@Override
 	public void addPropertyChangeListener(PropertyChangeListener l) {

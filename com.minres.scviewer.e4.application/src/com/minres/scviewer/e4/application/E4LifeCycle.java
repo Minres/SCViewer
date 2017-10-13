@@ -64,7 +64,7 @@ public class E4LifeCycle {
 		eventBroker.subscribe(UIEvents.UILifeCycle.ACTIVATE, new EventHandler() {
 			@Override
 			public void handleEvent(Event event) {
-				MPart part = (MPart) event.getProperty("ChangedElement");
+				MPart part = (MPart) event.getProperty("ChangedElement"); //$NON-NLS-1$
 				if(part!=null){
 					IEclipseContext ctx = part.getContext();
 					OpenViewHandler openViewHandler= new OpenViewHandler();
@@ -115,7 +115,7 @@ public class E4LifeCycle {
 		StringBuilder sb = new StringBuilder();
 		boolean first=true;
 		for(String token:tokens){
-			if(!first) sb.append(",");
+			if(!first) sb.append(","); //$NON-NLS-1$
 			sb.append(token);
 			first=false;
 		}
@@ -143,14 +143,14 @@ public class E4LifeCycle {
 		 */
 		public void openViewForFile(String name){
 			File file = new File(name);
-			MPart part = partService.createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer");
+			MPart part = partService.createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
 			part.setLabel(file.getName());
-			MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app);
+			MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
 			partStack.getChildren().add(part);
 			partService.showPart(part, PartState.ACTIVATE);
 			IEclipseContext ctx=part.getContext();
-			ctx.modify("input", file);
-			ctx.declareModifiable("input");
+			ctx.modify("input", file); //$NON-NLS-1$
+			ctx.declareModifiable("input"); //$NON-NLS-1$
 		}
 	}
 }

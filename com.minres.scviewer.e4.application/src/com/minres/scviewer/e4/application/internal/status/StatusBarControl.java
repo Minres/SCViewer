@@ -32,13 +32,15 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.osgi.service.prefs.PreferencesService;
 
+import com.minres.scviewer.e4.application.Messages;
+
 /**
  * The Class StatusBarControl.
  */
 public class StatusBarControl {
 
 	/** The Constant STATUS_UPDATE. */
-	public static final String STATUS_UPDATE="StatusUpdate";
+	public static final String STATUS_UPDATE="StatusUpdate"; //$NON-NLS-1$
 
 	/** The model service. */
 	@Inject	EModelService modelService;
@@ -194,7 +196,7 @@ public class StatusBarControl {
 						progressBar.setMaximum(progressBar.getMaximum() + totalWork);
 					}
 					runningTasks++;
-					progressBar.setToolTipText("Currently running: " + runningTasks + "\nLast task: " + name);
+					progressBar.setToolTipText(Messages.StatusBarControl_1 + runningTasks + Messages.StatusBarControl_2 + name);
 				}
 			});
 		}
@@ -266,9 +268,9 @@ public class StatusBarControl {
 							public void run() {
 								runningTasks--;
 								if (runningTasks > 0){	// --- some tasks are still running ---
-									progressBar.setToolTipText("Currently running: " + runningTasks);
+									progressBar.setToolTipText(Messages.StatusBarControl_3 + runningTasks);
 								} else { // --- all tasks are done (a reset of selection could also be done) ---
-									progressBar.setToolTipText("No background progress running.");
+									progressBar.setToolTipText(Messages.StatusBarControl_4);
 								}
 							}
 						});
