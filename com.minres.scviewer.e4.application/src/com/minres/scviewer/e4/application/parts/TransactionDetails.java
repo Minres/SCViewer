@@ -55,6 +55,7 @@ import org.eclipse.swt.widgets.Tree;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITxRelation;
+import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.provider.TxPropertiesLabelProvider;
 
@@ -579,7 +580,13 @@ PROPS, /** The attrs. */
 			default:
 				if (element instanceof ITxAttribute) {
 					ITxAttribute attribute = (ITxAttribute) element;
-					return new StyledString(attribute.getValue().toString());
+					String value = attribute.getValue().toString();
+					if((DataType.UNSIGNED == attribute.getDataType() || DataType.INTEGER==attribute.getDataType()) && !"0".equals(value)) {
+						try {
+							value = attribute.getValue().toString() + " [0x"+Long.toHexString(Long.parseLong(attribute.getValue().toString()))+"]";
+						} catch(NumberFormatException e) { }
+					}
+					return new StyledString(value);
 				}else if(element instanceof Object[]){
 					Object[] elements = (Object[]) element;
 					return new StyledString(elements[field].toString());
