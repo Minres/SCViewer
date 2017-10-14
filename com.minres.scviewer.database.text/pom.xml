@@ -39,4 +39,5 @@
 			</plugin>
 	</plugins>
 	</build>
-	</project>
+	<version>1.0.1-SNAPSHOT</version>
+</project>
