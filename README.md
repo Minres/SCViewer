@@ -6,6 +6,8 @@ created by the SystemC VCD trace implementation and the SystemC Verification Lib
 For further description of the SCV please refer to 
 http://www.accellera.org/activities/committees/systemc-verification.
 
+> If you encounter issue when running on Linux please try running as `SWT_GTK3=0 scviewer` as there exist issues wiht GTK3.
+
 The viewer is in early alpha stage and not yet ready for production use!
 
 The plugins are structured as follows:
