@@ -124,9 +124,9 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	 */
 	@Override
 	public void enterModule(String tokenString) {
-		if(moduleStack.isEmpty())
-			moduleStack.push(tokenString);
-		else
+		if(moduleStack.isEmpty()) {
+			if("SystemC".compareTo(tokenString)!=0) moduleStack.push(tokenString);
+		} else
 			moduleStack.push(moduleStack.peek()+"."+tokenString);
 
 	}
@@ -144,7 +144,8 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public Integer newNet(String netName, int i, int width) {
+	public Integer newNet(String name, int i, int width) {
+		String netName = moduleStack.empty()? name: moduleStack.lastElement()+"."+name;
 		int id = signals.size();
 		VCDSignal<? extends IWaveformEvent> signal;
 		if(width==1){

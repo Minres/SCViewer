@@ -92,8 +92,8 @@ public class DatabaseServicesTest {
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
-		assertEquals(718,  waveformDb.getAllWaves().size());
-		assertEquals(33,  waveformDb.getChildNodes().size());
+		assertEquals(778,  waveformDb.getAllWaves().size());
+		assertEquals(1,  waveformDb.getChildNodes().size());
 	}
 
 
