@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="1.2.2.qualifier" useFeatures="false" includeLaunchers="true">
+<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="1.3.0.qualifier" useFeatures="false" includeLaunchers="true">
 
    <configIni use="default">
    </configIni>
@@ -9,6 +9,8 @@
    <launcherArgs>
       <programArgs>-clearPersistedState -data @none
       </programArgs>
+      <vmArgs>-Xmx2G
+      </vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
    </launcherArgs>
@@ -39,6 +41,7 @@
    </license>
 
    <plugins>
+      <plugin id="com.google.guava"/>
       <plugin id="com.ibm.icu"/>
       <plugin id="com.minres.scviewer.database"/>
       <plugin id="com.minres.scviewer.database.sqlite"/>
@@ -50,12 +53,16 @@
       <plugin id="com.opcoach.e4.preferences"/>
       <plugin id="javax.annotation"/>
       <plugin id="javax.inject"/>
-      <plugin id="javax.xml"/>
+      <plugin id="org.apache.batik.constants"/>
       <plugin id="org.apache.batik.css"/>
+      <plugin id="org.apache.batik.i18n"/>
       <plugin id="org.apache.batik.util"/>
-      <plugin id="org.apache.batik.util.gui"/>
+      <plugin id="org.apache.commons.io"/>
       <plugin id="org.apache.commons.jxpath"/>
       <plugin id="org.apache.commons.logging"/>
+      <plugin id="org.apache.felix.scr"/>
+      <plugin id="org.apache.xmlgraphics"/>
+      <plugin id="org.codehaus.groovy"/>
       <plugin id="org.eclipse.core.commands"/>
       <plugin id="org.eclipse.core.contenttype"/>
       <plugin id="org.eclipse.core.databinding"/>
@@ -73,6 +80,7 @@
       <plugin id="org.eclipse.e4.core.di"/>
       <plugin id="org.eclipse.e4.core.di.annotations"/>
       <plugin id="org.eclipse.e4.core.di.extensions"/>
+      <plugin id="org.eclipse.e4.core.di.extensions.supplier"/>
       <plugin id="org.eclipse.e4.core.services"/>
       <plugin id="org.eclipse.e4.emf.xpath"/>
       <plugin id="org.eclipse.e4.ui.bindings"/>
@@ -84,6 +92,7 @@
       <plugin id="org.eclipse.e4.ui.services"/>
       <plugin id="org.eclipse.e4.ui.widgets"/>
       <plugin id="org.eclipse.e4.ui.workbench"/>
+      <plugin id="org.eclipse.e4.ui.workbench.addons.swt"/>
       <plugin id="org.eclipse.e4.ui.workbench.renderers.swt"/>
       <plugin id="org.eclipse.e4.ui.workbench.renderers.swt.cocoa" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.workbench.swt"/>
@@ -105,6 +114,8 @@
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.compatibility.state" fragment="true"/>
       <plugin id="org.eclipse.osgi.services"/>
+      <plugin id="org.eclipse.osgi.util"/>
+      <plugin id="org.eclipse.pde.ds.lib"/>
       <plugin id="org.eclipse.swt"/>
       <plugin id="org.eclipse.swt.cocoa.macosx.x86_64" fragment="true"/>
       <plugin id="org.w3c.css.sac"/>

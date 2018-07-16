@@ -34,12 +34,12 @@
 		<repository>
 			<id>mars</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/releases/neon</url>
+			<url>http://download.eclipse.org/releases/photon</url>
 		</repository>
 		<repository>
 			<id>GRECLIPSE</id>
 			<layout>p2</layout>
-			<url>http://dist.springsource.org/snapshot/GRECLIPSE/e4.6</url>
+			<url>http://dist.springsource.org/snapshot/GRECLIPSE/e4.8</url>
 		</repository>
 	</repositories>
 
