@@ -27,11 +27,11 @@ import com.minres.scviewer.database.IHierNode
 import com.minres.scviewer.database.ITxStream
 import com.minres.scviewer.database.ITx
 
-class TxStream extends HierNode implements ITxStream {
+class TxStream extends HierNode implements ITxStream, Serializable {
 
 	Long id
 	
-	IWaveformDb database
+	transient TextDbLoader loader
 	
 	String fullName
 	
@@ -43,24 +43,24 @@ class TxStream extends HierNode implements ITxStream {
 	
 	private TreeMap<Long, List<ITxEvent>> events
 	
-	TxStream(IWaveformDb db, int id, String name, String kind, DB backingStore){
+	TxStream(TextDbLoader loader, Long id, String name, String kind){
 		super(name)
 		this.id=id
-		this.database=db
+		this.loader=loader
 		this.fullName=name
 		this.kind=kind
 		this.maxConcurrency=0
-		//events = new TreeMap<Long, List<ITxEvent>>()
-		events=backingStore.createTreeMap("stream-"+name)
+		events = new TreeMap<Long, List<ITxEvent>>()
+		//events=backingStore.createTreeMap("stream-"+name)
 	}
 
 	List<ITxGenerator> getGenerators(){
-		return generators as List<ITxGenerator>
+		return generators.collect { loader.generatorsById[it] } as List<ITxGenerator>
 	}
 
 	@Override
 	public IWaveformDb getDb() {
-		return database
+		return loader.db
 	}
 
 	@Override

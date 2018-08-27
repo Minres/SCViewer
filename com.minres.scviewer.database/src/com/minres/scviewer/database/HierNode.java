@@ -12,18 +12,25 @@ package com.minres.scviewer.database;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.beans.Transient;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HierNode implements IHierNode {
+public class HierNode implements IHierNode, Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2278641781226609616L;
 
 	protected String name;
 	
 	protected String parentName;
 	
-	protected ArrayList<IHierNode> childs;
+	protected transient ArrayList<IHierNode> childs;
 	
-	protected PropertyChangeSupport pcs;
+	protected transient PropertyChangeSupport pcs;
 
 	public HierNode() {
 		childs = new ArrayList<IHierNode>();

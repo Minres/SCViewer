@@ -10,10 +10,16 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
-public class RelationType {
+public class RelationType implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5598253591502850283L;
+
 	private static HashMap<String, RelationType> registry = new HashMap<>();
 	
 	private String name;

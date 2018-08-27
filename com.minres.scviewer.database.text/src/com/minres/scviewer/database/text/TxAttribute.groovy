@@ -15,7 +15,7 @@ import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.ITxAttributeType;
 import com.minres.scviewer.database.ITxAttribute
 
-class TxAttribute  implements ITxAttribute{
+class TxAttribute  implements ITxAttribute, Serializable {
 	
 	TxAttributeType attributeType
 

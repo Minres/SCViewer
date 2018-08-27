@@ -11,6 +11,7 @@
 package com.minres.scviewer.database.internal;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,7 +32,12 @@ import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
 
-public class WaveformDb extends HierNode implements IWaveformDb {
+public class WaveformDb extends HierNode implements IWaveformDb, Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4917280760027131179L;
 
 	private static List<IWaveformDbLoader> loaders=new LinkedList<IWaveformDbLoader>();
 

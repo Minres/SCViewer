@@ -4,7 +4,7 @@ import com.minres.scviewer.database.ITxRelation
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.RelationType;
 
-class TxRelation implements ITxRelation {
+class TxRelation implements ITxRelation, Serializable {
 	Tx source
 	
 	Tx target

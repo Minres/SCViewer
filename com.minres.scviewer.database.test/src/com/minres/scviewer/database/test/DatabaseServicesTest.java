@@ -26,23 +26,13 @@ import com.minres.scviewer.database.IWaveformDbFactory;
 public class DatabaseServicesTest {
 
 
-	private static IWaveformDbFactory waveformDbFactory;
+	private DatabaseFactory databaseFactory;
 
 	private IWaveformDb waveformDb;
 	
-	public synchronized void setFactory(IWaveformDbFactory service) {
-		waveformDbFactory = service;
-	}
-
-	public synchronized void unsetFactory(IWaveformDbFactory service) {
-		if (waveformDbFactory == service) {
-			waveformDbFactory = null;
-		}
-	}
-	
 	@Before
 	public void setUp() throws Exception {
-		waveformDb=waveformDbFactory.getDatabase();
+		waveformDb=new DatabaseFactory().getDatabase();
 		// Wait for OSGi dependencies
 //		for (int i = 0; i < 10; i++) {
 //			if (waveformDb.size() == 3) // Dependencies fulfilled

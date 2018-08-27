@@ -12,7 +12,7 @@ package com.minres.scviewer.database.text
 
 import java.util.ArrayList;
 import java.util.List;
-
+import org.apache.jdbm.DB
 import com.minres.scviewer.database.ITxAttributeType
 import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITxEvent;
@@ -21,10 +21,11 @@ import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.IWaveformEvent;
 
-class TxGenerator implements ITxGenerator{
+class TxGenerator implements ITxGenerator, Serializable{
 	Long id
-	TxStream stream
+	Long stream_id
 	String name
+	TextDbLoader loader;
 	Boolean active = false
 	ArrayList<ITx> transactions=[]
 	
@@ -33,14 +34,15 @@ class TxGenerator implements ITxGenerator{
 	ArrayList<ITxAttributeType> end_attrs= []
 	int end_attrs_idx = 0
 	
-	TxGenerator(int id, TxStream stream, name){
+	TxGenerator(TextDbLoader loader, Long id, Long stream_id, name){
 		this.id=id
-		this.stream=stream
+		this.stream_id=stream_id
 		this.name=name
+		this.loader=loader
 	}
 	
 	ITxStream<? extends ITxEvent> getStream(){
-		return stream;
+		return loader.streamsById[stream_id];
 	}
 	
 	List<ITx> getTransactions(){

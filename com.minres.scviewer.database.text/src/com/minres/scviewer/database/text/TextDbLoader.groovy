@@ -26,17 +26,21 @@ import com.minres.scviewer.database.IWaveformDb
 import com.minres.scviewer.database.IWaveformDbLoader
 import com.minres.scviewer.database.RelationType
 
-public class TextDbLoader implements IWaveformDbLoader{
+public class TextDbLoader implements IWaveformDbLoader, Serializable{
 
 	private Long maxTime;
 
-	IWaveformDb db;
+	transient IWaveformDb db;
 
-	DB backingDb;
+	transient DB backingDb;
 
-	def streams = []
+	transient def streamsById = [:]
+	
+	transient def generatorsById = [:]
+	
+	transient def transactionsById = [:]
 
-	def relationTypes=[:]
+	transient def relationTypes=[:]
 
 	public TextDbLoader() {
 	}
@@ -48,37 +52,39 @@ public class TextDbLoader implements IWaveformDbLoader{
 
 	@Override
 	public List<IWaveform> getAllWaves() {
-		return new LinkedList<IWaveform>(streams);
+		return new LinkedList<IWaveform>(streamsById.values());
 	}
 
-	public Map<Long, ITxGenerator> getGeneratorsById() {
-		TreeMap<Long, ITxGenerator> res = new TreeMap<Long, ITxGenerator>();
-		streams.each{TxStream stream -> stream.generators.each{res.put(it.id, id)} }
-		return res;
-	}
+//	public Map<Long, ITxGenerator> getGeneratorsById() {
+//		TreeMap<Long, ITxGenerator> res = new TreeMap<Long, ITxGenerator>();
+//		streamsById.values().each{TxStream stream -> 
+//			stream.generators.each{res.put(it.id, id)} }
+//		return res;
+//	}
 
 	static final byte[] x = "scv_tr_stream".bytes
 
 	@Override
 	boolean load(IWaveformDb db, File file) throws Exception {
 		this.db=db
-		this.streams=[]
 		def gzipped = isGzipped(file)
 		if(isTxfile(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))){
-			if(true) {
-				def parentDir=file.absoluteFile.parent
-				def filename=file.name
-				new File(parentDir).eachFileRecurse (FileType.FILES) { f -> if(f.name=~/^\.${filename}/) f.delete() }
-				this.backingDb = DBMaker.openFile(parentDir+File.separator+"."+filename+"_bdb")
-						.deleteFilesAfterClose()
-						.useRandomAccessFile()
-						.setMRUCacheSize(4096) 
-						//.disableTransactions()
-						.disableLocking()
-						.make();
-			} else {
-				this.backingDb = DBMaker.openMemory().disableLocking().make()
-			}
+			def parentDir=file.absoluteFile.parent
+			def filename=file.name
+			new File(parentDir).eachFileRecurse (FileType.FILES) { f -> if(f.name=~/^\.${filename}/) f.delete() }
+			this.backingDb = DBMaker.openFile(parentDir+File.separator+"."+filename+"_bdb")
+					.deleteFilesAfterClose()
+					.useRandomAccessFile()
+					//.enableHardCache()
+					.enableMRUCache()
+					.setMRUCacheSize(1024*4096)
+					.disableTransactions()
+					.disableLocking()
+					.make();
+			streamsById = backingDb.createHashMap("streamsById")
+			generatorsById = backingDb.createHashMap("generatorsById")
+			transactionsById = backingDb.createHashMap("transactionsById")
+			relationTypes=backingDb.createHashMap("relationTypes")				
 			parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
 			calculateConcurrencyIndicees()
 			return true
@@ -122,9 +128,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 		}
 	}
 	private def parseInput(InputStream inputStream){
-		def streamsById = [:]
-		def generatorsById = [:]
-		def transactionsById = [:]
+		//def transactionsById = backingDb.createHashMap("transactionsById")
 		TxGenerator generator
 		Tx transaction
 		boolean endTransaction=false
@@ -139,15 +143,14 @@ public class TextDbLoader implements IWaveformDbLoader{
 				case "begin_attribute":
 				case "end_attribute":
 					if ((matcher = line =~ /^scv_tr_stream\s+\(ID (\d+),\s+name\s+"([^"]+)",\s+kind\s+"([^"]+)"\)$/)) {
-						def id = Integer.parseInt(matcher[0][1])
-						def stream = new TxStream(db, id, matcher[0][2], matcher[0][3], backingDb)
-						streams<<stream
+						def id = Long.parseLong(matcher[0][1])
+						def stream = new TxStream(this, id, matcher[0][2], matcher[0][3])
 						streamsById[id]=stream
 					} else if ((matcher = line =~ /^scv_tr_generator\s+\(ID\s+(\d+),\s+name\s+"([^"]+)",\s+scv_tr_stream\s+(\d+),$/)) {
-						def id = Integer.parseInt(matcher[0][1])
-						ITxStream stream=streamsById[Integer.parseInt(matcher[0][3])]
-						generator=new TxGenerator(id, stream, matcher[0][2])
-						stream.generators<<generator
+						def id = Long.parseLong(matcher[0][1])
+						ITxStream stream=streamsById[Long.parseLong(matcher[0][3])]
+						generator=new TxGenerator(this, id, stream.id, matcher[0][2])
+						stream.generators<<id
 						generatorsById[id]=generator
 					} else if ((matcher = line =~ /^begin_attribute \(ID (\d+), name "([^"]+)", type "([^"]+)"\)$/)) {
 						generator.begin_attrs << TxAttributeType.getAttrType(matcher[0][2], DataType.valueOf(matcher[0][3]), AssociationType.BEGIN)
@@ -159,9 +162,9 @@ public class TextDbLoader implements IWaveformDbLoader{
 					generator=null
 					break
 				case "tx_begin"://matcher = line =~ /^tx_begin\s+(\d+)\s+(\d+)\s+(\d+)\s+([munpf]?s)/
-					def id = Integer.parseInt(tokens[1])
-					TxGenerator gen=generatorsById[Integer.parseInt(tokens[2])]
-					transaction = new Tx(id, gen.stream, gen, Long.parseLong(tokens[3])*stringToScale(tokens[4]))
+					def id = Long.parseLong(tokens[1])
+					TxGenerator gen=generatorsById[Long.parseLong(tokens[2])]
+					transaction = new Tx(this, id, gen.id, Long.parseLong(tokens[3])*stringToScale(tokens[4]))
 					gen.transactions << transaction
 					transactionsById[id]= transaction
 					gen.begin_attrs_idx=0;
@@ -169,16 +172,16 @@ public class TextDbLoader implements IWaveformDbLoader{
 					endTransaction=false
 					break
 				case "tx_end"://matcher = line =~ /^tx_end\s+(\d+)\s+(\d+)\s+(\d+)\s+([munpf]?s)/
-					def id = Integer.parseInt(tokens[1])
+					def id = Long.parseLong(tokens[1])
 					transaction = transactionsById[id]
-					assert Integer.parseInt(tokens[2])==transaction.generator.id
+					assert Long.parseLong(tokens[2])==transaction.generator.id
 					transaction.endTime = Long.parseLong(tokens[3])*stringToScale(tokens[4])
 					transaction.generator.end_attrs_idx=0;
 					maxTime = maxTime>transaction.endTime?maxTime:transaction.endTime
 					endTransaction=true
 					break
 				case "tx_record_attribute"://matcher = line =~ /^tx_record_attribute\s+(\d+)\s+"([^"]+)"\s+(\S+)\s*=\s*(.+)$/
-					def id = Integer.parseInt(tokens[1])
+					def id = Long.parseLong(tokens[1])
 					transactionsById[id].attributes<<new TxAttribute(tokens[2][1..-2], DataType.valueOf(tokens[3]), AssociationType.RECORD, tokens[5..-1].join(' '))
 					break
 				case "a"://matcher = line =~ /^a\s+(.+)$/
@@ -189,8 +192,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 					}
 					break
 				case "tx_relation"://matcher = line =~ /^tx_relation\s+\"(\S+)\"\s+(\d+)\s+(\d+)$/
-					Tx tr2= transactionsById[Integer.parseInt(tokens[2])]
-					Tx tr1= transactionsById[Integer.parseInt(tokens[3])]
+					Tx tr2= transactionsById[Long.parseLong(tokens[2])]
+					Tx tr1= transactionsById[Long.parseLong(tokens[3])]
 					def relType=tokens[1][1..-2]
 					if(!relationTypes.containsKey(relType)) relationTypes[relType]=RelationType.create(relType)
 					def rel = new TxRelation(relationTypes[relType], tr1, tr2)
@@ -202,14 +205,14 @@ public class TextDbLoader implements IWaveformDbLoader{
 
 			}
 			lineCnt++
-			if((lineCnt%1000) == 0) {
-				backingDb.commit()
-			}
 		}
+		backingDb.commit();
 	}
 
 	private def calculateConcurrencyIndicees(){
-		streams.each{ TxStream  stream -> stream.getMaxConcurrency() }
+		streamsById.values().each{ TxStream  stream -> 
+			stream.getMaxConcurrency() 
+		}
 	}
 
 

@@ -12,13 +12,13 @@ package com.minres.scviewer.database.text
 
 import com.minres.scviewer.database.*
 
-class Tx implements ITx {
+class Tx implements ITx, Serializable {
+	
+	TextDbLoader loader
 	
 	Long id
 	
-	TxGenerator generator
-
-	TxStream stream
+	Long generator_id
 	
 	int concurrencyIndex
 	
@@ -32,10 +32,10 @@ class Tx implements ITx {
 	
 	def outgoingRelations =[]
 	
-	Tx(int id, TxStream stream, TxGenerator generator, Long begin){
+	Tx(TextDbLoader loader, Long id, Long generator_id, Long begin){
+		this.loader=loader
 		this.id=id
-		this.stream=stream
-		this.generator=generator
+		this.generator_id=generator_id
 		this.beginTime=begin
         this.endTime=begin
 	}
@@ -62,6 +62,16 @@ class Tx implements ITx {
 	@Override
 	public String toString() {
 		return "tx#"+getId()+"["+getBeginTime()/1000000+"ns - "+getEndTime()/1000000+"ns]";
+	}
+
+	@Override
+	public ITxStream<ITxEvent> getStream() {
+		return generator.stream;
+	}
+
+	@Override
+	public ITxGenerator getGenerator() {
+		return loader.generatorsById[generator_id];
 	}
 
 }

@@ -4,7 +4,7 @@ import com.minres.scviewer.database.ITx
 import com.minres.scviewer.database.ITxEvent
 import com.minres.scviewer.database.IWaveformEvent
 
-class TxEvent implements ITxEvent {
+class TxEvent implements ITxEvent, Serializable {
 
 	final ITxEvent.Type type;
 	
