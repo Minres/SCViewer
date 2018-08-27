@@ -72,6 +72,7 @@ import com.google.common.collect.Lists;
 import com.minres.scviewer.database.ISignal;
 import com.minres.scviewer.database.ISignalChange;
 import com.minres.scviewer.database.ISignalChangeMulti;
+import com.minres.scviewer.database.ISignalChangeReal;
 import com.minres.scviewer.database.ISignalChangeSingle;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxEvent;
@@ -458,6 +459,8 @@ public class WaveformViewer implements IWaveformViewer  {
 					entry.setValue("b'"+((ISignalChangeSingle)event).getValue());
 				} else if(event instanceof ISignalChangeMulti){
 					entry.setValue("h'"+((ISignalChangeMulti)event).getValue().toHexString());
+				} else if(event instanceof ISignalChangeReal){
+					entry.setValue(Double.toString(((ISignalChangeReal)event).getValue()));
 				}
 			} else if(entry.getKey() instanceof ITxStream<?>){
 				ITxStream<?> stream = (ITxStream<?>) entry.getKey();
