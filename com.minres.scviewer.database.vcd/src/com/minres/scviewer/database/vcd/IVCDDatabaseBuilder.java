@@ -52,8 +52,16 @@ public interface IVCDDatabaseBuilder {
 	 *
 	 * @param signalId the int value
 	 * @param currentTime the current time in ps
-	 * @param decodedValues the decoded values
+	 * @param decodedValues the decoded bit values
 	 */
 	public void appendTransition(int signalId, long currentTime, BitVector decodedValues);
 
+	/**
+	 * Append transition.
+	 *
+	 * @param signalId the int value
+	 * @param currentTime the current time in ps
+	 * @param vValues the real values
+	 */
+	public void appendTransition(int signalId, long currentTime, Double values);
 }

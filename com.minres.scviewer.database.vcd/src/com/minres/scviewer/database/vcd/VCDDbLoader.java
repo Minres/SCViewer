@@ -23,6 +23,7 @@ import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.ISignal;
 import com.minres.scviewer.database.ISignalChange;
 import com.minres.scviewer.database.ISignalChangeMulti;
+import com.minres.scviewer.database.ISignalChangeReal;
 import com.minres.scviewer.database.ISignalChangeSingle;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
@@ -171,9 +172,20 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
+	public void appendTransition(int signalId, long currentTime, Double value) {
+		VCDSignal<? extends IWaveformEvent> signal = (VCDSignal<? extends IWaveformEvent>) signals.get(signalId);
+		Long time = currentTime*TIME_RES;
+		((VCDSignal<ISignalChangeReal>)signal).values.put(time, new VCDSignalChangeReal(time, value));
+	}
+	
+	/* (non-Javadoc)
+	 * @see com.minres.scviewer.database.vcd.ITraceBuilder#appendTransition(int, long, com.minres.scviewer.database.vcd.BitVector)
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
 	public void appendTransition(int signalId, long currentTime, BitVector decodedValues) {
 		VCDSignal<? extends IWaveformEvent> signal = (VCDSignal<? extends IWaveformEvent>) signals.get(signalId);
-		Long time = currentTime* TIME_RES;
+		Long time = currentTime*TIME_RES;
 		if(signal.getWidth()==1){
 			((VCDSignal<ISignalChangeSingle>)signal).values.put(time, new VCDSignalChangeSingle(time, decodedValues.getValue()[0]));
 		} else {

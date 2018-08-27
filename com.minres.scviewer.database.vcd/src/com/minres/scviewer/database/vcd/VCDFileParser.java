@@ -147,6 +147,7 @@ class VCDFileParser {
 		if (tokenizer.sval.charAt(0) == '#') {	// If the line begins with a #, this is a timestamp.
 			currentTime = Long.parseLong(tokenizer.sval.substring(1)) * picoSecondsPerIncrement;
 		} else {
+			boolean isReal=false;
 			if(tokenizer.sval.equals("$comment")){
 				do {
 					if (!nextToken()) return false;
@@ -161,6 +162,13 @@ class VCDFileParser {
 				value = tokenizer.sval.substring(1);
 				nextToken();
 				id = tokenizer.sval;
+			} else if (tokenizer.sval.charAt(0) == 'r') {
+				// real value net. Value appears first, followed by space,
+				// then identifier
+				value = tokenizer.sval.substring(1);
+				nextToken();
+				id = tokenizer.sval;
+				isReal=true;
 			} else {
 				// Single value net. identifier first, then value, no space.
 				value = tokenizer.sval.substring(0, 1);
@@ -173,40 +181,48 @@ class VCDFileParser {
 				return true;
 			}
 
-			int netWidth = traceBuilder.getNetWidth(net);
-			BitVector decodedValues = new BitVector(netWidth);
-			if (value.equals("z") && netWidth > 1) {
-				for (int i = 0; i < netWidth; i++)
-					decodedValues.setValue(i, BitVector.VALUE_Z);
-			} else if (value.equals("x") && netWidth > 1) {
-				for (int i = 0; i < netWidth; i++)
-					decodedValues.setValue(i, BitVector.VALUE_X);
+			if(isReal) {
+				if("nan".equals(value)) {
+					traceBuilder.appendTransition(net, currentTime, Double.NaN);
+				} else {
+					traceBuilder.appendTransition(net, currentTime, Double.parseDouble(value));
+				}
 			} else {
-				int stringIndex = 0;
-				for (int convertedIndex = netWidth - value.length(); convertedIndex < netWidth; convertedIndex++) {
-					switch (value.charAt(stringIndex++)) {
-					case 'z':
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_Z);
-						break;
-
-					case '1':
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_1);
-						break;
-
-					case '0':
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_0);
-						break;
-
-					case 'x':
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
-						break;
-
-					default:
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
+				int netWidth = traceBuilder.getNetWidth(net);
+				BitVector decodedValues = new BitVector(netWidth);
+				if (value.equals("z") && netWidth > 1) {
+					for (int i = 0; i < netWidth; i++)
+						decodedValues.setValue(i, BitVector.VALUE_Z);
+				} else if (value.equals("x") && netWidth > 1) {
+					for (int i = 0; i < netWidth; i++)
+						decodedValues.setValue(i, BitVector.VALUE_X);
+				} else {
+					int stringIndex = 0;
+					for (int convertedIndex = netWidth - value.length(); convertedIndex < netWidth; convertedIndex++) {
+						switch (value.charAt(stringIndex++)) {
+						case 'z':
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_Z);
+							break;
+	
+						case '1':
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_1);
+							break;
+	
+						case '0':
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_0);
+							break;
+	
+						case 'x':
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
+							break;
+	
+						default:
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
+						}
 					}
 				}
+				traceBuilder.appendTransition(net, currentTime, decodedValues);
 			}
-			traceBuilder.appendTransition(net, currentTime, decodedValues);
 		}
 		return true;
 	}
