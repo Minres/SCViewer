@@ -16,10 +16,6 @@
                name="appName"
                value="SCViewer">
          </property>
-         <property
-               name="applicationCSS"
-               value="platform:/plugin/com.minres.scviewer.e4.application/css/default.css">
-         </property>
       </product>
    </extension>
    <extension
