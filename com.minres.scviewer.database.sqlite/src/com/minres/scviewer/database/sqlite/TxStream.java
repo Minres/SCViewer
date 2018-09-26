@@ -117,6 +117,7 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 				sb.append(scvStream.getId());
 				resultSet = statement.executeQuery(sb.toString());
 				while (resultSet.next()) {
+					if(maxConcurrency==null) maxConcurrency=0;
 					Object value = resultSet.getObject("concurrencyLevel");
 					if(value!=null)
 						maxConcurrency=(Integer) value;
