@@ -86,5 +86,15 @@ public class DatabaseServicesTest {
 		assertEquals(1,  waveformDb.getChildNodes().size());
 	}
 
+	@Test
+	public void testHierarchicalVCD() throws Exception {
+		File f = new File("inputs/simple_system.vcd").getAbsoluteFile();
+		assertTrue(f.exists());
+		waveformDb.load(f);
+		assertNotNull(waveformDb);
+		assertEquals(778,  waveformDb.getAllWaves().size());
+		assertEquals(1,  waveformDb.getChildNodes().size());
+	}
+
 
 }

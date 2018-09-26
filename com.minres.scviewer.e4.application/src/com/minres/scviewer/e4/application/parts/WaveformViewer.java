@@ -17,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,8 +56,11 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
 import com.minres.scviewer.database.ITx;
@@ -79,6 +83,7 @@ import com.minres.scviewer.e4.application.internal.util.IFileChangeListener;
 import com.minres.scviewer.e4.application.internal.util.IModificationChecker;
 import com.minres.scviewer.e4.application.preferences.DefaultValuesInitializer;
 import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
+//import com.minres.scviewer.database.swt.internal.WaveformCanvas;
 
 /**
  * The Class WaveformViewerPart.
@@ -724,6 +729,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param level the new zoom level
 	 */
 	public void setZoomLevel(Integer level) {
+		//System.out.println("setZoomLevel() - ZoomLevel: " + level);
 		if (level < 0)
 			level = 0;
 		if (level > zoomLevel.length - 1)
@@ -732,11 +738,43 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		updateAll();
 	}
 
+    //FIXME: need to use unitString and unitMultiplier from class WaveformCanvas which is located in >com.minres.scviewer.database.swt.internal.
+	//Trying to import com.minres.scviewer.database.swt.internal.WaveformCanvas results in the error:
+	//'Access restriction: The type 'WaveformCanvas' is not API (restriction on required project 'com.minres.scviewer.database.ui.swt')'.
+	public final static String[] unitString={"fs", "ps", "ns", "µs", "ms"};//, "s"};
+    public final static int[] unitMultiplier={1, 3, 10, 30, 100, 300};
+	
 	/**
 	 * Sets the zoom fit.
 	 */
 	public void setZoomFit() {
-		waveformPane.setZoomLevel(6);
+
+		//actual max time of signal
+		long maxTime = waveformPane.getMaxTime();
+		
+		//get area actually capable of displaying data, i.e. area of the receiver which is capable of displaying data
+		Rectangle clientArea = myParent.getClientArea();
+		long clientAreaWidth = clientArea.width;
+		
+		//System.out.println("ZoomLevel[] Array (Length " + zoomLevel.length + "): " + Arrays.toString(zoomLevel));
+		//System.out.println("ClientArea myParent: " + myParent.getClientArea());
+		//System.out.println("MaxTime: " + maxTime);
+		//System.out.println("clientAreaWidth: " + clientAreaWidth);
+		
+    	boolean foundZoom=false;
+		//try to find existing zoomlevel where scaleFactor*clientAreaWidth >= maxTime, if one is found set it as new zoomlevel
+		for (int level=0; level<unitMultiplier.length*unitString.length; level++){
+			long scaleFactor = (long) Math.pow(10, level/2);
+		    if(level%2==1) scaleFactor*=3;
+		    if(scaleFactor*clientAreaWidth >= maxTime) {
+		    	setZoomLevel(level);
+		    	foundZoom=true;
+		    	break;
+		    }
+		}
+		//if no zoom level is found, set biggest one available
+		if(!foundZoom) setZoomLevel(unitMultiplier.length*unitString.length-1);
+				
 		updateAll();
 	}
 

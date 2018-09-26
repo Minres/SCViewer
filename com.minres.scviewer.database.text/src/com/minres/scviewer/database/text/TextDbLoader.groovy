@@ -165,9 +165,11 @@ public class TextDbLoader implements IWaveformDbLoader{
 					break
 				case "a"://matcher = line =~ /^a\s+(.+)$/
 					if(endTransaction){
-						transaction.attributes << new TxAttribute(transaction.generator.end_attrs[0], tokens[1])
+						transaction.attributes << new TxAttribute(transaction.generator.end_attrs[transaction.generator.end_attrs_idx], tokens[1])
+						transaction.generator.end_attrs_idx++
 					} else {
-						transaction.attributes << new TxAttribute(transaction.generator.begin_attrs[0], tokens[1])
+						transaction.attributes << new TxAttribute(transaction.generator.begin_attrs[transaction.generator.begin_attrs_idx], tokens[1])
+						transaction.generator.begin_attrs_idx++
 					}
 					break
 				case "tx_relation"://matcher = line =~ /^tx_relation\s+\"(\S+)\"\s+(\d+)\s+(\d+)$/
