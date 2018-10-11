@@ -108,7 +108,7 @@
           <parameters xmi:id="_cuGAkHcjEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.12" name="com.minres.scviewer.e4.application.command.navigateTransCommand.parameter.dir" value="prev"/>
         </children>
         <children xsi:type="menu:ToolControl" xmi:id="_LtQhcIuKEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.toolcontrol.0" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.elements.RelationTypeToolControl"/>
-        <children xsi:type="menu:DirectToolItem" xmi:id="_Z7ZQkIuJEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.directtoolitem.nextprevinstream" toBeRendered="false" visible="false" label="Next/Prev in stream" enabled="false">
+        <children xsi:type="menu:DirectToolItem" xmi:id="_Z7ZQkIuJEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.directtoolitem.nextprevinstream" toBeRendered="false" visible="false" label="Next/Prev in stream">
           <menu xmi:id="_aPyMMIuJEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.menu.2">
             <children xsi:type="menu:DynamicMenuContribution" xmi:id="_cnNWkIuJEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.dynamicmenucontribution.2" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.NavigateContribution"/>
           </menu>
@@ -204,6 +204,7 @@
       <children xsi:type="menu:HandledMenuItem" xmi:id="_4ZeEQHabEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.previouschange" label="Previous Tx" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/reverse_green.png" command="_Gn3lEHXKEeWwZ-9vrAR2UQ">
         <parameters xmi:id="_4ZeEQXabEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.5" name="com.minres.scviewer.e4.application.command.navigateTransCommand.parameter.dir" value="prev"/>
       </children>
+      <children xsi:type="menu:DynamicMenuContribution" xmi:id="_KYI1EMxxEeiQc8UNpkcyEA" elementId="com.minres.scviewer.e4.application.dynamicmenucontribution.0" label="View as..." contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.elements.WaveformPopupMenuContribution"/>
     </menus>
   </descriptors>
   <commands xmi:id="_95PfvHNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.file.exit" commandName="quitCommand"/>
