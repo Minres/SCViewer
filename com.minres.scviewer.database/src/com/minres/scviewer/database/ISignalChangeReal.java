@@ -8,13 +8,10 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database.ui;
+package com.minres.scviewer.database;
 
-public enum WaveformColors {
-    LINE, LINE_HIGHLITE, 
-    TRACK_BG_EVEN, TRACK_BG_ODD, TRACK_BG_HIGHLITE, 
-    TX_BG, TX_BG_HIGHLITE, TX_BORDER,
-    SIGNAL0, SIGNAL1, SIGNALZ, SIGNALX, SIGNALU, SIGNAL_TEXT, SIGNAL_REAL,
-    CURSOR, CURSOR_DRAG, CURSOR_TEXT,
-    MARKER, MARKER_TEXT, REL_ARROW, REL_ARROW_HIGHLITE
+public interface ISignalChangeReal extends ISignalChange{
+
+	public double getValue();
+	
 }

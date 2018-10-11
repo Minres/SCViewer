@@ -8,13 +8,30 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database.ui;
+package com.minres.scviewer.database.vcd;
 
-public enum WaveformColors {
-    LINE, LINE_HIGHLITE, 
-    TRACK_BG_EVEN, TRACK_BG_ODD, TRACK_BG_HIGHLITE, 
-    TX_BG, TX_BG_HIGHLITE, TX_BORDER,
-    SIGNAL0, SIGNAL1, SIGNALZ, SIGNALX, SIGNALU, SIGNAL_TEXT, SIGNAL_REAL,
-    CURSOR, CURSOR_DRAG, CURSOR_TEXT,
-    MARKER, MARKER_TEXT, REL_ARROW, REL_ARROW_HIGHLITE
+import com.minres.scviewer.database.ISignalChangeReal;
+import com.minres.scviewer.database.SignalChange;
+
+public class VCDSignalChangeReal extends SignalChange implements ISignalChangeReal, Cloneable {
+
+	private double value;
+
+	public VCDSignalChangeReal(Long time, double value) {
+		super(time);
+		this.value=value;
+	}
+
+	public double getValue() {
+		return value;
+	}
+
+	public void setValue(double value) {
+		this.value = value;
+	}
+	
+	@Override
+	public String toString() {
+		return value+"@"+getTime();
+	}
 }
