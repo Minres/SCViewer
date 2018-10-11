@@ -245,10 +245,12 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		if (filesToLoad.size() > 0)
 			loadDatabase(persistedState);
 		eventBroker.post(WaveStatusBarControl.ZOOM_LEVEL, zoomLevel[waveformPane.getZoomLevel()]);
+//		menuService.registerContextMenu(waveformPane.getNameControl(),
+//				"com.minres.scviewer.e4.application.popupmenu.namecontext"); //$NON-NLS-1$
 		menuService.registerContextMenu(waveformPane.getNameControl(),
-				"com.minres.scviewer.e4.application.popupmenu.namecontext"); //$NON-NLS-1$
+				"com.minres.scviewer.e4.application.popupmenu.wavecontext"); //$NON-NLS-1$
 		menuService.registerContextMenu(waveformPane.getValueControl(),
-				"com.minres.scviewer.e4.application.popupmenu.namecontext"); //$NON-NLS-1$
+				"com.minres.scviewer.e4.application.popupmenu.wavecontext"); //$NON-NLS-1$
 		menuService.registerContextMenu(waveformPane.getWaveformControl(),
 				"com.minres.scviewer.e4.application.popupmenu.wavecontext"); //$NON-NLS-1$
 		ePartService.addPartListener(new PartListener() {
@@ -412,7 +414,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	@Focus
 	public void setFocus() {
-		myParent.setFocus();
+		waveformPane.getWaveformControl().setFocus();
 	}
 
 	/**
@@ -658,6 +660,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				index++;
 			waveformPane.getStreamList().addAll(index, streams);
 		}
+		setFocus();
 	}
 
 	/**
