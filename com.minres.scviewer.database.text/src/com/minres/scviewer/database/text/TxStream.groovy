@@ -43,15 +43,14 @@ class TxStream extends HierNode implements ITxStream {
 	
 	private TreeMap<Long, List<ITxEvent>> events
 	
-	TxStream(IWaveformDb db, int id, String name, String kind, DB backingStore){
+	TxStream(IWaveformDb db, int id, String name, String kind){
 		super(name)
 		this.id=id
 		this.database=db
 		this.fullName=name
 		this.kind=kind
 		this.maxConcurrency=0
-		//events = new TreeMap<Long, List<ITxEvent>>()
-		events=backingStore.createTreeMap("stream-"+name)
+		events = new TreeMap<Long, List<ITxEvent>>()
 	}
 
 	List<ITxGenerator> getGenerators(){

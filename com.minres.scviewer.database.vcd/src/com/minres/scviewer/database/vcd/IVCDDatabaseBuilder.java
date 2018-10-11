@@ -52,7 +52,7 @@ public interface IVCDDatabaseBuilder {
 	 *
 	 * @param netId the int value
 	 * @param currentTime the current time in ps
-	 * @param decodedValues the decoded values
+	 * @param decodedValues the decoded bit values
 	 */
 	public void appendTransition(int netId, long currentTime, char decodedValue);
 

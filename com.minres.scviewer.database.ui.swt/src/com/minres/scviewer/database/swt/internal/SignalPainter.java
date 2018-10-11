@@ -10,9 +10,8 @@
  *******************************************************************************/
 package com.minres.scviewer.database.swt.internal;
 
-import java.util.Map.Entry;
 import java.util.Collection;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 
 import javax.swing.JPanel;
@@ -26,9 +25,9 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.ISignal;
 import com.minres.scviewer.database.ISignalChange;
+import com.minres.scviewer.database.ISignalChangeBit;
 import com.minres.scviewer.database.ISignalChangeBitVector;
 import com.minres.scviewer.database.ISignalChangeReal;
-import com.minres.scviewer.database.ISignalChangeBit;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
 
@@ -110,7 +109,6 @@ public class SignalPainter extends TrackPainter {
 		NavigableMap<Long, ? extends ISignalChange> entries = signal.getEvents().subMap(first.getKey(), false, last.getKey(), true);
 		SignalChange left = new SignalChange(first);
 		SignalChange right = new SignalChange(entries.size() > 0 ? entries.firstEntry() : first);
-
 		maxX = area.x + area.width;
 		yOffsetT = this.waveCanvas.getTrackHeight() / 5 + area.y;
 		yOffsetM = this.waveCanvas.getTrackHeight() / 2 + area.y;
@@ -124,7 +122,6 @@ public class SignalPainter extends TrackPainter {
 			// b) left to close to right
 			if (left.time == right.time) {
 				right.time = endTime;
-
 			} else {
 				multiple = true;
 				long eTime = (xBegin + 1) * this.waveCanvas.getScaleFactor();
@@ -147,7 +144,9 @@ public class SignalPainter extends TrackPainter {
 			if (xEnd == xBegin) {
 				multiple = true;
 				long eTime = (xBegin + 1) * this.waveCanvas.getScaleFactor();
-				right.set(entries.floorEntry(eTime), endTime);
+				Entry<Long, ? extends ISignalChange> entry = entries.floorEntry(eTime);
+				if(entry!=null && entry.getKey()> right.time)
+					right.set(entry, endTime);
 				xEnd = getXEnd(eTime);
 			}
 		} while (left.time < endTime);
@@ -269,9 +268,86 @@ public class SignalPainter extends TrackPainter {
 				}
 			}
 		}
-
 	}
+/*
+	private class RealStencil implements SignalStencil {
+		double min;
+		double max;
+		double diff;
+		
+		public RealStencil(ISignalChange value, NavigableMap<Long, ? extends ISignalChange> entries) {
+			min=((ISignalChangeReal) value).getValue();
+			max=min;
+			for (ISignalChange e : entries.values()) {
+				double v = ((ISignalChangeReal)e).getValue();
+				max= Double.isNaN(max)? v : Math.max(max, v);
+				min= Double.isNaN(min)? v : Math.min(min, v);
+			}
+			int nans = (Double.isNaN(max)?2:0) + (Double.isNaN(max)?1:0); 
+			switch(nans) {
+			case 0:
+				break;
+			case 1:
+				max=min;
+				break;
+			case 2:
+				min=max;
+			case 3:
+				max=min=0;
+			}
+			diff=max-min;
+			if(diff==0.0) {
+				if(max>0)
+					min=0.0;
+				else if(min<0.0)
+					max=0.0;
+				else {
+					max=1.0;
+					min=0.0;
+				}
+				diff=max-min;
+			}
+		}
 
+		public void draw(GC gc, Rectangle area, ISignalChange left, ISignalChange right, int xBegin, int xEnd, boolean multiple) {
+			double value = ((ISignalChangeReal)left).getValue();
+			if(Double.isNaN(value)) {
+				Color color = waveCanvas.colors[WaveformColors.SIGNAL_NAN.ordinal()];
+				int width = xEnd - xBegin;
+				if (width > 1) {
+					int[] points = { 
+							xBegin, yOffsetT, 
+							xEnd,   yOffsetT, 
+							xEnd,   yOffsetB, 
+							xBegin, yOffsetB
+					};
+					gc.setForeground(color);
+					gc.drawPolygon(points);
+					gc.setBackground(color);
+					gc.fillPolygon(points);
+				} else {
+					gc.setForeground(color);
+					gc.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
+				}
+			} else {
+				Color color = waveCanvas.colors[WaveformColors.SIGNAL_ANALOG.ordinal()];
+				int height=yOffsetT-yOffsetB;
+				double offset=value-min;
+				int yOffset=diff>0?(int)(height*(offset/diff)) + yOffsetB:yOffsetM;
+				gc.setForeground(color);
+				if (xEnd > maxX) {
+					gc.drawLine(xBegin, yOffset, maxX, yOffset);
+				} else {
+					gc.drawLine(xBegin, yOffset, xEnd, yOffset);
+					double nextOffset = ((ISignalChangeReal)right).getValue()-min;
+					int yNext = diff>0?(int)(height*(nextOffset/diff)) + yOffsetB:height/2;
+					if (yOffset != yNext)
+						gc.drawLine(xEnd, yOffset, xEnd, yNext);
+				}
+			}
+		}
+	}
+*/
 	private class RealStencil implements SignalStencil {
 
 		double minVal, range;

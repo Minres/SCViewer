@@ -184,7 +184,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@Override
 	public void appendTransition(int signalId, long currentTime, char decodedValues) {
 		VCDSignal<? extends IWaveformEvent> signal = (VCDSignal<? extends IWaveformEvent>) signals.get(signalId);
-		Long time = currentTime* TIME_RES;
+		Long time = currentTime*TIME_RES;
 		if(signal.getWidth()==1){
 			((VCDSignal<ISignalChangeBit>)signal).values.put(time, new VCDSignalChangeBit(time, decodedValues));
 		}

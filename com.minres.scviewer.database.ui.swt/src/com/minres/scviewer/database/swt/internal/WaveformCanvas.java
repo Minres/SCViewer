@@ -56,7 +56,7 @@ public class WaveformCanvas extends Canvas {
     
     private int level = 12;
     
-    public final static String[] unitString={"fs", "ps", "ns", "µs", "ms"};//, "s"};
+    public final static String[] unitString={"fs", "ps", "ns", "us", "ms"};//, "s"};
     
     public final static int[] unitMultiplier={1, 3, 10, 30, 100, 300};
     
@@ -142,6 +142,7 @@ public class WaveformCanvas extends Canvas {
         colors[WaveformColors.SIGNALU.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
         colors[WaveformColors.SIGNAL_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
         colors[WaveformColors.SIGNAL_REAL.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
+        colors[WaveformColors.SIGNAL_NAN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
         colors[WaveformColors.CURSOR.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
         colors[WaveformColors.CURSOR_DRAG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GRAY);
         colors[WaveformColors.CURSOR_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
