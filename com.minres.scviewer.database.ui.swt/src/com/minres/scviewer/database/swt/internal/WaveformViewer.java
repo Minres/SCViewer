@@ -13,6 +13,7 @@ package com.minres.scviewer.database.swt.internal;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,8 +72,9 @@ import org.eclipse.wb.swt.SWTResourceManager;
 import com.google.common.collect.Lists;
 import com.minres.scviewer.database.ISignal;
 import com.minres.scviewer.database.ISignalChange;
-import com.minres.scviewer.database.ISignalChangeMulti;
-import com.minres.scviewer.database.ISignalChangeSingle;
+import com.minres.scviewer.database.ISignalChangeBitVector;
+import com.minres.scviewer.database.ISignalChangeReal;
+import com.minres.scviewer.database.ISignalChangeBit;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxRelation;
@@ -102,11 +104,11 @@ public class WaveformViewer implements IWaveformViewer  {
 
 	private Control namePaneHeader;
 
-	private Canvas nameList;
+	final private Canvas nameList;
 
-	private Canvas valueList;
+	final private Canvas valueList;
 
-	WaveformCanvas waveformCanvas;
+	final WaveformCanvas waveformCanvas;
 
 	private Composite top;
 
@@ -125,12 +127,11 @@ public class WaveformViewer implements IWaveformViewer  {
 	protected MouseListener nameValueMouseListener = new MouseAdapter() {
 		@Override
 		public void mouseDown(MouseEvent e) {
-			if ((e.button == 1 || e.button == 3)) {
+			if (e.button == 1) {
 				Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
 				if (entry != null)
 					setSelection(new StructuredSelection(entry.getValue()));
-			} 
-			if (e.button == 3) {
+			} else if (e.button == 3) {
 				Menu topMenu= top.getMenu();
 				if(topMenu!=null) topMenu.setVisible(true);
 			}
@@ -171,7 +172,7 @@ public class WaveformViewer implements IWaveformViewer  {
 						}
 					});
 				}
-			}else	if (e.button ==  2) {
+			}else if (e.button ==  2) {
 				setMarkerTime(snapOffsetToEvent(e), selectedMarker);
 				e.widget.getDisplay().asyncExec(new Runnable() {
 					@Override
@@ -273,9 +274,11 @@ public class WaveformViewer implements IWaveformViewer  {
 		nameList.addListener(SWT.Paint, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				GC gc = event.gc;
-				Rectangle rect = ((Canvas) event.widget).getClientArea();
-				paintNames(gc, rect);
+				if(!trackVerticalOffset.isEmpty()) {
+					GC gc = event.gc;
+					Rectangle rect = ((Canvas) event.widget).getClientArea();
+					paintNames(gc, rect);
+				}
 			}
 		});
 		nameList.addMouseListener(nameValueMouseListener);
@@ -305,9 +308,11 @@ public class WaveformViewer implements IWaveformViewer  {
 		valueList.addListener(SWT.Paint, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				GC gc = event.gc;
-				Rectangle rect = ((Canvas) event.widget).getClientArea();
-				paintValues(gc, rect);
+				if(!trackVerticalOffset.isEmpty()) {
+					GC gc = event.gc;
+					Rectangle rect = ((Canvas) event.widget).getClientArea();
+					paintValues(gc, rect);
+				}
 			}
 		});
 		valueList.addMouseListener(nameValueMouseListener);
@@ -315,7 +320,7 @@ public class WaveformViewer implements IWaveformViewer  {
 
 		waveformCanvas.setMaxTime(1);
 		waveformCanvas.addMouseListener(waveformMouseListener);
-
+		
 		nameListScrolled.getVerticalBar().addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				int y = ((ScrollBar) e.widget).getSelection();
@@ -454,10 +459,16 @@ public class WaveformViewer implements IWaveformViewer  {
 		for(Entry<IWaveform<? extends IWaveformEvent>, String> entry:actualValues.entrySet()){
 			if(entry.getKey() instanceof ISignal){    
 				ISignalChange event = ((ISignal<?>)entry.getKey()).getWaveformEventsBeforeTime(time);
-				if(event instanceof ISignalChangeSingle){
-					entry.setValue("b'"+((ISignalChangeSingle)event).getValue());
-				} else if(event instanceof ISignalChangeMulti){
-					entry.setValue("h'"+((ISignalChangeMulti)event).getValue().toHexString());
+				if(event instanceof ISignalChangeBit){
+					entry.setValue("b'"+((ISignalChangeBit)event).getValue());
+				} else if(event instanceof ISignalChangeBitVector){
+					entry.setValue("h'"+((ISignalChangeBitVector)event).getValue().toHexString());
+				} else if(event instanceof ISignalChangeReal){
+					double val = ((ISignalChangeReal)event).getValue();
+					if(val>0.001)
+						entry.setValue(String.format("%1$,.3f", val));
+					else
+						entry.setValue(Double.toString(val));
 				}
 			} else if(entry.getKey() instanceof ITxStream<?>){
 				ITxStream<?> stream = (ITxStream<?>) entry.getKey();
@@ -551,9 +562,10 @@ public class WaveformViewer implements IWaveformViewer  {
 	public ISelection getSelection() {
 		if (currentTxSelection != null)
 			return new StructuredSelection(currentTxSelection);
-		else if (currentWaveformSelection != null)
-			return new StructuredSelection(currentWaveformSelection.waveform);
-		else
+		else if (currentWaveformSelection != null) {
+			Object[] elem = {currentWaveformSelection.waveform, currentWaveformSelection};
+			return new StructuredSelection(elem);
+		} else
 			return new StructuredSelection();
 	}
 
@@ -738,6 +750,7 @@ public class WaveformViewer implements IWaveformViewer  {
 				setCursorTime(time);
 				waveformCanvas.reveal(time);
 				waveformCanvas.redraw();
+				updateValueList();
 			}
 		}
 
