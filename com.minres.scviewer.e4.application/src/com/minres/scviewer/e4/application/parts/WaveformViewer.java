@@ -744,7 +744,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
     //FIXME: need to use unitString and unitMultiplier from class WaveformCanvas which is located in >com.minres.scviewer.database.swt.internal.
 	//Trying to import com.minres.scviewer.database.swt.internal.WaveformCanvas results in the error:
 	//'Access restriction: The type 'WaveformCanvas' is not API (restriction on required project 'com.minres.scviewer.database.ui.swt')'.
-	public final static String[] unitString={"fs", "ps", "ns", "µs", "ms"};//, "s"};
+	public final static String[] unitString={"fs", "ps", "ns", "ï¿½s", "ms"};//, "s"};
     public final static int[] unitMultiplier={1, 3, 10, 30, 100, 300};
 	
 	/**
@@ -918,6 +918,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	public void setNavigationRelationType(RelationType relationType) {
 		if(navigationRelationType!=relationType) waveformPane.setHighliteRelation(relationType);
 		navigationRelationType=relationType;
+	}
+	
+	public void update() {
+		waveformPane.update();
 	}
 
 }

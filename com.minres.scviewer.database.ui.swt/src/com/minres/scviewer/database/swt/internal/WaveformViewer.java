@@ -119,8 +119,6 @@ public class WaveformViewer implements IWaveformViewer  {
 
 	private TreeMap<Integer, TrackEntry> trackVerticalOffset;
 
-	private HashMap<IWaveform<? extends IWaveformEvent>, String> actualValues;
-
 	private Font nameFont, nameFontB;
 
 	protected MouseListener nameValueMouseListener = new MouseAdapter() {
@@ -225,7 +223,6 @@ public class WaveformViewer implements IWaveformViewer  {
 
 		trackVerticalOffset = new TreeMap<Integer, TrackEntry>();
 		trackVerticalHeight=0;
-		actualValues = new HashMap<IWaveform<? extends IWaveformEvent>, String>();
 
 		nameFont = parent.getDisplay().getSystemFont();
 		nameFontB = SWTResourceManager.getBoldFont(nameFont);
@@ -384,19 +381,18 @@ public class WaveformViewer implements IWaveformViewer  {
 			waveformCanvas.getDisplay().asyncExec(new Runnable() {
 				@Override
 				public void run() {
-					updateTracklist();
+					update();
 				}
 			});
 		}
 	}
 
-	protected void updateTracklist() {
+	public void update() {
 		trackVerticalHeight = 0;
 		int nameMaxWidth = 0;
 		int previousHeight = trackVerticalOffset.size() == 0 ? 0 : trackVerticalOffset.lastKey();
 		IWaveformPainter painter = null;
 		trackVerticalOffset.clear();
-		actualValues.clear();
 		waveformCanvas.clearAllWaveformPainter();
 		boolean even = true;
 		boolean clearSelection = true;
@@ -407,12 +403,12 @@ public class WaveformViewer implements IWaveformViewer  {
 			streamEntry.vOffset=trackVerticalHeight;
 			clearSelection &= currentWaveformSelection!=null && (streamEntry.waveform != currentWaveformSelection.waveform);
 			if (streamEntry.isStream()) {
+				streamEntry.currentValue="";
 				streamEntry.height *= streamEntry.getStream().getMaxConcurrency();
 				painter = new StreamPainter(waveformCanvas, even, streamEntry);
-				actualValues.put(streamEntry.waveform, "");
 			} else if (streamEntry.isSignal()) {
+				streamEntry.currentValue="---";
 				painter = new SignalPainter(waveformCanvas, even, streamEntry);
-				actualValues.put(streamEntry.waveform, "---");
 			}
 			waveformCanvas.addWaveformPainter(painter);
 			trackVerticalOffset.put(trackVerticalHeight, streamEntry);
@@ -440,14 +436,15 @@ public class WaveformViewer implements IWaveformViewer  {
         for(Entry<Integer, IWaveform<? extends IWaveformEvent>> entry: trackVerticalOffset.entrySet()){
         	System.out.println("    "+entry.getKey()+": " +entry.getValue().getFullName());
         }
-		 */    }
+		 */    
+	}
 
 	private int calculateValueWidth() {
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
 		tl.setFont(nameFontB);
 		int valueMaxWidth = 0;
-		for (String v : actualValues.values()) {
-			tl.setText(v);
+		for (TrackEntry v : streams) {
+			tl.setText(v.currentValue);
 			valueMaxWidth = Math.max(valueMaxWidth, tl.getBounds().width);
 		}
 		return valueMaxWidth + 15;
@@ -455,22 +452,32 @@ public class WaveformViewer implements IWaveformViewer  {
 
 	private void updateValueList(){
 		final Long time = getCursorTime();
-		for(Entry<IWaveform<? extends IWaveformEvent>, String> entry:actualValues.entrySet()){
-			if(entry.getKey() instanceof ISignal){    
-				ISignalChange event = ((ISignal<?>)entry.getKey()).getWaveformEventsBeforeTime(time);
+		for(TrackEntry entry:streams){
+			if(entry.isSignal()){    
+				ISignalChange event = ((ISignal<?>)entry.waveform).getWaveformEventsBeforeTime(time);
 				if(event instanceof ISignalChangeBit){
-					entry.setValue("b'"+((ISignalChangeBit)event).getValue());
+					entry.currentValue="b'"+((ISignalChangeBit)event).getValue();
 				} else if(event instanceof ISignalChangeBitVector){
-					entry.setValue("h'"+((ISignalChangeBitVector)event).getValue().toHexString());
+					// TODO: same code resides in SignalPainter, fix it
+					switch(entry.valueDisplay) {
+					case SIGNED:
+						entry.currentValue=Long.toString(((ISignalChangeBitVector)event).getValue().toSignedValue());
+						break;						
+					case UNSIGNED:
+						entry.currentValue=Long.toString(((ISignalChangeBitVector)event).getValue().toUnsignedValue());
+						break;
+					default:
+						entry.currentValue="h'"+((ISignalChangeBitVector)event).getValue().toHexString();
+					}
 				} else if(event instanceof ISignalChangeReal){
 					double val = ((ISignalChangeReal)event).getValue();
 					if(val>0.001)
-						entry.setValue(String.format("%1$,.3f", val));
+						entry.currentValue=String.format("%1$,.3f", val);
 					else
-						entry.setValue(Double.toString(val));
+						entry.currentValue=Double.toString(val);
 				}
-			} else if(entry.getKey() instanceof ITxStream<?>){
-				ITxStream<?> stream = (ITxStream<?>) entry.getKey();
+			} else if(entry.isStream()){
+				ITxStream<?> stream = (ITxStream<?>) entry.waveform;
 				ITx[] resultsList = new ITx[stream.getMaxConcurrency()];
 				Entry<Long, List<ITxEvent>> firstTx=stream.getEvents().floorEntry(time);
 				if(firstTx!=null){
@@ -492,7 +499,7 @@ public class WaveformViewer implements IWaveformViewer  {
 							value+="|";
 						if(o!=null) value+=((ITx)o).getGenerator().getName();
 					}
-					entry.setValue(value);
+					entry.currentValue=value;
 				}
 			}
 		}
@@ -775,7 +782,7 @@ public class WaveformViewer implements IWaveformViewer  {
 			int newIdx=idx+i;
 			if(newIdx>=0 && newIdx<streams.size()){
 				Collections.swap(streams,idx,newIdx);
-				updateTracklist();
+				update();
 				if(selectedTx!=null){
 					setSelection(new StructuredSelection(new Object[]{selectedTx, selectedWaveform.waveform}));
 				} else
@@ -825,7 +832,7 @@ public class WaveformViewer implements IWaveformViewer  {
 					IWaveform<? extends IWaveformEvent> w = trackEntry.waveform;
 					if (w instanceof ITxStream<?>)
 						subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
-					drawValue(gc, subArea, firstKey, actualValues.get(w), trackEntry.selected);
+					drawValue(gc, subArea, firstKey, trackEntry.currentValue, trackEntry.selected);
 				} else {
 					for (Entry<Integer, TrackEntry> entry : trackVerticalOffset.subMap(firstKey, true, lastKey, true)
 							.entrySet()) {
@@ -833,7 +840,7 @@ public class WaveformViewer implements IWaveformViewer  {
 						subArea.height = waveformCanvas.getTrackHeight();
 						if (w instanceof ITxStream<?>)
 							subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
-						drawValue(gc, subArea, entry.getKey(), actualValues.get(w), entry.getValue().selected);
+						drawValue(gc, subArea, entry.getKey(), entry.getValue().currentValue, entry.getValue().selected);
 					}
 				}
 			}catch(NoSuchElementException e){}
@@ -1001,7 +1008,7 @@ public class WaveformViewer implements IWaveformViewer  {
 							else
 								streams.add(tgtIdx, srcWave);
 							currentWaveformSelection=srcWave;
-							updateTracklist();
+							update();
 						} else if(source instanceof CursorPainter){
 							((CursorPainter)source).setTime(0);
 							updateValueList();
