@@ -149,7 +149,6 @@ class VCDFileParser {
 		if (tokenizer.sval.charAt(0) == '#') {	// If the line begins with a #, this is a timestamp.
 			currentTime = Long.parseLong(tokenizer.sval.substring(1)) * picoSecondsPerIncrement;
 		} else {
-			boolean isReal=false;
 			if(tokenizer.sval.equals("$comment")){
 				do {
 					if (!nextToken()) return false;

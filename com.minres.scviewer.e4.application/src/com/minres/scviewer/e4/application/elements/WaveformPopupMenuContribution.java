@@ -27,7 +27,6 @@ import com.minres.scviewer.database.ISignalChange;
 import com.minres.scviewer.database.ISignalChangeBitVector;
 import com.minres.scviewer.database.ISignalChangeReal;
 import com.minres.scviewer.database.ui.TrackEntry;
-import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
 public class WaveformPopupMenuContribution {
