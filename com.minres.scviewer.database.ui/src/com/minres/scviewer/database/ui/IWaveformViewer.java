@@ -102,4 +102,6 @@ public interface IWaveformViewer extends PropertyChangeListener, ISelectionProvi
 	public long getBaselineTime();
 
 	public void setBaselineTime(Long scale);
+	
+	public void scrollHorizontal(int percent);
 }

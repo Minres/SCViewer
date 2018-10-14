@@ -32,6 +32,7 @@ import javax.inject.Named;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
@@ -56,12 +57,23 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseTrackListener;
+import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxRelation;
@@ -237,6 +249,117 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					selectionService.setSelection(event.getSelection());
 			}
 		});
+		waveformPane.getWaveformControl().addMouseTrackListener(new MouseTrackListener() {
+			
+			@Override
+			public void mouseHover(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseExit(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseEnter(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		waveformPane.getWaveformControl().addMouseWheelListener(new MouseWheelListener() {
+			
+			@Override
+			public void mouseScrolled(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		waveformPane.getWaveformControl().addListener(SWT.KeyDown, new Listener() {
+			
+			@Override
+			public void handleEvent(Event e) {
+				int state = e.stateMask & SWT.MODIFIER_MASK;
+				if(Platform.OS_MACOSX.equals(Platform.getOS())) { //swap cammnd and control for MacOSX
+					if((state&SWT.COMMAND)!=0) {
+						state&=~SWT.COMMAND;
+						state|=SWT.CONTROL;
+					} else if((state&SWT.CONTROL)!=0) {
+						state&=~SWT.CONTROL;
+						state|=SWT.COMMAND;
+					}
+				}
+				if(state==SWT.ALT) {
+					switch(e.keyCode) {
+					case SWT.ARROW_LEFT:
+						waveformPane.scrollHorizontal(-100);
+						return;
+					case SWT.ARROW_RIGHT:
+						waveformPane.scrollHorizontal(100);
+						return;
+					case SWT.KEYPAD_ADD:
+						return;
+					case SWT.KEYPAD_SUBTRACT:
+						return;
+					}
+				} else if(state==SWT.CTRL) {
+					int zoomlevel = waveformPane.getZoomLevel();
+					switch(e.keyCode) {
+					case '+':
+					case SWT.KEYPAD_ADD:
+						if(zoomlevel>0)
+							waveformPane.setZoomLevel(zoomlevel-1);
+						return;
+					case '-':
+					case SWT.KEYPAD_SUBTRACT:
+						if(zoomlevel<waveformPane.getZoomLevels().length-1)
+							waveformPane.setZoomLevel(zoomlevel+1);
+						return;
+					case SWT.ARROW_UP:
+						waveformPane.moveSelectedTrack(-1);
+						return;
+					case SWT.ARROW_DOWN:
+						waveformPane.moveSelectedTrack(1);
+						return;
+					}
+				} else if(state==SWT.SHIFT) {
+				} else {
+					switch(e.keyCode) {
+					case SWT.ARROW_LEFT:
+						waveformPane.scrollHorizontal(-10);
+						return;
+					case SWT.ARROW_RIGHT:
+						waveformPane.scrollHorizontal(10);
+						return;
+					case SWT.ARROW_UP:
+						waveformPane.moveSelection(GotoDirection.UP);
+						return;
+					case SWT.ARROW_DOWN:
+						waveformPane.moveSelection(GotoDirection.DOWN);
+						return;
+					case SWT.HOME:			return; //TODO: should be handled
+					case SWT.END:			return; //TODO: should be handled
+					}
+//					String string = e.type == SWT.KeyDown ? "DOWN:" : "UP  :";
+//					string += " stateMask=0x" + Integer.toHexString (e.stateMask) + ","; // SWT.CTRL, SWT.ALT, SWT.SHIFT, SWT.COMMAND
+//					string += " keyCode=0x" + Integer.toHexString (e.keyCode) + ",";
+//					string += " character=0x" + Integer.toHexString (e.character) ;
+//					if (e.keyLocation != 0) {
+//						string +=  " location=";
+//						if (e.keyLocation == SWT.LEFT) string +=  "LEFT";
+//						if (e.keyLocation == SWT.RIGHT) string +=  "RIGHT";
+//						if (e.keyLocation == SWT.KEYPAD) string +=  "KEYPAD";
+//					}
+//					System.out.println (string);
+				}
+
+			}
+		});
+		
 		zoomLevel = waveformPane.getZoomLevels();
 		setupColors();
 		checkForUpdates = prefs.getBoolean(PreferenceConstants.DATABASE_RELOAD, true);
@@ -485,6 +608,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		index = 0;
 		for (TrackEntry trackEntry : waveformPane.getStreamList()) {
 			persistedState.put(SHOWN_WAVEFORM + index, trackEntry.waveform.getFullName());
+			persistedState.put(SHOWN_WAVEFORM + index+".VALUE_DISPLAY", trackEntry.valueDisplay.toString());
+			persistedState.put(SHOWN_WAVEFORM + index+".WAVE_DISPLAY", trackEntry.waveDisplay.toString());
 			index++;
 		}
 		List<ICursor> cursors = waveformPane.getCursorList();
