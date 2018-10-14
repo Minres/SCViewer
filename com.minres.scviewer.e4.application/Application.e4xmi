@@ -142,7 +142,7 @@
       </children>
     </trimBars>
   </children>
-  <children xsi:type="basic:Dialog" xmi:id="_8BTkQIytEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.dialog.aboutscviewer" toBeRendered="false" visible="false" selectedElement="__VNlAIytEeWid7xO48ZBXw" label="About SCViewer" x="200" y="200">
+  <children xsi:type="basic:Window" xmi:id="_8BTkQIytEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.dialog.aboutscviewer" toBeRendered="false" visible="false" selectedElement="__VNlAIytEeWid7xO48ZBXw" label="About SCViewer" x="200" y="200">
     <children xsi:type="basic:Part" xmi:id="__VNlAIytEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.part.0" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.AboutDialog"/>
   </children>
   <handlers xmi:id="_95PfvXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.quitCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.QuitHandler" command="_95PfvHNmEeWBq8z1Dv39LA"/>

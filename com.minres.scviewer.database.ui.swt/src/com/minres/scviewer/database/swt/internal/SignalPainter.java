@@ -242,14 +242,12 @@ public class SignalPainter extends TrackPainter {
 	private class MultiBitStencilAnalog implements SignalStencil {
 
 		final boolean continous;
-		final boolean signed;
 		private long minVal;
 		private long range;
 
 		@SuppressWarnings("unchecked")
 		public MultiBitStencilAnalog(NavigableMap<Long, ? extends ISignalChange> entries, ISignalChange left, boolean continous, boolean signed) {
 			this.continous=continous;
-			this.signed=signed;
 			Collection<ISignalChangeBitVector> values = ((NavigableMap<Long, ISignalChangeBitVector>) entries).values();
 			minVal=((ISignalChangeBitVector) left).getValue().toUnsignedValue();
 			range=2;

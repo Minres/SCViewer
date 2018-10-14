@@ -347,12 +347,18 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 			addStreamToList(stream);
 	}
 
-	public void removeStreamFromList(IWaveform<? extends IWaveformEvent> obj){
-		if(getEditorInput() instanceof TxEditorInput && ((TxEditorInput) getEditorInput()).getStreamNames().contains(obj.getFullName())){
-			((TxEditorInput) getEditorInput()).getStreamNames().remove(obj.getFullName());
-			txDisplay.getStreamList().remove(obj);
-		} else
-			txDisplay.getStreamList().remove(obj);
+	public void removeStreamFromList(IWaveform<? extends IWaveformEvent> waveform){
+		if(getEditorInput() instanceof TxEditorInput && ((TxEditorInput) getEditorInput()).getStreamNames().contains(waveform.getFullName())){
+			((TxEditorInput) getEditorInput()).getStreamNames().remove(waveform.getFullName());
+		}
+		TrackEntry entry=null;
+		for(TrackEntry e:txDisplay.getStreamList()) {
+			if(e.waveform==waveform) {
+				entry=e;
+				break;
+			}
+		}
+		txDisplay.getStreamList().remove(entry);
 	}
 
 	public void removeStreamsFromList(IWaveform<? extends IWaveformEvent>[] iWaveforms){

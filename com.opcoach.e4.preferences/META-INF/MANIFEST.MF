@@ -16,3 +16,4 @@ Require-Bundle: javax.inject,
 Export-Package: com.opcoach.e4.preferences,
  com.opcoach.e4.preferences.handlers
 Bundle-ActivationPolicy: lazy
+Automatic-Module-Name: com.opcoach.e4.preferences
