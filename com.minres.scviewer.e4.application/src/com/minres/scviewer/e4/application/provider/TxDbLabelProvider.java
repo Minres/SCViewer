@@ -20,7 +20,7 @@ import org.eclipse.wb.swt.ResourceManager;
 
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ISignalChangeMulti;
+import com.minres.scviewer.database.ISignalChangeBitVector;
 import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.e4.application.parts.LoadingWaveformDb;
@@ -101,7 +101,7 @@ public class TxDbLabelProvider implements ILabelProvider {
 			return stream;
 		}else if(element instanceof ISignal<?>){
 			Object o = ((ISignal<?>)element).getEvents().firstEntry().getValue();
-			if(o instanceof ISignalChangeMulti)
+			if(o instanceof ISignalChangeBitVector)
 				return wave;
 			else 
 				return signal;

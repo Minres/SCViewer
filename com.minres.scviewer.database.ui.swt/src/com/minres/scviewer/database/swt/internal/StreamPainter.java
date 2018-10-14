@@ -110,6 +110,17 @@ public class StreamPainter extends TrackPainter{
 			gc.fillRectangle(bb);
 			gc.drawRectangle(bb);
 		} else {
+			// adjusting drawing width to circumvent issues in canvas algos
+			if(bb.x < area.x) {
+				bb.width = bb.width-(area.x-bb.x)+5;
+				bb.x=area.x-5;
+			}
+			int bb_x2 = bb.x+bb.width;
+			int area_x2 = area.x+area.width;
+			if(bb_x2>area_x2){
+				bb_x2=area_x2+5;
+				bb.width= bb_x2-bb.x;
+			}
 		    gc.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
 		    gc.drawRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
 		}

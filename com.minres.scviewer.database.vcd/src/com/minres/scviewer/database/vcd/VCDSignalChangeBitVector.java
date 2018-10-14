@@ -10,28 +10,34 @@
  *******************************************************************************/
 package com.minres.scviewer.database.vcd;
 
-import com.minres.scviewer.database.ISignalChangeSingle;
+import com.minres.scviewer.database.BitVector;
+import com.minres.scviewer.database.ISignalChangeBitVector;
 import com.minres.scviewer.database.SignalChange;
 
-public class VCDSignalChangeSingle extends SignalChange implements ISignalChangeSingle, Cloneable {
+public class VCDSignalChangeBitVector extends SignalChange implements ISignalChangeBitVector, Cloneable  {
 
-	private char value;
-
-	public VCDSignalChangeSingle(Long time, char value) {
+	private BitVector value;
+	
+	public VCDSignalChangeBitVector(Long time) {
 		super(time);
-		this.value=value;
 	}
 
-	public char getValue() {
+	public VCDSignalChangeBitVector(Long time, BitVector decodedValues) {
+		super(time);
+		this.value=decodedValues;
+	}
+
+	public BitVector getValue() {
 		return value;
 	}
-
-	public void setValue(char value) {
+	
+	public void setValue(BitVector value) {
 		this.value = value;
 	}
-	
+
 	@Override
 	public String toString() {
-		return value+"@"+getTime();
+		return value.toHexString()+"@"+getTime();
 	}
+
 }

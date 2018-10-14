@@ -45,6 +45,7 @@ $var wire    1  aaabd  s_gpio_29       $end
 $var wire    1  aaabe  s_gpio_30       $end
 $var wire    1  aaabf  s_gpio_31       $end
 $var wire    1  aaabg  s_rst_n       $end
+$var real    1  bbbbb  a_real        $end
 $scope module i_platform $end
 $var wire    1  aaabh  erst_n       $end
 $var wire   64  aabdc  s_tlclk [63:0]  $end
@@ -1621,6 +1622,7 @@ b1110100011010100101001010 aabdd
 0aabdv
 0aabdw
 0aabdx
+r0.0 bbbbb
 $end
 
 #10000
@@ -1638,6 +1640,28 @@ $end
 0aabcq
 0aabcy
 0aabde
+r1.0 bbbbb
+
+#20000
+r2.0 bbbbb
+
+#30000
+r2.5 bbbbb
+
+#40000
+r1.5 bbbbb
+
+#50000
+r-1.0 bbbbb
+
+#60000
+r-2.5 bbbbb
+
+#70000
+r-1.0 bbbbb
+
+#80000
+r0.0 bbbbb
 
 #1287121272
 b1000000000100000000000000000100 aabcr
