@@ -63,4 +63,49 @@ public class BitVector {
 		}
 		return new String(res);		
 	}
+	
+	public long toUnsignedValue() {
+		long res = 0;
+		for(char c:value) {
+			res<<=1;
+			switch (c) {
+			case VALUE_1:
+				res++;
+				break;
+			case VALUE_X:
+			case VALUE_Z:
+				return 0;
+			default:
+				break;
+			}
+		}
+		return res;
+	}
+	
+	public long toSignedValue() {
+		Boolean negative=null;
+		long res = 0;
+		for(char c:value) {
+			if(negative == null) {
+				switch (c) {
+				case VALUE_1: negative=true; break;
+				case VALUE_0: negative=false; break;
+				case VALUE_X:
+				case VALUE_Z: return 0;
+				default:
+				}				
+			} else {
+				res<<=1;
+				switch (c) {
+				case VALUE_1: if(!negative)	res++; break;
+				case VALUE_0: if(negative)	res++; break;
+				case VALUE_X:
+				case VALUE_Z: return 0;
+				default:
+				}
+			}
+		}
+		return negative?-1*(res+1):res;
+	}
 }
+

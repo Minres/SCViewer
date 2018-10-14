@@ -17,7 +17,17 @@ import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformEvent;
 
+
 public class TrackEntry {
+	public enum ValueDisplay {
+		DEFAULT, SIGNED, UNSIGNED
+
+	}
+
+	public enum WaveDisplay {
+		DEFAULT, STEP_WISE, CONTINOUS
+	}
+
 	final public IWaveform<? extends IWaveformEvent> waveform;
 
 	public int vOffset;
@@ -25,6 +35,12 @@ public class TrackEntry {
 	public int height;
 
 	public boolean selected;
+	
+	public String currentValue="";
+	
+	public ValueDisplay valueDisplay = ValueDisplay.DEFAULT;
+	
+	public WaveDisplay waveDisplay = WaveDisplay.DEFAULT;
 	
 	public TrackEntry(IWaveform<? extends IWaveformEvent> waveform) {
 		this.waveform = waveform;

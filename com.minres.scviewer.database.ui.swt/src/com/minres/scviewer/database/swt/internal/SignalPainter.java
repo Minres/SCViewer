@@ -67,7 +67,6 @@ public class SignalPainter extends TrackPainter {
 	private static final JPanel DUMMY_PANEL = new JPanel();
 
 	private final WaveformCanvas waveCanvas;
-	private ISignal<? extends ISignalChange> signal;
 
 	int yOffsetT;
 	int yOffsetM;
@@ -77,7 +76,6 @@ public class SignalPainter extends TrackPainter {
 	public SignalPainter(WaveformCanvas txDisplay, boolean even, TrackEntry trackEntry) {
 		super(trackEntry, even);
 		this.waveCanvas = txDisplay;
-		this.signal = trackEntry.getSignal();
 	}
 
 	private int getXEnd(long time) {
@@ -86,6 +84,7 @@ public class SignalPainter extends TrackPainter {
 	}
 
 	public void paintArea(GC gc, Rectangle area) {
+		ISignal<? extends ISignalChange> signal = trackEntry.getSignal();
 		if (trackEntry.selected)
 			gc.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()]);
 		else
@@ -156,9 +155,14 @@ public class SignalPainter extends TrackPainter {
 		if(left.value instanceof ISignalChangeBit)
 			return new SingleBitStencil();
 		else if (left.value instanceof ISignalChangeBitVector)
-			return new MultiBitStencil(gc);
+			if(trackEntry.waveDisplay==TrackEntry.WaveDisplay.DEFAULT)
+				return new MultiBitStencil(gc);
+			else
+				return new MultiBitStencilAnalog(entries, left.value, 
+						trackEntry.waveDisplay==TrackEntry.WaveDisplay.CONTINOUS,
+						trackEntry.valueDisplay==TrackEntry.ValueDisplay.SIGNED);
 		else if (left.value instanceof ISignalChangeReal)
-			return new RealStencil(entries, left.value);
+			return new RealStencil(entries, left.value, trackEntry.waveDisplay==TrackEntry.WaveDisplay.CONTINOUS);
 		else
 			return null;
 	}
@@ -200,7 +204,18 @@ public class SignalPainter extends TrackPainter {
 				gc.setForeground(colorBorder);
 				gc.drawPolygon(points);
 				gc.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_TEXT.ordinal()]);
-				String label = "h'" + last.getValue().toHexString();
+				//TODO: this code should be provided from a central location
+				String label = null;
+				switch(trackEntry.valueDisplay) {
+				case SIGNED:
+					label=Long.toString(last.getValue().toSignedValue());
+					break;
+				case UNSIGNED:
+					label=Long.toString(last.getValue().toUnsignedValue());
+					break;
+				default:
+					label="h'"+last.getValue().toHexString();
+				}
 				Point bb = getBoxWidth(gc, label);
 				if (xBegin < area.x) {
 					xBegin = area.x;
@@ -222,6 +237,62 @@ public class SignalPainter extends TrackPainter {
 			return new Point(DUMMY_PANEL.getFontMetrics(tmpAwtFont).stringWidth(label), height);
 		}
 
+	}
+
+	private class MultiBitStencilAnalog implements SignalStencil {
+
+		final boolean continous;
+		final boolean signed;
+		private long minVal;
+		private long range;
+
+		@SuppressWarnings("unchecked")
+		public MultiBitStencilAnalog(NavigableMap<Long, ? extends ISignalChange> entries, ISignalChange left, boolean continous, boolean signed) {
+			this.continous=continous;
+			this.signed=signed;
+			Collection<ISignalChangeBitVector> values = ((NavigableMap<Long, ISignalChangeBitVector>) entries).values();
+			minVal=((ISignalChangeBitVector) left).getValue().toUnsignedValue();
+			range=2;
+			if(!values.isEmpty()) {
+				long maxVal=minVal;
+				for (ISignalChange e : entries.values()) {
+					long v = ((ISignalChangeBitVector)e).getValue().toUnsignedValue();
+					maxVal=Math.max(maxVal, v);
+					minVal=Math.min(minVal, v);
+				}
+				if(maxVal==minVal) {
+					maxVal--;
+					minVal++;
+				}
+				range = maxVal-minVal;
+			} else
+				minVal--;
+			
+		}
+
+		public void draw(GC gc, Rectangle area, ISignalChange left, ISignalChange right, int xBegin, int xEnd, boolean multiple) {
+			long leftVal = ((ISignalChangeBitVector) left).getValue().toUnsignedValue();
+			long rightVal= ((ISignalChangeBitVector) right).getValue().toUnsignedValue();
+			gc.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_REAL.ordinal()]);
+			int yOffsetLeft = (int) ((leftVal-minVal) / range * (yOffsetB-yOffsetT));
+			int yOffsetRight = (int) ((rightVal-minVal) / range * (yOffsetB-yOffsetT));
+			if(continous) {
+				if (xEnd > maxX) {
+					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetRight);
+				} else {
+					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
+				}
+			} else {
+				if (xEnd > maxX) {
+					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetLeft);
+				} else {
+					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetLeft);
+					if(yOffsetRight!=yOffsetLeft) {
+						gc.drawLine(xEnd, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
+					}
+				}
+			}
+		}
 	}
 
 	private class SingleBitStencil implements SignalStencil {
@@ -269,49 +340,47 @@ public class SignalPainter extends TrackPainter {
 			}
 		}
 	}
-/*
+
 	private class RealStencil implements SignalStencil {
-		double min;
-		double max;
-		double diff;
+
+		double minVal, range;
 		
-		public RealStencil(ISignalChange value, NavigableMap<Long, ? extends ISignalChange> entries) {
-			min=((ISignalChangeReal) value).getValue();
-			max=min;
-			for (ISignalChange e : entries.values()) {
-				double v = ((ISignalChangeReal)e).getValue();
-				max= Double.isNaN(max)? v : Math.max(max, v);
-				min= Double.isNaN(min)? v : Math.min(min, v);
-			}
-			int nans = (Double.isNaN(max)?2:0) + (Double.isNaN(max)?1:0); 
-			switch(nans) {
-			case 0:
-				break;
-			case 1:
-				max=min;
-				break;
-			case 2:
-				min=max;
-			case 3:
-				max=min=0;
-			}
-			diff=max-min;
-			if(diff==0.0) {
-				if(max>0)
-					min=0.0;
-				else if(min<0.0)
-					max=0.0;
-				else {
-					max=1.0;
-					min=0.0;
+		final double scaleFactor = 1.05;
+		
+		boolean continous=true;
+		
+		@SuppressWarnings("unchecked")
+		public RealStencil(NavigableMap<Long, ? extends ISignalChange> entries, ISignalChange left, boolean continous) {
+			this.continous=continous;
+			Collection<ISignalChangeReal> values = ((NavigableMap<Long, ISignalChangeReal>) entries).values();
+			minVal=((ISignalChangeReal) left).getValue();
+			range=2.0;
+			if(!values.isEmpty()) {
+				double maxVal=minVal;
+				for (ISignalChange e : entries.values()) {
+					double v = ((ISignalChangeReal)e).getValue();
+					if(Double.isNaN(maxVal))
+						maxVal=v;
+					else if(!Double.isNaN(v))
+						maxVal=Math.max(maxVal, v);
+					if(Double.isNaN(minVal))
+						minVal=v;
+					else if(!Double.isNaN(v))
+						minVal=Math.min(minVal, v);
 				}
-				diff=max-min;
+				if(Double.isNaN(maxVal)){
+					maxVal=minVal=0.0;
+				}
+				range = (maxVal-minVal)*scaleFactor;
+				double avg = (maxVal+minVal)/2.0;
+				minVal=avg-(avg-minVal)*scaleFactor;
 			}
 		}
 
 		public void draw(GC gc, Rectangle area, ISignalChange left, ISignalChange right, int xBegin, int xEnd, boolean multiple) {
-			double value = ((ISignalChangeReal)left).getValue();
-			if(Double.isNaN(value)) {
+			double leftVal = ((ISignalChangeReal) left).getValue();
+			double rightVal= ((ISignalChangeReal) right).getValue();
+			if(Double.isNaN(leftVal)) {
 				Color color = waveCanvas.colors[WaveformColors.SIGNAL_NAN.ordinal()];
 				int width = xEnd - xBegin;
 				if (width > 1) {
@@ -329,82 +398,28 @@ public class SignalPainter extends TrackPainter {
 					gc.setForeground(color);
 					gc.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
 				}
-			} else {
-				Color color = waveCanvas.colors[WaveformColors.SIGNAL_ANALOG.ordinal()];
-				int height=yOffsetT-yOffsetB;
-				double offset=value-min;
-				int yOffset=diff>0?(int)(height*(offset/diff)) + yOffsetB:yOffsetM;
-				gc.setForeground(color);
-				if (xEnd > maxX) {
-					gc.drawLine(xBegin, yOffset, maxX, yOffset);
-				} else {
-					gc.drawLine(xBegin, yOffset, xEnd, yOffset);
-					double nextOffset = ((ISignalChangeReal)right).getValue()-min;
-					int yNext = diff>0?(int)(height*(nextOffset/diff)) + yOffsetB:height/2;
-					if (yOffset != yNext)
-						gc.drawLine(xEnd, yOffset, xEnd, yNext);
-				}
-			}
-		}
-	}
-*/
-	private class RealStencil implements SignalStencil {
-
-		double minVal, range;
-		
-		final double scaleFactor = 1.05;
-		
-		boolean stepWise=true;
-		
-		@SuppressWarnings("unchecked")
-		public RealStencil(NavigableMap<Long, ? extends ISignalChange> entries, ISignalChange left) {
-			Collection<ISignalChangeReal> values = ((NavigableMap<Long, ISignalChangeReal>) entries).values();
-			minVal=((ISignalChangeReal) left).getValue();
-			range=2.0;
-			if(!values.isEmpty()) {
-				double maxVal=minVal;
-				for(ISignalChangeReal v:values) {
-					minVal=Math.min(minVal, v.getValue());
-					maxVal=Math.max(maxVal, v.getValue());
-				}
-				range = (maxVal-minVal)*scaleFactor;
-				double avg = (maxVal+minVal)/2.0;
-				minVal=avg-(avg-minVal)*scaleFactor;
-			}
-		}
-
-		public void draw(GC gc, Rectangle area, ISignalChange left, ISignalChange right, int xBegin, int xEnd, boolean multiple) {
-			double leftVal = ((ISignalChangeReal) left).getValue();
-			double rightVal= ((ISignalChangeReal) right).getValue();
-//			if (multiple) {
-//				gc.setForeground(waveCanvas.colors[WaveformColors.SIGNALX.ordinal()]);
-//			} else {
+			} else {				
 				gc.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_REAL.ordinal()]);
-//			}
-			int yOffsetLeft = (int) ((leftVal-minVal) / range * (yOffsetB-yOffsetT));
-			int yOffsetRight = (int) ((rightVal-minVal) / range * (yOffsetB-yOffsetT));
-			if(stepWise) {
-				if (xEnd > maxX) {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetLeft);
+				int yOffsetLeft = (int) ((leftVal-minVal) / range * (yOffsetB-yOffsetT));
+				int yOffsetRight = Double.isNaN(rightVal)?yOffsetLeft:(int) ((rightVal-minVal) / range * (yOffsetB-yOffsetT));
+				if(continous) {
+					if (xEnd > maxX) {
+						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetRight);
+					} else {
+						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
+					}
 				} else {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetLeft);
-					if(yOffsetRight!=yOffsetLeft) {
-						gc.drawLine(xEnd, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
+					if (xEnd > maxX) {
+						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetLeft);
+					} else {
+						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetLeft);
+						if(yOffsetRight!=yOffsetLeft) {
+							gc.drawLine(xEnd, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
+						}
 					}
 				}
-				
-			} else {
-				if (xEnd > maxX) {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetRight);
-				} else {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
-				}
 			}
 		}
-	}
-
-	public ISignal<? extends ISignalChange> getSignal() {
-		return signal;
 	}
 
 }

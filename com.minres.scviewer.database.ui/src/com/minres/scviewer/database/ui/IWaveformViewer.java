@@ -34,6 +34,8 @@ public interface IWaveformViewer extends PropertyChangeListener, ISelectionProvi
 	public void addSelectionChangedListener(ISelectionChangedListener listener);
 
 	public void removeSelectionChangedListener(ISelectionChangedListener listener);
+	
+	public void update();
 
 	public Control getControl();
 
