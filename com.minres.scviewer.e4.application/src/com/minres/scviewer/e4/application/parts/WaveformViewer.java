@@ -33,7 +33,6 @@ import javax.inject.Named;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
@@ -282,6 +281,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		
 		waveformPane.getWaveformControl().addListener(SWT.KeyDown, new Listener() {
 			
+			@SuppressWarnings("null")
 			@Override
 			public void handleEvent(Event e) {
 				if(e==null) { // dummy to take out logging
