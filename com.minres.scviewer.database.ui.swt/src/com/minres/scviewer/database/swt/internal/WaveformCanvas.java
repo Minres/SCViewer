@@ -41,6 +41,7 @@ import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.ui.IWaveformViewer;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
@@ -56,11 +57,7 @@ public class WaveformCanvas extends Canvas {
     String unit="ns";
     
     private int level = 12;
-    
-    public final static String[] unitString={"fs", "ps", "ns", "us", "ms"};//, "s"};
-    
-    public final static int[] unitMultiplier={1, 3, 10, 30, 100, 300};
-    
+        
     private long maxTime;
     
     protected Point origin; /* original size */
@@ -225,12 +222,12 @@ public class WaveformCanvas extends Canvas {
     }
     
     public int getMaxZoomLevel(){
-    	return unitMultiplier.length*unitString.length-1;
+    	return Constants.unitMultiplier.length*Constants.unitString.length-1;
     }
 
     public void setZoomLevel(int level) {
     	long oldScaleFactor=scaleFactor;
-    	if(level<unitMultiplier.length*unitString.length){
+    	if(level<Constants.unitMultiplier.length*Constants.unitString.length){
     		this.level = level;
     		this.scaleFactor = (long) Math.pow(10, level/2);
     		if(level%2==1) this.scaleFactor*=3;
@@ -262,17 +259,17 @@ public class WaveformCanvas extends Canvas {
     }
 
     public long getScaleFactorPow10() {
-    	int scale = level/unitMultiplier.length;
+    	int scale = level/Constants.unitMultiplier.length;
     	double res = Math.pow(1000, scale);
     	return (long) res;
     }
 
     public String getUnitStr(){
-        return unitString[level/unitMultiplier.length];
+        return Constants.unitString[level/Constants.unitMultiplier.length];
     }
      
     public int getUnitMultiplier(){
-        return unitMultiplier[level%unitMultiplier.length];
+        return Constants.unitMultiplier[level%Constants.unitMultiplier.length];
     }
     
     public long getTimeForOffset(int xOffset){

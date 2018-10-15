@@ -75,6 +75,7 @@ import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.swt.WaveformViewerFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
@@ -865,12 +866,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		updateAll();
 	}
 
-    //FIXME: need to use unitString and unitMultiplier from class WaveformCanvas which is located in >com.minres.scviewer.database.swt.internal.
-	//Trying to import com.minres.scviewer.database.swt.internal.WaveformCanvas results in the error:
-	//'Access restriction: The type 'WaveformCanvas' is not API (restriction on required project 'com.minres.scviewer.database.ui.swt')'.
-	public final static String[] unitString={"fs", "ps", "ns", "�s", "ms"};//, "s"};
-    public final static int[] unitMultiplier={1, 3, 10, 30, 100, 300};
-	
 	/**
 	 * Sets the zoom fit.
 	 */
@@ -882,15 +877,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		//get area actually capable of displaying data, i.e. area of the receiver which is capable of displaying data
 		Rectangle clientArea = myParent.getClientArea();
 		long clientAreaWidth = clientArea.width;
-		
-		//System.out.println("ZoomLevel[] Array (Length " + zoomLevel.length + "): " + Arrays.toString(zoomLevel));
-		//System.out.println("ClientArea myParent: " + myParent.getClientArea());
-		//System.out.println("MaxTime: " + maxTime);
-		//System.out.println("clientAreaWidth: " + clientAreaWidth);
-		
+				
     	boolean foundZoom=false;
 		//try to find existing zoomlevel where scaleFactor*clientAreaWidth >= maxTime, if one is found set it as new zoomlevel
-		for (int level=0; level<unitMultiplier.length*unitString.length; level++){
+		for (int level=0; level<Constants.unitMultiplier.length*Constants.unitString.length; level++){
 			long scaleFactor = (long) Math.pow(10, level/2);
 		    if(level%2==1) scaleFactor*=3;
 		    if(scaleFactor*clientAreaWidth >= maxTime) {
@@ -900,7 +890,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		    }
 		}
 		//if no zoom level is found, set biggest one available
-		if(!foundZoom) setZoomLevel(unitMultiplier.length*unitString.length-1);
+		if(!foundZoom) setZoomLevel(Constants.unitMultiplier.length*Constants.unitString.length-1);
 				
 		updateAll();
 	}
