@@ -32,7 +32,7 @@ import com.minres.scviewer.e4.application.parts.WaveformViewer;
 /**
  * The Class NavigateContribution. Currently not used in Application.e4xmi
  */
-public class NavigateContribution {
+public class NavigateToolbarContribution {
 	
 	/** The part service. */
 	@Inject EPartService partService;

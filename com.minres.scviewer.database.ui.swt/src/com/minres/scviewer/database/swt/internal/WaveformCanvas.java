@@ -42,6 +42,7 @@ import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.ui.IWaveformViewer;
+import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
 
 public class WaveformCanvas extends Canvas {
@@ -126,6 +127,31 @@ public class WaveformCanvas extends Canvas {
 		painterList.add(marker);
 		cursorPainters.add(marker);
 		wave2painterMap=new HashMap<>();
+    	// fall back initialization
+        colors[WaveformColors.LINE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
+        colors[WaveformColors.LINE_HIGHLITE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_CYAN);
+        colors[WaveformColors.TRACK_BG_EVEN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_BLACK);
+        colors[WaveformColors.TRACK_BG_ODD.ordinal()] = SWTResourceManager.getColor(40, 40, 40);
+        colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()] = SWTResourceManager.getColor(40, 40, 80);
+        colors[WaveformColors.TX_BG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
+        colors[WaveformColors.TX_BG_HIGHLITE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GREEN);
+        colors[WaveformColors.TX_BORDER.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
+        colors[WaveformColors.SIGNAL0.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
+        colors[WaveformColors.SIGNAL1.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
+        colors[WaveformColors.SIGNALZ.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_YELLOW);
+        colors[WaveformColors.SIGNALX.ordinal()] = SWTResourceManager.getColor(255,  51,  51);
+        colors[WaveformColors.SIGNALU.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
+        colors[WaveformColors.SIGNAL_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
+        colors[WaveformColors.SIGNAL_REAL.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
+        colors[WaveformColors.SIGNAL_NAN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
+        colors[WaveformColors.CURSOR.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
+        colors[WaveformColors.CURSOR_DRAG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GRAY);
+        colors[WaveformColors.CURSOR_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
+        colors[WaveformColors.MARKER.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GRAY);
+        colors[WaveformColors.MARKER_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
+        colors[WaveformColors.REL_ARROW.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_MAGENTA);
+        colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()] = SWTResourceManager.getColor(255, 128, 255);
+
     }
 
 	public void addCursoPainter(CursorPainter cursorPainter){
@@ -137,35 +163,10 @@ public class WaveformCanvas extends Canvas {
         Display d = getDisplay();
         if (colourMap != null) {
             for (WaveformColors c : WaveformColors.values()) {
-                if (colourMap.containsKey(c)) {
+                if (colourMap.containsKey(c))
                     colors[c.ordinal()] = new Color(d, colourMap.get(c));
-                }
             }
             redraw();
-        } else {
-            colors[WaveformColors.LINE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-            colors[WaveformColors.LINE_HIGHLITE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_CYAN);
-            colors[WaveformColors.TRACK_BG_EVEN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_BLACK);
-            colors[WaveformColors.TRACK_BG_ODD.ordinal()] = SWTResourceManager.getColor(40, 40, 40);
-            colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()] = SWTResourceManager.getColor(40, 40, 80);
-            colors[WaveformColors.TX_BG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
-            colors[WaveformColors.TX_BG_HIGHLITE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GREEN);
-            colors[WaveformColors.TX_BORDER.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-            colors[WaveformColors.SIGNAL0.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GREEN);
-            colors[WaveformColors.SIGNAL1.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GREEN);
-            colors[WaveformColors.SIGNALZ.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_YELLOW);
-            colors[WaveformColors.SIGNALX.ordinal()] = SWTResourceManager.getColor(255,  51,  51);
-            colors[WaveformColors.SIGNALU.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
-            colors[WaveformColors.SIGNAL_ANALOG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
-            colors[WaveformColors.SIGNAL_NAN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-            colors[WaveformColors.SIGNAL_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
-            colors[WaveformColors.CURSOR.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-            colors[WaveformColors.CURSOR_DRAG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GRAY);
-            colors[WaveformColors.CURSOR_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
-            colors[WaveformColors.MARKER.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GRAY);
-            colors[WaveformColors.MARKER_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
-            colors[WaveformColors.REL_ARROW.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_MAGENTA);
-            colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()] = SWTResourceManager.getColor(255, 128, 255);
         }
     }
 
@@ -181,6 +182,9 @@ public class WaveformCanvas extends Canvas {
         return origin;
     }
 
+    public int getWidth() {
+    	return getClientArea().width; 
+    }
     public void setOrigin(Point origin) {
         setOrigin(origin.x, origin.y);
     }
@@ -292,9 +296,13 @@ public class WaveformCanvas extends Canvas {
     }
 
     public void addWaveformPainter(IWaveformPainter painter) {
+    	addWaveformPainter(painter, true);
+    }
+    
+    void addWaveformPainter(IWaveformPainter painter, boolean update) {
         trackAreaPainter.addTrackPainter(painter);
         wave2painterMap.put(painter.getTrackEntry().waveform, painter);
-        syncScrollBars();
+        if(update) syncScrollBars();
     }
 
     public List<CursorPainter> getCursorPainters() {
@@ -311,7 +319,7 @@ public class WaveformCanvas extends Canvas {
         super.dispose();
     }
 
-    /* Initalize the scrollbar and register listeners. */
+    /* Initialize the scrollbar and register listeners. */
     private void initScrollBars() {
         ScrollBar horizontal = getHorizontalBar();
         horizontal.setEnabled(false);
@@ -469,6 +477,27 @@ public class WaveformCanvas extends Canvas {
         }
     }
     
+	public void reveal(IWaveform<? extends IWaveformEvent> waveform) {
+        for (IWaveformPainter painter : wave2painterMap.values()) {
+        	TrackEntry te = painter.getTrackEntry();
+        	if(te.waveform == waveform) {
+                Point size = getSize();
+                //size.x -= getVerticalBar().getSize().x + 2;
+                size.y -=+rulerHeight;
+                ScrollBar sb = getHorizontalBar();
+                if((sb.getStyle()&SWT.SCROLLBAR_OVERLAY)!=0 && sb.isVisible()) // TODO: check on other platform than MacOSX
+                	size.y-=  getHorizontalBar().getSize().y;
+                int top = te.vOffset;
+                int bottom = top + trackHeight;
+                if (top < -origin.y) {
+                    setOrigin(origin.x, -(top-trackHeight));
+                } else if (bottom > (size.y - origin.y)) {
+                    setOrigin(origin.x, size.y - bottom);
+                }
+            }
+        }
+	}
+
     public void reveal(long time) {
         int scaledTime = (int) (time / scaleFactor);
         Point size = getSize();
@@ -513,4 +542,11 @@ public class WaveformCanvas extends Canvas {
         }
     }
 
+    long getMaxVisibleTime() {
+    	return (getClientArea().width+origin.x)*scaleFactor;
+    }
+
+    long getOriginTime() {
+    	return origin.x * scaleFactor;
+    }
 }

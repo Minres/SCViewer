@@ -133,7 +133,7 @@ public class AboutDialog extends Dialog {
 				// links are activated on mouse down when the control key is held down 
 //				if ((event.stateMask & SWT.MOD1) != 0) {
 					try {
-						int offset = ((StyledText)event.widget).getOffsetAtLocation(new Point (event.x, event.y));
+						int offset = ((StyledText)event.widget).getOffsetAtPoint(new Point (event.x, event.y));
 						StyleRange style = ((StyledText)event.widget).getStyleRangeAtOffset(offset);
 						if (style != null && style.underline && style.underlineStyle == SWT.UNDERLINE_LINK) {
 							Desktop.getDesktop().browse(new java.net.URI(style.data.toString()));

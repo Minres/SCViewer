@@ -61,9 +61,11 @@ class VCDFileParser {
 
 	private void parseVar() throws Exception {
 		nextToken(); // type
+		String type = tokenizer.sval;
 		nextToken(); // size
 		int width = Integer.parseInt(tokenizer.sval);
-
+		if("real".equals(type))
+			width*=-1;
 		nextToken();
 		String id = tokenizer.sval;
 		nextToken();
@@ -147,14 +149,14 @@ class VCDFileParser {
 		if (tokenizer.sval.charAt(0) == '#') {	// If the line begins with a #, this is a timestamp.
 			currentTime = Long.parseLong(tokenizer.sval.substring(1)) * picoSecondsPerIncrement;
 		} else {
-			boolean isReal=false;
 			if(tokenizer.sval.equals("$comment")){
 				do {
 					if (!nextToken()) return false;
 				} while (!tokenizer.sval.equals("$end"));
 				return true;
 			}
-			if (tokenizer.sval.equals("$dumpvars") || tokenizer.sval.equals("$end")) return true;
+			if (tokenizer.sval.equals("$dumpvars") || tokenizer.sval.equals("$end"))
+				return true;
 			String value, id;
 			if (tokenizer.sval.charAt(0) == 'b') {
 				// Multiple value net. Value appears first, followed by space,
@@ -162,13 +164,12 @@ class VCDFileParser {
 				value = tokenizer.sval.substring(1);
 				nextToken();
 				id = tokenizer.sval;
-			} else if (tokenizer.sval.charAt(0) == 'r') {
-				// real value net. Value appears first, followed by space,
-				// then identifier
-				value = tokenizer.sval.substring(1);
-				nextToken();
-				id = tokenizer.sval;
-				isReal=true;
+			}else if (tokenizer.sval.charAt(0) == 'r') {
+					// Multiple value net. Value appears first, followed by space,
+					// then identifier
+					value = tokenizer.sval.substring(1);
+					nextToken();
+					id = tokenizer.sval;
 			} else {
 				// Single value net. identifier first, then value, no space.
 				value = tokenizer.sval.substring(0, 1);
@@ -181,14 +182,10 @@ class VCDFileParser {
 				return true;
 			}
 
-			if(isReal) {
-				if("nan".equals(value)) {
-					traceBuilder.appendTransition(net, currentTime, Double.NaN);
-				} else {
-					traceBuilder.appendTransition(net, currentTime, Double.parseDouble(value));
-				}
+			int netWidth = traceBuilder.getNetWidth(net);
+			if(netWidth<0) {
+				traceBuilder.appendTransition(net, currentTime, Double.parseDouble(value));
 			} else {
-				int netWidth = traceBuilder.getNetWidth(net);
 				BitVector decodedValues = new BitVector(netWidth);
 				if (value.equals("z") && netWidth > 1) {
 					for (int i = 0; i < netWidth; i++)
@@ -221,7 +218,10 @@ class VCDFileParser {
 						}
 					}
 				}
-				traceBuilder.appendTransition(net, currentTime, decodedValues);
+				if(netWidth==1)
+					traceBuilder.appendTransition(net, currentTime, decodedValues.getValue()[0]);
+				else
+					traceBuilder.appendTransition(net, currentTime, decodedValues);
 			}
 		}
 		return true;
