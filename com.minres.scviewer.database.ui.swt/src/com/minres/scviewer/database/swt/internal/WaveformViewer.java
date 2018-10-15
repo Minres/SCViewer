@@ -219,7 +219,7 @@ public class WaveformViewer implements IWaveformViewer  {
 		nameFontB = SWTResourceManager.getBoldFont(nameFont);
 
 		streams = new ObservableList<>();
-		streams.addPropertyChangeListener(this);
+		streams.addPropertyChangeListener("content", this);
 
 		top = new Composite(parent, SWT.NONE);
 		top.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -381,22 +381,21 @@ public class WaveformViewer implements IWaveformViewer  {
 				});
 				revealSelected=false;
 			} else 
-			waveformCanvas.getDisplay().asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					update();
-				}
-			});
+				waveformCanvas.getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run() {
+						update();
+					}
+				});
 		}
 	}
 
 	public void update() {
 		trackVerticalHeight = 0;
 		int nameMaxWidth = 0;
-		int previousHeight = trackVerticalOffset.size() == 0 ? 0 : trackVerticalOffset.lastKey();
 		IWaveformPainter painter = null;
 		trackVerticalOffset.clear();
-		waveformCanvas.clearAllWaveformPainter();
+		waveformCanvas.clearAllWaveformPainter(false);
 		boolean even = true;
 		boolean clearSelection = true;
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
@@ -431,16 +430,8 @@ public class WaveformViewer implements IWaveformViewer  {
 		top.layout(new Control[] { valueList, nameList, waveformCanvas });
 		if (trackVerticalOffset.isEmpty()){
 			waveformCanvas.setOrigin(0, 0);
-		}else if(previousHeight > trackVerticalOffset.lastKey()){
-			Point o = waveformCanvas.getOrigin();
-			waveformCanvas.setOrigin(o.x, o.y - (previousHeight - trackVerticalOffset.lastKey()));
 		}
 		if(clearSelection) setSelection(new StructuredSelection());
-		/*        System.out.println("updateTracklist() state:");
-        for(Entry<Integer, IWaveform<? extends IWaveformEvent>> entry: trackVerticalOffset.entrySet()){
-        	System.out.println("    "+entry.getKey()+": " +entry.getValue().getFullName());
-        }
-		 */    
 	}
 
 	private int calculateValueWidth() {
@@ -629,7 +620,7 @@ public class WaveformViewer implements IWaveformViewer  {
 		}
 		if(currentWaveformSelection!=null) currentWaveformSelection.selected=true;
 		if (selectionChanged) {
-			waveformCanvas.reveal(currentWaveformSelection.waveform);
+			if(currentWaveformSelection!=null) waveformCanvas.reveal(currentWaveformSelection.waveform);
 			waveformCanvas.setSelected(currentTxSelection);
 			valueList.redraw();
 			nameList.redraw();

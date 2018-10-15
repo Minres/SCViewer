@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackListener;
@@ -282,30 +284,18 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			
 			@Override
 			public void handleEvent(Event e) {
-				int state = e.stateMask & SWT.MODIFIER_MASK;
-				if(Platform.OS_MACOSX.equals(Platform.getOS())) { //swap cammnd and control for MacOSX
-					if((state&SWT.COMMAND)!=0) {
-						state&=~SWT.COMMAND;
-						state|=SWT.CONTROL;
-					} else if((state&SWT.CONTROL)!=0) {
-						state&=~SWT.CONTROL;
-						state|=SWT.COMMAND;
+				if(e==null) { // dummy to take out logging
+					String string = e.type == SWT.KeyDown ? "DOWN:" : "UP  :";
+					string += " stateMask=0x" + Integer.toHexString (e.stateMask) + ","; // SWT.CTRL, SWT.ALT, SWT.SHIFT, SWT.COMMAND
+					string += " keyCode=0x" + Integer.toHexString (e.keyCode) + ",";
+					string += " character=0x" + Integer.toHexString (e.character) ;
+					if (e.keyLocation != 0) {
+						string +=  " location="+e.keyLocation;
 					}
+					System.out.println (string);
 				}
-				if(state==SWT.ALT) {
-					switch(e.keyCode) {
-					case SWT.ARROW_LEFT:
-						waveformPane.scrollHorizontal(-100);
-						return;
-					case SWT.ARROW_RIGHT:
-						waveformPane.scrollHorizontal(100);
-						return;
-					case SWT.KEYPAD_ADD:
-						return;
-					case SWT.KEYPAD_SUBTRACT:
-						return;
-					}
-				} else if(state==SWT.CTRL) {
+				if((e.stateMask&SWT.MOD3)!=0) { // Alt key
+				} else if((e.stateMask&SWT.MOD1)!=0) { //Ctrl/Cmd
 					int zoomlevel = waveformPane.getZoomLevel();
 					switch(e.keyCode) {
 					case '+':
@@ -325,7 +315,15 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						waveformPane.moveSelectedTrack(1);
 						return;
 					}
-				} else if(state==SWT.SHIFT) {
+				} else if((e.stateMask&SWT.MOD2)!=0) { //Shift
+					switch(e.keyCode) {
+					case SWT.ARROW_LEFT:
+						waveformPane.scrollHorizontal(-100);
+						return;
+					case SWT.ARROW_RIGHT:
+						waveformPane.scrollHorizontal(100);
+						return;
+					}
 				} else {
 					switch(e.keyCode) {
 					case SWT.ARROW_LEFT:
@@ -344,7 +342,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					case SWT.END:			return; //TODO: should be handled
 					}
 				}
-
 			}
 		});
 		
@@ -800,7 +797,24 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	public void removeStreamFromList(IWaveform<? extends IWaveformEvent> stream) {
 		TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
-		waveformPane.getStreamList().remove(trackEntry);
+		List<TrackEntry> streams = waveformPane.getStreamList();
+		ISelection sel = waveformPane.getSelection();
+		TrackEntry newSelection=null;
+		if(sel instanceof IStructuredSelection && ((IStructuredSelection) sel).size()==2) {
+				Iterator<?> it = ((IStructuredSelection)sel).iterator();
+				it.next();
+				int idx = streams.indexOf(it.next());
+				if(idx==streams.size()-1)
+					newSelection=streams.get(idx-1);
+				else
+					newSelection=streams.get(idx+1);
+		}
+		waveformPane.setSelection(new StructuredSelection());
+		streams.remove(trackEntry);
+		if(newSelection!=null) {
+			Object[] o = {newSelection};
+			waveformPane.setSelection(new StructuredSelection(o));
+		}
 	}
 
 	/**
