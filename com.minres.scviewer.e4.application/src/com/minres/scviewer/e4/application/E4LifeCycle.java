@@ -33,6 +33,10 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
+import com.minres.scviewer.e4.application.options.Options;
+import com.minres.scviewer.e4.application.options.Options.Multiplicity;
+import com.minres.scviewer.e4.application.options.Options.Separator;
+
 /**
  * This implementation contains e4 LifeCycle annotated methods.<br />
  * There is a corresponding entry in <em>plugin.xml</em> (under the
@@ -59,18 +63,29 @@ public class E4LifeCycle {
 	 */
 	@PostContextCreate
 	void postContextCreate(IApplicationContext appContext, final IEventBroker eventBroker) {
-		final String[] args = (String[])appContext.getArguments().get(IApplicationContext.APPLICATION_ARGS); 
+		final String[] args = (String[])appContext.getArguments().get(IApplicationContext.APPLICATION_ARGS);
+		Options opt = new Options(args, 0);
+		opt.getSet()
+			.addOption("clearPersistedState", Multiplicity.ZERO_OR_ONE)
+			.addOption("c", Separator.BLANK, Multiplicity.ZERO_OR_ONE);
+		if (!opt.check(Options.DEFAULT_SET, true, false)) {
+			System.err.println(opt.getCheckErrors());
+			System.exit(1);
+		}
+		final String confFile =opt.getSet().isSet("c")?opt.getSet().getOption("c").getResultValue(0):"";
+
 		// react on the first view being created, at that time the UI is available
 		eventBroker.subscribe(UIEvents.UILifeCycle.ACTIVATE, new EventHandler() {
 			@Override
 			public void handleEvent(Event event) {
-				MPart part = (MPart) event.getProperty("ChangedElement");
+				MPart part = (MPart) event.getProperty("ChangedElement"); //$NON-NLS-1$
 				if(part!=null){
 					IEclipseContext ctx = part.getContext();
 					OpenViewHandler openViewHandler= new OpenViewHandler();
+					if(confFile.length()>0) openViewHandler.setConfigFile(confFile);
 					ContextInjectionFactory.inject(openViewHandler, ctx);
 					eventBroker.unsubscribe(this);
-					for(String name:args){
+					for(String name:opt.getSet().getData()){
 						if(new File(name).exists())	openViewHandler.openViewForFile(name);
 					}
 				}
@@ -115,7 +130,7 @@ public class E4LifeCycle {
 		StringBuilder sb = new StringBuilder();
 		boolean first=true;
 		for(String token:tokens){
-			if(!first) sb.append(",");
+			if(!first) sb.append(","); //$NON-NLS-1$
 			sb.append(token);
 			first=false;
 		}
@@ -136,6 +151,7 @@ public class E4LifeCycle {
 		/** The part service. */
 		@Inject EPartService partService;
 		
+		String confFile="";
 		/**
 		 * Open view for file.
 		 *
@@ -143,14 +159,20 @@ public class E4LifeCycle {
 		 */
 		public void openViewForFile(String name){
 			File file = new File(name);
-			MPart part = partService.createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer");
+			MPart part = partService.createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
 			part.setLabel(file.getName());
-			MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app);
+			MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
 			partStack.getChildren().add(part);
 			partService.showPart(part, PartState.ACTIVATE);
 			IEclipseContext ctx=part.getContext();
-			ctx.modify("input", file);
-			ctx.declareModifiable("input");
+			ctx.modify("input", file); //$NON-NLS-1$
+			//ctx.declareModifiable("input"); //$NON-NLS-1$
+			ctx.modify("config", confFile); //$NON-NLS-1$
+			//ctx.declareModifiable("config"); //$NON-NLS-1$				
+		}
+
+		public void setConfigFile(String confFile) {
+			this.confFile=confFile;
 		}
 	}
 }

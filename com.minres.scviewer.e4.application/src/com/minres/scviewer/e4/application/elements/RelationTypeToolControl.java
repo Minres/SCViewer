@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.parts.PartListener;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
@@ -49,7 +50,7 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 	WaveformViewer waveformViewerPart;
 	
 	/** The dummy. */
-	RelationType dummy = RelationType.create("------------");
+	RelationType dummy = RelationType.create(Messages.RelationTypeToolControl_0);
 	
 	/**
 	 * Instantiates a new relation type tool control.
@@ -72,7 +73,7 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 	    comboViewer = new ComboViewer(parent, SWT.NONE);
 	    Combo comboBox = comboViewer.getCombo();
 	    comboBox.setBounds(0, 0, 26, 22);
-	    comboBox.setText("Select");
+	    comboBox.setText(Messages.RelationTypeToolControl_1);
 	    comboViewer.setContentProvider(new ArrayContentProvider());
 	    comboViewer.setInput(new RelationType[] {dummy});
 	    comboViewer.setSelection(new StructuredSelection(dummy));

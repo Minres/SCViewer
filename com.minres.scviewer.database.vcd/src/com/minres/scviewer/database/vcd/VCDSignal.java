@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.vcd;
 
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -106,7 +107,11 @@ public class VCDSignal<T extends ISignalChange> extends HierNode implements ISig
 
     @Override
     public T getWaveformEventsBeforeTime(Long time) {
-        return  values.floorEntry(time).getValue();
+    	Entry<Long, T> e = values.floorEntry(time);
+    	if(e==null)
+    		return null;
+    	else
+    		return  values.floorEntry(time).getValue();
     }
 
 	@Override

@@ -11,6 +11,7 @@ import java.util.Comparator;
 /**
  * Various utilities used in JDBM
  */
+@SuppressWarnings("rawtypes")
 class Utils {
 
     /**
@@ -45,8 +46,9 @@ class Utils {
     /**
      * Compares comparables. Default comparator for most of java types
      */
-    static final Comparator COMPARABLE_COMPARATOR = new Comparator<Comparable>() {
-        public int compare(Comparable o1, Comparable o2) {
+	static final Comparator COMPARABLE_COMPARATOR = new Comparator<Comparable>() {
+        @SuppressWarnings("unchecked")
+		public int compare(Comparable o1, Comparable o2) {
             return o1 == null && o2 != null ? -1 : (o1 != null && o2 == null ? 1 : o1.compareTo(o2));
         }
     };
@@ -72,7 +74,8 @@ class Utils {
     }
 
     
-    static <E> E max(E e1, E e2, Comparator comp){
+    @SuppressWarnings("unchecked")
+	static <E> E max(E e1, E e2, Comparator comp){
         if(e1 == null) return e2;
         if(e2 == null) return e1;
 
@@ -81,7 +84,8 @@ class Utils {
         return comp.compare(e1,e2)<0 ? e2:e1;
     }
 
-    static <E> E min(E e1, E e2, Comparator comp){
+    @SuppressWarnings("unchecked")
+	static <E> E min(E e1, E e2, Comparator comp){
         if(e1 == null) return e2;
         if(e2 == null) return e1;
 

@@ -22,7 +22,7 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService;
  */
 @SuppressWarnings("restriction")
 public class ThemeSetHandler {
-	final static String PARAMTER_ID = "com.minres.scviewer.e4.application.command.theme.parameter.id";
+	final static String PARAMTER_ID = "com.minres.scviewer.e4.application.command.theme.parameter.id"; //$NON-NLS-1$
 
 	@CanExecute
 	public boolean canExecute(EPartService partService) {

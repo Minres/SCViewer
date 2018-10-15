@@ -32,7 +32,7 @@ import com.minres.scviewer.e4.application.parts.WaveformViewer;
 /**
  * The Class NavigateContribution. Currently not used in Application.e4xmi
  */
-public class NavigateContribution {
+public class NavigateToolbarContribution {
 	
 	/** The part service. */
 	@Inject EPartService partService;
@@ -54,7 +54,7 @@ public class NavigateContribution {
 			WaveformViewer waveformViewerPart = (WaveformViewer) part.getObject();
 			RelationType relationTypeFilter = waveformViewerPart.getRelationTypeFilter();
 			MCommand command = modelService.findElements(application, 
-					"com.minres.scviewer.e4.application.command.setrelationtype", MCommand.class, null).get(0);
+					"com.minres.scviewer.e4.application.command.setrelationtype", MCommand.class, null).get(0); //$NON-NLS-1$
 			MCommandParameter commandParameter = command.getParameters().get(0);
 			for(RelationType relationType:waveformViewerPart.getAllRelationTypes()){
 //				MDirectMenuItem dynamicItem = modelService.createModelElement(MDirectMenuItem.class);
@@ -69,15 +69,15 @@ public class NavigateContribution {
 				MParameter parameter=modelService.createModelElement(MParameter.class);
 				parameter.setName(commandParameter.getElementId());
 				parameter.setValue(relationType.getName());
-				parameter.setContributorURI("platform:/plugin/com.minres.scviewer.e4.application");
+				parameter.setContributorURI("platform:/plugin/com.minres.scviewer.e4.application"); //$NON-NLS-1$
 				MHandledMenuItem handledMenuItem= modelService.createModelElement(MHandledMenuItem.class);
 				handledMenuItem.setLabel(relationType.getName());
 				if(relationTypeFilter.equals(relationType)){
 					handledMenuItem.setEnabled(false);
-					handledMenuItem.setIconURI("platform:/plugin/com.minres.scviewer.e4.application/icons/tick.png");
+					handledMenuItem.setIconURI("platform:/plugin/com.minres.scviewer.e4.application/icons/tick.png"); //$NON-NLS-1$
 				}else
-					handledMenuItem.setIconURI("platform:/plugin/com.minres.scviewer.e4.application/icons/empty.png");
-				handledMenuItem.setContributorURI("platform:/plugin/com.minres.scviewer.e4.application");
+					handledMenuItem.setIconURI("platform:/plugin/com.minres.scviewer.e4.application/icons/empty.png"); //$NON-NLS-1$
+				handledMenuItem.setContributorURI("platform:/plugin/com.minres.scviewer.e4.application"); //$NON-NLS-1$
 				handledMenuItem.setCommand(command);
 				handledMenuItem.getParameters().add(parameter);		
 				items.add(handledMenuItem);	

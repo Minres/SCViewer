@@ -44,6 +44,7 @@ import org.eclipse.ui.views.properties.tabbed.AbstractPropertySection;
 import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
 
 import com.minres.scviewer.database.AssociationType;
+import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITx;
 
@@ -51,7 +52,7 @@ public class AttributeProperty extends AbstractPropertySection implements ISelec
 
 	private final String[] titles = { "Location", "Name", "Type", "Value" };
 
-	private ListenerList listeners = new ListenerList();
+	private ListenerList<ISelectionChangedListener> listeners = new ListenerList<ISelectionChangedListener>();
 
 	private ITx iTr;
 
@@ -199,12 +200,13 @@ public class AttributeProperty extends AbstractPropertySection implements ISelec
 					else if (columnIndex == 2 )
 						return attr.getDataType().name();
 					else if (columnIndex == 3){
-						if("UNSIGNED".equals(attr.getType()) &&	(attr.getName().contains("addr")||attr.getName().contains("data")))
+						String value = attr.getValue().toString();
+						if((DataType.UNSIGNED == attr.getDataType() || DataType.INTEGER==attr.getDataType()) && !"0".equals(value)) {
 							try {
-								return "0x"+Long.toHexString(Long.parseLong(attr.getValue().toString()));
-							} catch(NumberFormatException e) {
-							}
-							return attr.getValue().toString();
+								value = attr.getValue().toString() + "(0x"+Long.toHexString(Long.parseLong(attr.getValue().toString()))+")";
+							} catch(NumberFormatException e) { }
+						}
+						return value;
 					}
 				} 
 				return null;

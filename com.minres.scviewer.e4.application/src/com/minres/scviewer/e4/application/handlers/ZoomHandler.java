@@ -22,7 +22,7 @@ import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
 public class ZoomHandler {
 
-	final static String PARAMTER_ID="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level";
+	final static String PARAMTER_ID="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level"; //$NON-NLS-1$
 
 	@CanExecute
 	public boolean canExecute(EPartService partService) {
@@ -36,11 +36,11 @@ public class ZoomHandler {
 		if(obj instanceof WaveformViewer){
 			WaveformViewer waveformViewerPart = (WaveformViewer) obj;
 			int zoomLevel = waveformViewerPart.getZoomLevel();
-			if("in".equalsIgnoreCase(level))
+			if("in".equalsIgnoreCase(level)) //$NON-NLS-1$
 				waveformViewerPart.setZoomLevel(zoomLevel-1);
-			else if("out".equalsIgnoreCase(level))
+			else if("out".equalsIgnoreCase(level)) //$NON-NLS-1$
 				waveformViewerPart.setZoomLevel(zoomLevel+1);
-			else if("fit".equalsIgnoreCase(level))
+			else if("fit".equalsIgnoreCase(level)) //$NON-NLS-1$
 				waveformViewerPart.setZoomFit();
 		}
 

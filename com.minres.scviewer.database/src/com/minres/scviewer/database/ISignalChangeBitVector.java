@@ -10,8 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
-
-public interface ISignalChangeMulti extends ISignalChange {
+public interface ISignalChangeBitVector extends ISignalChange {
 	
 	public BitVector getValue();
 

@@ -80,7 +80,7 @@ public class TxPropertiesLabelProvider implements ITableLabelProvider {
 	@Override
 	public String getColumnText(Object element, int columnIndex) {
 		ITxAttribute attribute = (ITxAttribute) element;
-	    String text = "";
+	    String text = ""; //$NON-NLS-1$
 	    switch (columnIndex) {
 	    case TransactionDetails.COLUMN_FIRST:
 	      text = attribute.getName();

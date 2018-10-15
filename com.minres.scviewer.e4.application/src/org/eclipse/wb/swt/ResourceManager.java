@@ -28,6 +28,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.osgi.framework.Bundle;
 
+import com.minres.scviewer.e4.application.Messages;
+
 /**
  * Utility class for managing OS resources associated with SWT/JFace controls such as colors, fonts, images,
  * etc.
@@ -124,7 +126,7 @@ public class ResourceManager extends SWTResourceManager {
 	 */
 	public static Image decorateImage(final Image baseImage, final Image decorator, final int corner) {
 		if (corner <= 0 || corner >= LAST_CORNER_KEY) {
-			throw new IllegalArgumentException("Wrong decorate corner");
+			throw new IllegalArgumentException(Messages.ResourceManager_0);
 		}
 		Map<Image, Map<Image, Image>> cornerDecoratedImageMap = m_decoratedImageMap[corner];
 		if (cornerDecoratedImageMap == null) {
@@ -145,15 +147,15 @@ public class ResourceManager extends SWTResourceManager {
 			CompositeImageDescriptor compositImageDesc = new CompositeImageDescriptor() {
 				@Override
 				protected void drawCompositeImage(int width, int height) {
-					drawImage(baseImage.getImageData(), 0, 0);
+					drawImage(createCachedImageDataProvider(baseImage), 0, 0);
 					if (corner == TOP_LEFT) {
-						drawImage(decorator.getImageData(), 0, 0);
+						drawImage(createCachedImageDataProvider(decorator), 0, 0);
 					} else if (corner == TOP_RIGHT) {
-						drawImage(decorator.getImageData(), bib.width - dib.width, 0);
+						drawImage(createCachedImageDataProvider(decorator), bib.width - dib.width, 0);
 					} else if (corner == BOTTOM_LEFT) {
-						drawImage(decorator.getImageData(), 0, bib.height - dib.height);
+						drawImage(createCachedImageDataProvider(decorator), 0, bib.height - dib.height);
 					} else if (corner == BOTTOM_RIGHT) {
-						drawImage(decorator.getImageData(), bib.width - dib.width, bib.height - dib.height);
+						drawImage(createCachedImageDataProvider(decorator), bib.width - dib.width, bib.height - dib.height);
 					}
 				}
 				@Override

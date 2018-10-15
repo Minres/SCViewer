@@ -13,8 +13,6 @@ package com.minres.scviewer.database.text;
 import java.nio.charset.CharsetDecoder;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream
-import org.apache.jdbm.DB
-import org.apache.jdbm.DBMaker
 import groovy.io.FileType
 
 import com.minres.scviewer.database.AssociationType
@@ -31,8 +29,6 @@ public class TextDbLoader implements IWaveformDbLoader{
 	private Long maxTime;
 
 	IWaveformDb db;
-
-	DB backingDb;
 
 	def streams = []
 
@@ -65,20 +61,6 @@ public class TextDbLoader implements IWaveformDbLoader{
 		this.streams=[]
 		def gzipped = isGzipped(file)
 		if(isTxfile(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))){
-			if(true) {
-				def parentDir=file.absoluteFile.parent
-				def filename=file.name
-				new File(parentDir).eachFileRecurse (FileType.FILES) { f -> if(f.name=~/^\.${filename}/) f.delete() }
-				this.backingDb = DBMaker.openFile(parentDir+File.separator+"."+filename+"_bdb")
-						.deleteFilesAfterClose()
-						.useRandomAccessFile()
-						.setMRUCacheSize(4096) 
-						//.disableTransactions()
-						.disableLocking()
-						.make();
-			} else {
-				this.backingDb = DBMaker.openMemory().disableLocking().make()
-			}
 			parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
 			calculateConcurrencyIndicees()
 			return true
@@ -140,7 +122,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				case "end_attribute":
 					if ((matcher = line =~ /^scv_tr_stream\s+\(ID (\d+),\s+name\s+"([^"]+)",\s+kind\s+"([^"]+)"\)$/)) {
 						def id = Integer.parseInt(matcher[0][1])
-						def stream = new TxStream(db, id, matcher[0][2], matcher[0][3], backingDb)
+						def stream = new TxStream(db, id, matcher[0][2], matcher[0][3])
 						streams<<stream
 						streamsById[id]=stream
 					} else if ((matcher = line =~ /^scv_tr_generator\s+\(ID\s+(\d+),\s+name\s+"([^"]+)",\s+scv_tr_stream\s+(\d+),$/)) {
@@ -183,9 +165,11 @@ public class TextDbLoader implements IWaveformDbLoader{
 					break
 				case "a"://matcher = line =~ /^a\s+(.+)$/
 					if(endTransaction){
-						transaction.attributes << new TxAttribute(transaction.generator.end_attrs[0], tokens[1])
+						transaction.attributes << new TxAttribute(transaction.generator.end_attrs[transaction.generator.end_attrs_idx], tokens[1])
+						transaction.generator.end_attrs_idx++
 					} else {
-						transaction.attributes << new TxAttribute(transaction.generator.begin_attrs[0], tokens[1])
+						transaction.attributes << new TxAttribute(transaction.generator.begin_attrs[transaction.generator.begin_attrs_idx], tokens[1])
+						transaction.generator.begin_attrs_idx++
 					}
 					break
 				case "tx_relation"://matcher = line =~ /^tx_relation\s+\"(\S+)\"\s+(\d+)\s+(\d+)$/
@@ -202,9 +186,6 @@ public class TextDbLoader implements IWaveformDbLoader{
 
 			}
 			lineCnt++
-			if((lineCnt%1000) == 0) {
-				backingDb.commit()
-			}
 		}
 	}
 

@@ -26,7 +26,7 @@ import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
 public class MoveWaveformHandler {
 
-	static final String PARAMETER_ID="com.minres.scviewer.e4.application.command.movewaveformupCommand.parameter.dir";
+	static final String PARAMETER_ID="com.minres.scviewer.e4.application.command.movewaveformupCommand.parameter.dir"; //$NON-NLS-1$
 
 	@CanExecute
 	public Boolean canExecute(ESelectionService selectionService){
@@ -43,9 +43,9 @@ public class MoveWaveformHandler {
 		MPart part = partService.getActivePart();
 		Object obj = part.getObject();
 		if(obj instanceof WaveformViewer){
-			if("up".equalsIgnoreCase(param))
+			if("up".equalsIgnoreCase(param)) //$NON-NLS-1$
 				((WaveformViewer)obj).moveSelected(-1);
-			else if("down".equalsIgnoreCase(param))
+			else if("down".equalsIgnoreCase(param)) //$NON-NLS-1$
 				((WaveformViewer)obj).moveSelected(1);
 		}
 	}

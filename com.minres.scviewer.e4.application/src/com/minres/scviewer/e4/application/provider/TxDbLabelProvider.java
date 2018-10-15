@@ -20,7 +20,7 @@ import org.eclipse.wb.swt.ResourceManager;
 
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ISignalChangeMulti;
+import com.minres.scviewer.database.ISignalChangeBitVector;
 import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.e4.application.parts.LoadingWaveformDb;
@@ -42,12 +42,12 @@ public class TxDbLabelProvider implements ILabelProvider {
 	 */
 	public TxDbLabelProvider() {
 		super();
-		loadinDatabase=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database_go.png");
-		database=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database.png");
-		stream=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/stream.png");
-		folder=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/folder.png");
-		signal=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/signal.png");
-		wave=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/wave.png");
+		loadinDatabase=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database_go.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		database=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		stream=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/stream.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		folder=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/folder.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		signal=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/signal.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		wave=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/wave.png"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/* (non-Javadoc)
@@ -101,7 +101,7 @@ public class TxDbLabelProvider implements ILabelProvider {
 			return stream;
 		}else if(element instanceof ISignal<?>){
 			Object o = ((ISignal<?>)element).getEvents().firstEntry().getValue();
-			if(o instanceof ISignalChangeMulti)
+			if(o instanceof ISignalChangeBitVector)
 				return wave;
 			else 
 				return signal;

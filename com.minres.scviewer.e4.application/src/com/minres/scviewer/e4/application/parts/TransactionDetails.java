@@ -55,6 +55,8 @@ import org.eclipse.swt.widgets.Tree;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITxRelation;
+import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.provider.TxPropertiesLabelProvider;
 
 /**
@@ -107,7 +109,7 @@ public class TransactionDetails {
 		parent.setLayout(new GridLayout(1, false));
 
 		nameFilter = new Text(parent, SWT.BORDER);
-		nameFilter.setMessage("Enter text to filter");
+		nameFilter.setMessage(Messages.TransactionDetails_0);
 		nameFilter.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
@@ -133,7 +135,7 @@ public class TransactionDetails {
 		tree.setLayoutData(new GridData(GridData.FILL_BOTH));
 		// Add the name column
 		col1 = new TreeViewerColumn(treeViewer, SWT.NONE);
-		col1.getColumn().setText("Name");
+		col1.getColumn().setText(Messages.TransactionDetails_1);
 		col1.getColumn().setResizable(true);
 		col1.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(AttributeLabelProvider.NAME)));
 		col1.getColumn().addSelectionListener(new SelectionAdapter() {
@@ -144,7 +146,7 @@ public class TransactionDetails {
 		});
 		// Add the type column
 		col2 = new TreeViewerColumn(treeViewer, SWT.NONE);
-		col2.getColumn().setText("Type");
+		col2.getColumn().setText(Messages.TransactionDetails_2);
 		col2.getColumn().setResizable(true);
 		col2.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(AttributeLabelProvider.TYPE)));
 		col2.getColumn().addSelectionListener(new SelectionAdapter() {
@@ -155,7 +157,7 @@ public class TransactionDetails {
 		});
 		// Add the value column
 		col3 = new TreeViewerColumn(treeViewer, SWT.NONE);
-		col3.getColumn().setText("Value");
+		col3.getColumn().setText(Messages.TransactionDetails_3);
 		col3.getColumn().setResizable(true);
 		col3.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(AttributeLabelProvider.VALUE)));
 		col3.getColumn().addSelectionListener(new SelectionAdapter() {
@@ -282,8 +284,8 @@ public class TransactionDetails {
 	 */
 	String txToString(ITx tx){
 		StringBuilder sb = new StringBuilder();
-		sb.append("tx#").append(tx.getId()).append("[").append(timeToString(tx.getBeginTime())).
-			append(" - ").append(timeToString(tx.getEndTime())).append("]");
+		sb.append("tx#").append(tx.getId()).append("[").append(timeToString(tx.getBeginTime())). //$NON-NLS-1$ //$NON-NLS-2$
+			append(" - ").append(timeToString(tx.getEndTime())).append("]"); //$NON-NLS-1$ //$NON-NLS-2$
 		return sb.toString();
 	}
 	
@@ -330,7 +332,6 @@ public class TransactionDetails {
 		 * @param e2 the e2
 		 * @return the int
 		 */
-		@SuppressWarnings("unchecked")
 		public int compare(Viewer viewer, Object e1, Object e2) {
 			int rc = 0;
 			if(e1 instanceof ITxAttribute && e2 instanceof ITxAttribute){
@@ -369,7 +370,7 @@ public class TransactionDetails {
 		 * @param s the new search text
 		 */
 		public void setSearchText(String s) {
-			this.searchString = ".*" + s + ".*";
+			this.searchString = ".*" + s + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		/* (non-Javadoc)
@@ -427,12 +428,12 @@ PROPS, /** The attrs. */
 		 */
 		public String toString(){
 			switch(type){
-			case PROPS:      return "Properties";
-			case ATTRS:	     return "Attributes";
-			case IN_REL:     return "Incoming relations";
-			case OUT_REL:    return "Outgoing relations";
+			case PROPS:      return Messages.TransactionDetails_10;
+			case ATTRS:	     return Messages.TransactionDetails_11;
+			case IN_REL:     return Messages.TransactionDetails_12;
+			case OUT_REL:    return Messages.TransactionDetails_13;
 			}
-			return "";
+			return ""; //$NON-NLS-1$
 		}
 	}
 
@@ -476,10 +477,10 @@ PROPS, /** The attrs. */
 				TreeNode propertyHolder=(TreeNode) element;
 				if(propertyHolder.type == Type.PROPS){
 					return new Object[][]{
-						{"Name", "String", propertyHolder.element.getStream().getFullName()},
-						{"Type", "String", propertyHolder.element.getGenerator().getName()},
-						{"Start time", "Time", timeToString(propertyHolder.element.getBeginTime())},
-						{"End time", "Time", timeToString(propertyHolder.element.getEndTime())}
+						{Messages.TransactionDetails_1, Messages.TransactionDetails_16, propertyHolder.element.getStream().getFullName()},
+						{Messages.TransactionDetails_2, Messages.TransactionDetails_16, propertyHolder.element.getGenerator().getName()},
+						{Messages.TransactionDetails_19, Messages.TransactionDetails_20, timeToString(propertyHolder.element.getBeginTime())},
+						{Messages.TransactionDetails_21, Messages.TransactionDetails_20, timeToString(propertyHolder.element.getEndTime())}
 					};
 				}else if(propertyHolder.type == Type.ATTRS)
 					return propertyHolder.element.getAttributes().toArray();
@@ -561,7 +562,7 @@ PROPS, /** The attrs. */
 					ITxAttribute attribute = (ITxAttribute) element;
 					return new StyledString(attribute.getName());
 				}else if (element instanceof ITxRelation) {
-					return new StyledString("Relation");
+					return new StyledString(Messages.TransactionDetails_4);
 				}else if(element instanceof Object[]){
 					Object[] elements = (Object[]) element;
 					return new StyledString(elements[field].toString());
@@ -575,18 +576,24 @@ PROPS, /** The attrs. */
 					Object[] elements = (Object[]) element;
 					return new StyledString(elements[field].toString());
 				}else 
-					return new StyledString("");					
+					return new StyledString("");					 //$NON-NLS-1$
 			default:
 				if (element instanceof ITxAttribute) {
 					ITxAttribute attribute = (ITxAttribute) element;
-					return new StyledString(attribute.getValue().toString());
+					String value = attribute.getValue().toString();
+					if((DataType.UNSIGNED == attribute.getDataType() || DataType.INTEGER==attribute.getDataType()) && !"0".equals(value)) {
+						try {
+							value = attribute.getValue().toString() + " [0x"+Long.toHexString(Long.parseLong(attribute.getValue().toString()))+"]";
+						} catch(NumberFormatException e) { }
+					}
+					return new StyledString(value);
 				}else if(element instanceof Object[]){
 					Object[] elements = (Object[]) element;
 					return new StyledString(elements[field].toString());
 				} else if(element instanceof ITx){
 					return new StyledString(txToString((ITx) element));
 				}else 
-					return new StyledString("");					
+					return new StyledString("");					 //$NON-NLS-1$
 			}
 		}
 	}

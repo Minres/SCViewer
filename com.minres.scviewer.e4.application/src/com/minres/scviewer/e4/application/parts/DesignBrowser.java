@@ -68,6 +68,7 @@ import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
+import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.handlers.AddWaveformHandler;
 import com.minres.scviewer.e4.application.provider.TxDbContentProvider;
 import com.minres.scviewer.e4.application.provider.TxDbLabelProvider;
@@ -79,7 +80,7 @@ import com.minres.scviewer.e4.application.provider.TxDbLabelProvider;
 public class DesignBrowser {
 
 	/** The Constant POPUP_ID. */
-	private static final String POPUP_ID="com.minres.scviewer.e4.application.parts.DesignBrowser.popupmenu";
+	private static final String POPUP_ID="com.minres.scviewer.e4.application.parts.DesignBrowser.popupmenu"; //$NON-NLS-1$
 
 	/** The event broker. */
 	@Inject IEventBroker eventBroker;
@@ -124,7 +125,7 @@ public class DesignBrowser {
 	private PropertyChangeListener treeViewerPCL = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			if("CHILDS".equals(evt.getPropertyName())){
+			if("CHILDS".equals(evt.getPropertyName())){ //$NON-NLS-1$
 				treeViewer.getTree().getDisplay().asyncExec(new Runnable() {					
 					@Override
 					public void run() {
@@ -215,7 +216,7 @@ public class DesignBrowser {
 		parent.setLayout(new GridLayout(1, false));
 
 		nameFilter = new Text(parent, SWT.BORDER);
-		nameFilter.setMessage("Enter text to filter waveforms");
+		nameFilter.setMessage(Messages.DesignBrowser_2);
 		nameFilter.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
@@ -237,7 +238,7 @@ public class DesignBrowser {
 			@Override
 			public void doubleClick(DoubleClickEvent event) {
 				AddWaveformHandler myHandler = new AddWaveformHandler();
-				Object result = runCommand(myHandler, CanExecute.class, "after", false);
+				Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
 				if(result!=null && (Boolean)result)
 					ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
 			}
@@ -258,14 +259,14 @@ public class DesignBrowser {
 		toolBar.setBounds(0, 0, 87, 20);
 
 		appendItem = new ToolItem(toolBar, SWT.NONE);
-		appendItem.setToolTipText("Append after");
-		appendItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/append_wave.png"));
+		appendItem.setToolTipText(Messages.DesignBrowser_4);
+		appendItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/append_wave.png")); //$NON-NLS-1$ //$NON-NLS-2$
 		appendItem.setEnabled(false);
 		appendItem.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				AddWaveformHandler myHandler = new AddWaveformHandler();
-				Object result = runCommand(myHandler, CanExecute.class, "after", false);
+				Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
 				if(result!=null && (Boolean)result)
 					ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
 			}
@@ -273,14 +274,14 @@ public class DesignBrowser {
 		});
 
 		insertItem = new ToolItem(toolBar, SWT.NONE);
-		insertItem.setToolTipText("Insert before");
-		insertItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/insert_wave.png"));
+		insertItem.setToolTipText(Messages.DesignBrowser_8);
+		insertItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/insert_wave.png")); //$NON-NLS-1$ //$NON-NLS-2$
 		insertItem.setEnabled(false);
 		insertItem.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				AddWaveformHandler myHandler = new AddWaveformHandler();
-				Object result = runCommand(myHandler, CanExecute.class, "before", false);
+				Object result = runCommand(myHandler, CanExecute.class, "before", false); //$NON-NLS-1$
 				if(result!=null && (Boolean)result)
 					ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
 			}
@@ -288,8 +289,8 @@ public class DesignBrowser {
 		new ToolItem(toolBar, SWT.SEPARATOR);
 
 		appendAllItem = new ToolItem(toolBar, SWT.NONE);
-		appendAllItem.setToolTipText("Append all after");
-		appendAllItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/append_all_waves.png"));
+		appendAllItem.setToolTipText(Messages.DesignBrowser_12);
+		appendAllItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/append_all_waves.png")); //$NON-NLS-1$ //$NON-NLS-2$
 		appendAllItem.setEnabled(false);
 
 		new ToolItem(toolBar, SWT.SEPARATOR);
@@ -301,7 +302,7 @@ public class DesignBrowser {
 					Object oldSel=selectionService.getSelection();
 					selectionService.setSelection(new StructuredSelection(all));
 					AddWaveformHandler myHandler = new AddWaveformHandler();
-					Object result = runCommand(myHandler, CanExecute.class, "after", false);
+					Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
 					if(result!=null && (Boolean)result)
 						ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
 					selectionService.setSelection(oldSel);
@@ -309,8 +310,8 @@ public class DesignBrowser {
 			}
 		});
 		insertAllItem = new ToolItem(toolBar, SWT.NONE);
-		insertAllItem.setToolTipText("Insert all before");
-		insertAllItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/insert_all_waves.png"));
+		insertAllItem.setToolTipText(Messages.DesignBrowser_16);
+		insertAllItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/insert_all_waves.png")); //$NON-NLS-1$ //$NON-NLS-2$
 		insertAllItem.setEnabled(false);
 		insertAllItem.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -320,7 +321,7 @@ public class DesignBrowser {
 					Object oldSel=selectionService.getSelection();
 					selectionService.setSelection(new StructuredSelection(all));
 					AddWaveformHandler myHandler = new AddWaveformHandler();
-					Object result = runCommand(myHandler, CanExecute.class, "before", false);
+					Object result = runCommand(myHandler, CanExecute.class, "before", false); //$NON-NLS-1$
 					if(result!=null && (Boolean)result)
 						ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
 					selectionService.setSelection(oldSel);
@@ -400,13 +401,13 @@ public class DesignBrowser {
 		if(txTableViewer!=null && !insertItem.isDisposed() && !appendItem.isDisposed() && 
 				!appendAllItem.isDisposed() && !insertAllItem.isDisposed()){
 			AddWaveformHandler myHandler = new AddWaveformHandler();
-			Object result = runCommand(myHandler, CanExecute.class, "after", false);
+			Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
 			appendItem.setEnabled(result instanceof Boolean && (Boolean)result);
-			result = runCommand(myHandler, CanExecute.class, "after", true);
+			result = runCommand(myHandler, CanExecute.class, "after", true); //$NON-NLS-1$
 			appendAllItem.setEnabled(result instanceof Boolean && (Boolean)result);
-			result = runCommand(myHandler, CanExecute.class, "before", false);
+			result = runCommand(myHandler, CanExecute.class, "before", false); //$NON-NLS-1$
 			insertItem.setEnabled(result instanceof Boolean && (Boolean)result);
-			result = runCommand(myHandler, CanExecute.class, "before", true);
+			result = runCommand(myHandler, CanExecute.class, "before", true); //$NON-NLS-1$
 			insertAllItem.setEnabled(result instanceof Boolean && (Boolean)result);
 		}
 	}
@@ -425,7 +426,7 @@ public class DesignBrowser {
 		 * @param s the new search text
 		 */
 		public void setSearchText(String s) {
-			this.searchString = ".*" + s + ".*";
+			this.searchString = ".*" + s + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		/* (non-Javadoc)

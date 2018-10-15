@@ -61,9 +61,11 @@ class VCDFileParser {
 
 	private void parseVar() throws Exception {
 		nextToken(); // type
+		String type = tokenizer.sval;
 		nextToken(); // size
 		int width = Integer.parseInt(tokenizer.sval);
-
+		if("real".equals(type))
+			width*=-1;
 		nextToken();
 		String id = tokenizer.sval;
 		nextToken();
@@ -153,7 +155,8 @@ class VCDFileParser {
 				} while (!tokenizer.sval.equals("$end"));
 				return true;
 			}
-			if (tokenizer.sval.equals("$dumpvars") || tokenizer.sval.equals("$end")) return true;
+			if (tokenizer.sval.equals("$dumpvars") || tokenizer.sval.equals("$end"))
+				return true;
 			String value, id;
 			if (tokenizer.sval.charAt(0) == 'b') {
 				// Multiple value net. Value appears first, followed by space,
@@ -161,6 +164,12 @@ class VCDFileParser {
 				value = tokenizer.sval.substring(1);
 				nextToken();
 				id = tokenizer.sval;
+			}else if (tokenizer.sval.charAt(0) == 'r') {
+					// Multiple value net. Value appears first, followed by space,
+					// then identifier
+					value = tokenizer.sval.substring(1);
+					nextToken();
+					id = tokenizer.sval;
 			} else {
 				// Single value net. identifier first, then value, no space.
 				value = tokenizer.sval.substring(0, 1);
@@ -174,39 +183,49 @@ class VCDFileParser {
 			}
 
 			int netWidth = traceBuilder.getNetWidth(net);
-			BitVector decodedValues = new BitVector(netWidth);
-			if (value.equals("z") && netWidth > 1) {
-				for (int i = 0; i < netWidth; i++)
-					decodedValues.setValue(i, BitVector.VALUE_Z);
-			} else if (value.equals("x") && netWidth > 1) {
-				for (int i = 0; i < netWidth; i++)
-					decodedValues.setValue(i, BitVector.VALUE_X);
+			if(netWidth<0) {
+				if("nan".equals(value))
+					traceBuilder.appendTransition(net, currentTime, Double.NaN);
+				else
+					traceBuilder.appendTransition(net, currentTime, Double.parseDouble(value));
 			} else {
-				int stringIndex = 0;
-				for (int convertedIndex = netWidth - value.length(); convertedIndex < netWidth; convertedIndex++) {
-					switch (value.charAt(stringIndex++)) {
-					case 'z':
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_Z);
-						break;
-
-					case '1':
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_1);
-						break;
-
-					case '0':
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_0);
-						break;
-
-					case 'x':
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
-						break;
-
-					default:
-						decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
+				BitVector decodedValues = new BitVector(netWidth);
+				if (value.equals("z") && netWidth > 1) {
+					for (int i = 0; i < netWidth; i++)
+						decodedValues.setValue(i, BitVector.VALUE_Z);
+				} else if (value.equals("x") && netWidth > 1) {
+					for (int i = 0; i < netWidth; i++)
+						decodedValues.setValue(i, BitVector.VALUE_X);
+				} else {
+					int stringIndex = 0;
+					for (int convertedIndex = netWidth - value.length(); convertedIndex < netWidth; convertedIndex++) {
+						switch (value.charAt(stringIndex++)) {
+						case 'z':
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_Z);
+							break;
+	
+						case '1':
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_1);
+							break;
+	
+						case '0':
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_0);
+							break;
+	
+						case 'x':
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
+							break;
+	
+						default:
+							decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
+						}
 					}
 				}
+				if(netWidth==1)
+					traceBuilder.appendTransition(net, currentTime, decodedValues.getValue()[0]);
+				else
+					traceBuilder.appendTransition(net, currentTime, decodedValues);
 			}
-			traceBuilder.appendTransition(net, currentTime, decodedValues);
 		}
 		return true;
 	}
