@@ -184,7 +184,10 @@ class VCDFileParser {
 
 			int netWidth = traceBuilder.getNetWidth(net);
 			if(netWidth<0) {
-				traceBuilder.appendTransition(net, currentTime, Double.parseDouble(value));
+				if("nan".equals(value))
+					traceBuilder.appendTransition(net, currentTime, Double.NaN);
+				else
+					traceBuilder.appendTransition(net, currentTime, Double.parseDouble(value));
 			} else {
 				BitVector decodedValues = new BitVector(netWidth);
 				if (value.equals("z") && netWidth > 1) {

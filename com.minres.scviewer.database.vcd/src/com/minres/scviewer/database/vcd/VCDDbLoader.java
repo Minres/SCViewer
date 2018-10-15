@@ -70,6 +70,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@Override
 	public boolean load(IWaveformDb db, File file) throws Exception {
 		this.db=db;
+		this.maxTime=0;
 		FileInputStream fis = new FileInputStream(file);
 		byte[] buffer = new byte[dateBytes.length];
 		int read = fis.read(buffer, 0, dateBytes.length);

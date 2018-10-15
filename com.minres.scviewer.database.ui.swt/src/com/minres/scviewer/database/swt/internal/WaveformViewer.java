@@ -82,6 +82,7 @@ import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.IWaveformViewer;
@@ -1194,10 +1195,10 @@ public class WaveformViewer implements IWaveformViewer  {
 	 */
 	@Override
 	public String[] getZoomLevels(){
-		String[] res = new String[WaveformCanvas.unitMultiplier.length*WaveformCanvas.unitString.length];
+		String[] res = new String[Constants.unitMultiplier.length*Constants.unitString.length];
 		int index=0;
-		for(String unit:WaveformCanvas.unitString){
-			for(int factor:WaveformCanvas.unitMultiplier){
+		for(String unit:Constants.unitString){
+			for(int factor:Constants.unitMultiplier){
 				res[index++]= new Integer(factor).toString()+unit;
 			}
 		}
