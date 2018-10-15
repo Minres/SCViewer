@@ -64,10 +64,13 @@ public class E4LifeCycle {
 	@PostContextCreate
 	void postContextCreate(IApplicationContext appContext, final IEventBroker eventBroker) {
 		final String[] args = (String[])appContext.getArguments().get(IApplicationContext.APPLICATION_ARGS);
-		Options opt = new Options(args, 1);
-		opt.getSet().addOption("c", Separator.BLANK, Multiplicity.ONCE);
-		if (!opt.check(Options.DEFAULT_SET, true, true)) {
-		  System.exit(1);
+		Options opt = new Options(args, 0);
+		opt.getSet()
+			.addOption("clearPersistedState", Multiplicity.ZERO_OR_ONE)
+			.addOption("c", Separator.BLANK, Multiplicity.ZERO_OR_ONE);
+		if (!opt.check(Options.DEFAULT_SET, true, false)) {
+			System.err.println(opt.getCheckErrors());
+			System.exit(1);
 		}
 		final String confFile =opt.getSet().isSet("c")?opt.getSet().getOption("c").getResultValue(0):"";
 
