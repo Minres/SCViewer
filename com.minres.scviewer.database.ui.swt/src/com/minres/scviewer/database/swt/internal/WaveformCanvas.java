@@ -287,9 +287,13 @@ public class WaveformCanvas extends Canvas {
     }
 
     public void clearAllWaveformPainter() {
+    	clearAllWaveformPainter(true);
+    }
+    
+    void clearAllWaveformPainter(boolean update) {
         trackAreaPainter.getTrackVerticalOffset().clear();
         wave2painterMap.clear();
-        syncScrollBars();
+        if(update) syncScrollBars();
     }
 
     public void addWaveformPainter(IWaveformPainter painter) {
@@ -350,38 +354,41 @@ public class WaveformCanvas extends Canvas {
             redraw();
             return;
         }
-        int height = trackAreaPainter.getHeight();
+        int height = trackAreaPainter.getHeight(); // incl. Ruler
         int width = (int) (maxTime / scaleFactor);
+        Rectangle clientArea=getClientArea();
         ScrollBar horizontal = getHorizontalBar();
         horizontal.setIncrement((int) (getClientArea().width / 100));
         horizontal.setPageIncrement(getClientArea().width);
-        int cw = getClientArea().width;
-        if (width > cw) { /* image is wider than client area */
+        int clientWidthw = clientArea.width;
+        if (width > clientWidthw) { /* image is wider than client area */
+        	horizontal.setMinimum(0);
             horizontal.setMaximum(width);
             horizontal.setEnabled(true);
-            if (((int) -origin.x) > horizontal.getMaximum() - cw)
-                origin.x = -horizontal.getMaximum() + cw;
+            if (((int) -origin.x) > horizontal.getMaximum() - clientWidthw)
+                origin.x = -horizontal.getMaximum() + clientWidthw;
         } else { /* image is narrower than client area */
             horizontal.setEnabled(false);
         }
+        horizontal.setThumb(clientWidthw);
         horizontal.setSelection(-origin.x);
-        horizontal.setThumb(cw);
 
         ScrollBar vertical = getVerticalBar();
         vertical.setIncrement((int) (getClientArea().height / 100));
         vertical.setPageIncrement((int) (getClientArea().height));
-        int ch = getClientArea().height;
-        if (height > ch) { /* image is higher than client area */
+        int clientHeighth = clientArea.height;
+        if (height > clientHeighth) { /* image is higher than client area */
+            vertical.setMinimum(0);
             vertical.setMaximum(height);
             vertical.setEnabled(true);
-            if (((int) -origin.y) > vertical.getMaximum() - ch)
-                origin.y = -vertical.getMaximum() + ch;
+            if (((int) -origin.y) > vertical.getMaximum() - clientHeighth)
+                origin.y = -vertical.getMaximum() + clientHeighth;
         } else { /* image is less higher than client area */
-            vertical.setMaximum((int) (ch));
+            vertical.setMaximum((int) (clientHeighth));
             vertical.setEnabled(false);
         }
+        vertical.setThumb(clientHeighth);
         vertical.setSelection(-origin.y);
-        vertical.setThumb(ch);
         redraw();
         fireSelectionEvent();
 
