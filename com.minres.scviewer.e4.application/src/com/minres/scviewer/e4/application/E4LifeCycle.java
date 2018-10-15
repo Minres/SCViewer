@@ -64,7 +64,7 @@ public class E4LifeCycle {
 	@PostContextCreate
 	void postContextCreate(IApplicationContext appContext, final IEventBroker eventBroker) {
 		final String[] args = (String[])appContext.getArguments().get(IApplicationContext.APPLICATION_ARGS);
-		Options opt = new Options(args, 0);
+		Options opt = new Options(args, 0, 1);
 		opt.getSet()
 			.addOption("clearPersistedState", Multiplicity.ZERO_OR_ONE)
 			.addOption("c", Separator.BLANK, Multiplicity.ZERO_OR_ONE);
