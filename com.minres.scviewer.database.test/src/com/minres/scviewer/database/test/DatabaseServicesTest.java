@@ -15,11 +15,22 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.minres.scviewer.database.AssociationType;
+import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.ITxAttribute;
+import com.minres.scviewer.database.ITxEvent;
+import com.minres.scviewer.database.ITxEvent.Type;
+import com.minres.scviewer.database.ITxStream;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 
@@ -68,7 +79,7 @@ public class DatabaseServicesTest {
 
 	@Test
 	public void testTxSQLite() throws Exception {
-		File f = new File("inputs/my_db.txdb").getAbsoluteFile();
+		File f = new File("inputs/my_sqldb.txdb").getAbsoluteFile();
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
@@ -84,6 +95,39 @@ public class DatabaseServicesTest {
 		assertNotNull(waveformDb);
 		assertEquals(3,  waveformDb.getAllWaves().size());
 		assertEquals(1,  waveformDb.getChildNodes().size());
+	}
+
+	@Test
+	public void testTxLDb() throws Exception {
+		File f = new File("inputs/my_ldb.txldb").getAbsoluteFile();
+		assertTrue(f.exists());
+		waveformDb.load(f);
+		assertNotNull(waveformDb);
+		assertEquals(1,  waveformDb.getChildNodes().size());
+		List<IWaveform<?>> waves = waveformDb.getAllWaves();
+		assertEquals(3,  waves.size());
+		IWaveform<?> wave = waves.get(0);
+		assertTrue(wave instanceof ITxStream<?>);
+		ITxStream<?> stream = (ITxStream<?>) wave;
+		assertEquals(2,  stream.getGenerators().size());
+		NavigableMap<Long, List<ITxEvent>> eventsList = stream.getEvents();
+		assertEquals(18, eventsList.size());
+		Entry<Long, List<ITxEvent>> eventEntry = eventsList.firstEntry();
+		assertEquals(100000L, (long) eventEntry.getKey());
+		List<ITxEvent> events = eventEntry.getValue();
+		assertEquals(2, events.size());
+		ITxEvent event = events.get(0);
+		assertEquals(Type.BEGIN, event.getType());
+		ITx tx = event.getTransaction();
+		assertEquals(3L,  (long) tx.getId());
+		List<ITxAttribute> attrs = tx.getAttributes();
+		assertEquals(1, attrs.size());
+		ITxAttribute attr = attrs.get(0);
+		assertEquals("data", attr.getName());
+		assertEquals(DataType.UNSIGNED, attr.getDataType());
+		assertEquals(AssociationType.END, attr.getType());
+		assertTrue(attr.getValue() instanceof Integer);
+		assertEquals(0, (int) attr.getValue());
 	}
 
 	@Test
