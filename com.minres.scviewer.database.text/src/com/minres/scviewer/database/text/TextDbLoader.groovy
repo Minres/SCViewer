@@ -59,12 +59,14 @@ public class TextDbLoader implements IWaveformDbLoader{
 	boolean load(IWaveformDb db, File file) throws Exception {
 		this.db=db
 		this.streams=[]
-		def gzipped = isGzipped(file)
-		if(isTxfile(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))){
-			parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
-			calculateConcurrencyIndicees()
-			return true
-		}
+		try {
+			def gzipped = isGzipped(file)
+			if(isTxfile(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))){
+				parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
+				calculateConcurrencyIndicees()
+				return true
+			}
+		} catch(Exception e) { }
 		return false;
 	}
 

@@ -16,6 +16,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 
@@ -33,6 +34,7 @@ import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
+import com.minres.scviewer.database.vcd.VCDSignal;
 
 public class DatabaseServicesTest {
 
@@ -54,13 +56,6 @@ public class DatabaseServicesTest {
 	@Before
 	public void setUp() throws Exception {
 		waveformDb=waveformDbFactory.getDatabase();
-		// Wait for OSGi dependencies
-//		for (int i = 0; i < 10; i++) {
-//			if (waveformDb.size() == 3) // Dependencies fulfilled
-//				return;
-//			Thread.sleep(1000);
-//		}
-//		assertEquals("OSGi dependencies unfulfilled", 3, WaveformDb.getLoaders().size());
 	}
 
 	@After
@@ -73,8 +68,17 @@ public class DatabaseServicesTest {
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
-		assertEquals(14,  waveformDb.getAllWaves().size());
+		List<IWaveform> waves= waveformDb.getAllWaves();
+		assertEquals(14,  waves.size());
 		assertEquals(2,  waveformDb.getChildNodes().size());
+		IWaveform bus_data_wave = waves.get(0);
+		VCDSignal<?> bus_data_sig = (VCDSignal<?>) bus_data_wave;
+		Entry<Long, ?> bus_data_entry = bus_data_sig.getEvents().floorEntry(1400000000L);
+		assertTrue("01111000".equals(bus_data_entry.getValue().toString()));
+		IWaveform rw_wave = waves.get(2);
+		VCDSignal<?> rw_sig = (VCDSignal<?>) rw_wave;
+		Entry<Long, ?> rw_entry = rw_sig.getEvents().floorEntry(2360000000L);
+		assertTrue("1".equals(rw_entry.getValue().toString()));
 	}
 
 	@Test
@@ -104,18 +108,18 @@ public class DatabaseServicesTest {
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
 		assertEquals(1,  waveformDb.getChildNodes().size());
-		List<IWaveform<?>> waves = waveformDb.getAllWaves();
+		List<IWaveform> waves = waveformDb.getAllWaves();
 		assertEquals(3,  waves.size());
-		IWaveform<?> wave = waves.get(0);
+		IWaveform wave = waves.get(0);
 		assertTrue(wave instanceof ITxStream<?>);
 		ITxStream<?> stream = (ITxStream<?>) wave;
 		assertEquals(2,  stream.getGenerators().size());
 		NavigableMap<Long, List<ITxEvent>> eventsList = stream.getEvents();
-		assertEquals(18, eventsList.size());
+		assertEquals(27, eventsList.size());
 		Entry<Long, List<ITxEvent>> eventEntry = eventsList.firstEntry();
-		assertEquals(100000L, (long) eventEntry.getKey());
+		assertEquals(100000000L, (long) eventEntry.getKey());
 		List<ITxEvent> events = eventEntry.getValue();
-		assertEquals(2, events.size());
+		assertEquals(1, events.size());
 		ITxEvent event = events.get(0);
 		assertEquals(Type.BEGIN, event.getType());
 		ITx tx = event.getTransaction();

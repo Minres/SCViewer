@@ -20,7 +20,7 @@ public interface IWaveformDbLoader {
 	
 	public Long getMaxTime();
 	
-	public List<IWaveform<? extends IWaveformEvent>> getAllWaves() ;
+	public List<IWaveform> getAllWaves() ;
 	
 	public Collection<RelationType> getAllRelationTypes() ;
 	

@@ -18,9 +18,9 @@ public interface IWaveformDb extends IHierNode {
 
 	public Long getMaxTime();
 	
-	public IWaveform<? extends IWaveformEvent> getStreamByName(String name);
+	public IWaveform getStreamByName(String name);
 	
-	public List<IWaveform<?>> getAllWaves();
+	public List<IWaveform> getAllWaves();
 	
 	public List<RelationType> getAllRelationTypes();
 	

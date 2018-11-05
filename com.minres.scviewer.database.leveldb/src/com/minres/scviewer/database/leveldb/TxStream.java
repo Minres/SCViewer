@@ -10,9 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database.leveldb;
 
-import java.beans.IntrospectionException;
-import java.lang.reflect.InvocationTargetException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,7 +20,6 @@ import org.iq80.leveldb.impl.SeekingIterator;
 import org.json.JSONObject;
 
 import java.util.NavigableMap;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
 
@@ -34,12 +30,11 @@ import com.minres.scviewer.database.ITxGenerator;
 import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
 
 public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 
-	private StringDBWrapper levelDb;
+	private TxDBWrapper levelDb;
 
 	private String fullName;
 	
@@ -59,7 +54,7 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 
 	private List<RelationType> usedRelationsList;
 	
-	public TxStream(StringDBWrapper database, IWaveformDb waveformDb, JSONObject object) {
+	public TxStream(TxDBWrapper database, IWaveformDb waveformDb, JSONObject object) {
 		super(object.get("name").toString());
 		this.levelDb=database;
 		this.db=waveformDb;
@@ -93,10 +88,11 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 		if(generators==null){
 			generators=new TreeMap<Long, TxGenerator>();
 			SeekingIterator<String, String> it = levelDb.iterator();
-			it.seek("sg~"+String.format("%016x", id));
+			String key="sg~"+String.format("%016x", id);
+			it.seek(key);
 			while(it.hasNext()) {
 				Entry<String, String> val = it.next();
-				if(!val.getKey().startsWith("sg~")) break;
+				if(!val.getKey().startsWith(key)) break;
 				JSONObject jVal = new JSONObject(val.getValue());
 				generators.put(jVal.getLong("id"), new TxGenerator(this, jVal));
 			}
@@ -107,7 +103,7 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	@Override
 	public int getMaxConcurrency() {
 		if(maxConcurrency==null){
-				maxConcurrency=1;
+				getTransactions();
 		}
 		return maxConcurrency;
 	}
@@ -117,8 +113,9 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 		if(events==null){
 			events=new TreeMap<Long, List<ITxEvent>>();
 			for(Entry<Long, ITx> entry:getTransactions().entrySet()){
-				putEvent(new TxEvent(TxEvent.Type.BEGIN, entry.getValue()));
-				putEvent(new TxEvent(TxEvent.Type.END, entry.getValue()));
+				ITx tx = entry.getValue();
+				putEvent(new TxEvent(TxEvent.Type.BEGIN, tx));
+				putEvent(new TxEvent(TxEvent.Type.END, tx));
 			}	
 		}
 		return events;
@@ -139,16 +136,21 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 		if(transactions==null){
 			if(generators==null) getGenerators();
 			transactions = new TreeMap<Long, ITx>();
+			maxConcurrency=0;
 			SeekingIterator<String, String> it = levelDb.iterator();
-			it.seek("sgx~"+String.format("%016x", id));
+			String key = "sgx~"+String.format("%016x", id);
+			it.seek(key);
 			while(it.hasNext()) {
 				Entry<String, String> val = it.next();
-				if(!val.getKey().startsWith("sgx~")) break;
+				if(!val.getKey().startsWith(key)) break;
 				String[] token = val.getKey().split("~");
 				long gid = Long.parseLong(token[2], 16); // gen id
 				long id = Long.parseLong(token[3], 16); // tx id
-				transactions.put(id, new Tx(levelDb, this, generators.get(gid), id));
+				ITx tx = new Tx(levelDb, this, generators.get(gid), id);
+				transactions.put(id, tx);
+				maxConcurrency= Math.max(maxConcurrency, tx.getConcurrencyIndex());
 			}
+			maxConcurrency++;
 		}
 		return transactions;
 	}
@@ -169,7 +171,7 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	}
 
 	@Override
-	public Boolean equals(IWaveform<? extends IWaveformEvent> other) {
+	public Boolean equals(IWaveform other) {
 		return(other instanceof TxStream && this.getId()==other.getId());
 	}
 

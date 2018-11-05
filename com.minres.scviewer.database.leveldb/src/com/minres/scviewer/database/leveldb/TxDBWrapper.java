@@ -11,17 +11,19 @@ import org.iq80.leveldb.ReadOptions;
 import org.iq80.leveldb.Snapshot;
 import org.iq80.leveldb.impl.DbImpl;
 import org.iq80.leveldb.impl.SeekingIterator;
-import org.json.*;
 
-class StringDBWrapper {
+class TxDBWrapper {
 	private final Options options;
+	private final ReadOptions ro = new ReadOptions();
 	private final File databaseDir;
 	private DbImpl db;
+	private long timeResolution=1L;;
 
-	StringDBWrapper(Options options, File databaseDir) throws IOException {
-		this.options = options.verifyChecksums(true).createIfMissing(false).errorIfExists(false);
+	TxDBWrapper(Options options, File databaseDir) throws IOException {
+		this.options = options.verifyChecksums(true).createIfMissing(false).errorIfExists(false).cacheSize(64*1024*1024);
 		this.databaseDir = databaseDir;
 		this.db = new DbImpl(options, databaseDir);
+		ro.snapshot(db.getSnapshot());
 	}
 
 	public String get(String key) {
@@ -33,11 +35,8 @@ class StringDBWrapper {
 	}
 
 	public String get(String key, Snapshot snapshot) {
-		byte[] slice = db.get(LevelDBLoader.toByteArray(key), new ReadOptions().snapshot(snapshot));
-		if (slice == null) {
-			return null;
-		}
-		return new String(slice, UTF_8);
+		byte[] slice = db.get(LevelDBLoader.toByteArray(key), ro);
+		return slice == null? null : new String(slice, UTF_8);
 	}
 
 	public void put(String key, String value) {
@@ -57,7 +56,10 @@ class StringDBWrapper {
 	}
 
 	public void close() {
-		db.close();
+		try {
+			ro.snapshot().close();
+			db.close();
+		} catch (IOException e) {} // ignore any error
 	}
 
 	public long size(String start, String limit) {
@@ -73,7 +75,16 @@ class StringDBWrapper {
 	}
 
 	public void reopen(Options options) throws IOException {
-		db.close();
+		this.close();
 		db = new DbImpl(options.verifyChecksums(true).createIfMissing(false).errorIfExists(false), databaseDir);
+		ro.snapshot(db.getSnapshot());
+	}
+	
+	public long getTimeResolution() {
+		return timeResolution;
+	}
+	
+	public void setTimeResolution(long resolution) {
+		this.timeResolution = resolution;
 	}
 }

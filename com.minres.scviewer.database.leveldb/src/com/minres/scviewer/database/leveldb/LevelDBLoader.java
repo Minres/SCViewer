@@ -24,7 +24,7 @@ public class LevelDBLoader implements IWaveformDbLoader {
 		return value.getBytes(UTF_8);
 	}
 
-	private StringDBWrapper levelDb;
+	private TxDBWrapper levelDb;
 	private IWaveformDb db;
 	private Long maxTime=null;
 	private List<RelationType> usedRelationsList = new ArrayList<>();
@@ -33,7 +33,10 @@ public class LevelDBLoader implements IWaveformDbLoader {
 	public boolean load(IWaveformDb db, File inp) throws Exception {
 		try {
 			this.db=db;
-			levelDb = new StringDBWrapper(new Options(), inp);
+			levelDb = new TxDBWrapper(new Options(), inp);
+			JSONObject configVal = new JSONObject(levelDb.get("__config"));
+			if(!configVal.isEmpty())
+				levelDb.setTimeResolution(configVal.getLong("resolution"));
 		} catch(Exception e) {
 			return false;
 		}
@@ -55,15 +58,15 @@ public class LevelDBLoader implements IWaveformDbLoader {
 				maxTime = 0L;
 			else {
 				String[] token = val.getKey().split("~");
-				maxTime = Long.parseLong(token[2], 16);
+				maxTime = Long.parseLong(token[2], 16)*levelDb.getTimeResolution();
 			}
 		}
 		return maxTime;
 	}
 
 	@Override
-	public List<IWaveform<? extends IWaveformEvent>> getAllWaves() {
-		List<IWaveform<? extends IWaveformEvent>> streams=new ArrayList<IWaveform<? extends IWaveformEvent>>();
+	public List<IWaveform> getAllWaves() {
+		List<IWaveform> streams=new ArrayList<IWaveform>();
 		SeekingIterator<String, String> it = levelDb.iterator();
 		it.seek("s~");
 		while(it.hasNext()) {

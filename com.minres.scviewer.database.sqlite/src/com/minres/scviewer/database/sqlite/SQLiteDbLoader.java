@@ -13,6 +13,7 @@ package com.minres.scviewer.database.sqlite;
 import java.beans.IntrospectionException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -60,9 +61,9 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	}
 
 	@Override
-	public List<IWaveform<? extends IWaveformEvent>> getAllWaves() {
+	public List<IWaveform> getAllWaves() {
 		SQLiteDatabaseSelectHandler<ScvStream> handler = new SQLiteDatabaseSelectHandler<ScvStream>(ScvStream.class, database);
-		List<IWaveform<? extends IWaveformEvent>> streams=new ArrayList<IWaveform<? extends IWaveformEvent>>();
+		List<IWaveform> streams=new ArrayList<IWaveform>();
 		try {
 			for(ScvStream scvStream:handler.selectObjects()){
 				TxStream stream = new TxStream(database, db, scvStream);
@@ -81,14 +82,17 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	@Override
 	public boolean load(IWaveformDb db, File file) throws Exception {
 		this.db=db;
-		FileInputStream fis = new FileInputStream(file);
-		byte[] buffer = new byte[x.length];
-		int read = fis.read(buffer, 0, x.length);
-		fis.close();
-		if (read == x.length)
-			for (int i = 0; i < x.length; i++)
-				if (buffer[i] != x[i])	return false;
-
+		try {
+			FileInputStream fis = new FileInputStream(file);
+			byte[] buffer = new byte[x.length];
+			int read = fis.read(buffer, 0, x.length);
+			fis.close();
+			if (read == x.length)
+				for (int i = 0; i < x.length; i++)
+					if (buffer[i] != x[i])	return false;
+		} catch(FileNotFoundException e) {
+			return false;
+		}
 		database=new SQLiteDatabase(file.getAbsolutePath());
 		database.setData("TIMERESOLUTION", 1L);
 		SQLiteDatabaseSelectHandler<ScvSimProps> handler = new SQLiteDatabaseSelectHandler<ScvSimProps>(ScvSimProps.class, database);

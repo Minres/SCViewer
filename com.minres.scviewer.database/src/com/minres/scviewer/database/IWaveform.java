@@ -11,7 +11,7 @@
 package com.minres.scviewer.database;
 
 
-public interface IWaveform<T extends IWaveformEvent> extends IHierNode {
+public interface IWaveform extends IHierNode {
 
 	public Long getId();
 
@@ -19,6 +19,6 @@ public interface IWaveform<T extends IWaveformEvent> extends IHierNode {
 
 	public IWaveformDb getDb();
 	
-	public Boolean equals(IWaveform<? extends IWaveformEvent> other);
+	public Boolean equals(IWaveform other);
 
 }
