@@ -499,6 +499,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		if (partInput instanceof File) {
 			filesToLoad = new ArrayList<File>();
 			File file = (File) partInput;
+			if(file.isFile() && "CURRENT".equals(file.getName())){
+				file=file.getParentFile();
+			}
 			if (file.exists()) {
 				filesToLoad.add(file);
 				try {
@@ -508,8 +511,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_20)));
 						} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)))) {
 							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)));
+						} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)))) {
+							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)));
 						}
-					} else if (Messages.WaveformViewer_20.equals(ext.toLowerCase()) || Messages.WaveformViewer_21.equals(ext.toLowerCase())) {
+					} else if (Messages.WaveformViewer_20.equals(ext.toLowerCase()) || 
+								Messages.WaveformViewer_21.equals(ext.toLowerCase()) ||
+								Messages.WaveformViewer_22.equals(ext.toLowerCase())
+							) {
 						if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)))) {
 							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)));
 						}
@@ -621,7 +629,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		Integer waves = state.containsKey(SHOWN_WAVEFORM+"S") ? Integer.parseInt(state.get(SHOWN_WAVEFORM + "S")):0; //$NON-NLS-1$ //$NON-NLS-2$
 		List<TrackEntry> res = new LinkedList<>();
 		for (int i = 0; i < waves; i++) {
-			IWaveform<? extends IWaveformEvent> waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
+			IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
 			if (waveform != null) {
 				TrackEntry t = new TrackEntry(waveform);
 				res.add(t);
@@ -685,8 +693,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		Object sel = o == null ? selectionService.getSelection() : o;
 		if (sel instanceof IStructuredSelection)
 			for (Object el : ((IStructuredSelection) sel).toArray()) {
-				if (el instanceof IWaveform<?>)
-					addStreamToList((IWaveform<?>) el, false);
+				if (el instanceof IWaveform)
+					addStreamToList((IWaveform) el, false);
 			}
 	}
 
@@ -761,8 +769,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param obj the obj
 	 * @param insert the insert
 	 */
-	public void addStreamToList(IWaveform<? extends IWaveformEvent> obj, boolean insert) {
-		addStreamsToList(new IWaveform<?>[] { obj }, insert);
+	public void addStreamToList(IWaveform obj, boolean insert) {
+		addStreamsToList(new IWaveform[] { obj }, insert);
 	}
 
 	/**
@@ -771,16 +779,16 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param iWaveforms the i waveforms
 	 * @param insert the insert
 	 */
-	public void addStreamsToList(IWaveform<? extends IWaveformEvent>[] iWaveforms, boolean insert) {
+	public void addStreamsToList(IWaveform[] iWaveforms, boolean insert) {
 		List<TrackEntry> streams = new LinkedList<>();
-		for (IWaveform<? extends IWaveformEvent> stream : iWaveforms)
+		for (IWaveform stream : iWaveforms)
 			streams.add(new TrackEntry(stream));
 		IStructuredSelection selection = (IStructuredSelection) waveformPane.getSelection();
 		if (selection.size() == 0) {
 			waveformPane.getStreamList().addAll(streams);
 		} else {
 			Object first = selection.getFirstElement();
-			IWaveform<?> stream = (first instanceof ITx) ? ((ITx) first).getStream() : (IWaveform<?>) first;
+			IWaveform stream = (first instanceof ITx) ? ((ITx) first).getStream() : (IWaveform) first;
 			TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
 			int index = waveformPane.getStreamList().indexOf(trackEntry);
 			if (!insert)
@@ -795,7 +803,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 *
 	 * @param stream the stream
 	 */
-	public void removeStreamFromList(IWaveform<? extends IWaveformEvent> stream) {
+	public void removeStreamFromList(IWaveform stream) {
 		TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
 		List<TrackEntry> streams = waveformPane.getStreamList();
 		ISelection sel = waveformPane.getSelection();
@@ -822,8 +830,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 *
 	 * @param iWaveforms the i waveforms
 	 */
-	public void removeStreamsFromList(IWaveform<? extends IWaveformEvent>[] iWaveforms) {
-		for (IWaveform<? extends IWaveformEvent> stream : iWaveforms)
+	public void removeStreamsFromList(IWaveform[] iWaveforms) {
+		for (IWaveform stream : iWaveforms)
 			removeStreamFromList(stream);
 	}
 

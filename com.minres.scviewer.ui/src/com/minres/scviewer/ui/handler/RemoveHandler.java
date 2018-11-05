@@ -31,8 +31,8 @@ public class RemoveHandler extends AbstractHandler {
 		if(editor instanceof TxEditorPart){
 			TxEditorPart editorPart = (TxEditorPart) editor;
 			ISelection selection =editorPart.getSelection();
-			if(selection instanceof StructuredSelection && ((StructuredSelection)selection).getFirstElement() instanceof IWaveform<?>){
-				editorPart.removeStreamFromList((IWaveform<? extends IWaveformEvent>) ((StructuredSelection)selection).getFirstElement());
+			if(selection instanceof StructuredSelection && ((StructuredSelection)selection).getFirstElement() instanceof IWaveform){
+				editorPart.removeStreamFromList((IWaveform) ((StructuredSelection)selection).getFirstElement());
 				editorPart.setSelection(new StructuredSelection());
 			}
 		}

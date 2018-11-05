@@ -183,16 +183,16 @@ public class TxOutlinePage extends ContentOutlinePage implements  ISelectionList
 					for(Object obj :selection.toArray()){
 						if(obj instanceof IWaveform){
 							if(remove)
-								editor.removeStreamFromList((IWaveform<? extends IWaveformEvent>) obj);
+								editor.removeStreamFromList((IWaveform) obj);
 							else
-								editor.addStreamToList((IWaveform<? extends IWaveformEvent>) obj);
+								editor.addStreamToList((IWaveform) obj);
 						} else if(obj instanceof IHierNode){
 							LinkedList<IHierNode> queue = new LinkedList<IHierNode>();
-							LinkedList<IWaveform<? extends IWaveformEvent>> streams = new LinkedList<IWaveform<? extends IWaveformEvent>>();
+							LinkedList<IWaveform> streams = new LinkedList<IWaveform>();
 							queue.add((IHierNode)obj);
 							while(queue.size()>0){
 								IHierNode n = queue.poll();
-								if(n instanceof IWaveform) streams.add((IWaveform<? extends IWaveformEvent>) n);
+								if(n instanceof IWaveform) streams.add((IWaveform) n);
 								queue.addAll(n.getChildNodes());
 							}
 							if(remove)

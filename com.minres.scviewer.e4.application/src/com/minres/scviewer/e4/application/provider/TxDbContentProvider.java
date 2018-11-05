@@ -73,7 +73,7 @@ public class TxDbContentProvider implements ITreeContentProvider {
 				@Override
 				public boolean apply(IHierNode arg0) {
 					if(showNodes){
-						return arg0 instanceof IWaveform<?>;
+						return arg0 instanceof IWaveform;
 					} else{
 						return arg0.getChildNodes().size()!=0;
 					}

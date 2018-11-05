@@ -80,7 +80,7 @@ public class WaveformCanvas extends Canvas {
 
 	private List<CursorPainter> cursorPainters;
 
-	HashMap<IWaveform<?>, IWaveformPainter> wave2painterMap;
+	HashMap<IWaveform, IWaveformPainter> wave2painterMap;
     /**
      * Constructor for ScrollableCanvas.
      * 
@@ -438,7 +438,7 @@ public class WaveformCanvas extends Canvas {
         return result;
     }
 
-    public List<Object> getEntriesAtPosition(IWaveform<? extends IWaveformEvent> iWaveform, int i) {
+    public List<Object> getEntriesAtPosition(IWaveform iWaveform, int i) {
     	LinkedList<Object> result=new LinkedList<>();
         int x = i - origin.x;
         for(IPainter p: wave2painterMap.values()){
@@ -481,7 +481,7 @@ public class WaveformCanvas extends Canvas {
         }
     }
     
-	public void reveal(IWaveform<? extends IWaveformEvent> waveform) {
+	public void reveal(IWaveform waveform) {
         for (IWaveformPainter painter : wave2painterMap.values()) {
         	TrackEntry te = painter.getTrackEntry();
         	if(te.waveform == waveform) {

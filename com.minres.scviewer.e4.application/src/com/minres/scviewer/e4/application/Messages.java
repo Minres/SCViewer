@@ -47,6 +47,7 @@ public class Messages extends NLS {
 	public static String WaveformViewer_19;
 	public static String WaveformViewer_20;
 	public static String WaveformViewer_21;
+	public static String WaveformViewer_22;
 	public static String WaveformViewer_37;
 	public static String WaveformViewer_38;
 	public static String WaveformViewer_39;

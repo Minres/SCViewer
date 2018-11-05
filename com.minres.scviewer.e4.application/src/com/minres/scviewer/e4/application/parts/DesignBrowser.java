@@ -388,7 +388,7 @@ public class DesignBrowser {
 				Object object= ((IStructuredSelection)selection).getFirstElement();			
 				if(object instanceof IHierNode&& ((IHierNode)object).getChildNodes().size()!=0)
 					txTableViewer.setInput(object);
-				otherSelectionCount = (object instanceof IWaveform<?> || object instanceof ITx)?1:0;
+				otherSelectionCount = (object instanceof IWaveform || object instanceof ITx)?1:0;
 			}
 		}
 		updateButtons();
@@ -437,7 +437,7 @@ public class DesignBrowser {
 			if (searchString == null || searchString.length() == 0) {
 				return true;
 			}
-			IWaveform<?> p = (IWaveform<?>) element;
+			IWaveform p = (IWaveform) element;
 			if (p.getName().matches(searchString)) {
 				return true;
 			}

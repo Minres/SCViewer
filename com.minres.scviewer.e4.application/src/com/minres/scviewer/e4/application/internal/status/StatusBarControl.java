@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.osgi.service.prefs.PreferencesService;
 
+import com.minres.scviewer.e4.application.AppModelId;
 import com.minres.scviewer.e4.application.Messages;
 
 /**
@@ -80,11 +81,11 @@ public class StatusBarControl {
 	 */
 	@PostConstruct
 	void createWidget(Composite parent, MToolControl toolControl) {
-		if (toolControl.getElementId().equals("org.eclipse.ui.StatusLine")) { //$NON-NLS-1$
+		if (toolControl.getElementId().equals(AppModelId.TOOLCONTROL_ORG_ECLIPSE_UI_STATUSLINE)) { //$NON-NLS-1$
 			createStatusLine(parent, toolControl);
-		} else if (toolControl.getElementId().equals("org.eclipse.ui.HeapStatus")) { //$NON-NLS-1$
+		} else if (toolControl.getElementId().equals(AppModelId.TOOLCONTROL_ORG_ECLIPSE_UI_HEAPSTATUS)) { //$NON-NLS-1$
 			createHeapStatus(parent, toolControl);
-		} else if (toolControl.getElementId().equals("org.eclipse.ui.ProgressBar")) { //$NON-NLS-1$
+		} else if (toolControl.getElementId().equals(AppModelId.TOOLCONTROL_ORG_ECLIPSE_UI_PROGRESSBAR)) { //$NON-NLS-1$
 			createProgressBar(parent, toolControl);
 		}
 	}

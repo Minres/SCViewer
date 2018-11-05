@@ -33,7 +33,7 @@ public class MoveWaveformHandler {
 		Object sel = selectionService.getSelection();
 		if( sel instanceof IStructuredSelection) {
 			Object o= ((IStructuredSelection)sel).getFirstElement();
-			return o instanceof IWaveform<?> || o instanceof ITx;
+			return o instanceof IWaveform || o instanceof ITx;
 		}
 		return false;
 	}
