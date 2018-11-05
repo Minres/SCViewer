@@ -15,3 +15,5 @@ Require-Bundle: com.minres.scviewer.database;bundle-version="1.0.0",
 Service-Component: OSGI-INF/component.xml
 Bundle-ActivationPolicy: lazy
 Automatic-Module-Name: com.minres.scviewer.database.text
+Bundle-ClassPath: lib/mapdb-3.0.7.jar,
+ .

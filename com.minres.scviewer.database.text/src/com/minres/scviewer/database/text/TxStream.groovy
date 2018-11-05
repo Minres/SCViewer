@@ -16,7 +16,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import org.apache.jdbm.DB
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb
