@@ -32,6 +32,7 @@
         </children>
       </children>
     </children>
+    <children xsi:type="basic:Part" xmi:id="__VNlAIytEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.dialog.aboutscviewer" toBeRendered="false" visible="false" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.AboutDialog" label="About SCViewer"/>
     <mainMenu xmi:id="_95PfyXNmEeWBq8z1Dv39LA" elementId="menu:org.eclipse.ui.main.menu">
       <children xsi:type="menu:Menu" xmi:id="_95QGwHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.menu.file" label="File">
         <children xsi:type="menu:HandledMenuItem" xmi:id="_VJG3YHgvEeWwZ-9vrAR2UQ" elementId="" label="Open Database" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" command="_95PfwHNmEeWBq8z1Dv39LA"/>
@@ -141,9 +142,6 @@
         <tags>Draggable</tags>
       </children>
     </trimBars>
-  </children>
-  <children xsi:type="basic:Window" xmi:id="_8BTkQIytEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.dialog.aboutscviewer" toBeRendered="false" visible="false" selectedElement="__VNlAIytEeWid7xO48ZBXw" label="About SCViewer" x="200" y="200">
-    <children xsi:type="basic:Part" xmi:id="__VNlAIytEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.part.0" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.AboutDialog"/>
   </children>
   <handlers xmi:id="_95PfvXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.quitCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.QuitHandler" command="_95PfvHNmEeWBq8z1Dv39LA"/>
   <handlers xmi:id="_95PfwXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.openCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.OpenHandler" command="_95PfwHNmEeWBq8z1Dv39LA"/>

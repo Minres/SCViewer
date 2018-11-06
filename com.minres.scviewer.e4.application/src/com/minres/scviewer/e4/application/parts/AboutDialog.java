@@ -75,7 +75,7 @@ public class AboutDialog extends Dialog {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridData gd_composite = new GridData(SWT.LEFT, SWT.FILL, true, true);
 		gd_composite.widthHint = 600;
-		gd_composite.heightHint =250;
+		gd_composite.heightHint =300;
 		composite.setLayoutData(gd_composite);
 		composite.setLayout(new GridLayout(2, false));
 		
@@ -86,7 +86,7 @@ public class AboutDialog extends Dialog {
 		Canvas canvas = new Canvas(composite,SWT.NO_REDRAW_RESIZE);
 		GridData gd_canvas = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_canvas.widthHint = 200;
-		gd_canvas.heightHint =250;
+		gd_canvas.heightHint =300;
 		canvas.setLayoutData(gd_canvas);
 		canvas.addPaintListener(new PaintListener() {
 			public void paintControl(PaintEvent e) {
@@ -97,7 +97,7 @@ public class AboutDialog extends Dialog {
 			}
 		});
 
-		StyledText styledText = new StyledText(composite, SWT.BORDER);
+		StyledText styledText = new StyledText(composite, SWT.V_SCROLL | SWT.BORDER);
 		styledText.setEditable(false);
 		GridData gd_styledText = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
 		styledText.setLayoutData(gd_styledText);
