@@ -18,8 +18,6 @@ import com.minres.scviewer.database.ITxAttribute;
 
 public class TxAttribute implements ITxAttribute{
 
-	private Tx trTransaction;
-	
 	private String name;
 	
 	private DataType dataType;
@@ -29,7 +27,6 @@ public class TxAttribute implements ITxAttribute{
 	private Object value;
 	
 	public TxAttribute(Tx trTransaction, JSONObject attribute) {
-		this.trTransaction=trTransaction;
 		this.name=attribute.getString("name");
 		this.dataType=DataType.values()[attribute.getInt("type")];
 		this.associationType=AssociationType.values()[attribute.getInt("assoc")];

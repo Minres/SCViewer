@@ -26,7 +26,6 @@ import com.minres.scviewer.database.ISignal;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
 
@@ -152,9 +151,9 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	public Integer newNet(String name, int i, int width) {
 		String netName = moduleStack.empty()? name: moduleStack.lastElement()+"."+name;
 		int id = signals.size();
-		assert(width>0);
+		assert(width>=0);
 		if(width==0) {
-			signals.add( i<0 ? new VCDSignal<Double>(db, id, netName) :
+			signals.add( i<0 ? new VCDSignal<Double>(db, id, netName, width) :
 				new VCDSignal<Double>((VCDSignal<Double>)signals.get(i), id, netName));			
 		} else if(width>0){
 			signals.add( i<0 ? new VCDSignal<BitVector>(db, id, netName, width) :

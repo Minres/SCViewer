@@ -96,16 +96,15 @@ public class BitVector {
 	
 	public long toUnsignedValue() {
 		long res = 0;
-        int bitOffset = width * 2;
-        int wordOffset = bitOffset >> 5;
-        bitOffset &= 31;
-        int currentWord = packedValues[wordOffset] >> bitOffset;
+        int bitOffset = 0;
+        int wordOffset = 0;
+        int currentWord = 0;
         // Copy values out of packed array
         for (int i = 0; i < width; i++) {
-			res<<=1;
+            if(bitOffset==0) currentWord = packedValues[wordOffset];
 			switch (currentWord & 3) {
 			case 1:
-				res++;
+				res|=1<<i;
 				break;
 			case 2:
 			case 3:
@@ -116,7 +115,6 @@ public class BitVector {
             bitOffset += 2;
             if (bitOffset == 32) {
                 wordOffset++;
-                currentWord = packedValues[wordOffset];
                 bitOffset = 0;
             } else {
                 currentWord >>= 2;
@@ -126,42 +124,46 @@ public class BitVector {
 	}
 	
 	public long toSignedValue() {
-		Boolean negative=null;
 		long res = 0;
-        int bitOffset = width * 2;
-        int wordOffset = bitOffset >> 5;
-        bitOffset &= 31;
-        int currentWord = packedValues[wordOffset] >> bitOffset;
+        int bitOffset = 0;
+        int wordOffset = 0;
+        int currentWord = 0;
+        int lastVal=0;
         // Copy values out of packed array
         for (int i = 0; i < width; i++) {
-			if(negative == null) {
-				switch (currentWord & 3) {
-				case 1: negative=true; break;
-				case 0: negative=false; break;
-				case 2:
-				case 3: return 0;
-				default:
-				}				
-			} else {
-				res<<=1;
-				switch (currentWord & 3) {
-				case 1: if(!negative)	res++; break;
-				case 0: if(negative)	res++; break;
-				case 2:
-				case 3: return 0;
-				default:
-				}
+        	if(bitOffset==0) currentWord = packedValues[wordOffset];
+        	lastVal=0;
+			switch (currentWord & 3) {
+			case 1:
+				res|=1<<i;
+				lastVal=1;
+				break;
+			case 2:
+			case 3:
+				return 0;
+			default:
 			}
             bitOffset += 2;
             if (bitOffset == 32) {
                 wordOffset++;
-                currentWord = packedValues[wordOffset];
                 bitOffset = 0;
             } else {
                 currentWord >>= 2;
             }
         }
-		return negative?-1*(res+1):res;
+        for(int i=width; i<64; i++) {
+        	if(bitOffset==0) currentWord = packedValues[wordOffset];
+        	res|=lastVal<<i;
+        	bitOffset += 2;
+            if (bitOffset == 32) {
+                wordOffset++;
+                bitOffset = 0;
+            } else {
+                currentWord >>= 2;
+            }
+        	
+        }
+		return res;
 	}
 }
 
