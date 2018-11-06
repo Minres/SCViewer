@@ -13,6 +13,7 @@ package com.minres.scviewer.database.swt.internal;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -70,17 +71,13 @@ import org.eclipse.swt.widgets.Widget;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 import com.google.common.collect.Lists;
+import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ISignalChange;
-import com.minres.scviewer.database.ISignalChangeBitVector;
-import com.minres.scviewer.database.ISignalChangeReal;
-import com.minres.scviewer.database.ISignalChangeBit;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxRelation;
 import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.ui.GotoDirection;
@@ -94,6 +91,8 @@ public class WaveformViewer implements IWaveformViewer  {
 	private ListenerList<ISelectionChangedListener> selectionChangedListeners = new ListenerList<ISelectionChangedListener>();
 
 	private PropertyChangeSupport pcs;
+
+	static final DecimalFormat df = new DecimalFormat("#.00####"); 
 
 	private ITx currentTxSelection;
 
@@ -219,7 +218,7 @@ public class WaveformViewer implements IWaveformViewer  {
 		nameFontB = SWTResourceManager.getBoldFont(nameFont);
 
 		streams = new ObservableList<>();
-		streams.addPropertyChangeListener(this);
+		streams.addPropertyChangeListener("content", this);
 
 		top = new Composite(parent, SWT.NONE);
 		top.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -381,22 +380,21 @@ public class WaveformViewer implements IWaveformViewer  {
 				});
 				revealSelected=false;
 			} else 
-			waveformCanvas.getDisplay().asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					update();
-				}
-			});
+				waveformCanvas.getDisplay().asyncExec(new Runnable() {
+					@Override
+					public void run() {
+						update();
+					}
+				});
 		}
 	}
 
 	public void update() {
 		trackVerticalHeight = 0;
 		int nameMaxWidth = 0;
-		int previousHeight = trackVerticalOffset.size() == 0 ? 0 : trackVerticalOffset.lastKey();
 		IWaveformPainter painter = null;
 		trackVerticalOffset.clear();
-		waveformCanvas.clearAllWaveformPainter();
+		waveformCanvas.clearAllWaveformPainter(false);
 		boolean even = true;
 		boolean clearSelection = true;
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
@@ -423,24 +421,14 @@ public class WaveformViewer implements IWaveformViewer  {
 		waveformCanvas.syncScrollBars();
 		nameList.setSize(nameMaxWidth + 15, trackVerticalHeight);
 		nameListScrolled.setMinSize(nameMaxWidth + 15, trackVerticalHeight);
-		valueList.setSize(calculateValueWidth(), trackVerticalHeight);
-		valueListScrolled.setMinSize(calculateValueWidth(), trackVerticalHeight);
 		nameList.redraw();
 		updateValueList();
 		waveformCanvas.redraw();
 		top.layout(new Control[] { valueList, nameList, waveformCanvas });
 		if (trackVerticalOffset.isEmpty()){
 			waveformCanvas.setOrigin(0, 0);
-		}else if(previousHeight > trackVerticalOffset.lastKey()){
-			Point o = waveformCanvas.getOrigin();
-			waveformCanvas.setOrigin(o.x, o.y - (previousHeight - trackVerticalOffset.lastKey()));
 		}
 		if(clearSelection) setSelection(new StructuredSelection());
-		/*        System.out.println("updateTracklist() state:");
-        for(Entry<Integer, IWaveform<? extends IWaveformEvent>> entry: trackVerticalOffset.entrySet()){
-        	System.out.println("    "+entry.getKey()+": " +entry.getValue().getFullName());
-        }
-		 */    
 	}
 
 	private int calculateValueWidth() {
@@ -457,24 +445,28 @@ public class WaveformViewer implements IWaveformViewer  {
 	private void updateValueList(){
 		final Long time = getCursorTime();
 		for(TrackEntry entry:streams){
-			if(entry.isSignal()){    
-				ISignalChange event = ((ISignal<?>)entry.waveform).getWaveformEventsBeforeTime(time);
-				if(event instanceof ISignalChangeBit){
-					entry.currentValue="b'"+((ISignalChangeBit)event).getValue();
-				} else if(event instanceof ISignalChangeBitVector){
-					// TODO: same code resides in SignalPainter, fix it
-					switch(entry.valueDisplay) {
-					case SIGNED:
-						entry.currentValue=Long.toString(((ISignalChangeBitVector)event).getValue().toSignedValue());
-						break;						
-					case UNSIGNED:
-						entry.currentValue=Long.toString(((ISignalChangeBitVector)event).getValue().toUnsignedValue());
-						break;
-					default:
-						entry.currentValue="h'"+((ISignalChangeBitVector)event).getValue().toHexString();
+			if(entry.isSignal()){
+				ISignal<?> signal = (ISignal<?>) entry.waveform;
+				Object value = signal.getWaveformValueBeforeTime(time);
+				if(value instanceof BitVector){
+					BitVector bv = (BitVector) value;
+					if(bv.getWidth()==1)
+						entry.currentValue="b'"+bv;
+					else {
+						// TODO: same code resides in SignalPainter, fix it
+						switch(entry.valueDisplay) {
+						case SIGNED:
+							entry.currentValue=Long.toString(bv.toSignedValue());
+							break;						
+						case UNSIGNED:
+							entry.currentValue=Long.toString(bv.toUnsignedValue());
+							break;
+						default:
+							entry.currentValue="h'"+bv.toHexString();
+						}
 					}
-				} else if(event instanceof ISignalChangeReal){
-					double val = ((ISignalChangeReal)event).getValue();
+				} else if(value instanceof Double){
+					Double val = (Double) value;
 					if(val>0.001)
 						entry.currentValue=String.format("%1$,.3f", val);
 					else
@@ -495,19 +487,20 @@ public class WaveformViewer implements IWaveformViewer  {
 						}
 						firstTx=stream.getEvents().lowerEntry(firstTx.getKey());
 					}while(firstTx!=null && !isArrayFull(resultsList));
-					String value=null;
+					entry.currentValue="";
+					boolean separator=false;
 					for(ITx o:resultsList){
-						if(value==null)
-							value=new String();
-						else
-							value+="|";
-						if(o!=null) value+=((ITx)o).getGenerator().getName();
+						if(separator) entry.currentValue+="|";
+						if(o!=null) entry.currentValue+=((ITx)o).getGenerator().getName();
+						separator=true;
 					}
-					entry.currentValue=value;
 				}
 			}
 		}
-		valueList.redraw();
+		int width = calculateValueWidth();
+		valueList.setSize(width, trackVerticalHeight);
+		valueListScrolled.setMinSize(width, trackVerticalHeight);
+		valueListScrolled.redraw();
 	}
 
 	private boolean isArrayFull(Object[] array){
@@ -629,7 +622,7 @@ public class WaveformViewer implements IWaveformViewer  {
 		}
 		if(currentWaveformSelection!=null) currentWaveformSelection.selected=true;
 		if (selectionChanged) {
-			waveformCanvas.reveal(currentWaveformSelection.waveform);
+			if(currentWaveformSelection!=null) waveformCanvas.reveal(currentWaveformSelection.waveform);
 			waveformCanvas.setSelected(currentTxSelection);
 			valueList.redraw();
 			nameList.redraw();
@@ -822,13 +815,13 @@ public class WaveformViewer implements IWaveformViewer  {
 				Rectangle subArea = new Rectangle(rect.x, 0, rect.width, waveformCanvas.getTrackHeight());
 				if (lastKey == firstKey) {
 					TrackEntry trackEntry=trackVerticalOffset.get(firstKey);
-					IWaveform<? extends IWaveformEvent> w = trackEntry.waveform;
+					IWaveform w = trackEntry.waveform;
 					if (w instanceof ITxStream<?>)
 						subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
 					drawTextFormat(gc, subArea, firstKey, w.getFullName(), trackEntry.selected);
 				} else {
 					for (Entry<Integer, TrackEntry> entry : trackVerticalOffset.subMap(firstKey, true, lastKey, true).entrySet()) {
-						IWaveform<? extends IWaveformEvent> w = entry.getValue().waveform;
+						IWaveform w = entry.getValue().waveform;
 						subArea.height = waveformCanvas.getTrackHeight();
 						if (w instanceof ITxStream<?>)
 							subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
@@ -849,14 +842,14 @@ public class WaveformViewer implements IWaveformViewer  {
 				Rectangle subArea = new Rectangle(rect.x, 0, rect.width, waveformCanvas.getTrackHeight());
 				if (lastKey == firstKey) {
 					TrackEntry trackEntry=trackVerticalOffset.get(firstKey);
-					IWaveform<? extends IWaveformEvent> w = trackEntry.waveform;
+					IWaveform w = trackEntry.waveform;
 					if (w instanceof ITxStream<?>)
 						subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
 					drawValue(gc, subArea, firstKey, trackEntry.currentValue, trackEntry.selected);
 				} else {
 					for (Entry<Integer, TrackEntry> entry : trackVerticalOffset.subMap(firstKey, true, lastKey, true)
 							.entrySet()) {
-						IWaveform<? extends IWaveformEvent> w = entry.getValue().waveform;
+						IWaveform w = entry.getValue().waveform;
 						subArea.height = waveformCanvas.getTrackHeight();
 						if (w instanceof ITxStream<?>)
 							subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
@@ -1047,7 +1040,7 @@ public class WaveformViewer implements IWaveformViewer  {
 		});
 	}
 
-	public TrackEntry getEntryForStream(IWaveform<?> source) {
+	public TrackEntry getEntryForStream(IWaveform source) {
 		for(TrackEntry trackEntry:streams)
 			if(trackEntry.waveform.equals(source)) return trackEntry;
 		return null;
@@ -1187,7 +1180,8 @@ public class WaveformViewer implements IWaveformViewer  {
 	public String getScaledTime(long time) {
 		StringBuilder sb = new StringBuilder();
 		Double dTime=new Double(time);
-		return sb.append(dTime/waveformCanvas.getScaleFactorPow10()).append(waveformCanvas.getUnitStr()).toString();
+		Double scaledTime = dTime/waveformCanvas.getScaleFactorPow10();
+		return sb.append(df.format(scaledTime)).append(waveformCanvas.getUnitStr()).toString();
 	}
 
 	/* (non-Javadoc)

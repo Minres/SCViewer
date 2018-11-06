@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NavigableMap;
 
-public interface  ITxStream<T extends ITxEvent> extends IWaveform<T> {
+public interface  ITxStream<T extends ITxEvent> extends IWaveform {
 
 	public List<ITxGenerator> getGenerators();
 

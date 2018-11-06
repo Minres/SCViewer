@@ -90,6 +90,7 @@ public class WaveStatusBarControl extends StatusBarControl {
 			label=new CLabel(box, SWT.SHADOW_NONE);	
 			label.setText(labelString);
 			text=new CLabel(box, SWT.SHADOW_IN);
+			text.setAlignment(SWT.RIGHT);
 			GridData layoutData=new GridData(SWT.DEFAULT, SWT.DEFAULT, true, false);
 			layoutData.minimumWidth=width;
 			text.setLayoutData(layoutData);
@@ -126,10 +127,10 @@ public class WaveStatusBarControl extends StatusBarControl {
 	@Inject
 	public WaveStatusBarControl(UISynchronize sync) {
 		super(sync);
-		cursorContribution = new TextContributionItem(Messages.WaveStatusBarControl_5, 80);
-		markerContribution = new TextContributionItem(Messages.WaveStatusBarControl_6, 80);
-		markerDiffContribution = new TextContributionItem(Messages.WaveStatusBarControl_7, 80);
-		zoomContribution = new TextContributionItem(Messages.WaveStatusBarControl_8, 80);
+		cursorContribution = new TextContributionItem(Messages.WaveStatusBarControl_5, 150);
+		markerContribution = new TextContributionItem(Messages.WaveStatusBarControl_6, 150);
+		markerDiffContribution = new TextContributionItem(Messages.WaveStatusBarControl_7, 150);
+		zoomContribution = new TextContributionItem(Messages.WaveStatusBarControl_8, 60);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,cursorContribution);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,markerContribution);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,markerDiffContribution);

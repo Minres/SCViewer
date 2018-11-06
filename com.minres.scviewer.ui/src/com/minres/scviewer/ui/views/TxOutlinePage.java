@@ -36,7 +36,6 @@ import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.ui.TxEditorPart;
 import com.minres.scviewer.ui.views.provider.TxDbTreeContentProvider;
 import com.minres.scviewer.ui.views.provider.TxDbTreeLabelProvider;
@@ -177,22 +176,21 @@ public class TxOutlinePage extends ContentOutlinePage implements  ISelectionList
 
 	private Action makeStreamAction(String text, String imgDescriptor, final IStructuredSelection selection, boolean enabled, final boolean remove) {
 		Action action = new Action() {
-			@SuppressWarnings("unchecked")
 			public void run() {
 				if(selection!=null)
 					for(Object obj :selection.toArray()){
 						if(obj instanceof IWaveform){
 							if(remove)
-								editor.removeStreamFromList((IWaveform<? extends IWaveformEvent>) obj);
+								editor.removeStreamFromList((IWaveform) obj);
 							else
-								editor.addStreamToList((IWaveform<? extends IWaveformEvent>) obj);
+								editor.addStreamToList((IWaveform) obj);
 						} else if(obj instanceof IHierNode){
 							LinkedList<IHierNode> queue = new LinkedList<IHierNode>();
-							LinkedList<IWaveform<? extends IWaveformEvent>> streams = new LinkedList<IWaveform<? extends IWaveformEvent>>();
+							LinkedList<IWaveform> streams = new LinkedList<IWaveform>();
 							queue.add((IHierNode)obj);
 							while(queue.size()>0){
 								IHierNode n = queue.poll();
-								if(n instanceof IWaveform) streams.add((IWaveform<? extends IWaveformEvent>) n);
+								if(n instanceof IWaveform) streams.add((IWaveform) n);
 								queue.addAll(n.getChildNodes());
 							}
 							if(remove)

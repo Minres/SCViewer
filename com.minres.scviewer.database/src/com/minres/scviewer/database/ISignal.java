@@ -13,12 +13,14 @@ package com.minres.scviewer.database;
 import java.util.NavigableMap;
 
 
-public interface ISignal<T extends ISignalChange> extends IWaveform<T>{
+public interface ISignal<T> extends IWaveform{
 
 	public NavigableMap<Long, T> getEvents();
 
-	public T getWaveformEventsAtTime(Long time);
+	public T getWaveformValueAtTime(Long time);
 
-	public T getWaveformEventsBeforeTime(Long time);
+	public T getWaveformValueBeforeTime(Long time);
+	
+	public Class<?> getType();
 }
 

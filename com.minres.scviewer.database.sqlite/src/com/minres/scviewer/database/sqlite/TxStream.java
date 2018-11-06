@@ -29,7 +29,6 @@ import com.minres.scviewer.database.ITxGenerator;
 import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
@@ -193,7 +192,7 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	}
 
 	@Override
-	public Boolean equals(IWaveform<? extends IWaveformEvent> other) {
+	public Boolean equals(IWaveform other) {
 		return(other instanceof TxStream && this.getId()==other.getId());
 	}
 

@@ -22,12 +22,9 @@ import java.util.Map;
 
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IHierNode;
-import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
 
@@ -41,7 +38,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 
 	private List<RelationType> relationTypes;
 	
-	private Map<String, IWaveform<?>> waveforms;
+	private Map<String, IWaveform> waveforms;
 
 	private Long maxTime;
 	
@@ -61,7 +58,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 
 	public WaveformDb() {
 		super();
-		waveforms = new HashMap<String, IWaveform<?>>();
+		waveforms = new HashMap<String, IWaveform>();
 		relationTypes=new ArrayList<>();
 		maxTime=0L;
 	}
@@ -72,32 +69,36 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 	}
 
 	@Override
-	public IWaveform<? extends IWaveformEvent> getStreamByName(String name) {
+	public IWaveform getStreamByName(String name) {
 		return waveforms.get(name);
 	}
 
 	@Override
-	public List<IWaveform<?>> getAllWaves() {
-		return new ArrayList<IWaveform<?>>(waveforms.values());
+	public List<IWaveform> getAllWaves() {
+		return new ArrayList<IWaveform>(waveforms.values());
 	}
 
 	@Override
-	public boolean load(File inp) throws Exception {
+	public boolean load(File inp){
 		for(IWaveformDbLoader loader:loaders){
-			if(loader.load(this, inp)){
-				for(IWaveform<?> w:loader.getAllWaves()){
-					waveforms.put(w.getFullName(),w);
+			try {
+				if(loader.load(this, inp)){
+					for(IWaveform w:loader.getAllWaves()){
+						waveforms.put(w.getFullName(),w);
+					}
+					if(loader.getMaxTime()>maxTime){
+						maxTime=loader.getMaxTime();
+					}
+					if(name==null) name=getFileBasename(inp.getName());
+					buildHierarchyNodes() ;
+					relationTypes.addAll(loader.getAllRelationTypes());
+					pcs.firePropertyChange("WAVEFORMS", null, waveforms);
+					pcs.firePropertyChange("CHILDS", null, childNodes);
+					loaded = true;
+					return true;
 				}
-				if(loader.getMaxTime()>maxTime){
-					maxTime=loader.getMaxTime();
-				}
-				if(name==null) name=getFileBasename(inp.getName());
-				buildHierarchyNodes() ;
-				relationTypes.addAll(loader.getAllRelationTypes());
-				pcs.firePropertyChange("WAVEFORMS", null, waveforms);
-				pcs.firePropertyChange("CHILDS", null, childNodes);
-				loaded = true;
-				return true;
+			} catch (Exception e) {
+				return false;
 			}
 		}		
 		return false;
@@ -125,8 +126,8 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 
 	private void buildHierarchyNodes() throws InputFormatException{
 		childNodes= new ArrayList<IHierNode>();
-		for(IWaveform<?> stream:getAllWaves()){
-			updateMaxTime(stream);
+		for(IWaveform stream:getAllWaves()){
+			//updateMaxTime(stream);
 			String[] hier = stream.getName().split("\\.");
 			IHierNode node = this;
 			List<String> path=new LinkedList<String>();
@@ -169,16 +170,6 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 		}
 	}
 
-	private void updateMaxTime(IWaveform<?> waveform) {
-		Long last=0L;
-		if(waveform instanceof ITxStream<?> && ((ITxStream<?>)waveform).getEvents().lastEntry()!=null)
-			last=((ITxStream<?>)waveform).getEvents().lastEntry().getKey();
-		else if(waveform instanceof ISignal<?> && ((ISignal<?>)waveform).getEvents().lastEntry()!=null)
-			last=((ISignal<?>)waveform).getEvents().lastEntry().getKey();
-		if(last>maxTime)
-			maxTime=last;
-	}
-	
 	private static String join(Collection<?> col, String delim) {
 	    StringBuilder sb = new StringBuilder();
 	    Iterator<?> iter = col.iterator();

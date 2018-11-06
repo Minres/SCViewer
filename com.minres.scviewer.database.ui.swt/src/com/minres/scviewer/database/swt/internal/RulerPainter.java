@@ -10,6 +10,8 @@
  *******************************************************************************/
 package com.minres.scviewer.database.swt.internal;
 
+import java.text.DecimalFormat;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
@@ -22,6 +24,8 @@ public class RulerPainter implements IPainter {
     static final int rulerTickMinorC = 10;
     static final int rulerTickMajorC = 100;
        
+	static final DecimalFormat df = new DecimalFormat("#.00####"); 
+
     public RulerPainter(WaveformCanvas waveCanvas) {
         this.waveCanvas=waveCanvas;
     }
@@ -64,7 +68,7 @@ public class RulerPainter implements IPainter {
         for (long tick = startMinorIncr; tick < end; tick += rulerTickMinor) {
             int x0 = (int) (tick/scaleFactor);
             if ((tick % rulerTickMajor) == 0) {
-                gc.drawText(Double.toString(tick/scaleFactor*unitMultiplier)+unit, x0, area.y+textY);
+                gc.drawText(df.format(tick/scaleFactor*unitMultiplier)+unit, x0, area.y+textY);
                 gc.drawLine(x0, area.y+majorTickY, x0,area.y+ bottom);
             } else {
                 gc.drawLine(x0, area.y+minorTickY, x0, area.y+bottom);

@@ -11,11 +11,9 @@
 package com.minres.scviewer.database.ui;
 
 import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ISignalChange;
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformEvent;
 
 
 public class TrackEntry {
@@ -28,7 +26,7 @@ public class TrackEntry {
 		DEFAULT, STEP_WISE, CONTINOUS
 	}
 
-	final public IWaveform<? extends IWaveformEvent> waveform;
+	final public IWaveform waveform;
 
 	public int vOffset;
 	
@@ -42,7 +40,7 @@ public class TrackEntry {
 	
 	public WaveDisplay waveDisplay = WaveDisplay.DEFAULT;
 	
-	public TrackEntry(IWaveform<? extends IWaveformEvent> waveform) {
+	public TrackEntry(IWaveform waveform) {
 		this.waveform = waveform;
 		vOffset=0;
 		height=0;
@@ -61,7 +59,7 @@ public class TrackEntry {
 		return waveform instanceof ISignal<?>;
 	}
 	
-	public ISignal<? extends ISignalChange> getSignal(){
+	public ISignal<?> getSignal(){
 		return (ISignal<?>) waveform;
 	}
 

@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,12 +33,14 @@ import javax.inject.Named;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
+import org.eclipse.core.runtime.jobs.JobGroup;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -47,6 +50,7 @@ import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.PersistState;
 import org.eclipse.e4.ui.di.UIEventTopic;
+import org.eclipse.e4.ui.di.UISynchronize;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.services.EMenuService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
@@ -57,6 +61,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackListener;
@@ -73,7 +78,6 @@ import com.minres.scviewer.database.ITxRelation;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.swt.WaveformViewerFactory;
@@ -140,6 +144,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	/** The waveform pane. */
 	private IWaveformViewer waveformPane;
+
+	/** get UISynchronize injected as field */
+	@Inject UISynchronize sync;
 
 	/** The event broker. */
 	@Inject
@@ -280,32 +287,21 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		
 		waveformPane.getWaveformControl().addListener(SWT.KeyDown, new Listener() {
 			
+			@SuppressWarnings("null")
 			@Override
 			public void handleEvent(Event e) {
-				int state = e.stateMask & SWT.MODIFIER_MASK;
-				if(Platform.OS_MACOSX.equals(Platform.getOS())) { //swap cammnd and control for MacOSX
-					if((state&SWT.COMMAND)!=0) {
-						state&=~SWT.COMMAND;
-						state|=SWT.CONTROL;
-					} else if((state&SWT.CONTROL)!=0) {
-						state&=~SWT.CONTROL;
-						state|=SWT.COMMAND;
+				/*
+					String string = e.type == SWT.KeyDown ? "DOWN:" : "UP  :";
+					string += " stateMask=0x" + Integer.toHexString (e.stateMask) + ","; // SWT.CTRL, SWT.ALT, SWT.SHIFT, SWT.COMMAND
+					string += " keyCode=0x" + Integer.toHexString (e.keyCode) + ",";
+					string += " character=0x" + Integer.toHexString (e.character) ;
+					if (e.keyLocation != 0) {
+						string +=  " location="+e.keyLocation;
 					}
-				}
-				if(state==SWT.ALT) {
-					switch(e.keyCode) {
-					case SWT.ARROW_LEFT:
-						waveformPane.scrollHorizontal(-100);
-						return;
-					case SWT.ARROW_RIGHT:
-						waveformPane.scrollHorizontal(100);
-						return;
-					case SWT.KEYPAD_ADD:
-						return;
-					case SWT.KEYPAD_SUBTRACT:
-						return;
-					}
-				} else if(state==SWT.CTRL) {
+					System.out.println (string);
+				*/
+				if((e.stateMask&SWT.MOD3)!=0) { // Alt key
+				} else if((e.stateMask&SWT.MOD1)!=0) { //Ctrl/Cmd
 					int zoomlevel = waveformPane.getZoomLevel();
 					switch(e.keyCode) {
 					case '+':
@@ -325,7 +321,15 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						waveformPane.moveSelectedTrack(1);
 						return;
 					}
-				} else if(state==SWT.SHIFT) {
+				} else if((e.stateMask&SWT.MOD2)!=0) { //Shift
+					switch(e.keyCode) {
+					case SWT.ARROW_LEFT:
+						waveformPane.scrollHorizontal(-100);
+						return;
+					case SWT.ARROW_RIGHT:
+						waveformPane.scrollHorizontal(100);
+						return;
+					}
 				} else {
 					switch(e.keyCode) {
 					case SWT.ARROW_LEFT:
@@ -344,7 +348,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					case SWT.END:			return; //TODO: should be handled
 					}
 				}
-
 			}
 		});
 		
@@ -414,7 +417,23 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		}
 		waveformPane.setColors(colorPref);
 	}
+	
+	class DbLoadJob extends Job {
+		final File file;
+		public DbLoadJob(String name, final File file) {
+			super(name);
+			this.file=file;
+		}
 
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			monitor.setTaskName(Messages.WaveformViewer_16+file.getName());
+			boolean res = database.load(file);
+			monitor.done();
+			database.addPropertyChangeListener(waveformPane);
+			return res?Status.OK_STATUS:Status.CANCEL_STATUS;
+		}
+	}
 	/**
 	 * Load database.
 	 *
@@ -422,50 +441,46 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	protected void loadDatabase(final Map<String, String> state) {
 		fileMonitor.removeFileChangeListener(this);
+		MultiStatus fStatus= new MultiStatus("blah", IStatus.OK, Messages.WaveformViewer_13, null);
 		Job job = new Job(Messages.WaveformViewer_15) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				// convert to SubMonitor and set total number of work units
-				SubMonitor subMonitor = SubMonitor.convert(monitor, filesToLoad.size()+1);
+				SubMonitor subMonitor = SubMonitor.convert(monitor, filesToLoad.size());
+				JobGroup jobGroup = new JobGroup(Messages.WaveformViewer_15, filesToLoad.size(), filesToLoad.size());
+				filesToLoad.forEach((final File file) -> {
+					Job job = new DbLoadJob(Messages.WaveformViewer_16 + file.getName(), file);
+					job.setProgressGroup(subMonitor, 1);
+					job.setJobGroup(jobGroup);
+					job.schedule();
+				});
 				try {
-					subMonitor.worked(1);
-					for (File file : filesToLoad) {
-						subMonitor.setTaskName(Messages.WaveformViewer_16+file.getName());
-						database.load(file);
-						database.addPropertyChangeListener(waveformPane);
-						subMonitor.worked(1);
-						if (monitor.isCanceled())
-							return Status.CANCEL_STATUS;
-					}
-				} catch (Exception e) {
-					database = null;
-					e.printStackTrace();
-					return Status.CANCEL_STATUS;
+					jobGroup.join(0, monitor);
+				} catch (OperationCanceledException | InterruptedException e) {
+					throw new OperationCanceledException(Messages.WaveformViewer_14);
 				}
-				subMonitor.done();
-				monitor.done();
-				return Status.OK_STATUS;
+				if (monitor.isCanceled())
+					throw new OperationCanceledException(Messages.WaveformViewer_14);
+
+				fStatus.addAll(jobGroup.getResult());
+				return fStatus;
 			}
 		};
 		job.addJobChangeListener(new JobChangeAdapter() {
 			@Override
 			public void done(IJobChangeEvent event) {
-				if (event.getResult() == Status.OK_STATUS)
-					myParent.getDisplay().asyncExec(new Runnable() {
-						@Override
-						public void run() {
-							waveformPane.setMaxTime(database.getMaxTime());
-							if (state != null)
-								restoreWaveformViewerState(state);
-							fileChecker = null;
-							if (checkForUpdates)
-								fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad,
-										FILE_CHECK_INTERVAL);
-						}
-					});
+				if (event.getResult().getCode() != Status.OK_STATUS.getCode()) return;
+				sync.asyncExec(()->{
+					waveformPane.setMaxTime(database.getMaxTime());
+					if (state != null)
+						restoreWaveformViewerState(state);
+					fileChecker = null;
+					if (checkForUpdates)
+						fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
+				});
 			}
 		});
-		job.schedule(0);
+		job.setSystem(true);
+		job.schedule(1000L); // let the UI initialize so that we have a progress monitor
 	}
 
 	/* (non-Javadoc)
@@ -502,6 +517,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		if (partInput instanceof File) {
 			filesToLoad = new ArrayList<File>();
 			File file = (File) partInput;
+			if(file.isFile() && "CURRENT".equals(file.getName())){
+				file=file.getParentFile();
+			}
 			if (file.exists()) {
 				filesToLoad.add(file);
 				try {
@@ -511,8 +529,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_20)));
 						} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)))) {
 							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)));
+						} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)))) {
+							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)));
 						}
-					} else if (Messages.WaveformViewer_20.equals(ext.toLowerCase()) || Messages.WaveformViewer_21.equals(ext.toLowerCase())) {
+					} else if (Messages.WaveformViewer_20.equals(ext.toLowerCase()) || 
+								Messages.WaveformViewer_21.equals(ext.toLowerCase()) ||
+								Messages.WaveformViewer_22.equals(ext.toLowerCase())
+							) {
 						if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)))) {
 							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)));
 						}
@@ -624,7 +647,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		Integer waves = state.containsKey(SHOWN_WAVEFORM+"S") ? Integer.parseInt(state.get(SHOWN_WAVEFORM + "S")):0; //$NON-NLS-1$ //$NON-NLS-2$
 		List<TrackEntry> res = new LinkedList<>();
 		for (int i = 0; i < waves; i++) {
-			IWaveform<? extends IWaveformEvent> waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
+			IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
 			if (waveform != null) {
 				TrackEntry t = new TrackEntry(waveform);
 				res.add(t);
@@ -688,8 +711,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		Object sel = o == null ? selectionService.getSelection() : o;
 		if (sel instanceof IStructuredSelection)
 			for (Object el : ((IStructuredSelection) sel).toArray()) {
-				if (el instanceof IWaveform<?>)
-					addStreamToList((IWaveform<?>) el, false);
+				if (el instanceof IWaveform)
+					addStreamToList((IWaveform) el, false);
 			}
 	}
 
@@ -764,8 +787,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param obj the obj
 	 * @param insert the insert
 	 */
-	public void addStreamToList(IWaveform<? extends IWaveformEvent> obj, boolean insert) {
-		addStreamsToList(new IWaveform<?>[] { obj }, insert);
+	public void addStreamToList(IWaveform obj, boolean insert) {
+		addStreamsToList(new IWaveform[] { obj }, insert);
 	}
 
 	/**
@@ -774,16 +797,16 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param iWaveforms the i waveforms
 	 * @param insert the insert
 	 */
-	public void addStreamsToList(IWaveform<? extends IWaveformEvent>[] iWaveforms, boolean insert) {
+	public void addStreamsToList(IWaveform[] iWaveforms, boolean insert) {
 		List<TrackEntry> streams = new LinkedList<>();
-		for (IWaveform<? extends IWaveformEvent> stream : iWaveforms)
+		for (IWaveform stream : iWaveforms)
 			streams.add(new TrackEntry(stream));
 		IStructuredSelection selection = (IStructuredSelection) waveformPane.getSelection();
 		if (selection.size() == 0) {
 			waveformPane.getStreamList().addAll(streams);
 		} else {
 			Object first = selection.getFirstElement();
-			IWaveform<?> stream = (first instanceof ITx) ? ((ITx) first).getStream() : (IWaveform<?>) first;
+			IWaveform stream = (first instanceof ITx) ? ((ITx) first).getStream() : (IWaveform) first;
 			TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
 			int index = waveformPane.getStreamList().indexOf(trackEntry);
 			if (!insert)
@@ -798,9 +821,26 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 *
 	 * @param stream the stream
 	 */
-	public void removeStreamFromList(IWaveform<? extends IWaveformEvent> stream) {
+	public void removeStreamFromList(IWaveform stream) {
 		TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
-		waveformPane.getStreamList().remove(trackEntry);
+		List<TrackEntry> streams = waveformPane.getStreamList();
+		ISelection sel = waveformPane.getSelection();
+		TrackEntry newSelection=null;
+		if(sel instanceof IStructuredSelection && ((IStructuredSelection) sel).size()==2) {
+				Iterator<?> it = ((IStructuredSelection)sel).iterator();
+				it.next();
+				int idx = streams.indexOf(it.next());
+				if(idx==streams.size()-1)
+					newSelection=streams.get(idx-1);
+				else
+					newSelection=streams.get(idx+1);
+		}
+		waveformPane.setSelection(new StructuredSelection());
+		streams.remove(trackEntry);
+		if(newSelection!=null) {
+			Object[] o = {newSelection};
+			waveformPane.setSelection(new StructuredSelection(o));
+		}
 	}
 
 	/**
@@ -808,8 +848,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 *
 	 * @param iWaveforms the i waveforms
 	 */
-	public void removeStreamsFromList(IWaveform<? extends IWaveformEvent>[] iWaveforms) {
-		for (IWaveform<? extends IWaveformEvent> stream : iWaveforms)
+	public void removeStreamsFromList(IWaveform[] iWaveforms) {
+		for (IWaveform stream : iWaveforms)
 			removeStreamFromList(stream);
 	}
 

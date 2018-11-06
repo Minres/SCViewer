@@ -59,7 +59,7 @@ public interface IWaveformViewer extends PropertyChangeListener, ISelectionProvi
 
 	public List<TrackEntry> getStreamList();
 
-	public TrackEntry getEntryForStream(IWaveform<?> source);
+	public TrackEntry getEntryForStream(IWaveform source);
 	
 	public void moveSelectedTrack(int i);
 	

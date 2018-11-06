@@ -13,6 +13,7 @@ package com.minres.scviewer.database.vcd;
 import java.io.*;
 import java.util.*;
 
+import com.minres.scviewer.database.BitValue;
 import com.minres.scviewer.database.BitVector;
 
 class VCDFileParser {
@@ -65,7 +66,7 @@ class VCDFileParser {
 		nextToken(); // size
 		int width = Integer.parseInt(tokenizer.sval);
 		if("real".equals(type))
-			width*=-1;
+			width=0;
 		nextToken();
 		String id = tokenizer.sval;
 		nextToken();
@@ -183,7 +184,7 @@ class VCDFileParser {
 			}
 
 			int netWidth = traceBuilder.getNetWidth(net);
-			if(netWidth<0) {
+			if(netWidth==0) {
 				if("nan".equals(value))
 					traceBuilder.appendTransition(net, currentTime, Double.NaN);
 				else
@@ -192,39 +193,40 @@ class VCDFileParser {
 				BitVector decodedValues = new BitVector(netWidth);
 				if (value.equals("z") && netWidth > 1) {
 					for (int i = 0; i < netWidth; i++)
-						decodedValues.setValue(i, BitVector.VALUE_Z);
+						decodedValues.setValue(i, BitValue.Z);
 				} else if (value.equals("x") && netWidth > 1) {
 					for (int i = 0; i < netWidth; i++)
-						decodedValues.setValue(i, BitVector.VALUE_X);
+						decodedValues.setValue(i, BitValue.X);
 				} else {
 					int stringIndex = 0;
-					for (int convertedIndex = netWidth - value.length(); convertedIndex < netWidth; convertedIndex++) {
-						switch (value.charAt(stringIndex++)) {
-						case 'z':
-							decodedValues.setValue(convertedIndex, BitVector.VALUE_Z);
-							break;
-	
-						case '1':
-							decodedValues.setValue(convertedIndex, BitVector.VALUE_1);
-							break;
-	
-						case '0':
-							decodedValues.setValue(convertedIndex, BitVector.VALUE_0);
-							break;
-	
-						case 'x':
-							decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
-							break;
-	
-						default:
-							decodedValues.setValue(convertedIndex, BitVector.VALUE_X);
+					for (int convertedIndex = netWidth -1; convertedIndex >=0; convertedIndex--) {
+						if(convertedIndex<value.length()) {
+							switch (value.charAt(stringIndex++)) {
+							case 'z':
+								decodedValues.setValue(convertedIndex, BitValue.Z);
+								break;
+
+							case '1':
+								decodedValues.setValue(convertedIndex, BitValue.ONE);
+								break;
+
+							case '0':
+								decodedValues.setValue(convertedIndex, BitValue.ZERO);
+								break;
+
+							case 'x':
+								decodedValues.setValue(convertedIndex, BitValue.X);
+								break;
+
+							default:
+								decodedValues.setValue(convertedIndex, BitValue.X);
+							}
+						} else {
+							decodedValues.setValue(convertedIndex, BitValue.ZERO);
 						}
 					}
 				}
-				if(netWidth==1)
-					traceBuilder.appendTransition(net, currentTime, decodedValues.getValue()[0]);
-				else
-					traceBuilder.appendTransition(net, currentTime, decodedValues);
+				traceBuilder.appendTransition(net, currentTime, decodedValues);
 			}
 		}
 		return true;

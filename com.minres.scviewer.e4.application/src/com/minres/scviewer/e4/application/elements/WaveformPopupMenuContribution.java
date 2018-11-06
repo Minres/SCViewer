@@ -22,10 +22,8 @@ import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
+import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ISignalChange;
-import com.minres.scviewer.database.ISignalChangeBitVector;
-import com.minres.scviewer.database.ISignalChangeReal;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
@@ -45,10 +43,11 @@ public class WaveformPopupMenuContribution {
 			if(!sel.isEmpty() && sel instanceof IStructuredSelection) {
 				Object selected = ((IStructuredSelection)sel).getFirstElement();
 				if(selected instanceof ISignal<?>) {
-					ISignalChange s = (ISignalChange) ((ISignal<?>) selected).getEvents().firstEntry().getValue();
-					if((s instanceof ISignalChangeReal) || (s instanceof ISignalChangeBitVector)) {
+					Object x = ((ISignal<?>) selected).getEvents().firstEntry().getValue();
+					if((x instanceof BitVector) && ((BitVector)x).getWidth()==1) {
+						return false;
+					} else
 						return true;
-					}
 				}
 			}
 		}
@@ -67,13 +66,13 @@ public class WaveformPopupMenuContribution {
 				Object second=null;
 				if(it.hasNext()) second=it.next();
 				if(first instanceof ISignal<?>) {
-					ISignalChange s = (ISignalChange) ((ISignal<?>) first).getEvents().firstEntry().getValue();
+					Object o = ((ISignal<?>) first).getEvents().firstEntry().getValue();
 					//com.minres.scviewer.e4.application.menu.mulitvaluesettings
-					if((s instanceof ISignalChangeReal) || (s instanceof ISignalChangeBitVector)) {
+					if((o instanceof Double) || (o instanceof BitVector)) {
 						TrackEntry entry=nullEntry;
 						if(second instanceof TrackEntry)
 							entry=(TrackEntry)second;
-						if(s instanceof ISignalChangeBitVector) {
+						if(o instanceof BitVector) {
 						    addValueMenuItem(items, application, modelService, "hex", TrackEntry.ValueDisplay.DEFAULT, entry.valueDisplay);
 						    addValueMenuItem(items, application, modelService, "unsigned", TrackEntry.ValueDisplay.UNSIGNED, entry.valueDisplay);
 						    addValueMenuItem(items, application, modelService, "signed", TrackEntry.ValueDisplay.SIGNED, entry.valueDisplay);

@@ -19,20 +19,18 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.ui.TxEditorPart;
 
 public class RemoveHandler extends AbstractHandler {
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IEditorPart editor = HandlerUtil.getActiveEditor(event);
 		if(editor instanceof TxEditorPart){
 			TxEditorPart editorPart = (TxEditorPart) editor;
 			ISelection selection =editorPart.getSelection();
-			if(selection instanceof StructuredSelection && ((StructuredSelection)selection).getFirstElement() instanceof IWaveform<?>){
-				editorPart.removeStreamFromList((IWaveform<? extends IWaveformEvent>) ((StructuredSelection)selection).getFirstElement());
+			if(selection instanceof StructuredSelection && ((StructuredSelection)selection).getFirstElement() instanceof IWaveform){
+				editorPart.removeStreamFromList((IWaveform) ((StructuredSelection)selection).getFirstElement());
 				editorPart.setSelection(new StructuredSelection());
 			}
 		}

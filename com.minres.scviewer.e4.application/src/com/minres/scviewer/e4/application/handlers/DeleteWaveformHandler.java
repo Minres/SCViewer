@@ -25,15 +25,15 @@ public class DeleteWaveformHandler {
 	@CanExecute
 	public Boolean canExecute(ESelectionService selectionService){
 		Object o = selectionService.getSelection();
-		return o instanceof IStructuredSelection && ((IStructuredSelection)o).getFirstElement() instanceof IWaveform<?>;
+		return o instanceof IStructuredSelection && ((IStructuredSelection)o).getFirstElement() instanceof IWaveform;
 	}
 	
 	@Execute
 	public void execute(ESelectionService selectionService, MPart activePart) {
 		Object o = activePart.getObject();
 		Object sel = selectionService.getSelection();
-		if(o instanceof WaveformViewer && ((IStructuredSelection)sel).getFirstElement() instanceof IWaveform<?>){
-			((WaveformViewer)o).removeStreamFromList((IWaveform<?>) ((IStructuredSelection)sel).getFirstElement());
+		if(o instanceof WaveformViewer && ((IStructuredSelection)sel).getFirstElement() instanceof IWaveform){
+			((WaveformViewer)o).removeStreamFromList((IWaveform) ((IStructuredSelection)sel).getFirstElement());
 		}	
 	}	
 }

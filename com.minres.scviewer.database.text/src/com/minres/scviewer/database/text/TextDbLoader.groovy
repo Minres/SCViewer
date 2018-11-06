@@ -13,6 +13,11 @@ package com.minres.scviewer.database.text;
 import java.nio.charset.CharsetDecoder;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream
+
+import org.codehaus.groovy.ast.stmt.CatchStatement
+import org.mapdb.DB
+import org.mapdb.DBMaker
+
 import groovy.io.FileType
 
 import com.minres.scviewer.database.AssociationType
@@ -34,6 +39,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 
 	def relationTypes=[:]
 
+	DB mapDb
+	
 	public TextDbLoader() {
 	}
 
@@ -59,12 +66,25 @@ public class TextDbLoader implements IWaveformDbLoader{
 	boolean load(IWaveformDb db, File file) throws Exception {
 		this.db=db
 		this.streams=[]
-		def gzipped = isGzipped(file)
-		if(isTxfile(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))){
-			parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
-			calculateConcurrencyIndicees()
-			return true
-		}
+		try {
+			def gzipped = isGzipped(file)
+			if(isTxfile(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))){
+				def mapDbFile = File.createTempFile("."+file.name, "tmp", file.parentFile)
+				mapDbFile.delete()
+				mapDbFile.deleteOnExit()
+				this.mapDb = DBMaker
+				.fileDB(mapDbFile)
+				.fileMmapEnableIfSupported()
+				.fileMmapPreclearDisable()
+				.cleanerHackEnable()
+				.allocateStartSize(64*1024*1024)
+				.allocateIncrement(64*1024*1024)
+				.make()
+				parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
+				calculateConcurrencyIndicees()
+				return true
+			}
+		} catch(Exception e) { }
 		return false;
 	}
 
@@ -122,7 +142,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				case "end_attribute":
 					if ((matcher = line =~ /^scv_tr_stream\s+\(ID (\d+),\s+name\s+"([^"]+)",\s+kind\s+"([^"]+)"\)$/)) {
 						def id = Integer.parseInt(matcher[0][1])
-						def stream = new TxStream(db, id, matcher[0][2], matcher[0][3])
+						def stream = new TxStream(this, id, matcher[0][2], matcher[0][3])
 						streams<<stream
 						streamsById[id]=stream
 					} else if ((matcher = line =~ /^scv_tr_generator\s+\(ID\s+(\d+),\s+name\s+"([^"]+)",\s+scv_tr_stream\s+(\d+),$/)) {

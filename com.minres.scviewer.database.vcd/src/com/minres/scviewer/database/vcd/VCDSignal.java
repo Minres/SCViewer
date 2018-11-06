@@ -16,12 +16,11 @@ import java.util.TreeMap;
 
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ISignalChange;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformEvent;
 
-public class VCDSignal<T extends ISignalChange> extends HierNode implements ISignal<T> {
+public class VCDSignal<T> extends HierNode implements ISignal<T> {
 
 	private long id;
 
@@ -30,10 +29,12 @@ public class VCDSignal<T extends ISignalChange> extends HierNode implements ISig
 	private final String kind = "signal";
 	
 	private final int width;
+
+	private final T dummy = null;
 	
 	private IWaveformDb db;
 
-	TreeMap<Long, T> values;
+	private TreeMap<Long, T> values;
 	
 	public VCDSignal(IWaveformDb db, String name) {
 		this(db, 0, name, 1);
@@ -53,7 +54,7 @@ public class VCDSignal<T extends ISignalChange> extends HierNode implements ISig
 	}
 
 	@SuppressWarnings("unchecked")
-	public VCDSignal(IWaveform<? extends ISignalChange> other, int id, String name) {
+	public VCDSignal(ISignal<T> other, int id, String name) {
 		super(name);
 		fullName=name;
 		this.id=id;
@@ -91,8 +92,8 @@ public class VCDSignal<T extends ISignalChange> extends HierNode implements ISig
 		return db;
 	}
 
-	public void addSignalChange(T change){
-		values.put(change.getTime(), change);
+	public void addSignalChange(Long time, T value){
+		values.put(time, value);
 	}
 	
 	@Override
@@ -101,12 +102,12 @@ public class VCDSignal<T extends ISignalChange> extends HierNode implements ISig
 	}
 
 	@Override
-	public T getWaveformEventsAtTime(Long time) {
+	public T getWaveformValueAtTime(Long time) {
 		return values.get(time);
 	}
 
     @Override
-    public T getWaveformEventsBeforeTime(Long time) {
+    public T getWaveformValueBeforeTime(Long time) {
     	Entry<Long, T> e = values.floorEntry(time);
     	if(e==null)
     		return null;
@@ -115,8 +116,13 @@ public class VCDSignal<T extends ISignalChange> extends HierNode implements ISig
     }
 
 	@Override
-	public Boolean equals(IWaveform<? extends IWaveformEvent> other) {
+	public Boolean equals(IWaveform other) {
 		return(other instanceof VCDSignal<?> && this.getId()==other.getId());
+	}
+
+	@Override
+	public Class<?> getType() {
+		return dummy.getClass();
 	}
 
 

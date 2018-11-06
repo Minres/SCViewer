@@ -58,13 +58,13 @@ public class LoadingWaveformDb implements IWaveformDb {
 	}
 
 	@Override
-	public IWaveform<? extends IWaveformEvent> getStreamByName(String name) {
+	public IWaveform getStreamByName(String name) {
 		return null;
 	}
 
 	@Override
-	public List<IWaveform<?>> getAllWaves() {
-		return new ArrayList<IWaveform<?>>();
+	public List<IWaveform> getAllWaves() {
+		return new ArrayList<IWaveform>();
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class LoadingWaveformDb implements IWaveformDb {
 	}
 
 	@Override
-	public boolean load(File inp) throws Exception {
+	public boolean load(File inp) {
 		return false;
 	}
 

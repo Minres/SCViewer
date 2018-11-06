@@ -40,6 +40,8 @@ public class Messages extends NLS {
 	public static String TransactionDetails_3;
 	public static String TransactionDetails_4;
 	public static String WaveformPreferencesPage_1;
+	public static String WaveformViewer_13;
+	public static String WaveformViewer_14;
 	public static String WaveformViewer_15;
 	public static String WaveformViewer_16;
 	public static String WaveformViewer_17;
@@ -47,6 +49,7 @@ public class Messages extends NLS {
 	public static String WaveformViewer_19;
 	public static String WaveformViewer_20;
 	public static String WaveformViewer_21;
+	public static String WaveformViewer_22;
 	public static String WaveformViewer_37;
 	public static String WaveformViewer_38;
 	public static String WaveformViewer_39;

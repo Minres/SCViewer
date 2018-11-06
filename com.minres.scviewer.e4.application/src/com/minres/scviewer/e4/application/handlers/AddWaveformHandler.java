@@ -56,7 +56,7 @@ public class AddWaveformHandler {
 		if(designBrowser==null) designBrowser = getListPart( partService);
 		if(designBrowser!=null && selection.size()>0){
 			List<?> sel=selection.toList();
-			designBrowser.getActiveWaveformViewerPart().addStreamsToList(sel.toArray(new IWaveform<?>[]{}),
+			designBrowser.getActiveWaveformViewerPart().addStreamsToList(sel.toArray(new IWaveform[]{}),
 					"before".equalsIgnoreCase(where)); //$NON-NLS-1$
 		}
 	}

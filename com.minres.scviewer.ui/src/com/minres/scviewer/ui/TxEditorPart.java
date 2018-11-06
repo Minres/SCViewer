@@ -48,7 +48,6 @@ import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.swt.WaveformViewerFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.IWaveformViewer;
@@ -242,7 +241,7 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 				((TxEditorInput) TxEditorPart.this.getEditorInput()).getStreamNames().size()>0){
 			LinkedList<TrackEntry> entries= new LinkedList<>();
 			for(String streamName:((TxEditorInput) TxEditorPart.this.getEditorInput()).getStreamNames()){
-				IWaveform<? extends IWaveformEvent> stream = database.getStreamByName(streamName);
+				IWaveform stream = database.getStreamByName(streamName);
 				if(stream!=null)
 					entries.add(new TrackEntry(stream));
 			}
@@ -333,7 +332,7 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 		return database;
 	}
 
-	public void addStreamToList(IWaveform<? extends IWaveformEvent> obj){
+	public void addStreamToList(IWaveform obj){
 		if(getEditorInput() instanceof TxEditorInput && !((TxEditorInput) getEditorInput()).getStreamNames().contains(obj.getFullName())){
 			((TxEditorInput) getEditorInput()).getStreamNames().add(obj.getFullName());
 			txDisplay.getStreamList().add(new TrackEntry(obj));
@@ -342,12 +341,12 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 
 	}
 
-	public void addStreamsToList(IWaveform<? extends IWaveformEvent>[] iWaveforms){
-		for(IWaveform<? extends IWaveformEvent> stream:iWaveforms)
+	public void addStreamsToList(IWaveform[] iWaveforms){
+		for(IWaveform stream:iWaveforms)
 			addStreamToList(stream);
 	}
 
-	public void removeStreamFromList(IWaveform<? extends IWaveformEvent> waveform){
+	public void removeStreamFromList(IWaveform waveform){
 		if(getEditorInput() instanceof TxEditorInput && ((TxEditorInput) getEditorInput()).getStreamNames().contains(waveform.getFullName())){
 			((TxEditorInput) getEditorInput()).getStreamNames().remove(waveform.getFullName());
 		}
@@ -361,8 +360,8 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 		txDisplay.getStreamList().remove(entry);
 	}
 
-	public void removeStreamsFromList(IWaveform<? extends IWaveformEvent>[] iWaveforms){
-		for(IWaveform<? extends IWaveformEvent> stream:iWaveforms)
+	public void removeStreamsFromList(IWaveform[] iWaveforms){
+		for(IWaveform stream:iWaveforms)
 			removeStreamFromList(stream);
 	}
 
