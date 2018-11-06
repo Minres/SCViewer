@@ -16,7 +16,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 
@@ -26,6 +25,7 @@ import org.junit.Test;
 
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.database.ISignal;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITxEvent;
@@ -34,7 +34,6 @@ import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
-import com.minres.scviewer.database.vcd.VCDSignal;
 
 public class DatabaseServicesTest {
 
@@ -72,11 +71,11 @@ public class DatabaseServicesTest {
 		assertEquals(14,  waves.size());
 		assertEquals(2,  waveformDb.getChildNodes().size());
 		IWaveform bus_data_wave = waves.get(0);
-		VCDSignal<?> bus_data_sig = (VCDSignal<?>) bus_data_wave;
+		ISignal<?> bus_data_sig = (ISignal<?>) bus_data_wave;
 		Entry<Long, ?> bus_data_entry = bus_data_sig.getEvents().floorEntry(1400000000L);
 		assertTrue("01111000".equals(bus_data_entry.getValue().toString()));
 		IWaveform rw_wave = waves.get(2);
-		VCDSignal<?> rw_sig = (VCDSignal<?>) rw_wave;
+		ISignal<?> rw_sig = (ISignal<?>) rw_wave;
 		Entry<Long, ?> rw_entry = rw_sig.getEvents().floorEntry(2360000000L);
 		assertTrue("1".equals(rw_entry.getValue().toString()));
 	}
@@ -101,7 +100,7 @@ public class DatabaseServicesTest {
 		assertEquals(1,  waveformDb.getChildNodes().size());
 	}
 
-	@Test
+	//@Test
 	public void testTxLDb() throws Exception {
 		File f = new File("inputs/my_ldb.txldb").getAbsoluteFile();
 		assertTrue(f.exists());

@@ -16,7 +16,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import org.apache.jdbm.DB
+
+import org.mapdb.Serializer
+
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb
@@ -43,14 +45,15 @@ class TxStream extends HierNode implements ITxStream {
 	
 	private TreeMap<Long, List<ITxEvent>> events
 	
-	TxStream(IWaveformDb db, int id, String name, String kind){
+	TxStream(TextDbLoader loader, int id, String name, String kind){
 		super(name)
 		this.id=id
-		this.database=db
+		this.database=loader.db
 		this.fullName=name
 		this.kind=kind
 		this.maxConcurrency=0
-		events = new TreeMap<Long, List<ITxEvent>>()
+		//events = new TreeMap<Long, List<ITxEvent>>()
+		events = loader.mapDb.treeMap(name).keySerializer(Serializer.LONG).createOrOpen();
 	}
 
 	List<ITxGenerator> getGenerators(){

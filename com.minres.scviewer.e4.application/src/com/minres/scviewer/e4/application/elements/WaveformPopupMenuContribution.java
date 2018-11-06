@@ -44,9 +44,10 @@ public class WaveformPopupMenuContribution {
 				Object selected = ((IStructuredSelection)sel).getFirstElement();
 				if(selected instanceof ISignal<?>) {
 					Object x = ((ISignal<?>) selected).getEvents().firstEntry().getValue();
-					if((x instanceof Double) || (x instanceof BitVector)) {
+					if((x instanceof BitVector) && ((BitVector)x).getWidth()==1) {
+						return false;
+					} else
 						return true;
-					}
 				}
 			}
 		}

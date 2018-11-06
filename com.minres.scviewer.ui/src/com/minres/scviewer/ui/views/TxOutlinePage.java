@@ -36,7 +36,6 @@ import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.ui.TxEditorPart;
 import com.minres.scviewer.ui.views.provider.TxDbTreeContentProvider;
 import com.minres.scviewer.ui.views.provider.TxDbTreeLabelProvider;
@@ -177,7 +176,6 @@ public class TxOutlinePage extends ContentOutlinePage implements  ISelectionList
 
 	private Action makeStreamAction(String text, String imgDescriptor, final IStructuredSelection selection, boolean enabled, final boolean remove) {
 		Action action = new Action() {
-			@SuppressWarnings("unchecked")
 			public void run() {
 				if(selection!=null)
 					for(Object obj :selection.toArray()){

@@ -22,12 +22,9 @@ import java.util.Map;
 
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IHierNode;
-import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
 
@@ -82,22 +79,26 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 	}
 
 	@Override
-	public boolean load(File inp) throws Exception {
+	public boolean load(File inp){
 		for(IWaveformDbLoader loader:loaders){
-			if(loader.load(this, inp)){
-				for(IWaveform w:loader.getAllWaves()){
-					waveforms.put(w.getFullName(),w);
+			try {
+				if(loader.load(this, inp)){
+					for(IWaveform w:loader.getAllWaves()){
+						waveforms.put(w.getFullName(),w);
+					}
+					if(loader.getMaxTime()>maxTime){
+						maxTime=loader.getMaxTime();
+					}
+					if(name==null) name=getFileBasename(inp.getName());
+					buildHierarchyNodes() ;
+					relationTypes.addAll(loader.getAllRelationTypes());
+					pcs.firePropertyChange("WAVEFORMS", null, waveforms);
+					pcs.firePropertyChange("CHILDS", null, childNodes);
+					loaded = true;
+					return true;
 				}
-				if(loader.getMaxTime()>maxTime){
-					maxTime=loader.getMaxTime();
-				}
-				if(name==null) name=getFileBasename(inp.getName());
-				buildHierarchyNodes() ;
-				relationTypes.addAll(loader.getAllRelationTypes());
-				pcs.firePropertyChange("WAVEFORMS", null, waveforms);
-				pcs.firePropertyChange("CHILDS", null, childNodes);
-				loaded = true;
-				return true;
+			} catch (Exception e) {
+				return false;
 			}
 		}		
 		return false;

@@ -14,7 +14,6 @@ import com.minres.scviewer.database.ISignal;
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformEvent;
 
 
 public class TrackEntry {

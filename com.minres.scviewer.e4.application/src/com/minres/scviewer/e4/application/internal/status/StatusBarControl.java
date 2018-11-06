@@ -186,17 +186,15 @@ public class StatusBarControl {
 		 */
 		@Override
 		public void beginTask(final String name, final int totalWork) {
-			sync.syncExec(new Runnable() {
+			sync.asyncExec(new Runnable() {
 				@Override
 				public void run() {
-					if(runningTasks <= 0) {  // --- no task is running at the moment ---
-						progressBar.setEnabled(false);
-						progressBar.setSelection(0);
-						progressBar.setMaximum(totalWork);
-					} else { // --- other tasks are running ---
-						progressBar.setMaximum(progressBar.getMaximum() + totalWork);
-					}
 					runningTasks++;
+					if(runningTasks == 1) {  // --- no task is running at the moment ---
+						progressBar.setEnabled(true);
+						progressBar.setSelection(0);
+					}
+					progressBar.setMaximum(totalWork);
 					progressBar.setToolTipText(Messages.StatusBarControl_1 + runningTasks + Messages.StatusBarControl_2 + name);
 				}
 			});
@@ -207,7 +205,7 @@ public class StatusBarControl {
 		 */
 		@Override
 		public void worked(final int work) {
-			sync.syncExec(new Runnable() {
+			sync.asyncExec(new Runnable() {
 				@Override
 				public void run() {
 					progressBar.setSelection(progressBar.getSelection() + work);
@@ -215,63 +213,28 @@ public class StatusBarControl {
 			});
 		}
 
-		/* (non-Javadoc)
-		 * @see org.eclipse.core.runtime.NullProgressMonitor#done()
+		/**
+		 * Adds the job.
+		 *
+		 * @param job the job
+		 * @return the i progress monitor
 		 */
-		@Override
-		public void done() {
-			sync.syncExec(new Runnable() {
-				@Override
-				public void run() {
-					progressBar.setSelection(0);
-					progressBar.setMaximum(1);
-					progressBar.setEnabled(false);
-				}
-			});
-		}
-
-/**
- * Adds the job.
- *
- * @param job the job
- * @return the i progress monitor
- */
-/*
-		@Override
-		public boolean isCanceled() {
-			sync.syncExec(new Runnable() {
-				@Override
-				public void run() {
-					cancelled=delegate.isCanceled();
-				}
-			});
-			return cancelled;
-		}
-
-		@Override
-		public void setCanceled(final boolean value) {
-			sync.syncExec(new Runnable() {
-				@Override
-				public void run() {
-					delegate.setCanceled(value);
-				}
-			});
-		}
-*/
 		public IProgressMonitor addJob(Job job){
 			if(job != null){
 				job.addJobChangeListener(new JobChangeAdapter() {
 					@Override
-					public void done(IJobChangeEvent event) {
-						sync.syncExec(new Runnable() {
-
+					public void done(final IJobChangeEvent event) {
+						sync.asyncExec(new Runnable() {
 							@Override
 							public void run() {
-								runningTasks--;
+								if(event.getResult()==null) return;
+								if(runningTasks>0) runningTasks--;
 								if (runningTasks > 0){	// --- some tasks are still running ---
 									progressBar.setToolTipText(Messages.StatusBarControl_3 + runningTasks);
 								} else { // --- all tasks are done (a reset of selection could also be done) ---
 									progressBar.setToolTipText(Messages.StatusBarControl_4);
+									progressBar.setSelection(progressBar.getMaximum());
+									progressBar.setEnabled(false);
 								}
 							}
 						});
