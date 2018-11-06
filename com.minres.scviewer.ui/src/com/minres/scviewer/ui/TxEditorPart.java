@@ -48,7 +48,6 @@ import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.swt.WaveformViewerFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.IWaveformViewer;

@@ -182,7 +182,6 @@ public class SignalPainter extends TrackPainter {
 			tmpAwtFont = new java.awt.Font(fd.getName(), fd.getStyle(), height);
 		}
 
-		@SuppressWarnings("unchecked")
 		public void draw(GC gc, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
 			Color colorBorder = waveCanvas.colors[WaveformColors.SIGNAL0.ordinal()];
 			BitVector last = (BitVector) left;
@@ -267,7 +266,6 @@ public class SignalPainter extends TrackPainter {
 			
 		}
 
-		@SuppressWarnings("unchecked")
 		public void draw(GC gc, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
 			long leftVal = ((BitVector) left).toUnsignedValue();
 			long rightVal= ((BitVector) right).toUnsignedValue();
@@ -294,7 +292,6 @@ public class SignalPainter extends TrackPainter {
 	}
 
 	private class SingleBitStencil implements SignalStencil {
-		@SuppressWarnings("unchecked")
 		public void draw(GC gc, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
 			if (multiple) {
 				gc.setForeground(waveCanvas.colors[WaveformColors.SIGNALU.ordinal()]);
@@ -375,7 +372,6 @@ public class SignalPainter extends TrackPainter {
 			}
 		}
 
-		@SuppressWarnings("unchecked")
 		public void draw(GC gc, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
 			double leftVal = (Double) left;
 			double rightVal= (Double) right;

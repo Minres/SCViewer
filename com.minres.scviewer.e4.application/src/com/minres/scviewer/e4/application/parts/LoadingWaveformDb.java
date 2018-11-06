@@ -73,7 +73,7 @@ public class LoadingWaveformDb implements IWaveformDb {
 	}
 
 	@Override
-	public boolean load(File inp) throws Exception {
+	public boolean load(File inp) {
 		return false;
 	}
 

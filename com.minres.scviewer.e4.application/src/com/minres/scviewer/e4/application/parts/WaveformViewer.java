@@ -31,14 +31,19 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.eclipse.core.internal.jobs.JobManager;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
+import org.eclipse.core.runtime.jobs.JobGroup;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -48,6 +53,7 @@ import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.PersistState;
 import org.eclipse.e4.ui.di.UIEventTopic;
+import org.eclipse.e4.ui.di.UISynchronize;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.services.EMenuService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
@@ -75,7 +81,6 @@ import com.minres.scviewer.database.ITxRelation;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.swt.WaveformViewerFactory;
@@ -142,6 +147,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	/** The waveform pane. */
 	private IWaveformViewer waveformPane;
+
+	/** get UISynchronize injected as field */
+	@Inject UISynchronize sync;
 
 	/** The event broker. */
 	@Inject
@@ -284,7 +292,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			
 			@Override
 			public void handleEvent(Event e) {
-				if(e==null) { // dummy to take out logging
+				/*
 					String string = e.type == SWT.KeyDown ? "DOWN:" : "UP  :";
 					string += " stateMask=0x" + Integer.toHexString (e.stateMask) + ","; // SWT.CTRL, SWT.ALT, SWT.SHIFT, SWT.COMMAND
 					string += " keyCode=0x" + Integer.toHexString (e.keyCode) + ",";
@@ -293,7 +301,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						string +=  " location="+e.keyLocation;
 					}
 					System.out.println (string);
-				}
+				*/
 				if((e.stateMask&SWT.MOD3)!=0) { // Alt key
 				} else if((e.stateMask&SWT.MOD1)!=0) { //Ctrl/Cmd
 					int zoomlevel = waveformPane.getZoomLevel();
@@ -411,7 +419,23 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		}
 		waveformPane.setColors(colorPref);
 	}
+	
+	class DbLoadJob extends Job {
+		final File file;
+		public DbLoadJob(String name, final File file) {
+			super(name);
+			this.file=file;
+		}
 
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			monitor.setTaskName(Messages.WaveformViewer_16+file.getName());
+			boolean res = database.load(file);
+			monitor.done();
+			database.addPropertyChangeListener(waveformPane);
+			return res?Status.OK_STATUS:Status.CANCEL_STATUS;
+		}
+	}
 	/**
 	 * Load database.
 	 *
@@ -419,50 +443,46 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	protected void loadDatabase(final Map<String, String> state) {
 		fileMonitor.removeFileChangeListener(this);
+		MultiStatus fStatus= new MultiStatus("blah", IStatus.OK, Messages.WaveformViewer_13, null);
 		Job job = new Job(Messages.WaveformViewer_15) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				// convert to SubMonitor and set total number of work units
-				SubMonitor subMonitor = SubMonitor.convert(monitor, filesToLoad.size()+1);
+				SubMonitor subMonitor = SubMonitor.convert(monitor, filesToLoad.size());
+				JobGroup jobGroup = new JobGroup(Messages.WaveformViewer_15, filesToLoad.size(), filesToLoad.size());
+				filesToLoad.forEach((final File file) -> {
+					Job job = new DbLoadJob(Messages.WaveformViewer_16 + file.getName(), file);
+					job.setProgressGroup(subMonitor, 1);
+					job.setJobGroup(jobGroup);
+					job.schedule();
+				});
 				try {
-					subMonitor.worked(1);
-					for (File file : filesToLoad) {
-						subMonitor.setTaskName(Messages.WaveformViewer_16+file.getName());
-						database.load(file);
-						database.addPropertyChangeListener(waveformPane);
-						subMonitor.worked(1);
-						if (monitor.isCanceled())
-							return Status.CANCEL_STATUS;
-					}
-				} catch (Exception e) {
-					database = null;
-					e.printStackTrace();
-					return Status.CANCEL_STATUS;
+					jobGroup.join(0, monitor);
+				} catch (OperationCanceledException | InterruptedException e) {
+					throw new OperationCanceledException(Messages.WaveformViewer_14);
 				}
-				subMonitor.done();
-				monitor.done();
-				return Status.OK_STATUS;
+				if (monitor.isCanceled())
+					throw new OperationCanceledException(Messages.WaveformViewer_14);
+
+				fStatus.addAll(jobGroup.getResult());
+				return fStatus;
 			}
 		};
 		job.addJobChangeListener(new JobChangeAdapter() {
 			@Override
 			public void done(IJobChangeEvent event) {
-				if (event.getResult() == Status.OK_STATUS)
-					myParent.getDisplay().asyncExec(new Runnable() {
-						@Override
-						public void run() {
-							waveformPane.setMaxTime(database.getMaxTime());
-							if (state != null)
-								restoreWaveformViewerState(state);
-							fileChecker = null;
-							if (checkForUpdates)
-								fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad,
-										FILE_CHECK_INTERVAL);
-						}
-					});
+				if (event.getResult().getCode() != Status.OK_STATUS.getCode()) return;
+				sync.asyncExec(()->{
+					waveformPane.setMaxTime(database.getMaxTime());
+					if (state != null)
+						restoreWaveformViewerState(state);
+					fileChecker = null;
+					if (checkForUpdates)
+						fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
+				});
 			}
 		});
-		job.schedule(0);
+		job.setSystem(true);
+		job.schedule(1000L); // let the UI initialize so that we have a progress monitor
 	}
 
 	/* (non-Javadoc)

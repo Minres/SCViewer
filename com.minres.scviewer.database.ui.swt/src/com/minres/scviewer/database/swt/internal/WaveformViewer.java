@@ -14,7 +14,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,7 +78,6 @@ import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxRelation;
 import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformEvent;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.ui.GotoDirection;
@@ -423,8 +421,6 @@ public class WaveformViewer implements IWaveformViewer  {
 		waveformCanvas.syncScrollBars();
 		nameList.setSize(nameMaxWidth + 15, trackVerticalHeight);
 		nameListScrolled.setMinSize(nameMaxWidth + 15, trackVerticalHeight);
-		valueList.setSize(calculateValueWidth(), trackVerticalHeight);
-		valueListScrolled.setMinSize(calculateValueWidth(), trackVerticalHeight);
 		nameList.redraw();
 		updateValueList();
 		waveformCanvas.redraw();
@@ -501,7 +497,10 @@ public class WaveformViewer implements IWaveformViewer  {
 				}
 			}
 		}
-		valueList.redraw();
+		int width = calculateValueWidth();
+		valueList.setSize(width, trackVerticalHeight);
+		valueListScrolled.setMinSize(width, trackVerticalHeight);
+		valueListScrolled.redraw();
 	}
 
 	private boolean isArrayFull(Object[] array){
