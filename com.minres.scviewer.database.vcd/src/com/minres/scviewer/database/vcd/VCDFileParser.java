@@ -22,10 +22,12 @@ class VCDFileParser {
 	private HashMap<String, Integer> nameToNetMap = new HashMap<String, Integer>();
 	private long picoSecondsPerIncrement;
 	private boolean stripNetWidth;
+	private boolean replaceColon;
 	long currentTime;
 
 	public VCDFileParser(boolean stripNetWidth) {
 		this.stripNetWidth=stripNetWidth;
+		this.replaceColon=false;
 	}
 
 	public boolean load(InputStream is, IVCDDatabaseBuilder builder) {
@@ -76,17 +78,34 @@ class VCDFileParser {
 		}
 
 		Integer net = nameToNetMap.get(id);
-		if (net == null) {
-			// We've never seen this net before
+		if (net == null) { // We've never seen this net before
+			int openBracket = netName.indexOf('[');
 			if(stripNetWidth){
-				int openBracket = netName.indexOf('[');
 				if (openBracket != -1) netName = netName.substring(0, openBracket);
+				openBracket = -1;
+			}
+			if(replaceColon) {
+				if (openBracket != -1) {
+					netName = netName.substring(0, openBracket).replaceAll(":", ".")+netName.substring(openBracket);
+				} else
+					netName=netName.replaceAll(":", ".");
 			}
 			nameToNetMap.put(id, traceBuilder.newNet(netName, -1, width));
 		} else {
 			// Shares data with existing net. Add as clone.
 			traceBuilder.newNet(netName, net, width);
 		}
+	}
+
+	private void parseComment() throws Exception {
+		nextToken();
+		String s = tokenizer.sval;
+		nextToken();
+		while(!tokenizer.sval.equals("$end")){
+			s+=" "+tokenizer.sval;
+			nextToken();
+		}
+		replaceColon|=s.contains("ARTERIS Architecture");
 	}
 
 	private void parseTimescale() throws Exception {
@@ -132,6 +151,8 @@ class VCDFileParser {
 			parseUpscope();
 		else if (tokenizer.sval.equals("$timescale"))
 			parseTimescale();
+		else if (tokenizer.sval.equals("$comment")) 
+			parseComment();
 		else if (tokenizer.sval.equals("$enddefinitions")) {
 			match("$end");
 			return false;

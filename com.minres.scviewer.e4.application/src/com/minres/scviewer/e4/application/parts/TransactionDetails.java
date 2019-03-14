@@ -29,9 +29,11 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.ITreeViewerListener;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.StyledString;
+import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -51,6 +53,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxAttribute;
@@ -129,6 +132,19 @@ public class TransactionDetails {
 		treeViewer.addFilter(attributeFilter);
 		treeViewer.setComparator(viewSorter);
 		treeViewer.setAutoExpandLevel(2);
+		treeViewer.addTreeListener(new ITreeViewerListener() {
+
+			@Override
+			public void treeCollapsed(TreeExpansionEvent event) {
+				treeViewer.getSelection();
+			}
+
+			@Override
+			public void treeExpanded(TreeExpansionEvent event) {
+				treeViewer.getSelection();
+			}
+			
+		});
 
 		// Set up the table
 		Tree tree = treeViewer.getTree();
@@ -247,6 +263,21 @@ public class TransactionDetails {
 		this.waveformViewerPart=part;
 	}
 
+	public void setInput(Object object) {
+		if(object instanceof ITx){
+			TreeItem obj = treeViewer.getTree().getTopItem();
+			Rectangle bounds = null;
+			if(obj!=null) bounds=obj.getBounds();
+			treeViewer.setInput(object);
+			if(bounds!=null) {
+				TreeItem ti =  treeViewer.getTree().getItem (new Point(bounds.x, bounds.y));
+				treeViewer.getTree().setTopItem(ti);
+			}
+		} else {
+			treeViewer.setInput(null);
+		}
+		
+	}
 	/**
 	 * Sets the selection.
 	 *
@@ -256,12 +287,7 @@ public class TransactionDetails {
 	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection){
 		if(treeViewer!=null && selection!=null && !treeViewer.getTree().isDisposed()){
 			if( selection instanceof IStructuredSelection) {
-				Object object= ((IStructuredSelection)selection).getFirstElement();			
-				if(object instanceof ITx){
-					treeViewer.setInput(object);
-				} else {
-					treeViewer.setInput(null);
-				}
+				setInput(((IStructuredSelection)selection).getFirstElement());			
 			}
 		}
 	}
