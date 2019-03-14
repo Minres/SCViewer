@@ -84,7 +84,11 @@ public class TextDbLoader implements IWaveformDbLoader{
 				calculateConcurrencyIndicees()
 				return true
 			}
-		} catch(Exception e) { }
+		} catch(EOFException e) {
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace()
+		}
 		return false;
 	}
 
