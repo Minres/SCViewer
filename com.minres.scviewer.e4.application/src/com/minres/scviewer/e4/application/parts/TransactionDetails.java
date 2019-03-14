@@ -271,7 +271,7 @@ public class TransactionDetails {
 			treeViewer.setInput(object);
 			if(bounds!=null) {
 				TreeItem ti =  treeViewer.getTree().getItem (new Point(bounds.x, bounds.y));
-				treeViewer.getTree().setTopItem(ti);
+				if(ti!=null) treeViewer.getTree().setTopItem(ti);
 			}
 		} else {
 			treeViewer.setInput(null);
