@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.e4.application.parts;
 
+import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.annotation.PostConstruct;
@@ -37,8 +38,8 @@ import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -55,10 +56,10 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
+import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITxRelation;
-import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.provider.TxPropertiesLabelProvider;
 
@@ -203,7 +204,7 @@ public class TransactionDetails {
 						Object[] selectedArray = (Object[]) selected;
 						if(selectedArray.length==3 && selectedArray[2] instanceof ITx){
 							waveformViewerPart.setSelection(new StructuredSelection(selectedArray[2]));
-							treeViewer.setInput(selectedArray[2]);
+							setInput(selectedArray[2]);
 						}
 					}
 				}
@@ -265,18 +266,74 @@ public class TransactionDetails {
 
 	public void setInput(Object object) {
 		if(object instanceof ITx){
-			TreeItem obj = treeViewer.getTree().getTopItem();
-			Rectangle bounds = null;
-			if(obj!=null) bounds=obj.getBounds();
+			ArrayList<String> names = new ArrayList<>();
+			int indexInParent=getTopItemHier(names);
+			ArrayList<Boolean> states = getExpandedState(treeViewer.getTree().getItems());
 			treeViewer.setInput(object);
-			if(bounds!=null) {
-				TreeItem ti =  treeViewer.getTree().getItem (new Point(bounds.x, bounds.y));
-				if(ti!=null) treeViewer.getTree().setTopItem(ti);
-			}
+			setExpandedState(treeViewer.getTree().getItems(), states);
+			setTopItemFromHier(names, indexInParent);
 		} else {
 			treeViewer.setInput(null);
 		}
 		
+	}
+
+	private void setExpandedState(TreeItem[] treeItems, ArrayList<Boolean> states) {
+		for (int i = 0; i < treeItems.length; i++) {
+			treeItems[i].setExpanded(states.size()>i?states.get(i):true);
+		}
+	}
+
+	private ArrayList<Boolean> getExpandedState(TreeItem[] items){
+		ArrayList<Boolean> ret = new ArrayList<>();
+		for (TreeItem treeItem : items)
+			ret.add(treeItem.getItemCount()>0?treeItem.getExpanded():true);
+		return ret;
+	}
+	
+	private int getTopItemHier(ArrayList<String> names){
+		int indexInParent=-1;
+		TreeItem obj = treeViewer.getTree().getTopItem();
+		if(obj!=null) {
+			names.add(0, obj.getText(0));
+			if(obj.getParentItem()!=null) {
+				TreeItem pobj=obj.getParentItem();
+				names.add(0, pobj.getText(0));
+				TreeItem[] items = pobj.getItems();
+				for (int i = 0; i < items.length; i++) {
+					if(items[i]==obj) {
+						indexInParent=i;
+						break;
+					}
+				}
+			}
+		}
+		return indexInParent;
+	}
+	
+	private void setTopItemFromHier(ArrayList<String> names, int indexInParent) {
+		if(indexInParent<0 || names.size()==0 ) return;
+		TreeItem selItem=null;
+		for (TreeItem item : treeViewer.getTree().getItems()) { // find item from category
+			if(item.getText(0).equals(names.get(0))) {
+				if(names.size()>1) { // if we had an attribute as top item
+					TreeItem[] subItems=item.getItems();
+					for(TreeItem it : subItems) { // try to align by name
+						if(it.getText(0).equals(names.get(1))) {
+							selItem=it;
+							break;
+						}
+					}
+					if(selItem==null && indexInParent>=0 && subItems.length>0) // name based match failed so try to use position
+						selItem=subItems[subItems.length>indexInParent?indexInParent:subItems.length-1];
+				}
+				if(selItem==null) // no match in attributes so set the category as top item
+					selItem=item;
+				break;
+			}
+		}
+		if(selItem!=null)
+			treeViewer.getTree().setTopItem(selItem);
 	}
 	/**
 	 * Sets the selection.
