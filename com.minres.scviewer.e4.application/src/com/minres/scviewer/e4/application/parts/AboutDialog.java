@@ -19,8 +19,10 @@ import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
@@ -39,6 +41,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.wb.swt.ResourceManager;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.osgi.framework.Version;
 
 import com.minres.scviewer.e4.application.Messages;
 
@@ -101,7 +104,10 @@ public class AboutDialog extends Dialog {
 		styledText.setEditable(false);
 		GridData gd_styledText = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
 		styledText.setLayoutData(gd_styledText);
-		styledText.setText(productTitle+copyrightText);
+		Version version = Platform.getProduct().getDefiningBundle().getVersion();
+		String versionString = String.format("%d.%d.%d", version.getMajor(), version.getMinor(), version.getMicro());
+		String pt = NLS.bind(Messages.AboutDialog_0, versionString);
+		styledText.setText(pt+copyrightText);
 		styledText.setBackground(white);
 		styledText.setWordWrap(true);
 		styledText.setLeftMargin(5);
