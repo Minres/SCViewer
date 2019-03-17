@@ -68,18 +68,26 @@ public class SignalPainter extends TrackPainter {
 	int yOffsetT;
 	int yOffsetM;
 	int yOffsetB;
-	int maxX;
+	/// maximum visible canvas position in canvas coordinates
+	int maxPosX;
+	/// maximum visible position in waveform coordinates
+	int maxValX;
 
 	public SignalPainter(WaveformCanvas txDisplay, boolean even, TrackEntry trackEntry) {
 		super(trackEntry, even);
 		this.waveCanvas = txDisplay;
 	}
 
-	private int getXEnd(long time) {
+	private int getXValEnd(long time) {
 		long ltmp = time / this.waveCanvas.getScaleFactor();
-		return ltmp > maxX ? maxX : (int) ltmp;
+		return ltmp > maxValX ? maxValX : (int) ltmp;
 	}
 
+	private int getXPosEnd(long time) {
+		long ltmp = time / this.waveCanvas.getScaleFactor() - waveCanvas.getXOffset();
+		return ltmp > maxPosX ? maxPosX : (int) ltmp;
+	}
+	
 	public void paintArea(GC gc, Rectangle area) {
 		ISignal<?> signal = trackEntry.getSignal();
 		if (trackEntry.selected)
@@ -88,8 +96,13 @@ public class SignalPainter extends TrackPainter {
 			gc.setBackground(this.waveCanvas.colors[even ? WaveformColors.TRACK_BG_EVEN.ordinal() : WaveformColors.TRACK_BG_ODD.ordinal()]);
 		gc.setFillRule(SWT.FILL_EVEN_ODD);
 		gc.fillRectangle(area);
-		long beginTime = area.x * this.waveCanvas.getScaleFactor();
-		long endTime = (area.x + area.width) * this.waveCanvas.getScaleFactor();
+
+		long scaleFactor = this.waveCanvas.getScaleFactor();
+		long beginPos = area.x;
+		long beginTime = (beginPos + waveCanvas.getXOffset())*scaleFactor;
+		long endPos = beginPos + area.width;
+        long endTime = beginTime + area.width*scaleFactor;
+		
 		Entry<Long, ?> first = signal.getEvents().floorEntry(beginTime);
 		Entry<Long, ?> last = signal.getEvents().floorEntry(endTime);
 		if (first == null) {
@@ -105,14 +118,18 @@ public class SignalPainter extends TrackPainter {
 		NavigableMap<Long, ?> entries = signal.getEvents().subMap(first.getKey(), false, last.getKey(), true);
 		SignalChange left = new SignalChange(first);
 		SignalChange right = new SignalChange(entries.size() > 0 ? entries.firstEntry() : first);
-		maxX = area.x + area.width;
+		maxPosX = area.x + area.width;
+		maxValX = maxPosX + (int)waveCanvas.getXOffset();
 		yOffsetT = this.waveCanvas.getTrackHeight() / 5 + area.y;
 		yOffsetM = this.waveCanvas.getTrackHeight() / 2 + area.y;
 		yOffsetB = 4 * this.waveCanvas.getTrackHeight() / 5 + area.y;
-		int xBegin = Math.max(area.x, (int) (left.time / this.waveCanvas.getScaleFactor()));
-		int xEnd = Math.max(area.x, getXEnd(right.time));
+		int xSigChangeBeginVal = Math.max(area.x + (int)waveCanvas.getXOffset(), (int) (left.time / this.waveCanvas.getScaleFactor()));
+		int xSigChangeBeginPos = area.x;
+		int xSigChangeEndVal = Math.max(area.x + (int)waveCanvas.getXOffset(), getXValEnd(right.time));
+		int xSigChangeEndPos = Math.max(area.x, getXPosEnd(right.time));
+		
 		boolean multiple = false;
-		if (xEnd == xBegin) {
+		if (xSigChangeEndPos == xSigChangeBeginPos) {
 			// this can trigger if
 			// a) left == right
 			// b) left to close to right
@@ -120,30 +137,31 @@ public class SignalPainter extends TrackPainter {
 				right.time = endTime;
 			} else {
 				multiple = true;
-				long eTime = (xBegin + 1) * this.waveCanvas.getScaleFactor();
+				long eTime = (xSigChangeBeginVal + 1) * this.waveCanvas.getScaleFactor();
 				right.set(entries.floorEntry(eTime), endTime);
 				right.time = eTime;
 			}
-			xEnd = getXEnd(right.time);
+			xSigChangeEndPos = getXPosEnd(right.time);
 		}
 
+		
 		SignalStencil stencil = getStencil(gc, left, entries);
 		do {
-			stencil.draw(gc, area, left.value, right.value, xBegin, xEnd, multiple);
+			stencil.draw(gc, area, left.value, right.value, xSigChangeBeginPos, xSigChangeEndPos, multiple);
 			if (right.time >= endTime)
 				break;
 			left.assign(right);
-			xBegin = xEnd;
+			xSigChangeBeginPos = xSigChangeEndPos;
 			right.set(entries.higherEntry(left.time), endTime);
-			xEnd = getXEnd(right.time);
+			xSigChangeEndPos = getXPosEnd(right.time);
 			multiple = false;
-			if (xEnd == xBegin) {
+			if (xSigChangeEndPos == xSigChangeBeginPos) {
 				multiple = true;
-				long eTime = (xBegin + 1) * this.waveCanvas.getScaleFactor();
+				long eTime = (xSigChangeBeginPos + 1) * this.waveCanvas.getScaleFactor();
 				Entry<Long, ?> entry = entries.floorEntry(eTime);
 				if(entry!=null && entry.getKey()> right.time)
 					right.set(entry, endTime);
-				xEnd = getXEnd(eTime);
+				xSigChangeEndPos = getXPosEnd(eTime);
 			}
 		} while (left.time < endTime);
 	}
@@ -273,14 +291,14 @@ public class SignalPainter extends TrackPainter {
 			int yOffsetLeft = (int) ((leftVal-minVal) / range * (yOffsetB-yOffsetT));
 			int yOffsetRight = (int) ((rightVal-minVal) / range * (yOffsetB-yOffsetT));
 			if(continous) {
-				if (xEnd > maxX) {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetRight);
+				if (xEnd > maxPosX) {
+					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);
 				} else {
 					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
 				}
 			} else {
-				if (xEnd > maxX) {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetLeft);
+				if (xEnd > maxPosX) {
+					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetLeft);
 				} else {
 					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetLeft);
 					if(yOffsetRight!=yOffsetLeft) {
@@ -316,8 +334,8 @@ public class SignalPainter extends TrackPainter {
 				default:
 				}
 				gc.setForeground(color);
-				if (xEnd > maxX) {
-					gc.drawLine(xBegin, yOffset, maxX, yOffset);
+				if (xEnd > maxPosX) {
+					gc.drawLine(xBegin, yOffset, maxPosX, yOffset);
 				} else {
 					gc.drawLine(xBegin, yOffset, xEnd, yOffset);
 					int yNext = yOffsetM;
@@ -398,14 +416,14 @@ public class SignalPainter extends TrackPainter {
 				int yOffsetLeft = (int) ((leftVal-minVal) / range * (yOffsetB-yOffsetT));
 				int yOffsetRight = Double.isNaN(rightVal)?yOffsetLeft:(int) ((rightVal-minVal) / range * (yOffsetB-yOffsetT));
 				if(continous) {
-					if (xEnd > maxX) {
-						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetRight);
+					if (xEnd > maxPosX) {
+						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);
 					} else {
 						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
 					}
 				} else {
-					if (xEnd > maxX) {
-						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxX, yOffsetB-yOffsetLeft);
+					if (xEnd > maxPosX) {
+						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetLeft);
 					} else {
 						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetLeft);
 						if(yOffsetRight!=yOffsetLeft) {
