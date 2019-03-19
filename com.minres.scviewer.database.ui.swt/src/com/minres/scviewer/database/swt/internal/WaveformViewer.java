@@ -225,7 +225,7 @@ public class WaveformViewer implements IWaveformViewer  {
 
 		SashForm topSash = new SashForm(top, SWT.SMOOTH);
 		topSash.setBackground(topSash.getDisplay().getSystemColor(SWT.COLOR_GRAY));
-
+				
 		Composite composite = new Composite(topSash, SWT.NONE);
 		composite.setLayout(new FillLayout(SWT.HORIZONTAL));
 
@@ -304,7 +304,7 @@ public class WaveformViewer implements IWaveformViewer  {
 		valueList.addMouseListener(nameValueMouseListener);
 		valueListScrolled.setContent(valueList);
 
-		waveformCanvas.setMaxTime(1);
+		waveformCanvas.setMaxTime(1); 
 		waveformCanvas.addMouseListener(waveformMouseListener);
 		
 		nameListScrolled.getVerticalBar().addSelectionListener(new SelectionAdapter() {
