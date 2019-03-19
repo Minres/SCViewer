@@ -45,7 +45,7 @@ import com.minres.scviewer.database.ui.IWaveformViewer;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
 
-public class WaveformCanvas extends Canvas {
+public class WaveformCanvas extends Canvas{
 	
     Color[] colors = new Color[WaveformColors.values().length];
 
@@ -84,13 +84,13 @@ public class WaveformCanvas extends Canvas {
      * Constructor for ScrollableCanvas.
      * 
      * @param parent
-     *            the parent of this control.
+     *            the parent of this control.super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE | SWT.V_SCROLL | SWT.H_SCROLL);
      * @param style
      *            the style of this control.
      */
     public WaveformCanvas(final Composite parent, int style) {
         super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE | SWT.V_SCROLL | SWT.H_SCROLL);
-        addControlListener(new ControlAdapter() { /* resize listener. */
+    	addControlListener(new ControlAdapter() { /* resize listener. */
             public void controlResized(ControlEvent event) {
                 syncScrollBars();
             }
@@ -149,7 +149,11 @@ public class WaveformCanvas extends Canvas {
         colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()] = SWTResourceManager.getColor(255, 128, 255);
 
     }
-
+    
+    public long getXOffset() {
+    	return -origin.x;
+    }
+    
 	public void addCursoPainter(CursorPainter cursorPainter){
 		painterList.add(cursorPainter);
 		cursorPainters.add(cursorPainter);
@@ -243,10 +247,11 @@ public class WaveformCanvas extends Canvas {
     		long xoffs=xc+origin.x; // cursor offset relative to left border
     		long xcn=tc/scaleFactor; // new total x-offset
     		long originX=xcn-xoffs;
-    		if(originX>0)
+    		if(originX>0) {
     			origin.x=(int) -originX; // new cursor time offset relative to left border
-    		else
+    		}else {
     			origin.x=0;
+    		}
     		syncScrollBars();
     		arrowPainter.setTx(tx);    		
     		redraw();
@@ -354,7 +359,7 @@ public class WaveformCanvas extends Canvas {
             return;
         }
         int height = trackAreaPainter.getHeight(); // incl. Ruler
-        int width = (int) (maxTime / scaleFactor);
+        long width = maxTime / scaleFactor;
         Rectangle clientArea=getClientArea();
         ScrollBar horizontal = getHorizontalBar();
         horizontal.setIncrement((int) (getClientArea().width / 100));
@@ -362,10 +367,11 @@ public class WaveformCanvas extends Canvas {
         int clientWidthw = clientArea.width;
         if (width > clientWidthw) { /* image is wider than client area */
         	horizontal.setMinimum(0);
-            horizontal.setMaximum(width);
+            horizontal.setMaximum((int)width);
             horizontal.setEnabled(true);
-            if (((int) -origin.x) > horizontal.getMaximum() - clientWidthw)
+            if (((int) -origin.x) > horizontal.getMaximum() - clientWidthw) {
                 origin.x = -horizontal.getMaximum() + clientWidthw;
+            }
         } else { /* image is narrower than client area */
             horizontal.setEnabled(false);
         }
@@ -380,8 +386,9 @@ public class WaveformCanvas extends Canvas {
             vertical.setMinimum(0);
             vertical.setMaximum(height);
             vertical.setEnabled(true);
-            if (((int) -origin.y) > vertical.getMaximum() - clientHeighth)
+            if (((int) -origin.y) > vertical.getMaximum() - clientHeighth) {
                 origin.y = -vertical.getMaximum() + clientHeighth;
+            }
         } else { /* image is less higher than client area */
             vertical.setMaximum((int) (clientHeighth));
             vertical.setEnabled(false);
@@ -396,12 +403,13 @@ public class WaveformCanvas extends Canvas {
     /* Paint function */
     private void paint(GC gc) {
         Rectangle clientRect = getClientArea(); /* Canvas' painting area */
-        clientRect.x = -origin.x;
+//      clientRect.x = -origin.x;
         clientRect.y = -origin.y;
         // reset the transform
         transform.identity();
         // shift the content
-        transform.translate(origin.x, origin.y);
+        // DO NOT SHIFT HORIZONTALLY, the range is WAY TOO BIG for float!!!
+        transform.translate(0, origin.y);
         gc.setTransform(transform);
         gc.setClipping(clientRect);
         if (painterList.size() > 0 ) {

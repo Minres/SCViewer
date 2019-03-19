@@ -57,15 +57,23 @@ public class StreamPainter extends TrackPainter{
 			gc.setBackground(this.waveCanvas.colors[even?WaveformColors.TRACK_BG_EVEN.ordinal():WaveformColors.TRACK_BG_ODD.ordinal()]);
 		gc.setFillRule(SWT.FILL_EVEN_ODD);
 		gc.fillRectangle(area);
-		Entry<Long, ?> firstTx=stream.getEvents().floorEntry(area.x*waveCanvas.getScaleFactor());
-		Entry<Long, ?> lastTx=stream.getEvents().ceilingEntry((area.x+area.width)*waveCanvas.getScaleFactor());
+		
+		long scaleFactor = this.waveCanvas.getScaleFactor();
+		long beginPos = area.x;
+		long beginTime = (beginPos + waveCanvas.getXOffset())*scaleFactor;
+		long endPos = beginPos + area.width;
+        long endTime = beginTime + area.width*scaleFactor;
+
+		Entry<Long, ?> firstTx=stream.getEvents().floorEntry(beginTime);
+		Entry<Long, ?> lastTx=stream.getEvents().ceilingEntry(endTime);
 		if(firstTx==null) firstTx = stream.getEvents().firstEntry();
 		if(lastTx==null) lastTx=stream.getEvents().lastEntry();
         gc.setFillRule(SWT.FILL_EVEN_ODD);
         gc.setLineStyle(SWT.LINE_SOLID);
         gc.setLineWidth(1);
         gc.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
-        for(int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
+        
+        for( int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
         	gc.drawLine(area.x, y1, area.x+area.width, y1);
 		if(firstTx==lastTx)
 			for(ITxEvent txEvent:(Collection<?  extends ITxEvent>)firstTx.getValue())
@@ -97,12 +105,13 @@ public class StreamPainter extends TrackPainter{
 			}
 		}
 	}
-
+	
 	protected void drawTx(GC gc, Rectangle area, ITx tx) {
 		int offset = tx.getConcurrencyIndex()*this.waveCanvas.getTrackHeight();
 		Rectangle bb = new Rectangle(
-				(int)(tx.getBeginTime()/this.waveCanvas.getScaleFactor()), area.y+offset+txBase,
+				(int)(tx.getBeginTime()/this.waveCanvas.getScaleFactor()-waveCanvas.getXOffset()), area.y+offset+txBase,
 				(int)((tx.getEndTime()-tx.getBeginTime())/this.waveCanvas.getScaleFactor()), txHeight);
+
 		if(bb.x+bb.width<area.x || bb.x>area.x+area.width) return;
 		if(bb.width==0){
 			gc.drawLine(bb.x, bb.y, bb.x, bb.y+bb.height);
@@ -110,7 +119,6 @@ public class StreamPainter extends TrackPainter{
 			gc.fillRectangle(bb);
 			gc.drawRectangle(bb);
 		} else {
-			// adjusting drawing width to circumvent issues in canvas algos
 			if(bb.x < area.x) {
 				bb.width = bb.width-(area.x-bb.x)+5;
 				bb.x=area.x-5;
@@ -121,7 +129,7 @@ public class StreamPainter extends TrackPainter{
 				bb_x2=area_x2+5;
 				bb.width= bb_x2-bb.x;
 			}
-		    gc.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
+			gc.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
 		    gc.drawRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
 		}
 	}
