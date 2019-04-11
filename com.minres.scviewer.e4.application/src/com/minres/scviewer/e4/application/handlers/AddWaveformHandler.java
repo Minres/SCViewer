@@ -40,13 +40,16 @@ public class AddWaveformHandler {
 			@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection) {
 		if(designBrowser==null) designBrowser = getListPart( partService);
 		if(designBrowser==null || designBrowser.getActiveWaveformViewerPart()==null) return false;
-		Boolean before = "before".equalsIgnoreCase(where); //$NON-NLS-1$
+		boolean before = "before".equalsIgnoreCase(where); //$NON-NLS-1$
+		IStructuredSelection waveformSelection = null;
+		if(designBrowser.getActiveWaveformViewerPart()!=null)
+			waveformSelection = (IStructuredSelection)designBrowser.getActiveWaveformViewerPart().getSelection();
 		if("true".equalsIgnoreCase(all))  //$NON-NLS-1$
 			return designBrowser.getFilteredChildren().length>0 && 
-					(!before || ((IStructuredSelection)designBrowser.getActiveWaveformViewerPart().getSelection()).size()>0);
+					(!before || (waveformSelection!=null && waveformSelection.size()>0));
 		else
-			return selection.size()>0 && 
-					(!before || ((IStructuredSelection)designBrowser.getActiveWaveformViewerPart().getSelection()).size()>0);
+			return selection!=null && selection.size()>0 && 
+					(!before || (waveformSelection!=null && waveformSelection.size()>0));
 	}
 
 	@Execute
