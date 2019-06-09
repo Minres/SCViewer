@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.swt.internal;
 
+import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -485,13 +486,15 @@ public class WaveformViewer implements IWaveformViewer  {
 									resultsList[tx.getConcurrencyIndex()]= evt.getTransaction();
 							}
 						}
-						firstTx=stream.getEvents().lowerEntry(firstTx.getKey());
+						firstTx=stream.getEvents().lowerEntry(firstTx.getKey());	
 					}while(firstTx!=null && !isArrayFull(resultsList));
 					entry.currentValue="";
 					boolean separator=false;
+									
 					for(ITx o:resultsList){
 						if(separator) entry.currentValue+="|";
 						if(o!=null) entry.currentValue+=((ITx)o).getGenerator().getName();
+											
 						separator=true;
 					}
 				}
@@ -502,7 +505,8 @@ public class WaveformViewer implements IWaveformViewer  {
 		valueListScrolled.setMinSize(width, trackVerticalHeight);
 		valueListScrolled.redraw();
 	}
-
+	
+	
 	private boolean isArrayFull(Object[] array){
 		for(Object o:array){
 			if(o==null) return false;
@@ -600,6 +604,9 @@ public class WaveformViewer implements IWaveformViewer  {
 						TrackEntry trackEntry = getEntryForStream(txSel.getStream());
 						if(trackEntry==null && addIfNeeded){
 							trackEntry=new TrackEntry(txSel.getStream());
+							// compute fallback colors
+							Color fallbackColors[] = TrackEntry.computeColor(txSel.getStream().getName(), TrackEntry.fallbackColor, TrackEntry.highlightedFallbackColor);
+							trackEntry.setColor(fallbackColors[0], fallbackColors[1]);
 							streams.add(trackEntry);
 						}
 						currentTxSelection = txSel;
