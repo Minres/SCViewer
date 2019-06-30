@@ -826,14 +826,26 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		List<TrackEntry> streams = waveformPane.getStreamList();
 		ISelection sel = waveformPane.getSelection();
 		TrackEntry newSelection=null;
+		
 		if(sel instanceof IStructuredSelection && ((IStructuredSelection) sel).size()==2) {
 				Iterator<?> it = ((IStructuredSelection)sel).iterator();
 				it.next();
 				int idx = streams.indexOf(it.next());
-				if(idx==streams.size()-1)
-					newSelection=streams.get(idx-1);
-				else
+				
+				if(idx==streams.size()-1) {
+					//last stream gets deleted, no more selection
+					if(idx==0) {
+						newSelection=null;
+					}
+					//more than 1 stream left, last gets deleted, selection jumps to new last stream
+					else {
+						newSelection=streams.get(idx-1);
+					}
+				}
+				//more than 1 stream left, any stream but the last gets deleted, selection jumps to the next stream
+				else {
 					newSelection=streams.get(idx+1);
+				}
 		}
 		waveformPane.setSelection(new StructuredSelection());
 		streams.remove(trackEntry);
