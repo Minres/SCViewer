@@ -76,6 +76,7 @@ public class BitVector {
 		for(int i=resWidth-1; i>=0; i--){
 			int digit=0;
 			for(int j=3; j>=0; j--){
+				if((4*i+j)>=value.length) continue;
 				BitValue val = BitValue.fromChar(value[4*i+j]);
 				switch(val) {
 				case X:

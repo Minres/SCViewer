@@ -26,7 +26,9 @@
             </menus>
           </children>
           <children xsi:type="basic:PartSashContainer" xmi:id="_uT9BIHgtEeWwZ-9vrAR2UQ" elementId="" containerData="80">
-            <children xsi:type="basic:PartStack" xmi:id="_95QGyXNmEeWBq8z1Dv39LA" elementId="org.eclipse.editorss" containerData="75"/>
+            <children xsi:type="basic:PartStack" xmi:id="_95QGyXNmEeWBq8z1Dv39LA" elementId="org.eclipse.editorss" containerData="75">
+              <tags>NoAutoCollapse</tags>
+            </children>
             <children xsi:type="basic:Part" xmi:id="_vtfm8HgtEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parts.WaveformDetails" containerData="25" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.TransactionDetails" label="Waveform Details"/>
           </children>
         </children>
