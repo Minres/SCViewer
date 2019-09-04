@@ -38,10 +38,10 @@
     <mainMenu xmi:id="_95PfyXNmEeWBq8z1Dv39LA" elementId="menu:org.eclipse.ui.main.menu">
       <children xsi:type="menu:Menu" xmi:id="_95QGwHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.menu.file" label="File">
         <children xsi:type="menu:HandledMenuItem" xmi:id="_VJG3YHgvEeWwZ-9vrAR2UQ" elementId="" label="Open Database" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" command="_95PfwHNmEeWBq8z1Dv39LA"/>
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_e7MOYJedEeW09eyIbHsdvg" elementId="" label="Load settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_page.png" command="_7-AIMJebEeW09eyIbHsdvg">
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_e7MOYJedEeW09eyIbHsdvg" elementId="" label="Load active tab settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_page.png" command="_7-AIMJebEeW09eyIbHsdvg">
           <parameters xmi:id="_4vtYgJehEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.parameter.30" name="com.minres.scviewer.e4.application.commandparameter.loadStore" value="load"/>
         </children>
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGwnNmEeWBq8z1Dv39LA" label="Save settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/script_save.png" command="_7-AIMJebEeW09eyIbHsdvg">
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGwnNmEeWBq8z1Dv39LA" label="Save active tab settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/script_save.png" command="_7-AIMJebEeW09eyIbHsdvg">
           <parameters xmi:id="_61QIsJehEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.parameter.31" name="com.minres.scviewer.e4.application.commandparameter.loadStore" value="store"/>
         </children>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGw3NmEeWBq8z1Dv39LA" label="Quit" command="_95PfvHNmEeWBq8z1Dv39LA"/>
