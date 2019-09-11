@@ -32,6 +32,7 @@ public class RulerPainter implements IPainter {
 
     @Override
     public void paintArea(GC gc, Rectangle area) {
+
     	Color headerFgColor=waveCanvas.getDisplay().getSystemColor(SWT.COLOR_WIDGET_FOREGROUND);
     	if(headerFgColor.isDisposed())
     		headerFgColor=SWTResourceManager.getColor(0,0,0);
@@ -41,9 +42,11 @@ public class RulerPainter implements IPainter {
         String unit=waveCanvas.getUnitStr();
         int unitMultiplier=waveCanvas.getUnitMultiplier();
         long scaleFactor=waveCanvas.getScaleFactor();
-//        long zoomLevel = waveCanvas.getZoomLevel();
-        long start=area.x*scaleFactor;
-        long end=start+area.width*scaleFactor;
+
+        long startPos=area.x*scaleFactor; 
+        long startVal=startPos + waveCanvas.getXOffset()*scaleFactor;
+        long endPos=startPos+area.width*scaleFactor;
+        long endVal=startVal+area.width*scaleFactor;
 
         long rulerTickMinor = rulerTickMinorC*scaleFactor;
         long rulerTickMajor = rulerTickMajorC*scaleFactor;
@@ -54,9 +57,9 @@ public class RulerPainter implements IPainter {
         int baselineY=waveCanvas.rulerHeight - 1;
         int bottom=waveCanvas.rulerHeight - 2;
 
-        long startMinorIncr = start;
-        long modulo = start % rulerTickMinor;
-        startMinorIncr+=rulerTickMinor-modulo;
+        long modulo = startVal % rulerTickMinor;
+        long startMinorIncrPos = startPos+rulerTickMinor-modulo;
+        long startMinorIncrVal = startVal+rulerTickMinor-modulo;
         
         gc.setBackground(waveCanvas.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
         gc.fillRectangle(new Rectangle(area.x, area.y, area.width, waveCanvas.rulerHeight));
@@ -65,15 +68,18 @@ public class RulerPainter implements IPainter {
         gc.setForeground(headerFgColor);
         gc.drawLine(area.x, area.y+bottom, area.x+area.width, area.y+bottom);
         
-        for (long tick = startMinorIncr; tick < end; tick += rulerTickMinor) {
-            int x0 = (int) (tick/scaleFactor);
+        int x0_max = 0;
+        
+        for (long pos = startMinorIncrPos, tick = startMinorIncrVal; pos < endPos; pos+= rulerTickMinor, tick += rulerTickMinor) {
+            int x0_pos = (int) (pos/scaleFactor);
+            long x0_val = tick/scaleFactor;
+            x0_max = x0_pos;
             if ((tick % rulerTickMajor) == 0) {
-                gc.drawText(df.format(tick/scaleFactor*unitMultiplier)+unit, x0, area.y+textY);
-                gc.drawLine(x0, area.y+majorTickY, x0,area.y+ bottom);
+                gc.drawText(df.format(x0_val*unitMultiplier)+unit, x0_pos, area.y+textY);
+                gc.drawLine(x0_pos, area.y+majorTickY, x0_pos,area.y+ bottom);
             } else {
-                gc.drawLine(x0, area.y+minorTickY, x0, area.y+bottom);
+                gc.drawLine(x0_pos, area.y+minorTickY, x0_pos, area.y+bottom);
             }
         }
-        
     }
 }

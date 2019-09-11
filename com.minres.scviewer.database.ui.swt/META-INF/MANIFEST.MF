@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: SWT widget
 Bundle-SymbolicName: com.minres.scviewer.database.ui.swt
-Bundle-Version: 2.0.0.qualifier
+Bundle-Version: 2.0.2.qualifier
 Bundle-Vendor: MINRES Technologies GmbH
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.eclipse.swt;bundle-version="3.103.1",

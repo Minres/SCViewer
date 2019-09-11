@@ -59,7 +59,7 @@ public class WaveStatusBarControl extends StatusBarControl {
 		final String labelString;
 		
 		/** The width. */
-		final int width;
+		//final int width;
 		
 		/** The text. */
 		CLabel label, text;
@@ -73,10 +73,10 @@ public class WaveStatusBarControl extends StatusBarControl {
 		 * @param labelString the label string
 		 * @param width the width
 		 */
-		public TextContributionItem(String labelString, int width) {
+		public TextContributionItem(String labelString /*, int width */) {
 			super();
 			this.labelString = labelString;
-			this.width=width;
+			//this.width=width;
 			content=""; //$NON-NLS-1$
 		}
 
@@ -85,14 +85,16 @@ public class WaveStatusBarControl extends StatusBarControl {
 		 */
 		@Override
 		public void fill(Composite parent) {
-			Composite box=new Composite(parent, SWT.NONE);
+			Composite box=new Composite(parent, SWT.NONE); //NONE
 			box.setLayout(new GridLayout(2, false));
 			label=new CLabel(box, SWT.SHADOW_NONE);	
 			label.setText(labelString);
 			text=new CLabel(box, SWT.SHADOW_IN);
 			text.setAlignment(SWT.RIGHT);
+			//GridData layoutData=new GridData(SWT.DEFAULT, SWT.DEFAULT, true, false);
 			GridData layoutData=new GridData(SWT.DEFAULT, SWT.DEFAULT, true, false);
-			layoutData.minimumWidth=width;
+			layoutData.minimumWidth=70;
+			//layoutData.minimumWidth=width;
 			text.setLayoutData(layoutData);
 		}
 
@@ -127,10 +129,11 @@ public class WaveStatusBarControl extends StatusBarControl {
 	@Inject
 	public WaveStatusBarControl(UISynchronize sync) {
 		super(sync);
-		cursorContribution = new TextContributionItem(Messages.WaveStatusBarControl_5, 150);
-		markerContribution = new TextContributionItem(Messages.WaveStatusBarControl_6, 150);
-		markerDiffContribution = new TextContributionItem(Messages.WaveStatusBarControl_7, 150);
-		zoomContribution = new TextContributionItem(Messages.WaveStatusBarControl_8, 60);
+				
+		cursorContribution = new TextContributionItem(Messages.WaveStatusBarControl_5 /*, 150 */); //150
+		markerContribution = new TextContributionItem(Messages.WaveStatusBarControl_6 /*, 150 */); //150
+		markerDiffContribution = new TextContributionItem(Messages.WaveStatusBarControl_7 /*, 150 */); //150
+		zoomContribution = new TextContributionItem(Messages.WaveStatusBarControl_8 /*, 60 */); //60
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,cursorContribution);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,markerContribution);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,markerDiffContribution);

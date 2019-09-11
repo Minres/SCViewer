@@ -74,6 +74,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
 import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxRelation;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
@@ -126,7 +127,16 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	/** The Constant BASE_LINE_TIME. */
 	protected static final String BASE_LINE_TIME = "BASE_LINE_TIME"; //$NON-NLS-1$
+	
+	/** The Constant SELECTED_TX_ID. */
+	protected static final String SELECTED_TX_ID = "SELECTED_TX_ID"; //$NON-NLS-1$
 
+	/** The Constant SELECTED_TRACKENTRY_NAME. */
+	protected static final String SELECTED_TRACKENTRY_NAME = "SELECTED_TRACKENTRY_NAME"; //$NON-NLS-1$
+	
+	/** The Constant WAVEFORM_SELECTED. */
+	protected static final String WAVEFORM_SELECTED = ".WAVEFORM_SELECTED"; //$NON-NLS-1$
+	
 	/** The Constant FILE_CHECK_INTERVAL. */
 	protected static final long FILE_CHECK_INTERVAL = 60000;
 	
@@ -578,6 +588,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	}
 
 	public void saveState(String fileName){
+		
+				
 		Map<String, String> persistedState = new HashMap<>();
 		persistedState.put(DATABASE_FILE + "S", Integer.toString(filesToLoad.size())); //$NON-NLS-1$
 		Integer index = 0;
@@ -588,10 +600,14 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		saveWaveformViewerState(persistedState);
 		Properties props = new Properties();
 		props.putAll(persistedState);
+		
 		try {
-			FileOutputStream out = new FileOutputStream(fileName);
-			props.store(out, "Written by SCViewer"); //$NON-NLS-1$
-			out.close();
+			
+				FileOutputStream out = new FileOutputStream(fileName);
+                props.store(out, "Written by SCViewer"); //$NON-NLS-1$
+			    out.close();
+			
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -600,6 +616,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	public void loadState(String fileName){
 		Properties props = new Properties();
 		try {
+			//clear old streams before loading tab settings
+			if(!waveformPane.getStreamList().isEmpty()) {
+				waveformPane.getStreamList().clear();
+				for (TrackEntry trackEntry : waveformPane.getStreamList()) {
+					trackEntry.selected = false;
+				}
+			}
 			FileInputStream in = new FileInputStream(fileName);
 			props.load(in);
 			in.close();
@@ -619,12 +642,15 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	protected void saveWaveformViewerState(Map<String, String> persistedState) {
 		Integer index;
+		boolean isStream = false;
 		persistedState.put(SHOWN_WAVEFORM + "S", Integer.toString(waveformPane.getStreamList().size())); //$NON-NLS-1$
 		index = 0;
 		for (TrackEntry trackEntry : waveformPane.getStreamList()) {
+			if(trackEntry.isStream()) { isStream=true; }
 			persistedState.put(SHOWN_WAVEFORM + index, trackEntry.waveform.getFullName());
 			persistedState.put(SHOWN_WAVEFORM + index + VALUE_DISPLAY, trackEntry.valueDisplay.toString());
 			persistedState.put(SHOWN_WAVEFORM + index + WAVE_DISPLAY, trackEntry.waveDisplay.toString());
+			persistedState.put(SHOWN_WAVEFORM + index + WAVEFORM_SELECTED, String.valueOf(trackEntry.selected).toUpperCase());
 			index++;
 		}
 		List<ICursor> cursors = waveformPane.getCursorList();
@@ -636,8 +662,38 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		}
 		persistedState.put(ZOOM_LEVEL, Integer.toString(waveformPane.getZoomLevel()));
 		persistedState.put(BASE_LINE_TIME, Long.toString(waveformPane.getBaselineTime()));
+		
+		// get selected transaction	of a stream	
+		ISelection selection = waveformPane.getSelection();
+		if (!selection.isEmpty() && isStream) {
+			List<Object> t = getISelection(selection);
+			ITx tx = (ITx) t.get(0);
+			TrackEntry te = (TrackEntry) t.get(1);
+			// get transaction id
+			persistedState.put(SELECTED_TX_ID, Long.toString(tx.getId()));
+			//get TrackEntry name
+			String name = te.getStream().getFullName();
+			persistedState.put(SELECTED_TRACKENTRY_NAME, name);
+		}
 	}
 
+	protected List<Object> getISelection(ISelection selection){
+	    List<Object> result = new LinkedList<Object> ();
+
+	    if ( selection instanceof IStructuredSelection )
+	    {
+	        Iterator<?> i = ((IStructuredSelection)selection).iterator();
+	        while (i.hasNext()){
+	            Object o = i.next ();
+	            if (o == null) {
+	                continue;
+	            }
+	            result.add(o);
+	        }
+	    }
+	    return result;
+	}	
+	
 	/**
 	 * Restore waveform viewer state.
 	 *
@@ -650,6 +706,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
 			if (waveform != null) {
 				TrackEntry t = new TrackEntry(waveform);
+				//check if t is selected
+				boolean isSelected = Boolean.valueOf(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED));
+				if(isSelected) {
+					t.selected = true;
+				} else {
+					t.selected = false;
+				}
 				res.add(t);
 				String v = state.get(SHOWN_WAVEFORM + i + VALUE_DISPLAY);
 				if(v!=null)
@@ -680,6 +743,38 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			try {
 				Long scale = Long.parseLong(state.get(BASE_LINE_TIME));
 				waveformPane.setBaselineTime(scale);
+			} catch (NumberFormatException e) {
+			}
+		}
+		if (state.containsKey(SELECTED_TX_ID) && state.containsKey(SELECTED_TRACKENTRY_NAME)) {
+			try {
+				Long txId = Long.parseLong(state.get(SELECTED_TX_ID));
+				String trackentryName = state.get(SELECTED_TRACKENTRY_NAME);
+				
+				//get TrackEntry Object based on name and TX Object by id and put into selectionList
+				for(TrackEntry te : res) {
+					if(te.waveform.getFullName().compareTo(trackentryName)==0) {
+						boolean found = false;
+						// TODO: find transaction by time? To avoid 3x for-loop
+						for( List<ITxEvent> lev : te.getStream().getEvents().values() ) {
+							if(lev == null) continue;
+							for(ITxEvent itxe : lev) {
+								if(itxe == null) continue;
+								ITx itx = itxe.getTransaction();
+								if(itx.getId() == txId) {
+									found = true;
+									ArrayList<Object> selectionList = new ArrayList<Object>();
+									selectionList.add(te);
+									selectionList.add(itx);
+									waveformPane.setSelection(new StructuredSelection (selectionList));
+									break;
+								}
+							}
+							if(found) break;
+						}
+						break;
+					}
+				}
 			} catch (NumberFormatException e) {
 			}
 		}
@@ -826,14 +921,26 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		List<TrackEntry> streams = waveformPane.getStreamList();
 		ISelection sel = waveformPane.getSelection();
 		TrackEntry newSelection=null;
+		
 		if(sel instanceof IStructuredSelection && ((IStructuredSelection) sel).size()==2) {
 				Iterator<?> it = ((IStructuredSelection)sel).iterator();
 				it.next();
 				int idx = streams.indexOf(it.next());
-				if(idx==streams.size()-1)
-					newSelection=streams.get(idx-1);
-				else
+				
+				if(idx==streams.size()-1) {
+					//last stream gets deleted, no more selection
+					if(idx==0) {
+						newSelection=null;
+					}
+					//more than 1 stream left, last gets deleted, selection jumps to new last stream
+					else {
+						newSelection=streams.get(idx-1);
+					}
+				}
+				//more than 1 stream left, any stream but the last gets deleted, selection jumps to the next stream
+				else {
 					newSelection=streams.get(idx+1);
+				}
 		}
 		waveformPane.setSelection(new StructuredSelection());
 		streams.remove(trackEntry);

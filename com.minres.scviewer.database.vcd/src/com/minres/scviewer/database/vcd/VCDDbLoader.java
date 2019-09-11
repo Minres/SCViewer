@@ -13,6 +13,8 @@ package com.minres.scviewer.database.vcd;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +22,7 @@ import java.util.NavigableMap;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.zip.GZIPInputStream;
 
 import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.ISignal;
@@ -56,8 +59,20 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	public VCDDbLoader() {
 	}
 
-	/** The date bytes. */
-	private byte[] dateBytes = "$date".getBytes();
+	private static boolean isGzipped(File f) {
+		InputStream is = null;
+		try {
+			is = new FileInputStream(f);
+			byte [] signature = new byte[2];
+			int nread = is.read( signature ); //read the gzip signature
+			return nread == 2 && signature[ 0 ] == (byte) 0x1f && signature[ 1 ] == (byte) 0x8b;
+		} catch (IOException e) {
+			return false;
+		} finally {
+			try { is.close();} catch (IOException e) { }
+		}
+	}
+
 
 	/* (non-Javadoc)
 	 * @see com.minres.scviewer.database.ITrDb#load(java.io.File)
@@ -67,22 +82,16 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	public boolean load(IWaveformDb db, File file) throws Exception {
 		this.db=db;
 		this.maxTime=0;
-		try {
-			FileInputStream fis = new FileInputStream(file);
-			byte[] buffer = new byte[dateBytes.length];
-			int read = fis.read(buffer, 0, dateBytes.length);
-			fis.close();
-			if (read == dateBytes.length)
-				for (int i = 0; i < dateBytes.length; i++)
-					if (buffer[i] != dateBytes[i])
-						return false;
-		} catch(FileNotFoundException e) {
+		String name = file.getCanonicalFile().getName();
+		if(!(name.endsWith(".vcd") ||
+				name.endsWith(".vcdz") ||
+				name.endsWith(".vcdgz")  ||
+				name.endsWith(".vcd.gz")) )
 			return false;
-		}
-
 		signals = new Vector<IWaveform>();
-		moduleStack= new Stack<String>(); 
-		boolean res = new VCDFileParser(false).load(new FileInputStream(file), this);
+		moduleStack= new Stack<String>();
+		FileInputStream fis = new FileInputStream(file);
+		boolean res = new VCDFileParser(false).load(isGzipped(file)?new GZIPInputStream(fis):fis, this);
 		moduleStack=null;
 		if(!res) throw new InputFormatException();
 		// calculate max time of database

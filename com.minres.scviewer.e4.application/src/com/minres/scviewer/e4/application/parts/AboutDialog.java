@@ -19,8 +19,10 @@ import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
@@ -39,6 +41,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.wb.swt.ResourceManager;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.osgi.framework.Version;
 
 import com.minres.scviewer.e4.application.Messages;
 
@@ -75,7 +78,7 @@ public class AboutDialog extends Dialog {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridData gd_composite = new GridData(SWT.LEFT, SWT.FILL, true, true);
 		gd_composite.widthHint = 600;
-		gd_composite.heightHint =250;
+		gd_composite.heightHint =300;
 		composite.setLayoutData(gd_composite);
 		composite.setLayout(new GridLayout(2, false));
 		
@@ -86,7 +89,7 @@ public class AboutDialog extends Dialog {
 		Canvas canvas = new Canvas(composite,SWT.NO_REDRAW_RESIZE);
 		GridData gd_canvas = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_canvas.widthHint = 200;
-		gd_canvas.heightHint =250;
+		gd_canvas.heightHint =300;
 		canvas.setLayoutData(gd_canvas);
 		canvas.addPaintListener(new PaintListener() {
 			public void paintControl(PaintEvent e) {
@@ -97,11 +100,14 @@ public class AboutDialog extends Dialog {
 			}
 		});
 
-		StyledText styledText = new StyledText(composite, SWT.BORDER);
+		StyledText styledText = new StyledText(composite, SWT.V_SCROLL | SWT.BORDER);
 		styledText.setEditable(false);
 		GridData gd_styledText = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
 		styledText.setLayoutData(gd_styledText);
-		styledText.setText(productTitle+copyrightText);
+		Version version = Platform.getProduct().getDefiningBundle().getVersion();
+		String versionString = String.format("%d.%d.%d", version.getMajor(), version.getMinor(), version.getMicro());
+		String pt = NLS.bind(Messages.AboutDialog_0, versionString);
+		styledText.setText(pt+copyrightText);
 		styledText.setBackground(white);
 		styledText.setWordWrap(true);
 		styledText.setLeftMargin(5);
@@ -133,7 +139,7 @@ public class AboutDialog extends Dialog {
 				// links are activated on mouse down when the control key is held down 
 //				if ((event.stateMask & SWT.MOD1) != 0) {
 					try {
-						int offset = ((StyledText)event.widget).getOffsetAtPoint(new Point (event.x, event.y));
+						int offset = ((StyledText)event.widget).getOffsetAtLocation(new Point (event.x, event.y));
 						StyleRange style = ((StyledText)event.widget).getStyleRangeAtOffset(offset);
 						if (style != null && style.underline && style.underlineStyle == SWT.UNDERLINE_LINK) {
 							Desktop.getDesktop().browse(new java.net.URI(style.data.toString()));

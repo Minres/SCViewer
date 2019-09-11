@@ -30,6 +30,11 @@ public class CursorPainter implements IPainter, ICursor {
 	
 	public final int id;
 	
+	/// maximum visible canvas position in canvas coordinates
+	int maxPosX;
+	/// maximum visible position in waveform coordinates
+	int maxValX;
+	
 	/**
 	 * @param i 
 	 * @param txDisplay
@@ -56,23 +61,32 @@ public class CursorPainter implements IPainter, ICursor {
 		this.isDragging = isDragging;
 	}
 
+	
 	public void paintArea(GC gc, Rectangle area) {			
 		if(this.waveCanvas.painterList.size()>0){
+			
 			long scaleFactor=waveCanvas.getScaleFactor();
+			long beginPos = area.x;
+			
+			maxPosX = area.x + area.width;
+			maxValX = maxPosX + (int)waveCanvas.getXOffset();
+	        
+			// x position of marker in pixels on canvas
 			int x = (int) (time/scaleFactor);
+			// distance of marker from the top of Canvas' painting area
 			int top = id<0?area.y:area.y+15;
+			
 			Color drawColor=waveCanvas.colors[id<0?WaveformColors.CURSOR.ordinal():WaveformColors.MARKER.ordinal()];
 			Color dragColor = waveCanvas.colors[WaveformColors.CURSOR_DRAG.ordinal()];
 			Color textColor=waveCanvas.colors[id<0?WaveformColors.CURSOR_TEXT.ordinal():WaveformColors.MARKER_TEXT.ordinal()];
-			if(x>=area.x && x<=(area.x+area.width)){
+			if(x>=beginPos && x<=maxValX){
 				gc.setForeground(isDragging?dragColor:drawColor);
-				gc.drawLine(x, top, x, area.y+area.height);
+				gc.drawLine(x-(int)waveCanvas.getXOffset(), top, x-(int)waveCanvas.getXOffset(), area.y+area.height);
 				gc.setBackground(drawColor);
 				gc.setForeground(textColor);
 				Double dTime=new Double(time);
-				gc.drawText((dTime/waveCanvas.getScaleFactorPow10())+waveCanvas.getUnitStr(), x+1, top);
+				gc.drawText((dTime/waveCanvas.getScaleFactorPow10())+waveCanvas.getUnitStr(), x+1-(int)waveCanvas.getXOffset(), top);
 			}
 		}
-	}
-
+	}	
 }

@@ -44,6 +44,20 @@ public class StreamPainter extends TrackPainter{
 		this.stream=trackEntry.getStream();
 		this.seenTx=new TreeSet<ITx>();
 	}
+    
+	/*
+	 * convert java.awt.Color to org.eclipse.swt.graphics.Color 
+	 */
+	static org.eclipse.swt.graphics.Color toSwtColor( GC gc, java.awt.Color awtColor ){
+		return new org.eclipse.swt.graphics.Color( gc.getDevice(), awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue() );
+	}
+
+	static org.eclipse.swt.graphics.Color[] toSwtColors( GC gc, java.awt.Color[] awtColors ){
+		org.eclipse.swt.graphics.Color[] swtColors = new org.eclipse.swt.graphics.Color[awtColors.length];
+		for( int i=0; i<awtColors.length; i++ )
+			swtColors[i] = toSwtColor( gc, awtColors[i] );
+		return swtColors;
+	}
 
 	@SuppressWarnings("unchecked")
 	public void paintArea(GC gc, Rectangle area) {
@@ -51,58 +65,73 @@ public class StreamPainter extends TrackPainter{
 		int trackHeight=trackEntry.height/stream.getMaxConcurrency();
 		txBase=trackHeight/5;
 		txHeight=trackHeight*3/5;
-		if(trackEntry.selected)
+		if(trackEntry.selected) {
 			gc.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()]);
+		}
 		else
 			gc.setBackground(this.waveCanvas.colors[even?WaveformColors.TRACK_BG_EVEN.ordinal():WaveformColors.TRACK_BG_ODD.ordinal()]);
 		gc.setFillRule(SWT.FILL_EVEN_ODD);
 		gc.fillRectangle(area);
-		Entry<Long, ?> firstTx=stream.getEvents().floorEntry(area.x*waveCanvas.getScaleFactor());
-		Entry<Long, ?> lastTx=stream.getEvents().ceilingEntry((area.x+area.width)*waveCanvas.getScaleFactor());
+		
+		long scaleFactor = this.waveCanvas.getScaleFactor();
+		long beginPos = area.x;
+		long beginTime = (beginPos + waveCanvas.getXOffset())*scaleFactor;
+		//long endPos = beginPos + area.width;
+        long endTime = beginTime + area.width*scaleFactor;
+
+		Entry<Long, ?> firstTx=stream.getEvents().floorEntry(beginTime);
+		Entry<Long, ?> lastTx=stream.getEvents().ceilingEntry(endTime);
 		if(firstTx==null) firstTx = stream.getEvents().firstEntry();
 		if(lastTx==null) lastTx=stream.getEvents().lastEntry();
         gc.setFillRule(SWT.FILL_EVEN_ODD);
         gc.setLineStyle(SWT.LINE_SOLID);
         gc.setLineWidth(1);
         gc.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
-        for(int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
+        
+        for( int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
         	gc.drawLine(area.x, y1, area.x+area.width, y1);
-		if(firstTx==lastTx)
+		if(firstTx==lastTx) {
 			for(ITxEvent txEvent:(Collection<?  extends ITxEvent>)firstTx.getValue())
-				drawTx(gc, area, txEvent.getTransaction());					
-		else{
+				drawTx(gc, area, txEvent.getTransaction(), false);
+		}else{
 			seenTx.clear();
 			NavigableMap<Long,?> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
 			boolean highlighed=false;
 	        gc.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
-	        gc.setBackground(this.waveCanvas.colors[WaveformColors.TX_BG.ordinal()]);
-			for(Entry<Long, ?> entry: entries.entrySet())
+	        
+	        for(Entry<Long, ?> entry: entries.entrySet())
 				for(ITxEvent txEvent:(Collection<?  extends ITxEvent>)entry.getValue()){
 					if(txEvent.getType()==ITxEvent.Type.BEGIN)
 						seenTx.add(txEvent.getTransaction());
 					if(txEvent.getType()==ITxEvent.Type.END){
 						ITx tx = txEvent.getTransaction();
 						highlighed|=waveCanvas.currentSelection!=null && waveCanvas.currentSelection.equals(tx);
-						drawTx(gc, area, tx);
+						drawTx(gc, area, tx, false);
 						seenTx.remove(tx);
 					}
 				}
 			for(ITx tx:seenTx){
-				drawTx(gc, area, tx);
+				drawTx(gc, area, tx, false);
 			}
 			if(highlighed){
 		        gc.setForeground(this.waveCanvas.colors[WaveformColors.LINE_HIGHLITE.ordinal()]);
-		        gc.setBackground(this.waveCanvas.colors[WaveformColors.TX_BG_HIGHLITE.ordinal()]);
-				drawTx(gc, area, waveCanvas.currentSelection);
+		        drawTx(gc, area, waveCanvas.currentSelection, true);
 			}
 		}
 	}
-
-	protected void drawTx(GC gc, Rectangle area, ITx tx) {
+	
+	protected void drawTx(GC gc, Rectangle area, ITx tx, boolean highlighted ) {
+		// compute colors
+        java.awt.Color[] fallbackColors = trackEntry.getColors();
+        java.awt.Color[] transColor = TrackEntry.computeColor( tx.getGenerator().getName(), fallbackColors[0], fallbackColors[1] );
+        
+        gc.setBackground( toSwtColor( gc, transColor[highlighted?1:0] ) );
+        
 		int offset = tx.getConcurrencyIndex()*this.waveCanvas.getTrackHeight();
 		Rectangle bb = new Rectangle(
-				(int)(tx.getBeginTime()/this.waveCanvas.getScaleFactor()), area.y+offset+txBase,
+				(int)(tx.getBeginTime()/this.waveCanvas.getScaleFactor()-waveCanvas.getXOffset()), area.y+offset+txBase,
 				(int)((tx.getEndTime()-tx.getBeginTime())/this.waveCanvas.getScaleFactor()), txHeight);
+
 		if(bb.x+bb.width<area.x || bb.x>area.x+area.width) return;
 		if(bb.width==0){
 			gc.drawLine(bb.x, bb.y, bb.x, bb.y+bb.height);
@@ -110,7 +139,6 @@ public class StreamPainter extends TrackPainter{
 			gc.fillRectangle(bb);
 			gc.drawRectangle(bb);
 		} else {
-			// adjusting drawing width to circumvent issues in canvas algos
 			if(bb.x < area.x) {
 				bb.width = bb.width-(area.x-bb.x)+5;
 				bb.x=area.x-5;
@@ -121,7 +149,7 @@ public class StreamPainter extends TrackPainter{
 				bb_x2=area_x2+5;
 				bb.width= bb_x2-bb.x;
 			}
-		    gc.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
+			gc.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
 		    gc.drawRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
 		}
 	}
