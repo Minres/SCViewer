@@ -72,7 +72,7 @@ public class TrackEntry {
 		}else {
 			// assign "random" color here, one name always results in the same color!
 			if( randomColors.length > 0 ) {
-				int index = streamValue.hashCode() % randomColors.length;
+				int index = Math.abs(streamValue.hashCode()) % randomColors.length;
 				result[0] = randomColors[index][0];
 				result[1] = randomColors[index][1];
 			}
