@@ -46,6 +46,7 @@ import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -1248,5 +1249,10 @@ public class WaveformViewer implements IWaveformViewer  {
 				updateValueList();
 			}
 		});
+	}
+	
+	/// probably not the way it should be done
+	public void addDisposeListener( DisposeListener listener ) {
+		waveformCanvas.addDisposeListener(listener);
 	}
 }

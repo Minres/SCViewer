@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Control;
 
@@ -104,4 +105,6 @@ public interface IWaveformViewer extends PropertyChangeListener, ISelectionProvi
 	public void setBaselineTime(Long scale);
 	
 	public void scrollHorizontal(int percent);
+	
+	public void addDisposeListener( DisposeListener listener );
 }
