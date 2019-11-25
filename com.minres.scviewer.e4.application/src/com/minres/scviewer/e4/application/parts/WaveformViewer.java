@@ -63,6 +63,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.MouseWheelListener;
@@ -72,7 +74,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
-
+import org.eclipse.swt.widgets.TypedListener;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxRelation;
@@ -101,7 +103,7 @@ import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
  * The Class WaveformViewerPart.
  */
 @SuppressWarnings("restriction")
-public class WaveformViewer implements IFileChangeListener, IPreferenceChangeListener {
+public class WaveformViewer implements IFileChangeListener, IPreferenceChangeListener, DisposeListener {
 
 	/** The Constant ACTIVE_WAVEFORMVIEW. */
 	public static final String ACTIVE_WAVEFORMVIEW = "Active_Waveform_View"; //$NON-NLS-1$
@@ -149,6 +151,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	/** The Constant WAVE_ACTION_ID. */
 	public static final String WAVE_ACTION_ID = "com.minres.scviewer.ui.action.AddToWave"; //$NON-NLS-1$
 
+	/** The number of active DisposeListeners */
+	private static int disposeListenerNumber = 0;
+	
 	/** The factory. */
 	WaveformViewerFactory factory = new WaveformViewerFactory();
 
@@ -178,6 +183,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@Inject
 	@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE)
 	IEclipsePreferences prefs;
+	
+	@Inject @Optional DesignBrowser designBrowser;
 
 	/** The database. */
 	private IWaveformDb database;
@@ -221,6 +228,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	@PostConstruct
 	public void createComposite(MPart part, Composite parent, IWaveformDbFactory dbFactory) {
+		disposeListenerNumber += 1;
+				
 		myPart = part;
 		myParent = parent;
 		database = dbFactory.getDatabase();
@@ -393,6 +402,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			}
 		});
 		prefs.addPreferenceChangeListener(this);
+		
+		waveformPane.addDisposeListener(this);
 	}
 
 	/* (non-Javadoc)
@@ -1184,5 +1195,29 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	public void update() {
 		waveformPane.update();
 	}
+
+	/**
+	 * add dispose listener
+	 * 
+	 * @param listener
+	 */
+	public void addDisposeListener (DisposeListener listener) {
+		waveformPane.getControl().addDisposeListener(listener);
+	}
+
+	/**
+	 * triggers included actions if widget is disposed
+	 * 
+	 * @param e
+	 */
+    public void widgetDisposed(DisposeEvent e) {
+    	disposeListenerNumber -= 1;
+    	if( disposeListenerNumber == 0) {  //if the last tab is closed, reset statusbar
+			eventBroker.post(WaveStatusBarControl.ZOOM_LEVEL, null);
+			eventBroker.post(WaveStatusBarControl.CURSOR_TIME, null);
+			eventBroker.post(WaveStatusBarControl.MARKER_TIME, null);
+			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, null);
+    	}
+    }
 
 }
