@@ -80,6 +80,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				.allocateStartSize(64*1024*1024)
 				.allocateIncrement(64*1024*1024)
 				.make()
+				// NPE here --->
 				parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
 				calculateConcurrencyIndicees()
 				return true
@@ -87,6 +88,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 		} catch(EOFException e) {
 			return true;
 		} catch(Exception e) {
+			System.out.println("---->>> Exception caught while loading database. StackTrace following... ");
 			e.printStackTrace()
 		}
 		return false;
