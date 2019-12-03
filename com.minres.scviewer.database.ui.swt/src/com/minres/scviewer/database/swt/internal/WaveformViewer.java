@@ -158,6 +158,7 @@ public class WaveformViewer implements IWaveformViewer  {
 
 		@Override
 		public void mouseUp(MouseEvent e) {
+			if(start==null) return;
 			if((e.stateMask&SWT.MODIFIER_MASK&~SWT.SHIFT)!=0) return; //don't react on modifier
 			if (e.button ==  1 && ((e.stateMask&SWT.SHIFT)==0)) {
 				if(Math.abs(e.x-start.x)<3 && Math.abs(e.y-start.y)<3){				

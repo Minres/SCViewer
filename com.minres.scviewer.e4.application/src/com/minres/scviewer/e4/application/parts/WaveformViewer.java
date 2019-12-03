@@ -74,7 +74,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.TypedListener;
+import org.eclipse.swt.widgets.MessageBox;
+
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxRelation;
@@ -489,7 +490,17 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		job.addJobChangeListener(new JobChangeAdapter() {
 			@Override
 			public void done(IJobChangeEvent event) {
-				if (event.getResult().getCode() != Status.OK_STATUS.getCode()) return;
+				IStatus result = event.getResult();
+				if( (!result.isMultiStatus() && result.getCode() != Status.OK_STATUS.getCode() ) ||
+				    (result.isMultiStatus() && result.getChildren().length > 0 && result.getChildren()[0].getCode() != Status.OK_STATUS.getCode() ) ){
+					// kill editor and pop up warning for user
+					sync.asyncExec(() -> {
+						final Display display = myParent.getDisplay();
+						MessageDialog.openWarning(display.getActiveShell(), "Error loading database", "Database cannot be loaded. Aborting...");
+					    ePartService.hidePart(myPart, true);
+					});
+					return;
+				}
 				sync.asyncExec(()->{
 					waveformPane.setMaxTime(database.getMaxTime());
 					if (state != null)
