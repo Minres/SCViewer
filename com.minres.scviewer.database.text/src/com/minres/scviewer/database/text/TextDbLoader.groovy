@@ -28,6 +28,7 @@ import com.minres.scviewer.database.IWaveform
 import com.minres.scviewer.database.IWaveformDb
 import com.minres.scviewer.database.IWaveformDbLoader
 import com.minres.scviewer.database.RelationType
+import com.minres.scviewer.database.DataType
 
 public class TextDbLoader implements IWaveformDbLoader{
 
@@ -140,7 +141,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
 		long lineCnt=0;
 		reader.eachLine { line ->
-			def tokens = line.split(/\s+/)
+			def tokens = line.split(/\s+/) as ArrayList
 			switch(tokens[0]){
 				case "scv_tr_stream":
 				case "scv_tr_generator":
@@ -187,7 +188,10 @@ public class TextDbLoader implements IWaveformDbLoader{
 					break
 				case "tx_record_attribute"://matcher = line =~ /^tx_record_attribute\s+(\d+)\s+"([^"]+)"\s+(\S+)\s*=\s*(.+)$/
 					def id = Integer.parseInt(tokens[1])
-					transactionsById[id].attributes<<new TxAttribute(tokens[2][1..-2], DataType.valueOf(tokens[3]), AssociationType.RECORD, tokens[5..-1].join(' '))
+					def name = tokens[2][1..-2]
+					def type = tokens[3] as DataType
+					def remaining = tokens.size()>5?tokens[5..-1].join(' '):""
+					transactionsById[id].attributes<<new TxAttribute(name, type, AssociationType.RECORD, remaining)
 					break
 				case "a"://matcher = line =~ /^a\s+(.+)$/
 					if(endTransaction){
@@ -215,6 +219,26 @@ public class TextDbLoader implements IWaveformDbLoader{
 		}
 	}
 
+	private def toDataType(String str){
+		switch (str)
+		{
+			case "BOOLEAN": return DataType.                       BOOLEAN                      
+			case "ENUMERATION": return DataType.                   ENUMERATION                  
+			case "INTEGER": return DataType.                       INTEGER                      
+			case "UNSIGNED": return DataType.                      UNSIGNED                     
+			case "FLOATING_POINT_NUMBER": return DataType.         FLOATING_POINT_NUMBER        
+			case "BIT_VECTOR": return DataType.                    BIT_VECTOR                   
+			case "LOGIC_VECTOR": return DataType.                  LOGIC_VECTOR                 
+			case "FIXED_POINT_INTEGER": return DataType.           FIXED_POINT_INTEGER          
+			case "UNSIGNED_FIXED_POINT_INTEGER": return DataType.  UNSIGNED_FIXED_POINT_INTEGER 
+			case "RECORD": return DataType.                        RECORD                       
+			case "POINTER": return DataType.                       POINTER                      
+			case "ARRAY": return DataType.                         ARRAY                        
+			case "STRING": return DataType.                        STRING
+			default: return DataType.INTEGER
+		}
+	}
+	
 	private def calculateConcurrencyIndicees(){
 		streams.each{ TxStream  stream -> stream.getMaxConcurrency() }
 	}
