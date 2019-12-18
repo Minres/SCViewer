@@ -60,6 +60,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -373,9 +374,13 @@ public class DesignBrowser {
 			waveformViewerPart.addDisposeListener( new DisposeListener() {
 				@Override
 				public void widgetDisposed(DisposeEvent e) {
-					// reset tree- and tableviewer
-					resetTreeViewer();
-    			}
+					Control control = treeViewer.getControl();
+					// check if widget is already disposed (f.ex. because of workbench closing)
+					if (control == null || control.isDisposed()) { //if so: do nothing
+					}else {  //reset tree- and tableviewer
+						resetTreeViewer();
+					}
+				}
 			} );
 		}
 		this.waveformViewerPart=waveformViewerPart;
