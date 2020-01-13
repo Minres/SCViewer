@@ -116,7 +116,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 		} catch (IOException e) {
 			return false;
 		} finally {
-			is.close()
+			if(is!=null) is.close()
 		}
 	}
 
