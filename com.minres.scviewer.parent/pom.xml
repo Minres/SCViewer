@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.minres.scviewer</groupId>
@@ -24,25 +25,10 @@
 	</modules>
 
 	<properties>
-		<tycho-version>0.23.1</tycho-version>
-		<tycho-extras-version>${tycho-version}</tycho-extras-version>
-		<groovy-eclipse-compiler-version>2.8.0-01</groovy-eclipse-compiler-version>
-		<!-- <groovy-eclipse-batch-version>2.0.5</groovy-eclipse-batch-version> -->
-		<groovy-eclipse-batch-version>2.1.8-01</groovy-eclipse-batch-version>
-
+		<tycho-version>1.5.0</tycho-version>
+		<groovy-eclipse-compiler-version>3.5.0</groovy-eclipse-compiler-version>
+		<groovy-eclipse-batch-version>2.5.8-03</groovy-eclipse-batch-version>
 	</properties>
-	<repositories>
-		<repository>
-			<id>mars</id>
-			<layout>p2</layout>
-			<url>http://download.eclipse.org/releases/photon</url>
-		</repository>
-		<repository>
-			<id>GRECLIPSE</id>
-			<layout>p2</layout>
-			<url>http://dist.springsource.org/snapshot/GRECLIPSE/e4.8</url>
-		</repository>
-	</repositories>
 
 	<build>
 		<plugins>
@@ -55,9 +41,52 @@
 
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-source-plugin</artifactId>
+				<version>${tycho-version}</version>
+
+				<executions>
+					<execution>
+						<id>plugin-source</id>
+						<goals>
+							<goal>plugin-source</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-p2-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<executions>
+					<execution>
+						<id>attach-p2-metadata</id>
+						<phase>package</phase>
+						<goals>
+							<goal>p2-metadata</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-versions-plugin</artifactId>
+				<version>${tycho-version}</version>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>target-platform-configuration</artifactId>
 				<version>${tycho-version}</version>
 				<configuration>
+					<target>
+						<artifact>
+							<groupId>com.minres.scviewer</groupId>
+							<artifactId>com.minres.scviewer.target</artifactId>
+							<version>2.0.0-SNAPSHOT</version>
+						</artifact>
+					</target>
 					<environments>
 						<environment>
 							<os>linux</os>
@@ -91,7 +120,7 @@
 			<plugin>
 				<groupId>org.eclipse.tycho.extras</groupId>
 				<artifactId>tycho-source-feature-plugin</artifactId>
-				<version>${tycho-extras-version}</version>
+				<version>${tycho-version}</version>
 
 				<executions>
 					<execution>
@@ -111,41 +140,6 @@
 				</configuration>
 			</plugin>
 
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-source-plugin</artifactId>
-				<version>${tycho-version}</version>
-
-				<executions>
-					<execution>
-						<id>plugin-source</id>
-						<goals>
-							<goal>plugin-source</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-p2-plugin</artifactId>
-				<version>${tycho-version}</version>
-				<executions>
-					<execution>
-						<id>attached-p2-metadata</id>
-						<phase>package</phase>
-						<goals>
-							<goal>p2-metadata</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-versions-plugin</artifactId>
-				<version>${tycho-version}</version>
-			</plugin>
 		</plugins>
 	</build>
 </project>
