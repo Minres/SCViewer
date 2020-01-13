@@ -46,6 +46,7 @@ import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -157,6 +158,7 @@ public class WaveformViewer implements IWaveformViewer  {
 
 		@Override
 		public void mouseUp(MouseEvent e) {
+			if(start==null) return;
 			if((e.stateMask&SWT.MODIFIER_MASK&~SWT.SHIFT)!=0) return; //don't react on modifier
 			if (e.button ==  1 && ((e.stateMask&SWT.SHIFT)==0)) {
 				if(Math.abs(e.x-start.x)<3 && Math.abs(e.y-start.y)<3){				
@@ -1248,5 +1250,10 @@ public class WaveformViewer implements IWaveformViewer  {
 				updateValueList();
 			}
 		});
+	}
+	
+	/// probably not the way it should be done
+	public void addDisposeListener( DisposeListener listener ) {
+		waveformCanvas.addDisposeListener(listener);
 	}
 }

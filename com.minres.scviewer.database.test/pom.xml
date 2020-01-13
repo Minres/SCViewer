@@ -14,7 +14,7 @@
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-surefire-plugin</artifactId>
-				<version>0.23.1</version>
+				<version>${tycho-version}</version>
 				<configuration>
 <!-- 					<bundleStartLevel /> -->
 					<dependencies>

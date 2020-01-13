@@ -49,6 +49,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.PaintEvent;
@@ -58,6 +60,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -344,6 +347,16 @@ public class DesignBrowser {
 		thisSelectionCount=selection.toList().size();
 		updateButtons();
 	}
+	
+	/** 
+	 * reset tree viewer and tableviewer after every closed tab
+	 */
+	protected void resetTreeViewer() {
+		//reset tree- and tableviewer
+		treeViewer.setInput(null);
+		txTableViewer.setInput(null);
+		txTableViewer.setSelection(null);
+	}
 
 	/**
 	 * Gets the status event.
@@ -354,21 +367,35 @@ public class DesignBrowser {
 	@SuppressWarnings("unchecked")
 	@Inject @Optional
 	public void  getActiveWaveformViewerEvent(@UIEventTopic(WaveformViewer.ACTIVE_WAVEFORMVIEW) WaveformViewer waveformViewerPart) {
-		if(this.waveformViewerPart!=null)
+		if(this.waveformViewerPart!=null) { 
 			this.waveformViewerPart.storeDesignBrowerState(new DBState());
+		}
+		if( this.waveformViewerPart == null || this.waveformViewerPart != waveformViewerPart ) {
+			waveformViewerPart.addDisposeListener( new DisposeListener() {
+				@Override
+				public void widgetDisposed(DisposeEvent e) {
+					Control control = treeViewer.getControl();
+					// check if widget is already disposed (f.ex. because of workbench closing)
+					if (control == null || control.isDisposed()) { //if so: do nothing
+					}else {  //reset tree- and tableviewer
+						resetTreeViewer();
+					}
+				}
+			} );
+		}
 		this.waveformViewerPart=waveformViewerPart;
 		IWaveformDb database = waveformViewerPart.getDatabase();
 		Object input = treeViewer.getInput();
 		if(input!=null && input instanceof List<?>){
 			IWaveformDb db = ((List<IWaveformDb>)input).get(0);
-			if(db==database) return; // do nothing if old and new daabase is the same
+			if(db==database) return; // do nothing if old and new database is the same
 			((List<IWaveformDb>)input).get(0).removePropertyChangeListener(treeViewerPCL);
 		}
 		treeViewer.setInput(Arrays.asList(database.isLoaded()?new IWaveformDb[]{database}:new IWaveformDb[]{new LoadingWaveformDb()}));
 		Object state=this.waveformViewerPart.retrieveDesignBrowerState();
 		if(state!=null && state instanceof DBState) 
 			((DBState)state).apply();
-		else
+		else 
 			txTableViewer.setInput(null);
 		// Set up the tree viewer
 		database.addPropertyChangeListener(treeViewerPCL);

@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><?pde version="3.8"?><target name="Photon Platform" sequenceNumber="138">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?>
+<target name="com.minres.scviewer.target" sequenceNumber="138">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
@@ -11,8 +13,9 @@
 <repository location="http://download.eclipse.org/releases/photon"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.codehaus.groovy24.feature.feature.group" version="0.0.0"/>
+<unit id="org.codehaus.groovy24.feature.feature.group" version="3.5.1.v201909291550-e48"/>
 <repository location="http://dist.springsource.org/snapshot/GRECLIPSE/e4.8/"/>
+	<unit id="org.codehaus.groovy25.feature.feature.group" version="3.5.1.v201909291550-e48"/>
 </location>
 </locations>
 <environment>
