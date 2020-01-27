@@ -199,10 +199,14 @@ public class DesignBrowser {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
 				ISelection selection=event.getSelection();
-				if( selection instanceof IStructuredSelection) {
+				if( selection instanceof IStructuredSelection) { 
 					Object object= ((IStructuredSelection)selection).getFirstElement();			
-					if(object instanceof IHierNode&& ((IHierNode)object).getChildNodes().size()!=0){
+					if(object instanceof IHierNode && ((IHierNode)object).getChildNodes().size()!=0){
 						txTableViewer.setInput(object);
+						updateButtons();
+					}
+					else { //if selection is changed but empty
+						txTableViewer.setInput(null);
 						updateButtons();
 					}
 				}
@@ -250,8 +254,8 @@ public class DesignBrowser {
 			
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
-					selectionService.setSelection(event.getSelection());
-					updateButtons();
+				selectionService.setSelection(event.getSelection());
+				updateButtons();
 			}
 		});
 
