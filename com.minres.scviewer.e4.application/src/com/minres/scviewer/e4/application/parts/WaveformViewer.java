@@ -249,6 +249,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		});
 		waveformPane = factory.createPanel(parent);
 		waveformPane.setMaxTime(0);
+		
+		//set selection to empty selection when opening a new waveformPane
+		selectionService.setSelection(new StructuredSelection());
+		
 		waveformPane.addPropertyChangeListener(IWaveformViewer.CURSOR_PROPERTY, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -268,11 +272,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getScaledTime(cursor - time));
 			}
 		});
+		
 		waveformPane.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
-				if (event.getSelection() instanceof IStructuredSelection)
+				if (event.getSelection() instanceof IStructuredSelection) {
 					selectionService.setSelection(event.getSelection());
+				}
 			}
 		});
 		waveformPane.getWaveformControl().addMouseTrackListener(new MouseTrackListener() {

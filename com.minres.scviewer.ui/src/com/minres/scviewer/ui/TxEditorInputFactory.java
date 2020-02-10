@@ -71,7 +71,7 @@ public class TxEditorInputFactory implements IElementFactory {
             String listData = memento.getString(TAG_STREAMLIST);
             if (listData != null) {
 				try {
-	    	        ByteArrayInputStream bais = new ByteArrayInputStream(javax.xml.bind.DatatypeConverter.parseHexBinary(listData));
+	    	        ByteArrayInputStream bais = new ByteArrayInputStream(Hex.decode(listData));
 	    	        ObjectInputStream ois = new ObjectInputStream(bais);
 	    	        Object obj = ois.readObject();
 	    	        if(obj instanceof List<?>)
@@ -107,8 +107,9 @@ public class TxEditorInputFactory implements IElementFactory {
 	        ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream(baos);
 	        oos.writeObject(input.getStreamNames());
-	        memento.putString(TAG_STREAMLIST, javax.xml.bind.DatatypeConverter.printHexBinary(baos.toByteArray()));
+	        memento.putString(TAG_STREAMLIST, Hex.encode(baos.toByteArray()));
 		} catch (IOException e) {
 		}
     }
+    
 }
