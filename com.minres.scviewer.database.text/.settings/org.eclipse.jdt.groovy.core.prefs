@@ -1,3 +1,2 @@
 eclipse.preferences.version=1
-groovy.compiler.level=26
-groovy.script.filters=**/*.dsld,y,**/*.gradle,n
+groovy.compiler.level=25
