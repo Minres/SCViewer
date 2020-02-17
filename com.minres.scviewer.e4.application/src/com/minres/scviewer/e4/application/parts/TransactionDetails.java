@@ -119,8 +119,10 @@ public class TransactionDetails {
 			public void modifyText(ModifyEvent e) {
 				attributeFilter.setSearchText(((Text) e.widget).getText());
 				treeViewer.refresh();
+				treeViewer.expandAll(true);
 			}
 		});
+		
 		nameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		attributeFilter = new TxAttributeFilter();
@@ -461,16 +463,20 @@ public class TransactionDetails {
 		 */
 		@Override
 		public boolean select(Viewer viewer, Object parentElement, Object element) {
+			
 			if (searchString == null || searchString.length() == 0) {
 				return true;
 			}
-			if(element instanceof ITxAttribute){
-				ITxAttribute p = (ITxAttribute) element;
-				if (p.getName().matches(searchString)) {
-					return true;
-				}
-			} else if(element instanceof TreeNode)
+			if(element instanceof TreeNode) {
 				return true;
+			}
+			if(element instanceof ITxAttribute){
+				return (((ITxAttribute) element).getName().toLowerCase().matches(searchString.toLowerCase())); 
+			} 
+			if(element instanceof Object[]) {
+				return (((Object[])element)[0]).toString().toLowerCase().matches(searchString.toLowerCase());	
+			}
+			
 			return false;
 		}
 	}
