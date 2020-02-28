@@ -21,7 +21,9 @@ import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.UIEventTopic;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.services.IServiceConstants;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
@@ -343,10 +345,14 @@ public class TransactionDetails {
 	 * @param selection the new selection
 	 */
 	@Inject
-	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection){
+	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection, EPartService partService){
+		// only react if selection is actually from the WaveformViewer and nothing else
+		MPart part = partService.getActivePart();
+		if( part == null || ! (part.getObject() instanceof WaveformViewer ) )
+			return;
 		if(treeViewer!=null && selection!=null && !treeViewer.getTree().isDisposed()){
 			if( selection instanceof IStructuredSelection) {
-				setInput(((IStructuredSelection)selection).getFirstElement());			
+				setInput(((IStructuredSelection)selection).getFirstElement());		
 			}
 		}
 	}
