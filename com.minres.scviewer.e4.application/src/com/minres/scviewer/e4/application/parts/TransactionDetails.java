@@ -21,7 +21,9 @@ import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.UIEventTopic;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.services.IServiceConstants;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
@@ -119,8 +121,10 @@ public class TransactionDetails {
 			public void modifyText(ModifyEvent e) {
 				attributeFilter.setSearchText(((Text) e.widget).getText());
 				treeViewer.refresh();
+				treeViewer.expandAll(true);
 			}
 		});
+		
 		nameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		attributeFilter = new TxAttributeFilter();
@@ -341,10 +345,14 @@ public class TransactionDetails {
 	 * @param selection the new selection
 	 */
 	@Inject
-	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection){
+	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection, EPartService partService){
+		// only react if selection is actually from the WaveformViewer and nothing else
+		MPart part = partService.getActivePart();
+		if( part == null || ! (part.getObject() instanceof WaveformViewer ) )
+			return;
 		if(treeViewer!=null && selection!=null && !treeViewer.getTree().isDisposed()){
 			if( selection instanceof IStructuredSelection) {
-				setInput(((IStructuredSelection)selection).getFirstElement());			
+				setInput(((IStructuredSelection)selection).getFirstElement());		
 			}
 		}
 	}
@@ -461,16 +469,20 @@ public class TransactionDetails {
 		 */
 		@Override
 		public boolean select(Viewer viewer, Object parentElement, Object element) {
+			
 			if (searchString == null || searchString.length() == 0) {
 				return true;
 			}
-			if(element instanceof ITxAttribute){
-				ITxAttribute p = (ITxAttribute) element;
-				if (p.getName().matches(searchString)) {
-					return true;
-				}
-			} else if(element instanceof TreeNode)
+			if(element instanceof TreeNode) {
 				return true;
+			}
+			if(element instanceof ITxAttribute){
+				return (((ITxAttribute) element).getName().toLowerCase().matches(searchString.toLowerCase())); 
+			} 
+			if(element instanceof Object[]) {
+				return (((Object[])element)[0]).toString().toLowerCase().matches(searchString.toLowerCase());	
+			}
+			
 			return false;
 		}
 	}
