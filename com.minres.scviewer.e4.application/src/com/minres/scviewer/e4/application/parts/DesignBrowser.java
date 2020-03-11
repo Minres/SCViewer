@@ -15,6 +15,7 @@ import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -469,7 +470,10 @@ public class DesignBrowser {
 				return true;
 			}
 			IWaveform p = (IWaveform) element;
-			if (p.getName().matches(searchString)) {
+			try {
+				if (p.getName().matches(searchString))
+					return true;
+			} catch (PatternSyntaxException e) {
 				return true;
 			}
 			return false;
