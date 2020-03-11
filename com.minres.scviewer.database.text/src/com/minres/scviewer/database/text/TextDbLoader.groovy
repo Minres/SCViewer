@@ -86,11 +86,16 @@ public class TextDbLoader implements IWaveformDbLoader{
 				calculateConcurrencyIndicees()
 				return true
 			}
+		} catch (IndexOutOfBoundsException e) {
+			return false
+		} catch (NumberFormatException e) {
+			return false
 		} catch(EOFException e) {
 			return true;
 		} catch(Exception e) {
-			System.out.println("---->>> Exception caught while loading database. StackTrace following... ");
-			e.printStackTrace()
+			System.out.println("---->>> Exception "+e.toString()+" caught while loading database");
+			//System.out.println("---->>> Exception "+e.toString()+" caught while loading database. StackTrace following... ");
+			//e.printStackTrace()
 		}
 		return false;
 	}
@@ -129,7 +134,9 @@ public class TextDbLoader implements IWaveformDbLoader{
 			case "ms":return 1000000000000L
 			case "s": return 1000000000000000L
 		}
+		return "fs"
 	}
+	
 	private def parseInput(InputStream inputStream){
 		def streamsById = [:]
 		def generatorsById = [:]

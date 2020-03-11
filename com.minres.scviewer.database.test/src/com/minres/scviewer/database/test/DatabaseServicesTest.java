@@ -100,6 +100,16 @@ public class DatabaseServicesTest {
 		assertEquals(1,  waveformDb.getChildNodes().size());
 	}
 
+	@Test
+	public void testTxTextTruncated() throws Exception {
+		File f = new File("inputs/my_db_truncated.txlog").getAbsoluteFile();
+		assertTrue(f.exists());
+		waveformDb.load(f);
+		assertNotNull(waveformDb);
+		assertEquals(3,  waveformDb.getAllWaves().size());
+		assertEquals(1,  waveformDb.getChildNodes().size());
+	}
+
 	//@Test
 	public void testTxLDb() throws Exception {
 		File f = new File("inputs/my_ldb.txldb").getAbsoluteFile();
