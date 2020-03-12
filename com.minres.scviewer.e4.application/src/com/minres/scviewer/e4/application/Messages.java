@@ -9,6 +9,7 @@ public class Messages extends NLS {
 	public static String DesignBrowser_12;
 	public static String DesignBrowser_16;
 	public static String DesignBrowser_2;
+	public static String DesignBrowser_3;
 	public static String DesignBrowser_4;
 	public static String DesignBrowser_8;
 	public static String LoadingWaveformDb_0;

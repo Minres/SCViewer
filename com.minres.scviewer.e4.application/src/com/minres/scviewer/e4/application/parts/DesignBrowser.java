@@ -68,6 +68,7 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.wb.swt.ResourceManager;
 import org.eclipse.wb.swt.SWTResourceManager;
 
+import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.IWaveform;
@@ -110,17 +111,23 @@ public class DesignBrowser {
 	/** The tree viewer. */
 	private TreeViewer treeViewer;
 
+	/** The name filter of the design browser tree. */
+	private Text treeNameFilter;
+
+	/** The attribute filter. */
+	WaveformAttributeFilter treeAttributeFilter;
+
 	/** The name filter. */
-	private Text nameFilter;
+	private Text tableNameFilter;
+
+	/** The attribute filter. */
+	WaveformAttributeFilter tableAttributeFilter;
 
 	/** The tx table viewer. */
 	private TableViewer txTableViewer;
 
 	/** The append all item. */
 	ToolItem appendItem, insertItem, insertAllItem, appendAllItem;
-
-	/** The attribute filter. */
-	WaveformAttributeFilter attributeFilter;
 
 	/** The other selection count. */
 	int thisSelectionCount=0, otherSelectionCount=0;
@@ -189,10 +196,25 @@ public class DesignBrowser {
 	 */
 	public void createTreeViewerComposite(Composite parent) {
 		parent.setLayout(new GridLayout(1, false));
+
+		treeNameFilter = new Text(parent, SWT.BORDER);
+		treeNameFilter.setMessage(Messages.DesignBrowser_3);
+		treeNameFilter.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				treeAttributeFilter.setSearchText(((Text) e.widget).getText());
+				treeViewer.refresh();
+			}
+		});
+		treeNameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+		treeAttributeFilter = new WaveformAttributeFilter();
+
 		treeViewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		treeViewer.getTree().setLayoutData(new GridData(GridData.FILL_BOTH));
 		treeViewer.setContentProvider(new TxDbContentProvider());
 		treeViewer.setLabelProvider(new TxDbLabelProvider());
+		treeViewer.addFilter(treeAttributeFilter);
 		treeViewer.setUseHashlookup(true);
 		treeViewer.setAutoExpandLevel(2);
 		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -223,25 +245,25 @@ public class DesignBrowser {
 	public void createTableComposite(Composite parent) {
 		parent.setLayout(new GridLayout(1, false));
 
-		nameFilter = new Text(parent, SWT.BORDER);
-		nameFilter.setMessage(Messages.DesignBrowser_2);
-		nameFilter.addModifyListener(new ModifyListener() {
+		tableNameFilter = new Text(parent, SWT.BORDER);
+		tableNameFilter.setMessage(Messages.DesignBrowser_2);
+		tableNameFilter.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
-				attributeFilter.setSearchText(((Text) e.widget).getText());
+				tableAttributeFilter.setSearchText(((Text) e.widget).getText());
 				updateButtons();
 				txTableViewer.refresh();
 			}
 		});
-		nameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		tableNameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		attributeFilter = new WaveformAttributeFilter();
+		tableAttributeFilter = new WaveformAttributeFilter();
 
 		txTableViewer = new TableViewer(parent);
 		txTableViewer.setContentProvider(new TxDbContentProvider(true));
 		txTableViewer.setLabelProvider(new TxDbLabelProvider());
 		txTableViewer.getTable().setLayoutData(new GridData(GridData.FILL_BOTH));
-		txTableViewer.addFilter(attributeFilter);
+		txTableViewer.addFilter(tableAttributeFilter);
 		txTableViewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event) {
@@ -469,12 +491,24 @@ public class DesignBrowser {
 			if (searchString == null || searchString.length() == 0) {
 				return true;
 			}
-			IWaveform p = (IWaveform) element;
-			try {
-				if (p.getName().matches(searchString))
+			if(element instanceof IWaveform) {
+				IWaveform p = (IWaveform) element;
+				try {
+					if (p.getName().matches(searchString))
+						return true;
+				} catch (PatternSyntaxException e) {
 					return true;
-			} catch (PatternSyntaxException e) {
+				}
+			} else if(element instanceof IWaveformDb) {
 				return true;
+			} else if(element instanceof HierNode) {
+				HierNode n = (HierNode) element;
+				try {
+					if (n.getFullName().matches(searchString))
+						return true;
+				} catch (PatternSyntaxException e) {
+					return true;
+				}
 			}
 			return false;
 		}
