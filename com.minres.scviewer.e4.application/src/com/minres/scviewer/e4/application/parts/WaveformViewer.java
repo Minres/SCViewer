@@ -301,7 +301,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		});
 		*/
 		waveformPane.getWaveformControl().addListener(SWT.KeyDown, new Listener() {
-			@SuppressWarnings("null")
 			@Override
 			public void handleEvent(Event e) {
 				/*
