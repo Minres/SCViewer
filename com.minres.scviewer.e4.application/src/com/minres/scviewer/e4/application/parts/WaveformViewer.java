@@ -65,16 +65,12 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackListener;
-import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.MessageBox;
 
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxEvent;
@@ -281,38 +277,30 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				}
 			}
 		});
+		/*
 		waveformPane.getWaveformControl().addMouseTrackListener(new MouseTrackListener() {
-			
 			@Override
 			public void mouseHover(MouseEvent e) {
 				// TODO Auto-generated method stub
-				
 			}
-			
 			@Override
 			public void mouseExit(MouseEvent e) {
 				// TODO Auto-generated method stub
-				
 			}
-			
 			@Override
 			public void mouseEnter(MouseEvent e) {
 				// TODO Auto-generated method stub
-				
 			}
 		});
 		
 		waveformPane.getWaveformControl().addMouseWheelListener(new MouseWheelListener() {
-			
 			@Override
 			public void mouseScrolled(MouseEvent e) {
 				// TODO Auto-generated method stub
-				
 			}
 		});
-		
+		*/
 		waveformPane.getWaveformControl().addListener(SWT.KeyDown, new Listener() {
-			
 			@SuppressWarnings("null")
 			@Override
 			public void handleEvent(Event e) {
@@ -616,8 +604,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	}
 
 	public void saveState(String fileName){
-		
-				
 		Map<String, String> persistedState = new HashMap<>();
 		persistedState.put(DATABASE_FILE + "S", Integer.toString(filesToLoad.size())); //$NON-NLS-1$
 		Integer index = 0;
@@ -634,8 +620,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				FileOutputStream out = new FileOutputStream(fileName);
                 props.store(out, "Written by SCViewer"); //$NON-NLS-1$
 			    out.close();
-			
-			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -929,10 +913,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			Object first = selection.getFirstElement();
 			IWaveform stream = (first instanceof ITx) ? ((ITx) first).getStream() : (IWaveform) first;
 			TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
-			int index = waveformPane.getStreamList().indexOf(trackEntry);
-			if (!insert)
-				index++;
-			waveformPane.getStreamList().addAll(index, streams);
+			if (insert) {
+				int index = waveformPane.getStreamList().indexOf(trackEntry);
+				waveformPane.getStreamList().addAll(index, streams);
+			} else {
+				waveformPane.getStreamList().addAll(streams);
+			}
+
 		}
 		setFocus();
 	}
@@ -1043,7 +1030,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * Sets the zoom fit.
 	 */
 	public void setZoomFit() {
-
 		//actual max time of signal
 		long maxTime = waveformPane.getMaxTime();
 		

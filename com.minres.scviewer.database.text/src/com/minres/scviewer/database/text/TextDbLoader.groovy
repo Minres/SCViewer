@@ -88,6 +88,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 			}
 		} catch (IndexOutOfBoundsException e) {
 			return false
+		} catch (IllegalArgumentException e) {
+			return false
 		} catch (NumberFormatException e) {
 			return false
 		} catch(EOFException e) {
