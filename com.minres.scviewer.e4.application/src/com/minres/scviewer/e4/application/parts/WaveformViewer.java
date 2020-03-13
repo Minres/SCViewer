@@ -913,10 +913,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			Object first = selection.getFirstElement();
 			IWaveform stream = (first instanceof ITx) ? ((ITx) first).getStream() : (IWaveform) first;
 			TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
-			int index = waveformPane.getStreamList().indexOf(trackEntry);
-			if (!insert)
-				index++;
-			waveformPane.getStreamList().addAll(index, streams);
+			if (insert) {
+				int index = waveformPane.getStreamList().indexOf(trackEntry);
+				waveformPane.getStreamList().addAll(index, streams);
+			} else {
+				waveformPane.getStreamList().addAll(streams);
+			}
+
 		}
 		setFocus();
 	}

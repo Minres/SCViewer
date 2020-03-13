@@ -4,7 +4,7 @@
     <children xsi:type="advanced:PerspectiveStack" xmi:id="_95QGxnNmEeWBq8z1Dv39LA">
       <children xsi:type="advanced:Perspective" xmi:id="_95QGx3NmEeWBq8z1Dv39LA">
         <children xsi:type="basic:PartSashContainer" xmi:id="_95QGyHNmEeWBq8z1Dv39LA" horizontal="true">
-          <children xsi:type="basic:Part" xmi:id="_95QGynNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.parts.DesignBrowser" containerData="2000" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.DesignBrowser" label="Design Browser">
+          <children xsi:type="basic:Part" xmi:id="_95QGynNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.parts.DesignBrowser" containerData="2000" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.DesignBrowser" label="Design Browser" bindingContexts="_iQ3kQGVmEeqSQM-A6dw9ig">
             <handlers xmi:id="_JIWOYIq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handler.addWaveformCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.AddWaveformHandler" command="_2PehEHr9EeWVM_sKoXvptg"/>
             <menus xsi:type="menu:PopupMenu" xmi:id="_HvUl8Iq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parts.DesignBrowser.popupmenu">
               <children xsi:type="menu:HandledMenuItem" xmi:id="_HvUl8Yq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handledmenuitem.append" label="Append after" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/append_wave.png" command="_2PehEHr9EeWVM_sKoXvptg">
@@ -187,9 +187,15 @@
       <tags>type:user</tags>
     </bindings>
   </bindingTables>
+  <bindingTables xmi:id="_mnMrUGVmEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingtable.0" bindingContext="_iQ3kQGVmEeqSQM-A6dw9ig">
+    <bindings xmi:id="_n9yDwGVmEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.keybinding.0" keySequence="M1+A" command="_bV-TMHXHEeWwZ-9vrAR2UQ">
+      <tags>type:user</tags>
+    </bindings>
+  </bindingTables>
   <rootContext xmi:id="_95PfuXNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.contexts.dialogAndWindow" name="In Dialog and Windows">
     <children xmi:id="_95PfunNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.contexts.window" name="In Windows">
       <children xmi:id="_q4VSsGVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingcontext.waveform" name="In Waveform Part"/>
+      <children xmi:id="_iQ3kQGVmEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingcontext.indesignbrowser" name="In DesignBrowser"/>
     </children>
     <children xmi:id="_95Pfu3NmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.contexts.dialog" name="In Dialogs"/>
   </rootContext>

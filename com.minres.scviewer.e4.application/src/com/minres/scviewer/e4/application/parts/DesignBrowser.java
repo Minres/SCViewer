@@ -13,9 +13,9 @@ package com.minres.scviewer.e4.application.parts;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -133,7 +133,7 @@ public class DesignBrowser {
 	private TableViewer txTableViewer;
 
 	/** The append all item. */
-	ToolItem appendItem, insertItem, insertAllItem, appendAllItem;
+	ToolItem appendItem, insertItem;
 
 	/** The other selection count. */
 	int thisSelectionCount=0, otherSelectionCount=0;
@@ -287,7 +287,6 @@ public class DesignBrowser {
 				updateButtons();
 			}
 		});
-
 		menuService.registerContextMenu(txTableViewer.getControl(), POPUP_ID);
 
 		ToolBar toolBar = new ToolBar(parent, SWT.FLAT | SWT.RIGHT);
@@ -322,48 +321,6 @@ public class DesignBrowser {
 					ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
 			}
 		});
-		new ToolItem(toolBar, SWT.SEPARATOR);
-
-		appendAllItem = new ToolItem(toolBar, SWT.NONE);
-		appendAllItem.setToolTipText(Messages.DesignBrowser_12);
-		appendAllItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/append_all_waves.png")); //$NON-NLS-1$ //$NON-NLS-2$
-		appendAllItem.setEnabled(false);
-
-		new ToolItem(toolBar, SWT.SEPARATOR);
-		appendAllItem.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Object[] all = getFilteredChildren(txTableViewer);
-				if(all.length>0){
-					Object oldSel=selectionService.getSelection();
-					selectionService.setSelection(new StructuredSelection(all));
-					AddWaveformHandler myHandler = new AddWaveformHandler();
-					Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
-					if(result!=null && (Boolean)result)
-						ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
-					selectionService.setSelection(oldSel);
-				}
-			}
-		});
-		insertAllItem = new ToolItem(toolBar, SWT.NONE);
-		insertAllItem.setToolTipText(Messages.DesignBrowser_16);
-		insertAllItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/insert_all_waves.png")); //$NON-NLS-1$ //$NON-NLS-2$
-		insertAllItem.setEnabled(false);
-		insertAllItem.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Object[] all = getFilteredChildren(txTableViewer);
-				if(all.length>0){
-					Object oldSel=selectionService.getSelection();
-					selectionService.setSelection(new StructuredSelection(all));
-					AddWaveformHandler myHandler = new AddWaveformHandler();
-					Object result = runCommand(myHandler, CanExecute.class, "before", false); //$NON-NLS-1$
-					if(result!=null && (Boolean)result)
-						ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
-					selectionService.setSelection(oldSel);
-				}
-			}
-		});
 	}
 
 	/**
@@ -391,6 +348,16 @@ public class DesignBrowser {
 		txTableViewer.setSelection(null);
 	}
 
+	public void selectAllWaveforms() {
+		int itemCount = txTableViewer.getTable().getItemCount();
+		ArrayList<Object> list = new ArrayList<>();
+		for(int i=0; i<itemCount; i++) {
+			list.add(txTableViewer.getElementAt(i));
+		}
+		StructuredSelection sel = new StructuredSelection(list);
+		txTableViewer.setSelection(sel);
+	}
+	
 	/**
 	 * Gets the status event.
 	 *
@@ -458,17 +425,12 @@ public class DesignBrowser {
 	 * Update buttons.
 	 */
 	private void updateButtons() {
-		if(txTableViewer!=null && !insertItem.isDisposed() && !appendItem.isDisposed() && 
-				!appendAllItem.isDisposed() && !insertAllItem.isDisposed()){
+		if(txTableViewer!=null && !insertItem.isDisposed() && !appendItem.isDisposed()){
 			AddWaveformHandler myHandler = new AddWaveformHandler();
 			Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
 			appendItem.setEnabled(result instanceof Boolean && (Boolean)result);
-			result = runCommand(myHandler, CanExecute.class, "after", true); //$NON-NLS-1$
-			appendAllItem.setEnabled(result instanceof Boolean && (Boolean)result);
 			result = runCommand(myHandler, CanExecute.class, "before", false); //$NON-NLS-1$
 			insertItem.setEnabled(result instanceof Boolean && (Boolean)result);
-			result = runCommand(myHandler, CanExecute.class, "before", true); //$NON-NLS-1$
-			insertAllItem.setEnabled(result instanceof Boolean && (Boolean)result);
 		}
 	}
 
