@@ -229,6 +229,11 @@ public class WaveformCanvas extends Canvas{
     }
 
     public void setZoomLevel(int level) {
+		long tc=cursorPainters.get(0).getTime(); // cursor time
+		setZoomLevel(level, tc);
+    }
+
+    public void setZoomLevel(int level, long centerTime) {
     	long oldScaleFactor=scaleFactor;
     	if(level<Constants.unitMultiplier.length*Constants.unitString.length){
     		this.level = level;
@@ -242,10 +247,9 @@ public class WaveformCanvas extends Canvas{
     		 * xcn = tc/newScaleFactor
     		 * t0n = (xcn-xoffs)*scaleFactor
     		 */
-    		long tc=cursorPainters.get(0).getTime(); // cursor time
-    		long xc=tc/oldScaleFactor; // cursor total x-offset
+    		long xc=centerTime/oldScaleFactor; // cursor total x-offset
     		long xoffs=xc+origin.x; // cursor offset relative to left border
-    		long xcn=tc/scaleFactor; // new total x-offset
+    		long xcn=centerTime/scaleFactor; // new total x-offset
     		long originX=xcn-xoffs;
     		if(originX>0) {
     			origin.x=(int) -originX; // new cursor time offset relative to left border
@@ -557,7 +561,7 @@ public class WaveformCanvas extends Canvas{
     	return (getClientArea().width+origin.x)*scaleFactor;
     }
 
-    long getOriginTime() {
+    long getMinVisibleTime() {
     	return origin.x * scaleFactor;
     }
 }
