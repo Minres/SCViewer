@@ -140,7 +140,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 						break;
 					}
 				}
-				if(name == hier[hier.length-1]){ //leaf
+				if(name.equals(hier[hier.length-1])){ //leaf
 					if(n1!=null) {
 						if(n1 instanceof HierNode){
 							node.getChildNodes().remove(n1);

@@ -117,7 +117,7 @@ public class VCDSignal<T> extends HierNode implements ISignal<T> {
 
 	@Override
 	public Boolean equals(IWaveform other) {
-		return(other instanceof VCDSignal<?> && this.getId()==other.getId());
+		return( other instanceof VCDSignal<?> && this.getId().equals(other.getId()));
 	}
 
 	@Override
