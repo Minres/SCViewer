@@ -40,6 +40,7 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
 import org.eclipse.swt.dnd.DragSourceAdapter;
 import org.eclipse.swt.dnd.DragSourceEvent;
+import org.eclipse.swt.dnd.DragSourceListener;
 import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
@@ -50,6 +51,9 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
@@ -139,14 +143,21 @@ public class WaveformViewer implements IWaveformViewer  {
 			}
 		}
 	};
-
-	protected MouseListener waveformMouseListener = new MouseAdapter(){
-		Point start;
+	
+	class WaveformMouseListener implements MouseMoveListener, MouseListener, PaintListener {
+		Point start, end;
 		List<Object> initialSelected;
+		boolean down=false;
+
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {
+		}
 
 		@Override
 		public void mouseDown(MouseEvent e) {
 			start=new Point(e.x, e.y);
+			end=new Point(e.x, e.y);
+			down=true;
 			if((e.stateMask&SWT.MODIFIER_MASK)!=0) return; //don't react on modifier
 			if (e.button ==  1) {	
 				initialSelected = waveformCanvas.getClicked(start);
@@ -157,10 +168,34 @@ public class WaveformViewer implements IWaveformViewer  {
 		}
 
 		@Override
+		public void mouseMove(MouseEvent e) {
+			if(down) {
+				end=new Point(e.x, e.y);
+				asyncUpdate(e.widget);
+			}	
+		}
+		
+		@Override
+		public void paintControl(PaintEvent e) {
+			if(down) {
+	            GC gc = e.gc;
+	            gc.setAlpha(128);
+	            int minX = Math.min(start.x, end.x);
+	            int maxX = Math.max(start.x, end.x);
+	            int width = maxX - minX;
+	            gc.fillRectangle(minX, 0, width, e.height);
+			}
+		}
+
+		@Override
 		public void mouseUp(MouseEvent e) {
+			down=false;
 			if(start==null) return;
-			if((e.stateMask&SWT.MODIFIER_MASK&~SWT.SHIFT)!=0) return; //don't react on modifier
-			if (e.button ==  1 && ((e.stateMask&SWT.SHIFT)==0)) {
+			if((e.stateMask&SWT.MODIFIER_MASK&~SWT.SHIFT)!=0) return; //don't react on modifier except shift
+			if(!start.equals(end)){
+				asyncUpdate(e.widget);
+			} else if (e.button ==  1 && ((e.stateMask&SWT.SHIFT)==0)) {
+				// set cursor (button 1 and no shift)
 				if(Math.abs(e.x-start.x)<3 && Math.abs(e.y-start.y)<3){				
 					// first set cursor time
 					setCursorTime(snapOffsetToEvent(e));
@@ -169,11 +204,12 @@ public class WaveformViewer implements IWaveformViewer  {
 					asyncUpdate(e.widget);
 				}
 			}else if (e.button ==  2 ||(e.button==1 && (e.stateMask&SWT.SHIFT)!=0)) {
+				// set marker (button 1 and shift)
 				setMarkerTime(snapOffsetToEvent(e), selectedMarker);
 				asyncUpdate(e.widget);
 			}        
 		}
-
+		
 		protected long snapOffsetToEvent(MouseEvent e) {
 			long time= waveformCanvas.getTimeForOffset(e.x);
 			long scaling=5*waveformCanvas.getScaleFactor();
@@ -209,7 +245,9 @@ public class WaveformViewer implements IWaveformViewer  {
 			}
 			return time;
 		}
+
 	};
+	protected WaveformMouseListener waveformMouseListener = new WaveformMouseListener();
 
 	public WaveformViewer(Composite parent) {
 		pcs=new PropertyChangeSupport(this);
@@ -309,6 +347,8 @@ public class WaveformViewer implements IWaveformViewer  {
 
 		waveformCanvas.setMaxTime(1); 
 		waveformCanvas.addMouseListener(waveformMouseListener);
+		waveformCanvas.addMouseMoveListener(waveformMouseListener);
+		waveformCanvas.addPaintListener(waveformMouseListener);
 		
 		nameListScrolled.getVerticalBar().addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
