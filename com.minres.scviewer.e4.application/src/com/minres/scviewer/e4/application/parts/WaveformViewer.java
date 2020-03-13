@@ -669,12 +669,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param persistedState the persisted state
 	 */
 	protected void saveWaveformViewerState(Map<String, String> persistedState) {
-		Integer index;
-		boolean isStream = false;
 		persistedState.put(SHOWN_WAVEFORM + "S", Integer.toString(waveformPane.getStreamList().size())); //$NON-NLS-1$
-		index = 0;
+		Integer index = 0;
 		for (TrackEntry trackEntry : waveformPane.getStreamList()) {
-			if(trackEntry.isStream()) { isStream=true; }
 			persistedState.put(SHOWN_WAVEFORM + index, trackEntry.waveform.getFullName());
 			persistedState.put(SHOWN_WAVEFORM + index + VALUE_DISPLAY, trackEntry.valueDisplay.toString());
 			persistedState.put(SHOWN_WAVEFORM + index + WAVE_DISPLAY, trackEntry.waveDisplay.toString());
@@ -693,23 +690,24 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		
 		// get selected transaction	of a stream	
 		ISelection selection = waveformPane.getSelection();
-		if (!selection.isEmpty() && isStream) {
+		if (!selection.isEmpty()) {
 			List<Object> t = getISelection(selection);
-			ITx tx = (ITx) t.get(0);
-			TrackEntry te = (TrackEntry) t.get(1);
-			// get transaction id
-			persistedState.put(SELECTED_TX_ID, Long.toString(tx.getId()));
-			//get TrackEntry name
-			String name = te.getStream().getFullName();
-			persistedState.put(SELECTED_TRACKENTRY_NAME, name);
+			if(t.get(0) instanceof ITx) {
+				ITx tx = (ITx) t.get(0);
+				TrackEntry te = (TrackEntry) t.get(1);
+				// get transaction id
+				persistedState.put(SELECTED_TX_ID, Long.toString(tx.getId()));
+				//get TrackEntry name
+				String name = te.getStream().getFullName();
+				persistedState.put(SELECTED_TRACKENTRY_NAME, name);
+			}
 		}
 	}
 
 	protected List<Object> getISelection(ISelection selection){
 	    List<Object> result = new LinkedList<Object> ();
 
-	    if ( selection instanceof IStructuredSelection )
-	    {
+	    if ( selection instanceof IStructuredSelection ) {
 	        Iterator<?> i = ((IStructuredSelection)selection).iterator();
 	        while (i.hasNext()){
 	            Object o = i.next ();
