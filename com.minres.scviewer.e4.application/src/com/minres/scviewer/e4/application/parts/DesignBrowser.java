@@ -15,6 +15,8 @@ import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.PostConstruct;
@@ -35,14 +37,18 @@ import org.eclipse.e4.ui.services.IServiceConstants;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.ITreePathContentProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
@@ -115,13 +121,13 @@ public class DesignBrowser {
 	private Text treeNameFilter;
 
 	/** The attribute filter. */
-	WaveformAttributeFilter treeAttributeFilter;
+	StreamTTreeFilter treeAttributeFilter;
 
 	/** The name filter. */
 	private Text tableNameFilter;
 
 	/** The attribute filter. */
-	WaveformAttributeFilter tableAttributeFilter;
+	StreamTableFilter tableAttributeFilter;
 
 	/** The tx table viewer. */
 	private TableViewer txTableViewer;
@@ -208,7 +214,7 @@ public class DesignBrowser {
 		});
 		treeNameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		treeAttributeFilter = new WaveformAttributeFilter();
+		treeAttributeFilter = new StreamTTreeFilter();
 
 		treeViewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		treeViewer.getTree().setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -257,7 +263,7 @@ public class DesignBrowser {
 		});
 		tableNameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		tableAttributeFilter = new WaveformAttributeFilter();
+		tableAttributeFilter = new StreamTableFilter();
 
 		txTableViewer = new TableViewer(parent);
 		txTableViewer.setContentProvider(new TxDbContentProvider(true));
@@ -467,12 +473,13 @@ public class DesignBrowser {
 	}
 
 	/**
-	 * The Class WaveformAttributeFilter.
+	 * The Class StreamTableFilter.
 	 */
-	public class WaveformAttributeFilter extends ViewerFilter {
+	public class StreamTableFilter extends ViewerFilter {
 
 		/** The search string. */
 		private String searchString;
+		private Pattern pattern;
 
 		/**
 		 * Sets the search text.
@@ -480,7 +487,10 @@ public class DesignBrowser {
 		 * @param s the new search text
 		 */
 		public void setSearchText(String s) {
-			this.searchString = ".*" + s + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
+			try {
+		        pattern = Pattern.compile(".*" + s + ".*"); //$NON-NLS-1$ //$NON-NLS-2$
+		        this.searchString = ".*" + s + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
+			} catch (PatternSyntaxException e) {}
 		}
 
 		/* (non-Javadoc)
@@ -492,28 +502,102 @@ public class DesignBrowser {
 				return true;
 			}
 			if(element instanceof IWaveform) {
-				IWaveform p = (IWaveform) element;
-				try {
-					if (p.getName().matches(searchString))
-						return true;
-				} catch (PatternSyntaxException e) {
+				if (pattern.matcher(((IWaveform) element).getName()).matches())
 					return true;
+			}
+			return false;
+		}
+	}
+
+	public class StreamTTreeFilter extends ViewerFilter {
+
+		/** The search string. */
+		private String searchString;
+		private Pattern pattern;
+
+		/**
+		 * Sets the search text.
+		 *
+		 * @param s the new search text
+		 */
+		public void setSearchText(String s) {
+			try {
+		        pattern = Pattern.compile(".*" + s + ".*");
+		        this.searchString = ".*" + s + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
+			} catch (PatternSyntaxException e) {}
+
+		}
+
+		/* (non-Javadoc)
+		 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+		 */
+		@Override
+		public boolean select(Viewer viewer, Object parentElement, Object element) {
+			return selectTreePath(viewer, new TreePath(new Object[] { parentElement }), element);
+		}
+		
+		private boolean selectTreePath(Viewer viewer, TreePath parentPath, Object element) {
+			// Cut off children of elements that are shown repeatedly.
+			for (int i = 0; i < parentPath.getSegmentCount() - 1; i++) {
+				if (element.equals(parentPath.getSegment(i))) {
+					return false;
 				}
-			} else if(element instanceof IWaveformDb) {
+			}
+
+			if (!(viewer instanceof TreeViewer)) {
 				return true;
+			}
+			if (searchString == null || searchString.length() == 0) {
+				return true;
+			}
+			TreeViewer treeViewer = (TreeViewer) viewer;
+			Boolean matchingResult = isMatchingOrNull(element);
+			if (matchingResult != null) {
+				return matchingResult;
+			}
+			return hasUnfilteredChild(treeViewer, parentPath, element);
+		}
+
+		Boolean isMatchingOrNull(Object element) {
+			if(element instanceof IWaveform) {
+				if (pattern.matcher(((IWaveform) element).getName()).matches())
+					return Boolean.TRUE;
+			} else if(element instanceof IWaveformDb) {
+				return Boolean.TRUE;
 			} else if(element instanceof HierNode) {
 				HierNode n = (HierNode) element;
 				try {
-					if (n.getFullName().matches(searchString))
-						return true;
+					if (pattern.matcher(n.getFullName()).matches())
+						return Boolean.TRUE;
 				} catch (PatternSyntaxException e) {
+					return Boolean.TRUE;
+				}
+			} else {
+				return Boolean.FALSE;
+			}
+			/* maybe children are matching */
+			return null;
+		}
+
+		private boolean hasUnfilteredChild(TreeViewer viewer, TreePath parentPath, Object element) {
+			TreePath elementPath = parentPath.createChildPath(element);
+			IContentProvider contentProvider = viewer.getContentProvider();
+			Object[] children = contentProvider instanceof ITreePathContentProvider
+					? ((ITreePathContentProvider) contentProvider).getChildren(elementPath)
+					: ((ITreeContentProvider) contentProvider).getChildren(element);
+
+			/* avoid NPE + guard close */
+			if (children == null || children.length == 0) {
+				return false;
+			}
+			for (int i = 0; i < children.length; i++) {
+				if (selectTreePath(viewer, elementPath, children[i])) {
 					return true;
 				}
 			}
 			return false;
 		}
 	}
-
 	/**
 	 * Gets the filtered children.
 	 *
