@@ -193,7 +193,7 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 
 	@Override
 	public Boolean equals(IWaveform other) {
-		return(other instanceof TxStream && this.getId()==other.getId());
+		return(other instanceof TxStream && this.getId().equals(other.getId()));
 	}
 
 }
