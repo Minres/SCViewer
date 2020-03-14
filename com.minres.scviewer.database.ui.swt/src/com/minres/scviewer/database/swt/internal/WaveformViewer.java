@@ -40,7 +40,6 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
 import org.eclipse.swt.dnd.DragSourceAdapter;
 import org.eclipse.swt.dnd.DragSourceEvent;
-import org.eclipse.swt.dnd.DragSourceListener;
 import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
@@ -181,9 +180,11 @@ public class WaveformViewer implements IWaveformViewer  {
 	            GC gc = e.gc;
 	            gc.setAlpha(128);
 	            int minX = Math.min(start.x, end.x);
-	            int maxX = Math.max(start.x, end.x);
-	            int width = maxX - minX;
-	            gc.fillRectangle(minX, 0, width, e.height);
+	            int width = Math.max(start.x, end.x) - minX;
+	            Point origin = waveformCanvas.getOrigin();
+	            int y_top = waveformCanvas.getRulerHeight()- origin.y;
+	            int y_bottom = waveformCanvas.getSize().y;
+	            gc.fillRectangle(minX, y_top, width,y_bottom);
 			}
 		}
 

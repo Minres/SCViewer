@@ -28,7 +28,6 @@ import com.minres.scviewer.database.IWaveform
 import com.minres.scviewer.database.IWaveformDb
 import com.minres.scviewer.database.IWaveformDbLoader
 import com.minres.scviewer.database.RelationType
-import com.minres.scviewer.database.DataType
 
 public class TextDbLoader implements IWaveformDbLoader{
 

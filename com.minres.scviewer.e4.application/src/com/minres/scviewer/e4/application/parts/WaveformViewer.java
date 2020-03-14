@@ -277,43 +277,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				}
 			}
 		});
-		/*
-		waveformPane.getWaveformControl().addMouseTrackListener(new MouseTrackListener() {
-			@Override
-			public void mouseHover(MouseEvent e) {
-				// TODO Auto-generated method stub
-			}
-			@Override
-			public void mouseExit(MouseEvent e) {
-				// TODO Auto-generated method stub
-			}
-			@Override
-			public void mouseEnter(MouseEvent e) {
-				// TODO Auto-generated method stub
-			}
-		});
-		
-		waveformPane.getWaveformControl().addMouseWheelListener(new MouseWheelListener() {
-			@Override
-			public void mouseScrolled(MouseEvent e) {
-				// TODO Auto-generated method stub
-			}
-		});
-		*/
+
 		waveformPane.getWaveformControl().addListener(SWT.KeyDown, new Listener() {
-			@SuppressWarnings("null")
 			@Override
 			public void handleEvent(Event e) {
-				/*
-					String string = e.type == SWT.KeyDown ? "DOWN:" : "UP  :";
-					string += " stateMask=0x" + Integer.toHexString (e.stateMask) + ","; // SWT.CTRL, SWT.ALT, SWT.SHIFT, SWT.COMMAND
-					string += " keyCode=0x" + Integer.toHexString (e.keyCode) + ",";
-					string += " character=0x" + Integer.toHexString (e.character) ;
-					if (e.keyLocation != 0) {
-						string +=  " location="+e.keyLocation;
-					}
-					System.out.println (string);
-				*/
 				if((e.stateMask&SWT.MOD3)!=0) { // Alt key
 				} else if((e.stateMask&SWT.MOD1)!=0) { //Ctrl/Cmd
 					int zoomlevel = waveformPane.getZoomLevel();

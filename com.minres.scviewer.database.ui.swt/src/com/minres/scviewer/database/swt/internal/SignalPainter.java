@@ -78,11 +78,6 @@ public class SignalPainter extends TrackPainter {
 		this.waveCanvas = txDisplay;
 	}
 
-	private int getXValEnd(long time) {
-		long ltmp = time / this.waveCanvas.getScaleFactor();
-		return ltmp > maxValX ? maxValX : (int) ltmp;
-	}
-
 	private int getXPosEnd(long time) {
 		long ltmp = time / this.waveCanvas.getScaleFactor() - waveCanvas.getXOffset();
 		return ltmp > maxPosX ? maxPosX : (int) ltmp;
@@ -100,7 +95,6 @@ public class SignalPainter extends TrackPainter {
 		long scaleFactor = this.waveCanvas.getScaleFactor();
 		long beginPos = area.x;
 		long beginTime = (beginPos + waveCanvas.getXOffset())*scaleFactor;
-		long endPos = beginPos + area.width;
         long endTime = beginTime + area.width*scaleFactor;
 		
 		Entry<Long, ?> first = signal.getEvents().floorEntry(beginTime);
@@ -125,7 +119,6 @@ public class SignalPainter extends TrackPainter {
 		yOffsetB = 4 * this.waveCanvas.getTrackHeight() / 5 + area.y;
 		int xSigChangeBeginVal = Math.max(area.x + (int)waveCanvas.getXOffset(), (int) (left.time / this.waveCanvas.getScaleFactor()));
 		int xSigChangeBeginPos = area.x;
-		int xSigChangeEndVal = Math.max(area.x + (int)waveCanvas.getXOffset(), getXValEnd(right.time));
 		int xSigChangeEndPos = Math.max(area.x, getXPosEnd(right.time));
 		
 		boolean multiple = false;
