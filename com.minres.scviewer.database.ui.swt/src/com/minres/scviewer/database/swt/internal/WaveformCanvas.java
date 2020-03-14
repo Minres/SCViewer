@@ -235,6 +235,7 @@ public class WaveformCanvas extends Canvas{
 
     public void setZoomLevel(int level, long centerTime) {
     	long oldScaleFactor=scaleFactor;
+    	if(level<0) level = 0;
     	if(level<Constants.unitMultiplier.length*Constants.unitString.length){
     		this.level = level;
     		this.scaleFactor = (long) Math.pow(10, level/2);
