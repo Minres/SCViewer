@@ -158,17 +158,25 @@ public class E4LifeCycle {
 		 * @param name the name
 		 */
 		public void openViewForFile(String name){
-			File file = new File(name);
+			File file = new File(getFirstFileName(name));
 			MPart part = partService.createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
 			part.setLabel(file.getName());
 			MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
 			partStack.getChildren().add(part);
 			partService.showPart(part, PartState.ACTIVATE);
 			IEclipseContext ctx=part.getContext();
-			ctx.modify("input", file); //$NON-NLS-1$
+			ctx.modify("input", name); //$NON-NLS-1$
 			//ctx.declareModifiable("input"); //$NON-NLS-1$
 			ctx.modify("config", confFile); //$NON-NLS-1$
 			//ctx.declareModifiable("config"); //$NON-NLS-1$				
+		}
+
+		private String getFirstFileName(String name) {
+			if(name.contains(":")) {
+				String[] tokens = name.split(",");
+				return tokens[0];
+			} else
+				return name;
 		}
 
 		public void setConfigFile(String confFile) {

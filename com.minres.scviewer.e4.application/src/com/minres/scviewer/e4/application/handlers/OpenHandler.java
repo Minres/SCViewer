@@ -11,6 +11,7 @@
 package com.minres.scviewer.e4.application.handlers;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -33,19 +34,23 @@ public class OpenHandler {
 		dialog.setFilterExtensions (new String []{Messages.OpenHandler_0});
 		dialog.open();
 		String path = dialog.getFilterPath();
+		ArrayList<File> files = new ArrayList<File>();
 		for(String fileName: dialog.getFileNames()){
 			File file = new File(path+File.separator+fileName);
-			if(file.exists()){
-				MPart part = partService .createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
-				part.setLabel(file.getName());
-				MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
-				partStack.getChildren().add(part);
-				partService.showPart(part, PartState.ACTIVATE);
-				IEclipseContext ctx=part.getContext();
-				ctx.modify("input", file); //$NON-NLS-1$
-				ctx.modify("config", ""); //$NON-NLS-1$				
-			}
+			if(file.exists())
+				files.add(file);
 		}
+		MPart part = partService .createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
+		part.setLabel(files.get(0).getName());
+		MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
+		partStack.getChildren().add(part);
+		partService.showPart(part, PartState.ACTIVATE);
+		final IEclipseContext ctx=part.getContext();
+		files.stream()
+			.map(x -> x.getAbsolutePath())
+			.reduce((s1, s2) -> s1 + "," + s2)
+			.ifPresent(s -> ctx.modify("input", s)); //$NON-NLS-1$
+		ctx.modify("config", ""); //$NON-NLS-1$				
 	}
 	
 }

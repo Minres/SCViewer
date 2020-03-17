@@ -507,34 +507,40 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@Inject
 	@Optional
 	public void setPartInput(@Named("input") Object partInput, @Named("config") Object partConfig) {
-		if (partInput instanceof File) {
+		if (partInput instanceof String) {
+			String name = (String)partInput;
 			filesToLoad = new ArrayList<File>();
-			File file = (File) partInput;
-			if(file.isFile() && "CURRENT".equals(file.getName())){
-				file=file.getParentFile();
-			}
-			if (file.exists()) {
-				filesToLoad.add(file);
-				try {
-					String ext = getFileExtension(file.getName());
-					if (Messages.WaveformViewer_19.equals(ext.toLowerCase())) {
-						if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_20)))) {
-							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_20)));
-						} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)))) {
-							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)));
-						} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)))) {
-							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)));
-						}
-					} else if (Messages.WaveformViewer_20.equals(ext.toLowerCase()) || 
-								Messages.WaveformViewer_21.equals(ext.toLowerCase()) ||
-								Messages.WaveformViewer_22.equals(ext.toLowerCase())
-							) {
-						if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)))) {
-							filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)));
-						}
-					}
-				} catch (IOException e) { // silently ignore any error
+			boolean explicit = name.contains(",");
+			for(String tok: name.split(",")) {
+				File file = new File(tok);
+				if(file.isFile() && "CURRENT".equals(file.getName())){
+					file=file.getParentFile();
 				}
+				if (file.exists()) {
+					filesToLoad.add(file);
+				}
+				if(!explicit)
+					try {
+						String ext = getFileExtension(file.getName());
+						if (Messages.WaveformViewer_19.equals(ext.toLowerCase())) {
+							if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_20)))) {
+								filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_20)));
+							} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)))) {
+								filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)));
+							} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)))) {
+								filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)));
+							}
+						} else if (Messages.WaveformViewer_20.equals(ext.toLowerCase()) || 
+									Messages.WaveformViewer_21.equals(ext.toLowerCase()) ||
+									Messages.WaveformViewer_22.equals(ext.toLowerCase())
+								) {
+							if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)))) {
+								filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)));
+							}
+						}
+					} catch (IOException e) { // silently ignore any error
+					}
+
 			}
 			if (filesToLoad.size() > 0)
 				loadDatabase(persistedState);
