@@ -32,7 +32,9 @@ public class OpenHandler {
 	public void execute(Shell shell, MApplication app, EModelService modelService, EPartService partService){
 		FileDialog dialog = new FileDialog(shell, SWT.OPEN | SWT.MULTI);
 		dialog.setFilterExtensions (new String []{Messages.OpenHandler_0});
-		dialog.open();
+		String ret = dialog.open();
+		if(ret==null)
+			return;
 		String path = dialog.getFilterPath();
 		ArrayList<File> files = new ArrayList<File>();
 		for(String fileName: dialog.getFileNames()){
