@@ -65,14 +65,18 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Widget;
 
+import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxRelation;
 import com.minres.scviewer.database.IWaveform;
@@ -80,6 +84,7 @@ import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
+import com.minres.scviewer.database.swt.ToolTipTableContentProvider;
 import com.minres.scviewer.database.swt.WaveformViewerFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
@@ -366,6 +371,50 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		prefs.addPreferenceChangeListener(this);
 		
 		waveformPane.addDisposeListener(this);
+
+		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipTableContentProvider() {
+			private List<Object> res;
+			
+			@Override
+			public ToolTipTableContentProvider initialize(Widget widget, Point pt) {
+				res = waveformPane.getElementsAt(pt);
+				return this;
+			}
+
+			@Override
+			public String getTableTitle() {
+				if(res.size()>0) {
+					Object o = res.get(0);
+					if(o instanceof ITx) {
+						ITx tx = (ITx)o;
+						return tx.toString();
+					}
+				}
+				return "";
+			}
+
+			@Override
+			public List<String[]> getTableContent() {
+				final ArrayList<String[]> ret = new ArrayList<>();
+				if(res.size()>0){
+					Object o = res.get(0);
+					if(o instanceof ITx) {
+						ITx tx = (ITx)o;
+						ret.add(new String[]{"type", tx.getGenerator().getName()});
+						for (ITxAttribute iTxAttribute : tx.getAttributes()) {
+							String value = iTxAttribute.getValue().toString();
+							if((DataType.UNSIGNED == iTxAttribute.getDataType() || DataType.INTEGER==iTxAttribute.getDataType()) && !"0".equals(value)) {
+								try {
+									value += " [0x"+Long.toHexString(Long.parseLong(iTxAttribute.getValue().toString()))+"]";
+								} catch(NumberFormatException e) { }
+							}
+							ret.add(new String[]{iTxAttribute.getName(), value});
+						}
+					}
+				}
+				return ret;
+			}
+		});
 	}
 
 	/* (non-Javadoc)

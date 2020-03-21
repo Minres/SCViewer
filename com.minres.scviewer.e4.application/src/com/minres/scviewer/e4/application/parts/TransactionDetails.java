@@ -97,7 +97,7 @@ public class TransactionDetails {
 
 	/** The attribute filter. */
 	TxAttributeFilter attributeFilter;
-	
+
 	/** The view sorter. */
 	TxAttributeViewerSorter viewSorter;
 
@@ -124,12 +124,12 @@ public class TransactionDetails {
 				treeViewer.expandAll(true);
 			}
 		});
-		
+
 		nameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		attributeFilter = new TxAttributeFilter();
 		viewSorter = new TxAttributeViewerSorter();
-		
+
 		treeViewer = new TreeViewer(parent);
 		treeViewer.setContentProvider(new TransactionTreeContentProvider());
 		treeViewer.setLabelProvider(new TxPropertiesLabelProvider());
@@ -148,7 +148,7 @@ public class TransactionDetails {
 			public void treeExpanded(TreeExpansionEvent event) {
 				treeViewer.getSelection();
 			}
-			
+
 		});
 
 		// Set up the table
@@ -188,14 +188,14 @@ public class TransactionDetails {
 			}
 		});
 		// Pack the columns
-//		for (int i = 0, n = table.getColumnCount(); i < n; i++) {
-//			table.getColumn(i).pack();
-//		}
+		//		for (int i = 0, n = table.getColumnCount(); i < n; i++) {
+		//			table.getColumn(i).pack();
+		//		}
 
 		// Turn on the header and the lines
 		tree.setHeaderVisible(true);
 		tree.setLinesVisible(true);
-		
+
 		treeViewer.addDoubleClickListener(new IDoubleClickListener(){
 
 			@Override
@@ -213,7 +213,7 @@ public class TransactionDetails {
 					}
 				}
 			}
-			
+
 		});
 		parent.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e) {
@@ -279,7 +279,7 @@ public class TransactionDetails {
 		} else {
 			treeViewer.setInput(null);
 		}
-		
+
 	}
 
 	private void setExpandedState(TreeItem[] treeItems, ArrayList<Boolean> states) {
@@ -294,7 +294,7 @@ public class TransactionDetails {
 			ret.add(treeItem.getItemCount()>0?treeItem.getExpanded():true);
 		return ret;
 	}
-	
+
 	private int getTopItemHier(ArrayList<String> names){
 		int indexInParent=-1;
 		TreeItem obj = treeViewer.getTree().getTopItem();
@@ -314,7 +314,7 @@ public class TransactionDetails {
 		}
 		return indexInParent;
 	}
-	
+
 	private void setTopItemFromHier(ArrayList<String> names, int indexInParent) {
 		if(indexInParent<0 || names.size()==0 ) return;
 		TreeItem selItem=null;
@@ -375,16 +375,16 @@ public class TransactionDetails {
 	 */
 	String txToString(ITx tx){
 		StringBuilder sb = new StringBuilder();
-		sb.append("tx#").append(tx.getId()).append("[").append(timeToString(tx.getBeginTime())). //$NON-NLS-1$ //$NON-NLS-2$
-			append(" - ").append(timeToString(tx.getEndTime())).append("]"); //$NON-NLS-1$ //$NON-NLS-2$
+		sb.append("tx#").append(tx.getId()).append("[").append(timeToString(tx.getBeginTime())); //$NON-NLS-1$ //$NON-NLS-2$
+		sb.append(" - ").append(timeToString(tx.getEndTime())).append("]"); //$NON-NLS-1$ //$NON-NLS-2$
 		return sb.toString();
 	}
-	
+
 	/**
 	 * The Class TxAttributeViewerSorter.
 	 */
 	class TxAttributeViewerSorter extends ViewerComparator {
-		
+
 		/** The Constant ASCENDING. */
 		private static final int ASCENDING = 0;
 
@@ -469,7 +469,7 @@ public class TransactionDetails {
 		 */
 		@Override
 		public boolean select(Viewer viewer, Object parentElement, Object element) {
-			
+
 			if (searchString == null || searchString.length() == 0) {
 				return true;
 			}
@@ -482,7 +482,7 @@ public class TransactionDetails {
 			if(element instanceof Object[]) {
 				return (((Object[])element)[0]).toString().toLowerCase().matches(searchString.toLowerCase());	
 			}
-			
+
 			return false;
 		}
 	}
@@ -491,19 +491,19 @@ public class TransactionDetails {
 	 * The Enum Type.
 	 */
 	enum Type {/** The props. */
-PROPS, /** The attrs. */
- ATTRS, /** The in rel. */
- IN_REL, /** The out rel. */
- OUT_REL}
+		PROPS, /** The attrs. */
+		ATTRS, /** The in rel. */
+		IN_REL, /** The out rel. */
+		OUT_REL}
 
 	/**
 	 * The Class TreeNode.
 	 */
 	class TreeNode{
-		
+
 		/** The type. */
 		public Type type;
-		
+
 		/** The element. */
 		public ITx element;
 
@@ -624,16 +624,16 @@ PROPS, /** The attrs. */
 	 * The Class AttributeLabelProvider.
 	 */
 	class AttributeLabelProvider extends LabelProvider implements IStyledLabelProvider {
-		
+
 		/** The field. */
 		final int field;
-		
+
 		/** The Constant NAME. */
 		public static final int NAME=0;
-		
+
 		/** The Constant TYPE. */
 		public static final int TYPE=1;
-		
+
 		/** The Constant VALUE. */
 		public static final int VALUE=2;
 
@@ -678,13 +678,18 @@ PROPS, /** The attrs. */
 					String value = attribute.getValue().toString();
 					if((DataType.UNSIGNED == attribute.getDataType() || DataType.INTEGER==attribute.getDataType()) && !"0".equals(value)) {
 						try {
-							value = attribute.getValue().toString() + " [0x"+Long.toHexString(Long.parseLong(attribute.getValue().toString()))+"]";
+							value += " [0x"+Long.toHexString(Long.parseLong(attribute.getValue().toString()))+"]";
 						} catch(NumberFormatException e) { }
 					}
 					return new StyledString(value);
 				}else if(element instanceof Object[]){
 					Object[] elements = (Object[]) element;
-					return new StyledString(elements[field].toString());
+					Object o = elements[field];
+					if(o instanceof ITx) {
+						ITx tx = (ITx)o;
+						return new StyledString(txToString(tx)+" ("+tx.getStream().getFullName()+")");
+					} else
+						return new StyledString(o.toString());
 				} else if(element instanceof ITx){
 					return new StyledString(txToString((ITx) element));
 				}else 

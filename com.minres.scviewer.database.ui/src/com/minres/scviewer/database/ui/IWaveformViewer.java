@@ -18,6 +18,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Control;
 
@@ -61,6 +62,8 @@ public interface IWaveformViewer extends PropertyChangeListener, ISelectionProvi
 	public List<TrackEntry> getStreamList();
 
 	public TrackEntry getEntryForStream(IWaveform source);
+	
+	public List<Object> getElementsAt(Point pt);
 	
 	public void moveSelectedTrack(int i);
 	
