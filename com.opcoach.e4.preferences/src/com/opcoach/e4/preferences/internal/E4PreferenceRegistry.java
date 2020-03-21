@@ -46,6 +46,7 @@ public class E4PreferenceRegistry
 
 	public static final String PREFS_PAGE_XP = "com.opcoach.e4.preferences.e4PreferencePages"; // $NON-NLS-1$
 	public static final String PREF_STORE_PROVIDER = "com.opcoach.e4.preferences.e4PreferenceStoreProvider"; // $NON-NLS-1$
+	public static final String KEY_PREF_STORE_PROVIDERS = "com.opcoach.e4.preferences.e4PreferenceStoreProviders"; // $NON-NLS-1$
 	protected static final String ELMT_PAGE = "page"; // $NON-NLS-1$
 	protected static final String ATTR_ID = "id"; // $NON-NLS-1$
 	protected static final String ATTR_CATEGORY = "category"; // $NON-NLS-1$
@@ -235,6 +236,7 @@ public class E4PreferenceRegistry
 			IContributionFactory factory = context.get(IContributionFactory.class);
 
 			psProviders = new HashMap<String, Object>();
+			IExtensionRegistry registry = context.get(IExtensionRegistry.class);
 
 			// Read extensions and fill the map...
 			for (IConfigurationElement elmt : registry.getConfigurationElementsFor(PREF_STORE_PROVIDER))
@@ -261,7 +263,7 @@ public class E4PreferenceRegistry
 				Object data = objectId;
 				if (classname != null)
 				{
-					data = factory.create(classname, context);
+					data = factory.create("bundleclass://"+declaringBundle+"/"+classname, context);
 					if (!(data instanceof IPreferenceStoreProvider))
 					{
 						logger.warn("In extension " + PREF_STORE_PROVIDER + " the class must implements IPreferenceStoreProvider. Check the plugin " + declaringBundle);
@@ -272,6 +274,8 @@ public class E4PreferenceRegistry
 				psProviders.put(pluginId, data);
 
 			}
+			
+			context.set(KEY_PREF_STORE_PROVIDERS, psProviders);
 		}
 	}
 

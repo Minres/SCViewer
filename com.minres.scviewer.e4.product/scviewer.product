@@ -7,7 +7,7 @@
    </configIni>
 
    <launcherArgs>
-      <programArgs>-clearPersistedState -data @none
+      <programArgs>-clearPersistedState
       </programArgs>
       <vmArgs>-Xmx2G
       </vmArgs>
