@@ -12,7 +12,7 @@
 		<module>../com.minres.scviewer.database.sqlite</module>
 		<module>../com.minres.scviewer.database.text</module>
 		<module>../com.minres.scviewer.database.vcd</module>
-		<module>../com.minres.scviewer.database.leveldb</module>
+<!-- 		<module>../com.minres.scviewer.database.leveldb</module> -->
 		<module>../com.minres.scviewer.database.test</module>
 		<module>../com.minres.scviewer.database.ui</module>
 		<module>../com.minres.scviewer.database.ui.swt</module>
