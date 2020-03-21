@@ -3,9 +3,9 @@ package com.minres.scviewer.database.swt.internal;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseTrackAdapter;
-import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -29,23 +29,18 @@ import com.minres.scviewer.database.swt.ToolTipTableContentProvider;
 
 class ToolTipHandler {
 	
+	private final Display display;
 	private Shell  parentShell;
-	private Shell  tipShell;
-	private Label  tipLabelText;
-	private Table  tipTable;
+	private Shell  shell;
+	private Label  label;
+	private Table  table;
+	private TableColumn nameCol;
+	private TableColumn valueCol;
+	
 	private Widget tipWidget; // widget this tooltip is hovering over
 	private Point  tipPosition; // the position being hovered over
 
-	private final TableColumn[] columns;
-	
 	private static final int hoverYOffset = 1;
-	
-	private static final String[] COLUMN_NAMES = { "Name", "Value"};
-	
-	
-	private static final int MAX_CHARS = 48;
-	// The names of the first 32 characters
-	private Color[] colors = new Color[MAX_CHARS];
 	
 	/**
 	 * Creates a new tooltip handler
@@ -53,63 +48,44 @@ class ToolTipHandler {
 	 * @param parent the parent Shell
 	 */
 	public ToolTipHandler(Shell parent) {
-		final Display display = parent.getDisplay();
+		display = parent.getDisplay();
 		this.parentShell = parent;
 
-		tipShell = new Shell(parent, SWT.ON_TOP | SWT.TOOL);
+		shell = new Shell(parent, SWT.ON_TOP | SWT.NO_FOCUS | SWT.TOOL);
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 1;
 		gridLayout.marginWidth = 2;
 		gridLayout.marginHeight = 2;
-		tipShell.setLayout(gridLayout);
+		shell.setLayout(gridLayout);
 
-		tipShell.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+		shell.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
 
-		tipLabelText = new Label(tipShell, SWT.NONE);
-		tipLabelText.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-		tipLabelText.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
-		tipLabelText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL |GridData.VERTICAL_ALIGN_CENTER));
+		label = new Label(shell, SWT.NONE);
+		label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+		label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL |GridData.VERTICAL_ALIGN_CENTER));
 		
 		final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
-		tipTable = new Table(tipShell, SWT.NONE);
-		tipTable.setHeaderVisible(true);
-		tipTable.setLinesVisible(true);
-		tipTable.setFont(font);
+		table = new Table(shell, SWT.NONE);
+		table.setHeaderVisible(false);
+		table.setLinesVisible(true);
+		table.setFont(font);
+		table.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+		table.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+		table.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+		nameCol = new TableColumn(table, SWT.LEFT);
+		nameCol.setText("Name");
+		valueCol = new TableColumn(table, SWT.LEFT);
+		nameCol.setText("Value");
 		
-		columns = createColumns(tipTable);
-
-		tipTable.setRedraw(false);		
-		for (int i = 0; i < MAX_CHARS; i++) {
-			// Create a background color for this row
-			colors[i] = new Color(tipTable.getDisplay(), 255 - i, 127 + i, i);
-
-			// Create the row in the table by creating
-			// a TableItem and setting text for each
-			// column
-			int c = 0;
-			TableItem item = new TableItem(tipTable, SWT.NONE);
-			item.setText(c++, String.valueOf((char) i));
-			item.setText(c++, String.valueOf(i));
-			item.setBackground(colors[i]);
-		}
-		// Now that we've set the text into the columns,
-		// we call pack() on each one to size it to the
-		// contents.
-		for (int i = 0, n = columns.length; i < n; i++)
-			columns[i].pack();
-		// Set redraw back to true so that the table
-		// will paint appropriately
-		tipTable.setRedraw(true);
-
-	}
-
-	private TableColumn[] createColumns(Table table) {
-		TableColumn[] columns = new TableColumn[COLUMN_NAMES.length];
-		for (int i = 0, n = columns.length; i < n; i++) {
-			columns[i] = new TableColumn(table, SWT.LEFT);
-			columns[i].setText(COLUMN_NAMES[i]);
-		}
-		return columns;
+		shell.addPaintListener(new PaintListener() {
+			@Override
+			public void paintControl(PaintEvent e) {
+				Rectangle area = shell.getClientArea();
+				valueCol.setWidth(area.width - nameCol.getWidth());
+			}
+		});
 	}
 
 	/**
@@ -122,27 +98,16 @@ class ToolTipHandler {
 		 * Get out of the way if we attempt to activate the control underneath the tooltip
 		 */
 		control.addMouseListener(MouseListener.mouseDownAdapter(e -> {
-			if (tipShell.isVisible())
-				tipShell.setVisible(false);
+			if (shell.isVisible())
+				shell.setVisible(false);
 		}));
-		/*
-		 * get out of the way if we move the mouse
-		 */
-		control.addMouseMoveListener(new MouseMoveListener() {
-			@Override
-			public void mouseMove(MouseEvent e) {
-				if (tipShell.isVisible())
-					tipShell.setVisible(false);
-			}
-
-		});
 		/*
 		 * Trap hover events to pop-up tooltip
 		 */
 		control.addMouseTrackListener(new MouseTrackAdapter () {
 			@Override
 			public void mouseExit(MouseEvent e) {
-				if (tipShell.isVisible()) tipShell.setVisible(false);
+				if (shell.isVisible()) shell.setVisible(false);
 				tipWidget = null;
 			}
 			@Override
@@ -162,45 +127,47 @@ class ToolTipHandler {
 					widget = w.getItem (pt);
 				}
 				if (widget == null) {
-					tipShell.setVisible(false);
+					shell.setVisible(false);
 					tipWidget = null;
 					return;
 				}
-				if (widget == tipWidget && tipShell.isVisible()) return;
+				Point newPos = control.toDisplay(pt);
+				if(shell.isFocusControl()) return;
+				if (widget == tipWidget && tipPosition.equals(newPos) && shell.isVisible()) return;
 				tipWidget = widget;
-				tipPosition = control.toDisplay(pt);
+				tipPosition = newPos;
 				boolean showDialog = false;
 				Object o = widget.getData(Constants.CONTENT_PROVIDER_TAG);
 				if(o != null) {
 					ToolTipTableContentProvider provider = ((ToolTipTableContentProvider)o).initialize(widget, pt);
-					tipLabelText.setText(provider.getTableTitle());
-					tipTable.setRedraw(false);	
-					tipTable.removeAll();
+					label.setText(provider.getTableTitle());
+					table.setRedraw(false);	
+					table.removeAll();
 					for (String[] strings : provider.getTableContent()) {
 						if(strings.length>0) {
 							showDialog=true;
-							TableItem item = new TableItem(tipTable, SWT.NONE);
+							TableItem item = new TableItem(table, SWT.NONE);
 							item.setText(0, strings[0]);
 							if(strings.length>1) 
 								item.setText(1, strings[1]);
 						}
 					}
-					for (int i = 0, n = columns.length; i < n; i++)
-						columns[i].pack();
-					tipTable.setRedraw(true);		
-					tipTable.setVisible(true);
+					nameCol.pack();
+					valueCol.pack();
+					table.setRedraw(true);		
+					table.setVisible(true);
 				} else {
-					tipTable.setVisible(false);
+					table.setVisible(false);
 				}
 				String text = (String) widget.getData(Constants.TEXT_PROVIDER_TAG);
 				if(text != null) {
-					tipLabelText.setText(text != null ? text : "Hover test should go here");
+					label.setText(text != null ? text : "Hover test should go here");
 					showDialog=true;
 				}
 				if(showDialog) {
-					tipShell.pack();
-					setHoverLocation(tipShell, tipPosition);
-					tipShell.setVisible(true);
+					shell.pack();
+					setHoverLocation(shell, tipPosition);
+					shell.setVisible(true);
 				}
 			}
 		});
@@ -215,8 +182,8 @@ class ToolTipHandler {
 			String text = handler.getHelpText(tipWidget);
 			if (text == null) return;
 
-			if (tipShell.isVisible()) {
-				tipShell.setVisible(false);
+			if (shell.isVisible()) {
+				shell.setVisible(false);
 				Shell helpShell = new Shell(parentShell, SWT.SHELL_TRIM);
 				helpShell.setLayout(new FillLayout());
 				Label label = new Label(helpShell, SWT.NONE);
@@ -226,6 +193,11 @@ class ToolTipHandler {
 				helpShell.open();
 			}
 		});
+//		control.addKeyListener(KeyListener.keyPressedAdapter( e-> {
+//				if (e.keyCode == SWT.F2 && shell.isVisible()) {
+//                    shell.setFocus();
+//                }
+//		}));
 	}
 
 	/**
