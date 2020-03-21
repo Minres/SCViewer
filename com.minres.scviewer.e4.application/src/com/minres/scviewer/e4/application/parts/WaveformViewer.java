@@ -31,6 +31,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.eclipse.core.internal.preferences.InstancePreferences;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -41,9 +42,11 @@ import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.core.runtime.jobs.JobGroup;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.e4.core.services.events.IEventBroker;
@@ -81,6 +84,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
+import org.osgi.service.prefs.BackingStoreException;
 
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.ITx;
@@ -192,9 +196,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	/** The prefs. */
 	@Inject
-	@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE)
-	IEclipsePreferences prefs;
-	
+	@Preference(value = ConfigurationScope.SCOPE, nodePath = PreferenceConstants.PREFERENCES_SCOPE)
+	protected IEclipsePreferences prefs;
+
 	@Inject @Optional DesignBrowser designBrowser;
 
 	/** The database. */
@@ -240,7 +244,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@PostConstruct
 	public void createComposite(MPart part, Composite parent, IWaveformDbFactory dbFactory) {
 		disposeListenerNumber += 1;
-				
+		
 		myPart = part;
 		myParent = parent;
 		database = dbFactory.getDatabase();
@@ -465,17 +469,21 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	@Override
 	public void preferenceChange(PreferenceChangeEvent event) {
+		InstancePreferences pref = (InstancePreferences)event.getSource();
 		if (PreferenceConstants.DATABASE_RELOAD.equals(event.getKey())) {
-			checkForUpdates = (Boolean) event.getNewValue();
+			checkForUpdates = pref.getBoolean(PreferenceConstants.DATABASE_RELOAD, true);
 			fileChecker = null;
 			if (checkForUpdates)
 				fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad,
 						FILE_CHECK_INTERVAL);
 			else
 				fileMonitor.removeFileChangeListener(this);
-		} else {
+		} else if (!PreferenceConstants.SHOW_HOVER.equals(event.getKey())){
 			setupColors();
 		}
+		try {
+			pref.flush();
+		} catch (BackingStoreException e) { }
 	}
 
 	/**
