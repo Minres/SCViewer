@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="2.3.0.qualifier" useFeatures="false" includeLaunchers="true">
+<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="2.4.0.qualifier" useFeatures="false" includeLaunchers="true">
 
    <configIni use="default">
    </configIni>
@@ -47,7 +47,6 @@
       <plugin id="com.google.guava"/>
       <plugin id="com.ibm.icu"/>
       <plugin id="com.minres.scviewer.database"/>
-      <plugin id="com.minres.scviewer.database.leveldb"/>
       <plugin id="com.minres.scviewer.database.sqlite"/>
       <plugin id="com.minres.scviewer.database.text"/>
       <plugin id="com.minres.scviewer.database.ui"/>

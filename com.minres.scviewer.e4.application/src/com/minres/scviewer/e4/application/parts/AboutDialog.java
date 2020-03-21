@@ -50,9 +50,6 @@ import com.minres.scviewer.e4.application.Messages;
  */
 public class AboutDialog extends Dialog {
 
-	/** The product title. */
-	private String productTitle=Messages.AboutDialog_0;
-	
 	/** The copyright text. */
 	private String copyrightText=Messages.AboutDialog_1;
 
@@ -106,8 +103,8 @@ public class AboutDialog extends Dialog {
 		styledText.setLayoutData(gd_styledText);
 		Version version = Platform.getProduct().getDefiningBundle().getVersion();
 		String versionString = String.format("%d.%d.%d", version.getMajor(), version.getMinor(), version.getMicro());
-		String pt = NLS.bind(Messages.AboutDialog_0, versionString);
-		styledText.setText(pt+copyrightText);
+		String productTitle = NLS.bind(Messages.AboutDialog_0, versionString);
+		styledText.setText(productTitle+copyrightText);
 		styledText.setBackground(white);
 		styledText.setWordWrap(true);
 		styledText.setLeftMargin(5);

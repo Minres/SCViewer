@@ -21,6 +21,9 @@ public class PreferenceConstants {
 	/** The Constant DATABASE_RELOAD. */
 	public static final String DATABASE_RELOAD="databaseReload"; //$NON-NLS-1$
 	
+	/** The Constant DATABASE_RELOAD. */
+	public static final String SHOW_HOVER="showWaveformHover"; //$NON-NLS-1$
+	
 	/** The Constant LINE_COLOR. */
 	public static final String LINE_COLOR="LINE_COLOR"; //$NON-NLS-1$
 	

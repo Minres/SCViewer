@@ -14,6 +14,7 @@ import java.beans.IntrospectionException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -90,6 +91,8 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 				for (int i = 0; i < x.length; i++)
 					if (buffer[i] != x[i])	return false;
 		} catch(FileNotFoundException e) {
+			return false;
+		} catch(IOException e) { //if an I/O error occurs
 			return false;
 		}
 		database=new SQLiteDatabase(file.getAbsolutePath());
