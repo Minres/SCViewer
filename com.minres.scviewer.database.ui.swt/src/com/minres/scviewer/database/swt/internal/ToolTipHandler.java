@@ -12,9 +12,12 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -24,11 +27,11 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.Widget;
 
 import com.minres.scviewer.database.swt.Constants;
+import com.minres.scviewer.database.swt.ToolTipContentProvider;
 import com.minres.scviewer.database.swt.ToolTipHelpTextProvider;
-import com.minres.scviewer.database.swt.ToolTipTableContentProvider;
 
 class ToolTipHandler {
-	
+
 	private final Display display;
 	private Shell  parentShell;
 	private Shell  shell;
@@ -36,12 +39,12 @@ class ToolTipHandler {
 	private Table  table;
 	private TableColumn nameCol;
 	private TableColumn valueCol;
-	
+
 	private Widget tipWidget; // widget this tooltip is hovering over
 	private Point  tipPosition; // the position being hovered over
 
 	private static final int hoverYOffset = 1;
-	
+
 	/**
 	 * Creates a new tooltip handler
 	 *
@@ -49,43 +52,7 @@ class ToolTipHandler {
 	 */
 	public ToolTipHandler(Shell parent) {
 		display = parent.getDisplay();
-		this.parentShell = parent;
-
-		shell = new Shell(parent, SWT.ON_TOP | SWT.NO_FOCUS | SWT.TOOL);
-		GridLayout gridLayout = new GridLayout();
-		gridLayout.numColumns = 1;
-		gridLayout.marginWidth = 2;
-		gridLayout.marginHeight = 2;
-		shell.setLayout(gridLayout);
-
-		shell.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
-
-		label = new Label(shell, SWT.NONE);
-		label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-		label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
-		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL |GridData.VERTICAL_ALIGN_CENTER));
-		
-		final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
-		table = new Table(shell, SWT.NONE);
-		table.setHeaderVisible(false);
-		table.setLinesVisible(true);
-		table.setFont(font);
-		table.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-		table.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
-		table.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-		nameCol = new TableColumn(table, SWT.LEFT);
-		nameCol.setText("Name");
-		valueCol = new TableColumn(table, SWT.LEFT);
-		nameCol.setText("Value");
-		
-		shell.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				Rectangle area = shell.getClientArea();
-				valueCol.setWidth(area.width - nameCol.getWidth());
-			}
-		});
+		parentShell = parent;
 	}
 
 	/**
@@ -94,83 +61,45 @@ class ToolTipHandler {
 	 * @control the control on which to enable hoverhelp
 	 */
 	public void activateHoverHelp(final Control control) {
-		/*
-		 * Get out of the way if we attempt to activate the control underneath the tooltip
-		 */
-		control.addMouseListener(MouseListener.mouseDownAdapter(e -> {
-			if (shell.isVisible())
-				shell.setVisible(false);
-		}));
-		/*
-		 * Trap hover events to pop-up tooltip
-		 */
-		control.addMouseTrackListener(new MouseTrackAdapter () {
+		Listener listener = new Listener () {
+			Shell tip = null;
 			@Override
-			public void mouseExit(MouseEvent e) {
-				if (shell.isVisible()) shell.setVisible(false);
-				tipWidget = null;
-			}
-			@Override
-			public void mouseHover (MouseEvent event) {
-				Point pt = new Point (event.x, event.y);
-				Widget widget = event.widget;
-				if (widget instanceof ToolBar) {
-					ToolBar w = (ToolBar) widget;
-					widget = w.getItem (pt);
+			public void handleEvent (Event event) {
+				switch (event.type) {
+				case SWT.Dispose:
+				case SWT.KeyDown:
+				case SWT.MouseMove: {
+					if (tip == null) break;
+					tip.dispose ();
+					tip = null;
+					label = null;
+					break;
 				}
-				if (widget instanceof Table) {
-					Table w = (Table) widget;
-					widget = w.getItem (pt);
-				}
-				if (widget instanceof Tree) {
-					Tree w = (Tree) widget;
-					widget = w.getItem (pt);
-				}
-				if (widget == null) {
-					shell.setVisible(false);
-					tipWidget = null;
-					return;
-				}
-				Point newPos = control.toDisplay(pt);
-				if(shell.isFocusControl()) return;
-				if (widget == tipWidget && tipPosition.equals(newPos) && shell.isVisible()) return;
-				tipWidget = widget;
-				tipPosition = newPos;
-				boolean showDialog = false;
-				Object o = widget.getData(Constants.CONTENT_PROVIDER_TAG);
-				if(o != null) {
-					ToolTipTableContentProvider provider = ((ToolTipTableContentProvider)o).initialize(widget, pt);
-					label.setText(provider.getTableTitle());
-					table.setRedraw(false);	
-					table.removeAll();
-					for (String[] strings : provider.getTableContent()) {
-						if(strings.length>0) {
-							showDialog=true;
-							TableItem item = new TableItem(table, SWT.NONE);
-							item.setText(0, strings[0]);
-							if(strings.length>1) 
-								item.setText(1, strings[1]);
-						}
+				case SWT.MouseHover: {
+					Object o = control.getData(Constants.CONTENT_PROVIDER_TAG);
+					if(o != null && o instanceof ToolTipContentProvider) {
+						ToolTipContentProvider provider = ((ToolTipContentProvider)o);
+						Point pt = new Point (event.x, event.y);
+						tipPosition = control.toDisplay(pt);
+						if (tip != null  && !tip.isDisposed ()) tip.dispose ();
+						tip = new Shell (parentShell, SWT.ON_TOP | SWT.NO_FOCUS | SWT.TOOL);
+						tip.setBackground (display.getSystemColor (SWT.COLOR_INFO_BACKGROUND));
+						RowLayout layout=new RowLayout(SWT.VERTICAL);
+						layout.fill=true;
+						tip.setLayout(layout);
+						boolean visible = provider.createContent(tip, pt);
+						tip.pack();
+						setHoverLocation(tip, tipPosition);	
+						tip.setVisible (visible);
 					}
-					nameCol.pack();
-					valueCol.pack();
-					table.setRedraw(true);		
-					table.setVisible(true);
-				} else {
-					table.setVisible(false);
 				}
-				String text = (String) widget.getData(Constants.TEXT_PROVIDER_TAG);
-				if(text != null) {
-					label.setText(text != null ? text : "Hover test should go here");
-					showDialog=true;
-				}
-				if(showDialog) {
-					shell.pack();
-					setHoverLocation(shell, tipPosition);
-					shell.setVisible(true);
 				}
 			}
-		});
+		};
+		control.addListener (SWT.Dispose, listener);
+		control.addListener (SWT.KeyDown, listener);
+		control.addListener (SWT.MouseMove, listener);
+		control.addListener (SWT.MouseHover, listener);
 
 		/*
 		 * Trap F1 Help to pop up a custom help box
@@ -193,11 +122,11 @@ class ToolTipHandler {
 				helpShell.open();
 			}
 		});
-//		control.addKeyListener(KeyListener.keyPressedAdapter( e-> {
-//				if (e.keyCode == SWT.F2 && shell.isVisible()) {
-//                    shell.setFocus();
-//                }
-//		}));
+		//		control.addKeyListener(KeyListener.keyPressedAdapter( e-> {
+		//				if (e.keyCode == SWT.F2 && shell.isVisible()) {
+		//                    shell.setFocus();
+		//                }
+		//		}));
 	}
 
 	/**

@@ -7,7 +7,6 @@ public class Constants {
     public static final int[] unitMultiplier={1, 3, 10, 30, 100, 300};
 
 	public static final String CONTENT_PROVIDER_TAG = "TOOLTIP_CONTENT_PROVIDER";
-	public static final String TEXT_PROVIDER_TAG = "TOOLTIP_TEXT_PROVIDER";
 	public static final String HELP_PROVIDER_TAG = "TOOLTIP_HELP_PROVIDER";
 
 }

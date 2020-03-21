@@ -65,13 +65,21 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
 
 import com.minres.scviewer.database.DataType;
@@ -84,7 +92,8 @@ import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
-import com.minres.scviewer.database.swt.ToolTipTableContentProvider;
+import com.minres.scviewer.database.swt.ToolTipContentProvider;
+import com.minres.scviewer.database.swt.ToolTipHelpTextProvider;
 import com.minres.scviewer.database.swt.WaveformViewerFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
@@ -372,35 +381,41 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		
 		waveformPane.addDisposeListener(this);
 
-		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipTableContentProvider() {
-			private List<Object> res;
-			
+		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipHelpTextProvider() {
 			@Override
-			public ToolTipTableContentProvider initialize(Widget widget, Point pt) {
-				res = waveformPane.getElementsAt(pt);
-				return this;
+			public String getHelpText(Widget widget) {
+				return "Waveform pane: press F2 to set the focus to the tooltip";
 			}
-
+		});
+		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipContentProvider() {
 			@Override
-			public String getTableTitle() {
-				if(res.size()>0) {
-					Object o = res.get(0);
-					if(o instanceof ITx) {
-						ITx tx = (ITx)o;
-						return tx.toString();
-					}
-				}
-				return "";
-			}
+			public boolean createContent(Composite parent, Point pt) {
+				List<Object> res = waveformPane.getElementsAt(pt);
+				if(res.size()>0)
+					if(res.get(0) instanceof ITx) {
+						ITx tx = (ITx)res.get(0);
+						final Display display = parent.getDisplay();
+						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
 
-			@Override
-			public List<String[]> getTableContent() {
-				final ArrayList<String[]> ret = new ArrayList<>();
-				if(res.size()>0){
-					Object o = res.get(0);
-					if(o instanceof ITx) {
-						ITx tx = (ITx)o;
-						ret.add(new String[]{"type", tx.getGenerator().getName()});
+						final Label label = new Label(parent, SWT.NONE);
+						label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+						label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+						label.setText(tx.toString());
+						label.setFont(font);
+
+						final Table table = new Table(parent, SWT.NONE);
+						table.setHeaderVisible(true);
+						table.setLinesVisible(true);
+						table.setFont(font);
+						table.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+						table.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+						table.setRedraw(false);		
+
+						final TableColumn nameCol = new TableColumn(table, SWT.LEFT);
+						nameCol.setText("Attribute");
+						final TableColumn valueCol = new TableColumn(table, SWT.LEFT);
+						valueCol.setText("Value");
+
 						for (ITxAttribute iTxAttribute : tx.getAttributes()) {
 							String value = iTxAttribute.getValue().toString();
 							if((DataType.UNSIGNED == iTxAttribute.getDataType() || DataType.INTEGER==iTxAttribute.getDataType()) && !"0".equals(value)) {
@@ -408,11 +423,35 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 									value += " [0x"+Long.toHexString(Long.parseLong(iTxAttribute.getValue().toString()))+"]";
 								} catch(NumberFormatException e) { }
 							}
-							ret.add(new String[]{iTxAttribute.getName(), value});
+							TableItem item = new TableItem(table, SWT.NONE);
+							item.setText(0, iTxAttribute.getName());
+							item.setText(1, value);
 						}
+						nameCol.pack();
+						valueCol.pack();
+						table.setRedraw(true);		
+
+						parent.addPaintListener(new PaintListener() {
+							@Override
+							public void paintControl(PaintEvent e) {
+								Rectangle area = parent.getClientArea();
+								valueCol.setWidth(area.width - nameCol.getWidth());
+							}
+						});
+						return true;
+					} else  if(res.get(0) instanceof TrackEntry) {
+						TrackEntry te = (TrackEntry)res.get(0);
+						final Display display = parent.getDisplay();
+						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
+
+						final Label label = new Label(parent, SWT.NONE);
+						label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+						label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+						label.setText(te.waveform.getFullName());
+						label.setFont(font);
+						return true;
 					}
-				}
-				return ret;
+				return false;
 			}
 		});
 	}
