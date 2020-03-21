@@ -1,17 +1,9 @@
 package com.minres.scviewer.database.swt.internal;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseTrackAdapter;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -21,9 +13,6 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.Widget;
 
 import com.minres.scviewer.database.swt.Constants;
@@ -35,10 +24,6 @@ class ToolTipHandler {
 	private final Display display;
 	private Shell  parentShell;
 	private Shell  shell;
-	private Label  label;
-	private Table  table;
-	private TableColumn nameCol;
-	private TableColumn valueCol;
 
 	private Widget tipWidget; // widget this tooltip is hovering over
 	private Point  tipPosition; // the position being hovered over
@@ -66,13 +51,20 @@ class ToolTipHandler {
 			@Override
 			public void handleEvent (Event event) {
 				switch (event.type) {
+				case SWT.KeyDown:{
+					if (tip != null && tip.isVisible() && event.keyCode == SWT.F2) {
+						tip.setFocus();
+						break;
+					} 
+				}
 				case SWT.Dispose:
-				case SWT.KeyDown:
-				case SWT.MouseMove: {
-					if (tip == null) break;
-					tip.dispose ();
-					tip = null;
-					label = null;
+				case SWT.MouseMove:
+				case SWT.MouseDown: {
+					if (tip != null){
+						tip.dispose ();
+						tip = null;
+						tipWidget=null;
+					}
 					break;
 				}
 				case SWT.MouseHover: {
@@ -91,6 +83,8 @@ class ToolTipHandler {
 						tip.pack();
 						setHoverLocation(tip, tipPosition);	
 						tip.setVisible (visible);
+						if(visible)
+							tipWidget=event.widget;
 					}
 				}
 				}
@@ -98,8 +92,9 @@ class ToolTipHandler {
 		};
 		control.addListener (SWT.Dispose, listener);
 		control.addListener (SWT.KeyDown, listener);
-		control.addListener (SWT.MouseMove, listener);
+		//control.addListener (SWT.MouseMove, listener);
 		control.addListener (SWT.MouseHover, listener);
+		control.addListener (SWT.MouseDown, listener);
 
 		/*
 		 * Trap F1 Help to pop up a custom help box

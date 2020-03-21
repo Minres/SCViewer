@@ -65,13 +65,13 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
@@ -381,7 +381,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		
 		waveformPane.addDisposeListener(this);
 
-		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipHelpTextProvider() {
+		waveformPane.getWaveformControl().setData(Constants.HELP_PROVIDER_TAG, new ToolTipHelpTextProvider() {
 			@Override
 			public String getHelpText(Widget widget) {
 				return "Waveform pane: press F2 to set the focus to the tooltip";
@@ -390,6 +390,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipContentProvider() {
 			@Override
 			public boolean createContent(Composite parent, Point pt) {
+				if(!prefs.getBoolean(PreferenceConstants.SHOW_HOVER, true)) return false;
 				List<Object> res = waveformPane.getElementsAt(pt);
 				if(res.size()>0)
 					if(res.get(0) instanceof ITx) {
@@ -438,6 +439,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 								valueCol.setWidth(area.width - nameCol.getWidth());
 							}
 						});
+						parent.addFocusListener(FocusListener.focusGainedAdapter(e -> {
+							table.setFocus();
+						}));
 						return true;
 					} else  if(res.get(0) instanceof TrackEntry) {
 						TrackEntry te = (TrackEntry)res.get(0);

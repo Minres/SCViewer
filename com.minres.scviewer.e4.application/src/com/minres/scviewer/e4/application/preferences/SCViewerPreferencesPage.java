@@ -36,6 +36,8 @@ public class SCViewerPreferencesPage extends FieldEditorPreferencePage {
 
 		addField(new BooleanFieldEditor(PreferenceConstants.DATABASE_RELOAD, Messages.SCViewerPreferencesPage_0,
 				getFieldEditorParent()));
+		addField(new BooleanFieldEditor(PreferenceConstants.SHOW_HOVER, Messages.SCViewerPreferencesPage_1,
+				getFieldEditorParent()));
 
 	}
 
