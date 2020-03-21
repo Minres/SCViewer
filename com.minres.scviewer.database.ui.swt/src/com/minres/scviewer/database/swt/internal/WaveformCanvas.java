@@ -426,7 +426,7 @@ public class WaveformCanvas extends Canvas{
         }
     }
 
-    public List<Object> getClicked(Point point) {
+    public List<Object> getElementsAt(Point point) {
     	LinkedList<Object> result=new LinkedList<>();
         for (IPainter p : Lists.reverse(painterList)) {
             if (p instanceof TrackAreaPainter) {

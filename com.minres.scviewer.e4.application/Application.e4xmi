@@ -123,15 +123,20 @@
         </children>
       </children>
       <children xsi:type="menu:ToolBar" xmi:id="_oQdMUHcqEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.toolbar.1">
-        <children xsi:type="menu:HandledToolItem" xmi:id="_5DrGQHf4EeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomfit" label="Zoom out" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/zoom.png" tooltip="Restore default zoom level" command="_693GoHcqEeWwZ-9vrAR2UQ">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_5DrGQHf4EeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomfit" label="Zoom out" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magnifier.png" tooltip="Restore default zoom level" command="_693GoHcqEeWwZ-9vrAR2UQ">
           <parameters xmi:id="_5DrGQXf4EeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.14" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="fit"/>
         </children>
         <children xsi:type="menu:ToolBarSeparator" xmi:id="_p1AvUHcqEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.toolbarseparator.1"/>
-        <children xsi:type="menu:HandledToolItem" xmi:id="_XMQPAHcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomin" label="Zoom in" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/zoom_in.png" tooltip="Zoom in by a factor of 3" command="_693GoHcqEeWwZ-9vrAR2UQ">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_XMQPAHcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomin" label="Zoom in" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magnifier_zoom_in.png" tooltip="Zoom in by a factor of 3" command="_693GoHcqEeWwZ-9vrAR2UQ">
           <parameters xmi:id="_fi5w4HcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="in"/>
         </children>
-        <children xsi:type="menu:HandledToolItem" xmi:id="_XqTc8HcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomout" label="Zoom out" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/zoom_out.png" tooltip="Zoom out by a factor of 3" command="_693GoHcqEeWwZ-9vrAR2UQ">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_XqTc8HcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomout" label="Zoom out" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magifier_zoom_out.png" tooltip="Zoom out by a factor of 3" command="_693GoHcqEeWwZ-9vrAR2UQ">
           <parameters xmi:id="_d7OBYHcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.14" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="out"/>
+        </children>
+      </children>
+      <children xsi:type="menu:ToolBar" xmi:id="_fwn8wGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.toolbar.2">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_j-XIgGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handledtoolitem.hover" label="Hover" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/lightbulb.png" tooltip="Enable hover window in waveform" selected="true" type="Check" command="_uyeyYGtTEeqmlpoaaMHoiw">
+          <tags>EnableHover</tags>
         </children>
       </children>
     </trimBars>
@@ -156,6 +161,7 @@
   <handlers xmi:id="_UUnX8IoNEeWxJ_wPkM6yGQ" elementId="com.minres.scviewer.e4.application.handler.set_them" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ThemeSetHandler" command="_KlGlsIoNEeWxJ_wPkM6yGQ"/>
   <handlers xmi:id="_V4EscIuGEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handler.setreleationtype" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SetRelationTypeHandler" command="_E9lUgIt2EeWid7xO48ZBXw"/>
   <handlers xmi:id="__99WoJebEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handler.loadStoreSettings" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.LoadStoreSettingsHandler" command="_7-AIMJebEeW09eyIbHsdvg"/>
+  <handlers xmi:id="_x4pSEGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handler.0" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableHover" command="_uyeyYGtTEeqmlpoaaMHoiw"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
@@ -286,6 +292,7 @@
   <commands xmi:id="_4C_asM3ZEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.command.changevaluedisplay" commandName="Change Value Display Command">
     <parameters xmi:id="_4C_asc3ZEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.commandparameter.changevaluedisplay" name="Type" optional="false"/>
   </commands>
+  <commands xmi:id="_uyeyYGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.command.enablehover" commandName="Enable hover" description="Enable hover window in waveform"/>
   <addons xmi:id="_95PfsnNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_95Pfs3NmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_95PftHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>

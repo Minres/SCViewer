@@ -15,6 +15,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.NoSuchElementException;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.util.LocalSelectionTransfer;
@@ -97,7 +99,7 @@ public class WaveformViewer implements IWaveformViewer  {
 
 	private PropertyChangeSupport pcs;
 
-	static final DecimalFormat df = new DecimalFormat("#.00####"); 
+	static final DecimalFormat df = new DecimalFormat("#0.00####"); 
 
 	private ITx currentTxSelection;
 
@@ -115,6 +117,8 @@ public class WaveformViewer implements IWaveformViewer  {
 
 	final WaveformCanvas waveformCanvas;
 
+	final ToolTipHandler toolTipHandler;
+	
 	private boolean revealSelected=false;
 	
 	private Composite top;
@@ -159,7 +163,7 @@ public class WaveformViewer implements IWaveformViewer  {
 			down=true;
 			if((e.stateMask&SWT.MODIFIER_MASK)!=0) return; //don't react on modifier
 			if (e.button ==  1) {	
-				initialSelected = waveformCanvas.getClicked(start);
+				initialSelected = waveformCanvas.getElementsAt(start);
 			} else if (e.button == 3) {
 				Menu topMenu= top.getMenu();
 				if(topMenu!=null) topMenu.setVisible(true);
@@ -248,7 +252,7 @@ public class WaveformViewer implements IWaveformViewer  {
 		protected long snapOffsetToEvent(Point p) {
 			long time= waveformCanvas.getTimeForOffset(p.x);
 			long scaling=5*waveformCanvas.getScaleFactor();
-			for(Object o:waveformCanvas.getClicked(p)){
+			for(Object o:waveformCanvas.getElementsAt(p)){
 				Entry<Long, ?> floorEntry=null, ceilEntry=null;
 				if(o instanceof TrackEntry){ 
 					TrackEntry entry = (TrackEntry) o;
@@ -417,6 +421,9 @@ public class WaveformViewer implements IWaveformViewer  {
 		createStreamDropTarget(valueList);
 		createWaveformDragSource(waveformCanvas);
 		createWaveformDropTarget(waveformCanvas);
+		
+		toolTipHandler = new ToolTipHandler(parent.getShell());
+		toolTipHandler.activateHoverHelp(waveformCanvas);
 	}
 
 	private Composite createTextPane(SashForm leftSash, String text) {
@@ -809,23 +816,39 @@ public class WaveformViewer implements IWaveformViewer  {
 			} else {
 				if (direction == GotoDirection.NEXT) {
 					Collection<ITxRelation>  outRel=currentTxSelection.getOutgoingRelations();
-					for(ITxRelation rel:outRel){
-						if(relationType.equals(rel.getRelationType())){
-							setSelection(new StructuredSelection(rel.getTarget()), true);
-							return;
-						}
-					}
+					ITxRelation tx = selectTxToNavigateTo(outRel, relationType, true);
+					if(tx!=null) setSelection(new StructuredSelection(tx.getTarget()), true);
 				} else if (direction == GotoDirection.PREV) {
 					Collection<ITxRelation>  inRel=currentTxSelection.getIncomingRelations();
-					for(ITxRelation rel:inRel){
-						if(relationType.equals(rel.getRelationType())){
-							setSelection(new StructuredSelection(rel.getSource()), true);
-							return;
-						}
-					}
+					ITxRelation tx = selectTxToNavigateTo(inRel, relationType, false);
+					if(tx!=null) setSelection(new StructuredSelection(tx.getSource()), true);
 				}
 			}
 		}
+	}
+
+	private ITxRelation selectTxToNavigateTo(Collection<ITxRelation> rel, RelationType relationType, boolean target) {
+		ArrayList<ITxRelation> candidates = rel.stream().filter(r -> relationType.equals(r.getRelationType())).collect(Collectors.toCollection(ArrayList::new));
+		//new RelSelectionDialog(waveformCanvas.getShell(), candidates, target).open();
+		switch (candidates.size()) {
+		case 0: return null;
+		case 1: return candidates.get(0);
+		default:
+			ArrayList<ITxRelation> visibleCandidates = candidates.stream().filter(r -> streamsVisible(r)).collect(Collectors.toCollection(ArrayList::new));
+			if(visibleCandidates.size()==0) {
+				return new RelSelectionDialog(waveformCanvas.getShell(), candidates, target).open();
+			} else if(visibleCandidates.size()==1) {
+				return visibleCandidates.size()==1?visibleCandidates.get(0):null;
+			} else {
+				return new RelSelectionDialog(waveformCanvas.getShell(), visibleCandidates, target).open();
+			}
+		}
+	}
+	
+	private boolean streamsVisible(ITxRelation relation) {
+		final ITxStream<ITxEvent> src = relation.getSource().getStream();
+		final ITxStream<ITxEvent> tgt = relation.getTarget().getStream();
+		return streams.stream().anyMatch(x -> x.waveform == src) && streams.stream().anyMatch(x -> x.waveform == tgt);
 	}
 
 	/* (non-Javadoc)
@@ -1130,6 +1153,10 @@ public class WaveformViewer implements IWaveformViewer  {
 		return null;
 	}
 
+	public List<Object> getElementsAt(Point pt){
+		return waveformCanvas.getElementsAt(pt);
+	}
+	
 	private void createWaveformDragSource(final Canvas canvas) {
 		Transfer[] types = new Transfer[] { LocalSelectionTransfer.getTransfer() };
 		DragSource dragSource = new DragSource(canvas, DND.DROP_MOVE);
@@ -1137,7 +1164,7 @@ public class WaveformViewer implements IWaveformViewer  {
 		dragSource.addDragListener(new DragSourceAdapter() {
 			public void dragStart(DragSourceEvent event) {
 				event.doit = false;
-				List<Object> clicked = waveformCanvas.getClicked(new Point(event.x, event.y));
+				List<Object> clicked = waveformCanvas.getElementsAt(new Point(event.x, event.y));
 				for(Object o:clicked){
 					if(o instanceof CursorPainter){
 						LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(o));
@@ -1150,7 +1177,7 @@ public class WaveformViewer implements IWaveformViewer  {
 
 			public void dragSetData(DragSourceEvent event) {
 				if (LocalSelectionTransfer.getTransfer().isSupportedType(event.dataType)) {
-					event.data=waveformCanvas.getClicked(new Point(event.x, event.y)); 
+					event.data=waveformCanvas.getElementsAt(new Point(event.x, event.y)); 
 				}
 			}
 		});

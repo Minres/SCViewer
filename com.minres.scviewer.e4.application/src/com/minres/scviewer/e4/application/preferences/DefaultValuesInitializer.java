@@ -67,6 +67,7 @@ public class DefaultValuesInitializer extends AbstractPreferenceInitializer {
 		IPreferenceStore store = new ScopedPreferenceStore(InstanceScope.INSTANCE, PreferenceConstants.PREFERENCES_SCOPE);
 
 		store.setDefault(PreferenceConstants.DATABASE_RELOAD, true);
+		store.setDefault(PreferenceConstants.SHOW_HOVER, true);
         for (WaveformColors c : WaveformColors.values()) {
         	 store.setDefault(c.name()+"_COLOR", StringConverter.asString(colors[c.ordinal()].getRGB())); //$NON-NLS-1$
         }
