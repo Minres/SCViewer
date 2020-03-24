@@ -75,6 +75,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
@@ -403,18 +404,26 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
 
 						final Label label = new Label(parent, SWT.NONE);
-						label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-						label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+//						label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+//						label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
 						label.setText(tx.toString());
 						label.setFont(font);
+						GridData labelGridData = new GridData();
+						labelGridData.horizontalAlignment = GridData.FILL;
+						labelGridData.grabExcessHorizontalSpace = true;
+						label.setLayoutData(labelGridData);
 
 						final Table table = new Table(parent, SWT.NONE);
 						table.setHeaderVisible(true);
 						table.setLinesVisible(true);
 						table.setFont(font);
-						table.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-						table.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+//						table.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+//						table.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
 						table.setRedraw(false);		
+						GridData tableGridData = new GridData();
+						tableGridData.horizontalAlignment = GridData.FILL;
+						tableGridData.grabExcessHorizontalSpace = true;
+						table.setLayoutData(tableGridData);
 
 						final TableColumn nameCol = new TableColumn(table, SWT.LEFT);
 						nameCol.setText("Attribute");
@@ -432,8 +441,12 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 							item.setText(0, iTxAttribute.getName());
 							item.setText(1, value);
 						}
+						TableItem item = new TableItem(table, SWT.NONE);
+						item.setText(0, "");
+						item.setText(1, "");
 						nameCol.pack();
 						valueCol.pack();
+						table.pack();
 						table.setRedraw(true);		
 
 						parent.addPaintListener(new PaintListener() {
@@ -453,10 +466,14 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
 
 						final Label label = new Label(parent, SWT.NONE);
-						label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-						label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+						//label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+						//label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
 						label.setText(te.waveform.getFullName());
 						label.setFont(font);
+						GridData labelGridData = new GridData();
+						labelGridData.horizontalAlignment = GridData.FILL;
+						labelGridData.grabExcessHorizontalSpace = true;
+						label.setLayoutData(labelGridData);
 						return true;
 					}
 				return false;
