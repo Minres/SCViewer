@@ -31,6 +31,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.eclipse.core.internal.preferences.InstancePreferences;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -41,9 +42,11 @@ import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.core.runtime.jobs.JobGroup;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.e4.core.services.events.IEventBroker;
@@ -65,14 +68,28 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Widget;
+import org.osgi.service.prefs.BackingStoreException;
 
+import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxRelation;
 import com.minres.scviewer.database.IWaveform;
@@ -80,6 +97,8 @@ import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
+import com.minres.scviewer.database.swt.ToolTipContentProvider;
+import com.minres.scviewer.database.swt.ToolTipHelpTextProvider;
 import com.minres.scviewer.database.swt.WaveformViewerFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
@@ -178,9 +197,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	/** The prefs. */
 	@Inject
-	@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE)
-	IEclipsePreferences prefs;
-	
+	@Preference(value = ConfigurationScope.SCOPE, nodePath = PreferenceConstants.PREFERENCES_SCOPE)
+	protected IEclipsePreferences prefs;
+
 	@Inject @Optional DesignBrowser designBrowser;
 
 	/** The database. */
@@ -226,7 +245,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@PostConstruct
 	public void createComposite(MPart part, Composite parent, IWaveformDbFactory dbFactory) {
 		disposeListenerNumber += 1;
-				
+		
 		myPart = part;
 		myParent = parent;
 		database = dbFactory.getDatabase();
@@ -366,6 +385,100 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		prefs.addPreferenceChangeListener(this);
 		
 		waveformPane.addDisposeListener(this);
+
+		waveformPane.getWaveformControl().setData(Constants.HELP_PROVIDER_TAG, new ToolTipHelpTextProvider() {
+			@Override
+			public String getHelpText(Widget widget) {
+				return "Waveform pane: press F2 to set the focus to the tooltip";
+			}
+		});
+		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipContentProvider() {
+			@Override
+			public boolean createContent(Composite parent, Point pt) {
+				if(!prefs.getBoolean(PreferenceConstants.SHOW_HOVER, true)) return false;
+				List<Object> res = waveformPane.getElementsAt(pt);
+				if(res.size()>0)
+					if(res.get(0) instanceof ITx) {
+						ITx tx = (ITx)res.get(0);
+						final Display display = parent.getDisplay();
+						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
+
+						final Label label = new Label(parent, SWT.NONE);
+//						label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+//						label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+						label.setText(tx.toString());
+						label.setFont(font);
+						GridData labelGridData = new GridData();
+						labelGridData.horizontalAlignment = GridData.FILL;
+						labelGridData.grabExcessHorizontalSpace = true;
+						label.setLayoutData(labelGridData);
+
+						final Table table = new Table(parent, SWT.NONE);
+						table.setHeaderVisible(true);
+						table.setLinesVisible(true);
+						table.setFont(font);
+//						table.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+//						table.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+						table.setRedraw(false);		
+						GridData tableGridData = new GridData();
+						tableGridData.horizontalAlignment = GridData.FILL;
+						tableGridData.grabExcessHorizontalSpace = true;
+						table.setLayoutData(tableGridData);
+
+						final TableColumn nameCol = new TableColumn(table, SWT.LEFT);
+						nameCol.setText("Attribute");
+						final TableColumn valueCol = new TableColumn(table, SWT.LEFT);
+						valueCol.setText("Value");
+
+						for (ITxAttribute iTxAttribute : tx.getAttributes()) {
+							String value = iTxAttribute.getValue().toString();
+							if((DataType.UNSIGNED == iTxAttribute.getDataType() || DataType.INTEGER==iTxAttribute.getDataType()) && !"0".equals(value)) {
+								try {
+									value += " [0x"+Long.toHexString(Long.parseLong(iTxAttribute.getValue().toString()))+"]";
+								} catch(NumberFormatException e) { }
+							}
+							TableItem item = new TableItem(table, SWT.NONE);
+							item.setText(0, iTxAttribute.getName());
+							item.setText(1, value);
+						}
+						TableItem item = new TableItem(table, SWT.NONE);
+						item.setText(0, "");
+						item.setText(1, "");
+						nameCol.pack();
+						valueCol.pack();
+						table.pack();
+						table.setRedraw(true);		
+
+						parent.addPaintListener(new PaintListener() {
+							@Override
+							public void paintControl(PaintEvent e) {
+								Rectangle area = parent.getClientArea();
+								valueCol.setWidth(area.width - nameCol.getWidth());
+							}
+						});
+						parent.addFocusListener(FocusListener.focusGainedAdapter(e -> {
+							table.setFocus();
+						}));
+						return true;
+					} else  if(res.get(0) instanceof TrackEntry) {
+						TrackEntry te = (TrackEntry)res.get(0);
+						final Display display = parent.getDisplay();
+						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
+
+						final Label label = new Label(parent, SWT.NONE);
+						//label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+						//label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+						label.setText(te.waveform.getFullName());
+						label.setFont(font);
+						GridData labelGridData = new GridData();
+						labelGridData.horizontalAlignment = GridData.FILL;
+						labelGridData.grabExcessHorizontalSpace = true;
+						label.setLayoutData(labelGridData);
+						return true;
+					}
+				return false;
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -373,17 +486,21 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	@Override
 	public void preferenceChange(PreferenceChangeEvent event) {
+		InstancePreferences pref = (InstancePreferences)event.getSource();
 		if (PreferenceConstants.DATABASE_RELOAD.equals(event.getKey())) {
-			checkForUpdates = (Boolean) event.getNewValue();
+			checkForUpdates = pref.getBoolean(PreferenceConstants.DATABASE_RELOAD, true);
 			fileChecker = null;
 			if (checkForUpdates)
 				fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad,
 						FILE_CHECK_INTERVAL);
 			else
 				fileMonitor.removeFileChangeListener(this);
-		} else {
+		} else if (!PreferenceConstants.SHOW_HOVER.equals(event.getKey())){
 			setupColors();
 		}
+		try {
+			pref.flush();
+		} catch (BackingStoreException e) { }
 	}
 
 	/**

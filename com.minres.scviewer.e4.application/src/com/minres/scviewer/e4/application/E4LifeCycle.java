@@ -86,7 +86,7 @@ public class E4LifeCycle {
 					ContextInjectionFactory.inject(openViewHandler, ctx);
 					eventBroker.unsubscribe(this);
 					for(String name:opt.getSet().getData()){
-						if(new File(name).exists())	openViewHandler.openViewForFile(name);
+						openViewHandler.openViewForFile(name);
 					}
 				}
 			}
@@ -159,6 +159,8 @@ public class E4LifeCycle {
 		 */
 		public void openViewForFile(String name){
 			File file = new File(getFirstFileName(name));
+			if(!file.exists())
+				return;
 			MPart part = partService.createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
 			part.setLabel(file.getName());
 			MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
@@ -172,7 +174,7 @@ public class E4LifeCycle {
 		}
 
 		private String getFirstFileName(String name) {
-			if(name.contains(":")) {
+			if(name.contains(",")) {
 				String[] tokens = name.split(",");
 				return tokens[0];
 			} else
