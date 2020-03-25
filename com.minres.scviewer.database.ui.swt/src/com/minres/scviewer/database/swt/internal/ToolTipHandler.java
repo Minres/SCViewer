@@ -73,7 +73,7 @@ class ToolTipHandler {
 						Point pt = new Point (event.x, event.y);
 						tipPosition = control.toDisplay(pt);
 						if (tip != null  && !tip.isDisposed ()) tip.dispose ();
-						tip = new Shell (parentShell, SWT.ON_TOP | SWT.NO_FOCUS | SWT.TOOL);
+						tip = new Shell (parentShell, SWT.NO_FOCUS | SWT.TOOL);
 						tip.setBackground (display.getSystemColor (SWT.COLOR_INFO_BACKGROUND));
 						GridLayout layout = new GridLayout(1, true);
 						layout.verticalSpacing=0;
