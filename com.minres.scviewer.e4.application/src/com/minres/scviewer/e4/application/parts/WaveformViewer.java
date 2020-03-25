@@ -43,12 +43,9 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.core.runtime.jobs.JobGroup;
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
-import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
-import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.PersistState;
@@ -59,7 +56,9 @@ import org.eclipse.e4.ui.services.EMenuService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.StringConverter;
+import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -112,8 +111,8 @@ import com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl;
 import com.minres.scviewer.e4.application.internal.util.FileMonitor;
 import com.minres.scviewer.e4.application.internal.util.IFileChangeListener;
 import com.minres.scviewer.e4.application.internal.util.IModificationChecker;
-import com.minres.scviewer.e4.application.preferences.DefaultValuesInitializer;
 import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
+import com.opcoach.e4.preferences.ScopedPreferenceStore;
 
 /**
  * The Class WaveformViewerPart.
@@ -195,10 +194,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@Inject
 	EPartService ePartService;
 
-	/** The prefs. */
-	@Inject
-	@Preference(value = ConfigurationScope.SCOPE, nodePath = PreferenceConstants.PREFERENCES_SCOPE)
-	protected IEclipsePreferences prefs;
+	IPreferenceStore store = new ScopedPreferenceStore(ConfigurationScope.INSTANCE, PreferenceConstants.PREFERENCES_SCOPE);
 
 	@Inject @Optional DesignBrowser designBrowser;
 
@@ -353,7 +349,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		
 		zoomLevel = waveformPane.getZoomLevels();
 		setupColors();
-		checkForUpdates = prefs.getBoolean(PreferenceConstants.DATABASE_RELOAD, true);
+		checkForUpdates = store.getBoolean(PreferenceConstants.DATABASE_RELOAD);
 		filesToLoad = new ArrayList<File>();
 		persistedState = part.getPersistedState();
 		Integer files = persistedState.containsKey(DATABASE_FILE + "S") //$NON-NLS-1$
@@ -382,7 +378,22 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				}
 			}
 		});
-		prefs.addPreferenceChangeListener(this);
+		store.addPropertyChangeListener(new IPropertyChangeListener() {
+			@Override
+			public void propertyChange(org.eclipse.jface.util.PropertyChangeEvent event) {
+				if (PreferenceConstants.DATABASE_RELOAD.equals(event.getProperty())) {
+					checkForUpdates = (Boolean)event.getNewValue();
+					fileChecker = null;
+					if (checkForUpdates)
+						fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad,
+								FILE_CHECK_INTERVAL);
+					else
+						fileMonitor.removeFileChangeListener(WaveformViewer.this);
+				} else if (!PreferenceConstants.SHOW_HOVER.equals(event.getProperty())){
+					setupColors();
+				}
+			}
+		});
 		
 		waveformPane.addDisposeListener(this);
 
@@ -395,7 +406,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipContentProvider() {
 			@Override
 			public boolean createContent(Composite parent, Point pt) {
-				if(!prefs.getBoolean(PreferenceConstants.SHOW_HOVER, true)) return false;
+				if(!store.getBoolean(PreferenceConstants.SHOW_HOVER)) return false;
 				List<Object> res = waveformPane.getElementsAt(pt);
 				if(res.size()>0)
 					if(res.get(0) instanceof ITx) {
@@ -403,9 +414,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						final Display display = parent.getDisplay();
 						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
 
-						final Label label = new Label(parent, SWT.NONE);
-//						label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-//						label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+						final Label label = new Label(parent, SWT.SHADOW_IN);
+						label.setForeground(display.getSystemColor(SWT.COLOR_BLACK));
+						label.setBackground(display.getSystemColor(SWT.COLOR_GRAY));
 						label.setText(tx.toString());
 						label.setFont(font);
 						GridData labelGridData = new GridData();
@@ -417,9 +428,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						table.setHeaderVisible(true);
 						table.setLinesVisible(true);
 						table.setFont(font);
-//						table.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-//						table.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
-						table.setRedraw(false);		
+						label.setForeground(display.getSystemColor(SWT.COLOR_BLACK));
+						label.setBackground(display.getSystemColor(SWT.COLOR_GRAY));
 						GridData tableGridData = new GridData();
 						tableGridData.horizontalAlignment = GridData.FILL;
 						tableGridData.grabExcessHorizontalSpace = true;
@@ -441,14 +451,15 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 							item.setText(0, iTxAttribute.getName());
 							item.setText(1, value);
 						}
-						TableItem item = new TableItem(table, SWT.NONE);
-						item.setText(0, "");
-						item.setText(1, "");
+						if(table.getHeaderVisible()) {
+							// add dummy row to get make last row visible
+							TableItem item = new TableItem(table, SWT.NONE);
+							item.setText(0, "");
+							item.setText(1, "");
+						}
 						nameCol.pack();
 						valueCol.pack();
-						table.pack();
-						table.setRedraw(true);		
-
+						table.setSize(table.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 						parent.addPaintListener(new PaintListener() {
 							@Override
 							public void paintControl(PaintEvent e) {
@@ -462,7 +473,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						return true;
 					} else  if(res.get(0) instanceof TrackEntry) {
 						TrackEntry te = (TrackEntry)res.get(0);
-						final Display display = parent.getDisplay();
 						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
 
 						final Label label = new Label(parent, SWT.NONE);
@@ -507,11 +517,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * Setup colors.
 	 */
 	protected void setupColors() {
-		DefaultValuesInitializer initializer = new DefaultValuesInitializer();
 		HashMap<WaveformColors, RGB> colorPref = new HashMap<>();
 		for (WaveformColors c : WaveformColors.values()) {
-			String prefValue = prefs.get(c.name() + "_COLOR", //$NON-NLS-1$
-					StringConverter.asString(initializer.colors[c.ordinal()].getRGB()));
+			String prefValue = store.getString(c.name() + "_COLOR"); //$NON-NLS-1$
 			RGB rgb = StringConverter.asRGB(prefValue);
 			colorPref.put(c, rgb);
 		}

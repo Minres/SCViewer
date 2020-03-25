@@ -11,12 +11,15 @@
       <programArgs>-clearPersistedState
       </programArgs>
       <vmArgs>-Xmx2G
+-Dosgi.instance.area=@user.home/.scviewer
+-Dosgi.instance.area.default=@user.home/.scviewer
       </vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
    </launcherArgs>
 
    <windowImages/>
+
 
    <launcher name="scviewer">
       <linux icon="icons/SCViewer_512x512.xpm"/>
@@ -141,5 +144,12 @@
       <plugin id="org.eclipse.equinox.ds" autoStart="true" startLevel="2" />
       <plugin id="org.eclipse.equinox.event" autoStart="true" startLevel="2" />
    </configurations>
+
+   <preferencesInfo>
+      <targetfile overwrite="false"/>
+   </preferencesInfo>
+
+   <cssInfo>
+   </cssInfo>
 
 </product>
