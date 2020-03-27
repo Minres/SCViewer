@@ -20,7 +20,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
 import com.opcoach.e4.preferences.ScopedPreferenceStore;
 
-@SuppressWarnings("restriction")
 public class EnableHover {
 	static final String TAG_NAME = "EnableHover"; //$NON-NLS-1$
 

@@ -425,7 +425,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						label.setLayoutData(labelGridData);
 
 						final Table table = new Table(parent, SWT.NONE);
-						table.setHeaderVisible(false);
+						table.setHeaderVisible(true);
 						table.setLinesVisible(true);
 						table.setFont(font);
 						label.setForeground(display.getSystemColor(SWT.COLOR_BLACK));
