@@ -64,6 +64,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 
 	@Override
 	boolean load(IWaveformDb db, File file) throws Exception {
+		if(file.isDirectory() || !file.exists()) return false;
 		this.db=db
 		this.streams=[]
 		try {

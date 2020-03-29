@@ -669,7 +669,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			}
 			if (filesToLoad.size() > 0)
 				loadDatabase(persistedState);
-			if(partConfig instanceof String) {
+			if(partConfig instanceof String && ((String)partConfig).length()>0) {
 				loadState((String) partConfig);
 			}
 		}
