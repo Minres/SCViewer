@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -25,6 +24,7 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.MouseAdapter;
@@ -34,16 +34,18 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.wb.swt.ResourceManager;
 
 public class FileBrowserDialog extends TrayDialog {
@@ -60,9 +62,17 @@ public class FileBrowserDialog extends TrayDialog {
 
 	TableViewer tableViewer;
 	
+	Text fileNameEntry;
+	
+	Combo filterCombo;
+	
 	FileTableComparator fileTableComparator;
 	
     private FileGlobber globber = new FileGlobber();
+    
+    private FileGlobber imageGlobber = new FileGlobber();
+
+    private File selectedDir;
     
     private List<File> selectedFiles;
     
@@ -79,8 +89,12 @@ public class FileBrowserDialog extends TrayDialog {
 	public void setFilterExtensions(String[] filterStrings) {
 		if(filterStrings.length==0){
 			globber = new FileGlobber();
-		} else
+		} else {
 			globber= new FileGlobber(filterStrings[0]);
+			imageGlobber = new FileGlobber(filterStrings[0]);
+			filterCombo.setItems(filterStrings);
+			filterCombo.select(0);
+		}
 		this.filterStrings=filterStrings;
 	}
 	
@@ -119,17 +133,41 @@ public class FileBrowserDialog extends TrayDialog {
 		dirTreeViewer.addSelectionChangedListener(event -> {
 			IStructuredSelection sel = event.getStructuredSelection();
 			File entry = (File) sel.getFirstElement();
-			if(entry.isDirectory()) {
-				tableViewer.setInput(entry.listFiles());
+			if(entry!=null && entry.isDirectory()) {
+				selectedDir = entry;
+				tableViewer.setInput(selectedDir.listFiles());
 			}
 		});
 
-		final Composite tableViewerParent = new Composite(sashForm, SWT.BORDER);
-		tableViewerParent.setLayout(new GridLayout(1, true));
-		tableViewer = new TableViewer(tableViewerParent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.MULTI);
+		final Composite tableViewerParent = new Composite(sashForm, SWT.NONE);
+		GridLayout gridLayout = new GridLayout(1, true);
+		gridLayout.horizontalSpacing=0;
+		gridLayout.verticalSpacing=5;
+		gridLayout.marginHeight=0;
+		gridLayout.marginHeight=0;
+		tableViewerParent.setLayout(gridLayout);
+		final ToolBar toolBar = new ToolBar(tableViewerParent, SWT.HORIZONTAL |SWT.SHADOW_OUT);
+		toolBar.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
+	    final ToolItem toolbarItemUp = new ToolItem(toolBar, SWT.PUSH);
+	    toolbarItemUp.setToolTipText("up one level");
+	    toolbarItemUp.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/arrow_up.png")); //$NON-NLS-1$ //$NON-NLS-2$);
+	    toolbarItemUp.addSelectionListener(new SelectionAdapter() {	
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if(selectedDir.getParentFile()!=null) {
+					selectedDir=selectedDir.getParentFile();
+					tableViewer.setInput(selectedDir.listFiles());
+				}
+			}
+		});
+		tableViewer = new TableViewer(tableViewerParent, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.MULTI);
 		tableViewer.getTable().setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL | GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL));
 		tableViewer.addSelectionChangedListener(event -> {
-			getButton(IDialogConstants.OK_ID).setEnabled(!event.getStructuredSelection().isEmpty());
+			IStructuredSelection sel = event.getStructuredSelection();
+			getButton(IDialogConstants.OK_ID).setEnabled(!sel.isEmpty());
+			@SuppressWarnings("unchecked")
+			Object text = sel.toList().stream().map(e -> ((File)e).getName()).collect(Collectors.joining(";"));
+			fileNameEntry.setText(text.toString());
 		});
 		tableViewer.addDoubleClickListener(event -> {
 			IStructuredSelection sel = tableViewer.getStructuredSelection();
@@ -175,7 +213,7 @@ public class FileBrowserDialog extends TrayDialog {
 		colName.setLabelProvider(new FileTableLabelProvider() {
 			@Override public String getText(Object element) { return ((File) element).getName(); }
 			@Override public Image getImage(Object element){
-				if(globber.matches(element)) return dbImage;
+				if(imageGlobber.matches(element)) return dbImage;
 				return ((File) element).isDirectory()?folderImage:fileImage; 
 			}
 		});
@@ -200,6 +238,32 @@ public class FileBrowserDialog extends TrayDialog {
 		
 		fileTableComparator = new FileTableComparator();
 		tableViewer.setComparator(fileTableComparator);
+		tableViewer.addFilter(new FileTableFilter());
+		
+		Composite bottomBar = new Composite(tableViewerParent, SWT.NONE);
+		bottomBar.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
+		GridLayout gridLayoutBottom = new GridLayout(2, false);
+		gridLayoutBottom.horizontalSpacing=0;
+		gridLayoutBottom.verticalSpacing=0;
+		gridLayoutBottom.marginHeight=0;
+		gridLayoutBottom.marginWidth=0;
+		bottomBar.setLayout(gridLayoutBottom);
+		
+		fileNameEntry = new Text(bottomBar, SWT.BORDER);
+		fileNameEntry.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
+		fileNameEntry.setEditable(false); //TODO: temporary disabled
+		
+		filterCombo = new Combo(bottomBar, SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
+		filterCombo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
+		filterCombo.setItems(filterStrings);
+		filterCombo.select(0);
+		filterCombo.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				globber= new FileGlobber(filterCombo.getText());
+				tableViewer.setInput(selectedDir.listFiles());
+			}
+		});
 		sashForm.setWeights(new int[]{2, 3});
 		return area;
 	}
@@ -355,6 +419,15 @@ public class FileBrowserDialog extends TrayDialog {
 			listeners.remove(arg0);
 		}
 
+	}
+	
+	public class FileTableFilter extends ViewerFilter {
+
+	    @Override
+	    public boolean select(Viewer viewer, Object parentElement, Object element) {
+	        File p = (File) element;
+	        return !p.getName().startsWith(".");
+	    }
 	}
 	
 	public class FileTableComparator extends ViewerComparator {

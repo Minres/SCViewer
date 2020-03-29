@@ -32,7 +32,7 @@ public class OpenHandler {
 	public void execute(Shell shell, MApplication app, EModelService modelService, EPartService partService){
 		FileBrowserDialog dlg = new FileBrowserDialog(shell);
 		dlg.create();
-		dlg.setFilterExtensions (new String []{Messages.OpenHandler_0});
+		dlg.setFilterExtensions (new String []{Messages.OpenHandler_0, "*"});
 		if (dlg.open() != Window.OK) return;
 		List<File> files = dlg.getSelectedFiles();
 		MPart part = partService .createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
