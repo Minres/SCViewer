@@ -92,8 +92,11 @@ public class FileBrowserDialog extends TrayDialog {
 		} else {
 			globber= new FileGlobber(filterStrings[0]);
 			imageGlobber = new FileGlobber(filterStrings[0]);
+			if(filterCombo!=null) {
 			filterCombo.setItems(filterStrings);
 			filterCombo.select(0);
+			filterCombo.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+			}
 		}
 		this.filterStrings=filterStrings;
 	}
@@ -103,19 +106,13 @@ public class FileBrowserDialog extends TrayDialog {
 	}
 	
 	@Override
-	public int open() {
-		dirTreeViewer.setInput("root");
-		dirTreeViewer.refresh();
-		setDirSelection(currentDirFile.getAbsoluteFile().getParentFile());
-		getButton(IDialogConstants.OK_ID).setEnabled(!tableViewer.getSelection().isEmpty());
-		return super.open();
-	}
-
-	@Override
 	protected Control createContents(Composite parent) {
 		Control ret = super.createContents(parent);
+		setDirSelection(currentDirFile.getAbsoluteFile().getParentFile());
+		getButton(IDialogConstants.OK_ID).setEnabled(!tableViewer.getSelection().isEmpty());
 		if(parent instanceof Shell) {
-			((Shell)parent).setSize(800, 400);
+			Point size = ((Shell)parent).computeSize(SWT.DEFAULT, SWT.DEFAULT);
+			((Shell)parent).setSize(size.x, 400);
 			((Shell)parent).setText("Select database");
 		}
 		return ret;
@@ -138,7 +135,8 @@ public class FileBrowserDialog extends TrayDialog {
 				tableViewer.setInput(selectedDir.listFiles());
 			}
 		});
-
+		dirTreeViewer.setInput("root");
+		
 		final Composite tableViewerParent = new Composite(sashForm, SWT.NONE);
 		GridLayout gridLayout = new GridLayout(1, true);
 		gridLayout.horizontalSpacing=0;
@@ -252,6 +250,7 @@ public class FileBrowserDialog extends TrayDialog {
 		fileNameEntry = new Text(bottomBar, SWT.BORDER);
 		fileNameEntry.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
 		fileNameEntry.setEditable(false); //TODO: temporary disabled
+		fileNameEntry.setEnabled(false);
 		
 		filterCombo = new Combo(bottomBar, SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
 		filterCombo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
@@ -264,7 +263,7 @@ public class FileBrowserDialog extends TrayDialog {
 				tableViewer.setInput(selectedDir.listFiles());
 			}
 		});
-		sashForm.setWeights(new int[]{2, 3});
+		sashForm.setWeights(new int[]{3, 3});
 		return area;
 	}
 
@@ -285,7 +284,7 @@ public class FileBrowserDialog extends TrayDialog {
     private void setDirSelection(File f) {
     	ArrayList<File> fileTree = getParentDirList(f);
     	TreeSelection selection = new TreeSelection(new TreePath(fileTree.toArray()));
-    	dirTreeViewer.setSelection(selection);
+    	dirTreeViewer.setSelection(selection, true);
     }
 
 	private ArrayList<File> getParentDirList(File actual){
