@@ -11,7 +11,7 @@
 package com.minres.scviewer.e4.application.handlers;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -21,27 +21,20 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPartStack;
 import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 
 import com.minres.scviewer.e4.application.Messages;
+import com.minres.scviewer.e4.application.parts.FileBrowserDialog;
 public class OpenHandler {
 
 	@Execute
 	public void execute(Shell shell, MApplication app, EModelService modelService, EPartService partService){
-		FileDialog dialog = new FileDialog(shell, SWT.OPEN | SWT.MULTI);
-		dialog.setFilterExtensions (new String []{Messages.OpenHandler_0});
-		String ret = dialog.open();
-		if(ret==null)
-			return;
-		String path = dialog.getFilterPath();
-		ArrayList<File> files = new ArrayList<File>();
-		for(String fileName: dialog.getFileNames()){
-			File file = new File(path+File.separator+fileName);
-			if(file.exists())
-				files.add(file);
-		}
+		FileBrowserDialog dlg = new FileBrowserDialog(shell);
+		//dlg.create();
+		dlg.setFilterExtensions (new String []{Messages.OpenHandler_0, "*"});
+		if (dlg.open() != Window.OK) return;
+		List<File> files = dlg.getSelectedFiles();
 		MPart part = partService .createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
 		part.setLabel(files.get(0).getName());
 		MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
