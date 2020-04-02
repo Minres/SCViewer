@@ -51,31 +51,12 @@ public class TrackEntry {
 				
 		result[0] = fallback;
 		result[1] = highlightedFallback;
-		
-		// assign colors to standard values
-		if (streamValue.contains("read")){
-			result[0] = new Color(86,174,53);
-			result[1] = new Color (86,194,53);
-		}else if (streamValue.contains("rdata")){
-			result[0] = new Color(138,151,71);
-			result[1] = new Color (138,171,71);
-		}else if (streamValue.contains("addr")){
-			result[0] = new Color(233,187,68);
-			result[1] = new Color (233,207,68);
-		}else if (streamValue.contains("write")){
-			result[0] = new Color(1,128,191);
-			result[1] = new Color (1,128,211);
-		}else if (streamValue.contains("wdata")){
-			result[0] = new Color(2,181,160);
-			result[1] = new Color (2,201,160);
-			
-		}else {
-			// assign "random" color here, one name always results in the same color!
-			if( randomColors.length > 0 ) {
-				int index = Math.abs(streamValue.hashCode()) % randomColors.length;
-				result[0] = randomColors[index][0];
-				result[1] = randomColors[index][1];
-			}
+
+		// assign "random" color here, one name always results in the same color!
+		if( streamValue!=null && randomColors.length > 0 ) {
+			int index = Math.abs(streamValue.hashCode()) % randomColors.length;
+			result[0] = randomColors[index][0];
+			result[1] = randomColors[index][1];
 		}
 		
 		return result;
