@@ -128,7 +128,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	 * @see com.minres.scviewer.database.ITrDb#getAllWaves()
 	 */
 	@Override
-	public List<IWaveform> getAllWaves() {
+	public Collection<IWaveform> getAllWaves() {
 		return signals;
 	}
 
