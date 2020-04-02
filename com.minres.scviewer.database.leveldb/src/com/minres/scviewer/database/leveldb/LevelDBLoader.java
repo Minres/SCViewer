@@ -64,7 +64,7 @@ public class LevelDBLoader implements IWaveformDbLoader {
 	}
 
 	@Override
-	public List<IWaveform> getAllWaves() {
+	public Collection<IWaveform> getAllWaves() {
 		List<IWaveform> streams=new ArrayList<IWaveform>();
 		SeekingIterator<String, String> it = levelDb.iterator();
 		it.seek("s~");

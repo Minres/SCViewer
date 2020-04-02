@@ -50,8 +50,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 	}
 
 	@Override
-	public List<IWaveform> getAllWaves() {
-		return new LinkedList<IWaveform>(streams);
+	public Collection<IWaveform> getAllWaves() {
+		return streams;
 	}
 
 	public Map<Long, ITxGenerator> getGeneratorsById() {

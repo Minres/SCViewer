@@ -61,7 +61,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	}
 
 	@Override
-	public List<IWaveform> getAllWaves() {
+	public Collection<IWaveform> getAllWaves() {
 		SQLiteDatabaseSelectHandler<ScvStream> handler = new SQLiteDatabaseSelectHandler<ScvStream>(ScvStream.class, database);
 		List<IWaveform> streams=new ArrayList<IWaveform>();
 		try {
