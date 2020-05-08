@@ -7,5 +7,6 @@ Bundle-Vendor: MINRES Technologies GmbH
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: com.minres.scviewer.database.ui
 Require-Bundle: com.minres.scviewer.database,
- org.eclipse.jface
+ org.eclipse.jface,
+ org.eclipse.swt
 Automatic-Module-Name: com.minres.scviewer.database.ui
