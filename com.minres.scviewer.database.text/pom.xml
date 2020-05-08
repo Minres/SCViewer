@@ -24,8 +24,8 @@
 			        </compilerArguments>
 					<!-- set verbose to be true if you want lots of uninteresting messages -->
 					<!-- <verbose>true</verbose> -->
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 				<dependencies>
 					<dependency>
