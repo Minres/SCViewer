@@ -12,7 +12,6 @@ package com.minres.scviewer.database;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 
 public interface IWaveformDbLoader {
 	
@@ -20,7 +19,7 @@ public interface IWaveformDbLoader {
 	
 	public Long getMaxTime();
 	
-	public List<IWaveform> getAllWaves() ;
+	public Collection<IWaveform> getAllWaves() ;
 	
 	public Collection<RelationType> getAllRelationTypes() ;
 	

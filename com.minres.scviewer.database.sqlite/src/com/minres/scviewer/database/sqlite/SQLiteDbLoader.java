@@ -61,7 +61,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	}
 
 	@Override
-	public List<IWaveform> getAllWaves() {
+	public Collection<IWaveform> getAllWaves() {
 		SQLiteDatabaseSelectHandler<ScvStream> handler = new SQLiteDatabaseSelectHandler<ScvStream>(ScvStream.class, database);
 		List<IWaveform> streams=new ArrayList<IWaveform>();
 		try {
@@ -81,6 +81,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 
 	@Override
 	public boolean load(IWaveformDb db, File file) throws Exception {
+		if(file.isDirectory() || !file.exists()) return false;
 		this.db=db;
 		try {
 			FileInputStream fis = new FileInputStream(file);

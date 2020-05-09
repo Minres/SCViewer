@@ -50,8 +50,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 	}
 
 	@Override
-	public List<IWaveform> getAllWaves() {
-		return new LinkedList<IWaveform>(streams);
+	public Collection<IWaveform> getAllWaves() {
+		return streams;
 	}
 
 	public Map<Long, ITxGenerator> getGeneratorsById() {
@@ -64,6 +64,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 
 	@Override
 	boolean load(IWaveformDb db, File file) throws Exception {
+		if(file.isDirectory() || !file.exists()) return false;
 		this.db=db
 		this.streams=[]
 		try {
@@ -82,7 +83,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				.make()
 				// NPE here --->
 				parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
-				calculateConcurrencyIndicees()
+				streams.each{ TxStream  stream -> stream.getMaxConcurrency() }
 				return true
 			}
 		} catch (IndexOutOfBoundsException e) {
@@ -135,7 +136,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 			case "ms":return 1000000000000L
 			case "s": return 1000000000000000L
 		}
-		return "fs"
+		return 1L
 	}
 	
 	private def parseInput(InputStream inputStream){
@@ -152,23 +153,29 @@ public class TextDbLoader implements IWaveformDbLoader{
 			def tokens = line.split(/\s+/) as ArrayList
 			switch(tokens[0]){
 				case "scv_tr_stream":
-				case "scv_tr_generator":
-				case "begin_attribute":
-				case "end_attribute":
 					if ((matcher = line =~ /^scv_tr_stream\s+\(ID (\d+),\s+name\s+"([^"]+)",\s+kind\s+"([^"]+)"\)$/)) {
 						def id = Integer.parseInt(matcher[0][1])
 						def stream = new TxStream(this, id, matcher[0][2], matcher[0][3])
 						streams<<stream
 						streamsById[id]=stream
-					} else if ((matcher = line =~ /^scv_tr_generator\s+\(ID\s+(\d+),\s+name\s+"([^"]+)",\s+scv_tr_stream\s+(\d+),$/)) {
+					}
+					break;
+				case "scv_tr_generator":
+					if ((matcher = line =~ /^scv_tr_generator\s+\(ID\s+(\d+),\s+name\s+"([^"]+)",\s+scv_tr_stream\s+(\d+),$/)) {
 						def id = Integer.parseInt(matcher[0][1])
 						ITxStream stream=streamsById[Integer.parseInt(matcher[0][3])]
 						generator=new TxGenerator(id, stream, matcher[0][2])
 						stream.generators<<generator
 						generatorsById[id]=generator
-					} else if ((matcher = line =~ /^begin_attribute \(ID (\d+), name "([^"]+)", type "([^"]+)"\)$/)) {
+					}
+					break;
+				case "begin_attribute":
+					if ((matcher = line =~ /^begin_attribute \(ID (\d+), name "([^"]+)", type "([^"]+)"\)$/)) {
 						generator.begin_attrs << TxAttributeType.getAttrType(matcher[0][2], DataType.valueOf(matcher[0][3]), AssociationType.BEGIN)
-					} else if ((matcher = line =~ /^end_attribute \(ID (\d+), name "([^"]+)", type "([^"]+)"\)$/)) {
+					}
+					break;
+				case "end_attribute":
+					if ((matcher = line =~ /^end_attribute \(ID (\d+), name "([^"]+)", type "([^"]+)"\)$/)) {
 						generator.end_attrs << TxAttributeType.getAttrType(matcher[0][2], DataType.valueOf(matcher[0][3]), AssociationType.END)
 					}
 					break;
@@ -226,31 +233,6 @@ public class TextDbLoader implements IWaveformDbLoader{
 			lineCnt++
 		}
 	}
-
-	private def toDataType(String str){
-		switch (str)
-		{
-			case "BOOLEAN": return DataType.                       BOOLEAN                      
-			case "ENUMERATION": return DataType.                   ENUMERATION                  
-			case "INTEGER": return DataType.                       INTEGER                      
-			case "UNSIGNED": return DataType.                      UNSIGNED                     
-			case "FLOATING_POINT_NUMBER": return DataType.         FLOATING_POINT_NUMBER        
-			case "BIT_VECTOR": return DataType.                    BIT_VECTOR                   
-			case "LOGIC_VECTOR": return DataType.                  LOGIC_VECTOR                 
-			case "FIXED_POINT_INTEGER": return DataType.           FIXED_POINT_INTEGER          
-			case "UNSIGNED_FIXED_POINT_INTEGER": return DataType.  UNSIGNED_FIXED_POINT_INTEGER 
-			case "RECORD": return DataType.                        RECORD                       
-			case "POINTER": return DataType.                       POINTER                      
-			case "ARRAY": return DataType.                         ARRAY                        
-			case "STRING": return DataType.                        STRING
-			default: return DataType.INTEGER
-		}
-	}
-	
-	private def calculateConcurrencyIndicees(){
-		streams.each{ TxStream  stream -> stream.getMaxConcurrency() }
-	}
-
 
 	public Collection<RelationType> getAllRelationTypes(){
 		return relationTypes.values();

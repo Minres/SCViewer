@@ -11,10 +11,12 @@
 package com.minres.scviewer.e4.application;
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.services.events.IEventBroker;
@@ -30,6 +32,7 @@ import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
@@ -88,6 +91,20 @@ public class E4LifeCycle {
 					for(String name:opt.getSet().getData()){
 						openViewHandler.openViewForFile(name);
 					}
+				}
+			}
+		});
+		eventBroker.subscribe(UIEvents.UILifeCycle.APP_STARTUP_COMPLETE, new EventHandler() {
+			@Override
+			public void handleEvent(Event event) {
+				Location instanceLocation = Platform.getInstanceLocation();
+				try {
+					boolean isLocked = instanceLocation.isLocked();
+					if(isLocked)
+						instanceLocation.release();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		});

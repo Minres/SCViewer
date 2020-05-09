@@ -84,5 +84,12 @@
             category="com.minres.scviewer.e4.application.preferences.scviewer">
       </page>
    </extension>
+   <extension
+         point="com.opcoach.e4.preferences.e4PreferenceStoreProvider">
+      <preferenceStoreProvider
+            class="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.preferences.PreferencesStoreProvider"
+            pluginId="com.minres.scviewer.e4.application">
+      </preferenceStoreProvider>
+   </extension>
 
 </plugin>

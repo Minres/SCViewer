@@ -79,6 +79,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean load(IWaveformDb db, File file) throws Exception {
+		if(file.isDirectory() || !file.exists()) return false;
 		this.db=db;
 		this.maxTime=0;
 		String name = file.getCanonicalFile().getName();
@@ -127,7 +128,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	 * @see com.minres.scviewer.database.ITrDb#getAllWaves()
 	 */
 	@Override
-	public List<IWaveform> getAllWaves() {
+	public Collection<IWaveform> getAllWaves() {
 		return signals;
 	}
 

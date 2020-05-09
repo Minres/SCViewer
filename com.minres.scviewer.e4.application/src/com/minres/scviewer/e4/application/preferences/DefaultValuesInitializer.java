@@ -11,7 +11,7 @@
 package com.minres.scviewer.e4.application.preferences;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
-import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.swt.SWT;
@@ -64,7 +64,16 @@ public class DefaultValuesInitializer extends AbstractPreferenceInitializer {
 	 */
 	@Override
 	public void initializeDefaultPreferences() {
-		IPreferenceStore store = new ScopedPreferenceStore(InstanceScope.INSTANCE, PreferenceConstants.PREFERENCES_SCOPE);
+//		IEclipsePreferences node = DefaultScope.INSTANCE.getNode(PreferenceConstants.PREFERENCES_SCOPE);
+//		if (node != null)
+//		{
+//			node.putBoolean(PreferenceConstants.DATABASE_RELOAD, true);
+//			node.putBoolean(PreferenceConstants.SHOW_HOVER, true);
+//	        for (WaveformColors c : WaveformColors.values()) {
+//	        	node.put(c.name()+"_COLOR", StringConverter.asString(colors[c.ordinal()].getRGB())); //$NON-NLS-1$
+//	        }
+//		}
+		IPreferenceStore store = new ScopedPreferenceStore(DefaultScope.INSTANCE, PreferenceConstants.PREFERENCES_SCOPE);
 
 		store.setDefault(PreferenceConstants.DATABASE_RELOAD, true);
 		store.setDefault(PreferenceConstants.SHOW_HOVER, true);
