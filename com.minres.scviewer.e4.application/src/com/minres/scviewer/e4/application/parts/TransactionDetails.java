@@ -10,8 +10,14 @@
  *******************************************************************************/
 package com.minres.scviewer.e4.application.parts;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.Vector;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -477,12 +483,19 @@ public class TransactionDetails {
 				return true;
 			}
 			if(element instanceof ITxAttribute){
-				return (((ITxAttribute) element).getName().toLowerCase().matches(searchString.toLowerCase())); 
+				try {
+					return (((ITxAttribute) element).getName().toLowerCase().matches(searchString.toLowerCase()));
+				} catch (PatternSyntaxException e) {
+					return true;
+				}
 			} 
 			if(element instanceof Object[]) {
-				return (((Object[])element)[0]).toString().toLowerCase().matches(searchString.toLowerCase());	
+				try {
+					return (((Object[])element)[0]).toString().toLowerCase().matches(searchString.toLowerCase());	
+				} catch (PatternSyntaxException e) {
+					return true;
+				}
 			}
-
 			return false;
 		}
 	}
@@ -490,11 +503,13 @@ public class TransactionDetails {
 	/**
 	 * The Enum Type.
 	 */
-	enum Type {/** The props. */
-		PROPS, /** The attrs. */
-		ATTRS, /** The in rel. */
-		IN_REL, /** The out rel. */
-		OUT_REL}
+	enum Type {
+		PROPS,  /** The props. */
+		ATTRS,  /** The attrs. */
+		IN_REL, /** The in rel. */ 
+		OUT_REL,/** The out rel. */
+		HIER
+		}
 
 	/**
 	 * The Class TreeNode.
@@ -507,6 +522,7 @@ public class TransactionDetails {
 		/** The element. */
 		public ITx element;
 
+		private String hier_path;
 		/**
 		 * Instantiates a new tree node.
 		 *
@@ -516,6 +532,13 @@ public class TransactionDetails {
 		public TreeNode(ITx element, Type type){
 			this.element=element;
 			this.type=type;
+			this.hier_path="";
+		}
+
+		public TreeNode(ITx element, String path){
+			this.element=element;
+			this.type=Type.HIER;
+			this.hier_path=path;
 		}
 
 		/* (non-Javadoc)
@@ -527,9 +550,33 @@ public class TransactionDetails {
 			case ATTRS:	     return Messages.TransactionDetails_11;
 			case IN_REL:     return Messages.TransactionDetails_12;
 			case OUT_REL:    return Messages.TransactionDetails_13;
+			case HIER:{
+				String[] tokens = hier_path.split("\\.");
+				return tokens[tokens.length-1];
+			}
 			}
 			return ""; //$NON-NLS-1$
 		}
+		
+		public Object[] getAttributeListForHier() {
+			if(childs==null) {
+				Map<String, Object> res = element.getAttributes().stream()
+				.filter(txAttr -> txAttr.getName().startsWith(hier_path))
+				.map(txAttr -> {
+					String target = hier_path.length()==0?txAttr.getName():txAttr.getName().replace(hier_path+'.', "");
+					String[] tokens = target.split("\\.");
+					if(tokens.length==1)
+						return new AbstractMap.SimpleEntry<>(tokens[0], txAttr);
+					else 
+						return new AbstractMap.SimpleEntry<>(tokens[0], new TreeNode(element, hier_path.length()>0?hier_path+"."+tokens[0]:tokens[0]));
+				})
+				.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue(), (first, second) -> first));
+				childs = new TreeMap<String, Object>(res).values().toArray();
+			}
+			return childs;
+		}
+		
+		private Object[] childs=null;
 	}
 
 	/**
@@ -577,8 +624,8 @@ public class TransactionDetails {
 						{Messages.TransactionDetails_19, Messages.TransactionDetails_20, timeToString(propertyHolder.element.getBeginTime())},
 						{Messages.TransactionDetails_21, Messages.TransactionDetails_20, timeToString(propertyHolder.element.getEndTime())}
 					};
-				}else if(propertyHolder.type == Type.ATTRS)
-					return propertyHolder.element.getAttributes().toArray();
+				}else if(propertyHolder.type == Type.ATTRS || propertyHolder.type == Type.HIER)
+					return propertyHolder.getAttributeListForHier();
 				else if(propertyHolder.type == Type.IN_REL){
 					Vector<Object[] > res = new Vector<>();
 					for(ITxRelation rel:propertyHolder.element.getIncomingRelations()){
@@ -655,7 +702,8 @@ public class TransactionDetails {
 			case NAME:
 				if (element instanceof ITxAttribute) {
 					ITxAttribute attribute = (ITxAttribute) element;
-					return new StyledString(attribute.getName());
+					String[] tokens = attribute.getName().split("\\.");
+					return new StyledString(tokens[tokens.length-1]);
 				}else if (element instanceof ITxRelation) {
 					return new StyledString(Messages.TransactionDetails_4);
 				}else if(element instanceof Object[]){
