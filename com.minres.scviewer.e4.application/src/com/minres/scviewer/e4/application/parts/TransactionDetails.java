@@ -12,7 +12,6 @@ package com.minres.scviewer.e4.application.parts;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;

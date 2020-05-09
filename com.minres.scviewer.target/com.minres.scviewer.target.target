@@ -2,32 +2,30 @@
 <?pde version="3.8"?>
 <target name="com.minres.scviewer.target" sequenceNumber="138">
 <locations>
-<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.platform.sdk" version="0.0.0"/>
-<unit id="org.eclipse.sdk.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.rcp.sdk.id" version="0.0.0"/>
-<unit id="org.eclipse.rcptt.core.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.e4.rcp.feature.group" version="0.0.0"/>
-<unit id="org.eclipse.platform.feature.group" version="0.0.0"/>
-<repository location="http://download.eclipse.org/releases/photon"/>
-</location>
-<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.codehaus.groovy24.feature.feature.group" version="3.5.1.v201909291550-e48"/>
-<repository location="http://dist.springsource.org/snapshot/GRECLIPSE/e4.8/"/>
-	<unit id="org.codehaus.groovy25.feature.feature.group" version="3.5.1.v201909291550-e48"/>
-</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="https://www.opcoach.com/repository/2018-12"/>
-		<unit id="com.opcoach.e4.preferences.feature.feature.group" version="1.3.0.201903181741"/>
+		<repository location="http://download.eclipse.org/releases/2019-12/"/>
+		<unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
+		<unit id="org.eclipse.equinox.p2.sdk.feature.jar" version="0.0.0"/> <!-- needed by Linux exectable-->
+		<unit id="org.eclipse.equinox.sdk.feature.group" version="0.0.0"/>
+		<unit id="org.eclipse.platform.sdk" version="0.0.0"/>
+		<unit id="org.eclipse.sdk.feature.group" version="0.0.0"/> <!-- org.junit for testing -->
+		<unit id="org.eclipse.rcptt.core.feature.group" version="0.0.0"/><!-- com.google.guave-->
+	</location>
+	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+		<repository location="https://www.opcoach.com/repository/2019-12/"/>
+		<unit id="com.opcoach.e4.preferences.feature.feature.group" version="0.0.0"/>
+	</location>
+	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+		<repository location="http://dist.springsource.org/snapshot/GRECLIPSE/e4.14/"/>
+		<unit id="org.codehaus.groovy25.feature.feature.group" version="3.8.0.v202005090048-e1912"/>
 	</location>
 </locations>
 <environment>
-<arch>x86_64</arch>
-<nl>de_DE</nl>
+	<arch>x86_64</arch>
+	<nl>de_DE</nl>
 </environment>
 <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/Java SE 7 [1.7.0_45]"/>
 <launcherArgs>
-<vmArgs>-Dosgi.requiredJavaVersion=1.6 -XstartOnFirstThread  -Dorg.eclipse.swt.internal.carbon.smallFonts -Xdock:icon=../Resources/Eclipse.icns -Xms40m -Xmx2G</vmArgs>
+	<vmArgs>-Dosgi.requiredJavaVersion=1.6 -XstartOnFirstThread  -Dorg.eclipse.swt.internal.carbon.smallFonts -Xdock:icon=../Resources/Eclipse.icns -Xms40m -Xmx2G</vmArgs>
 </launcherArgs>
 </target>

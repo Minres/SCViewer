@@ -15,6 +15,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.ResourceLocator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
@@ -93,7 +94,7 @@ public class TxEditorPlugin extends AbstractUIPlugin {
 	 */
 	public static ImageDescriptor getImageDescriptor(String path) {
 		String fullpath = File.separator+"res"+File.separator+"images"+File.separator+path;
-		return imageDescriptorFromPlugin(PLUGIN_ID, fullpath);
+		return ResourceLocator.imageDescriptorFromBundle(PLUGIN_ID, fullpath).orElse(null);
 	}
 	
 	public static Image createImage(String name) {
