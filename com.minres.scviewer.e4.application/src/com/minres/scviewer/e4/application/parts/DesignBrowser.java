@@ -328,13 +328,15 @@ public class DesignBrowser {
 	 */
 	@Focus
 	public void setFocus() {
-		txTableViewer.getTable().setFocus();
-		IStructuredSelection selection = (IStructuredSelection)txTableViewer.getSelection();
-		if(selection.size()==0){
-			appendItem.setEnabled(false);
+		if(txTableViewer!=null) {
+			txTableViewer.getTable().setFocus();
+			IStructuredSelection selection = (IStructuredSelection)txTableViewer.getSelection();
+			if(selection.size()==0){
+				appendItem.setEnabled(false);
+			}
+			selectionService.setSelection(selection);
+			thisSelectionCount=selection.toList().size();
 		}
-		selectionService.setSelection(selection);
-		thisSelectionCount=selection.toList().size();
 		updateButtons();
 	}
 	
