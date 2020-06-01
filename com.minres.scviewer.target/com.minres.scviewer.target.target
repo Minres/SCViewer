@@ -17,7 +17,7 @@
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 		<repository location="http://dist.springsource.org/snapshot/GRECLIPSE/e4.14/"/>
-		<unit id="org.codehaus.groovy25.feature.feature.group" version="3.8.0.v202005090048-e1912"/>
+		<unit id="org.codehaus.groovy25.feature.feature.group" version="0.0.0"/>
 	</location>
 </locations>
 <environment>
