@@ -70,7 +70,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 		try {
 			def gzipped = isGzipped(file)
 			if(isTxfile(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))){
-				def mapDbFile = File.createTempFile("."+file.name, "tmp", file.parentFile)
+				def mapDbFile = File.createTempFile("."+file.name, null /*"tmp"*/, null /*file.parentFile*/)
 				mapDbFile.delete()
 				mapDbFile.deleteOnExit()
 				this.mapDb = DBMaker

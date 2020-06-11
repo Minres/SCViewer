@@ -17,4 +17,18 @@
       [Enter License Description here.]
    </license>
 
+   <plugin
+         id="com.minres.scviewer.database.ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.minres.scviewer.database.ui.swt"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
 </feature>
