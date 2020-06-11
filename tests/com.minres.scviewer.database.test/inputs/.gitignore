@@ -1,2 +1,4 @@
 /.scviewer.*
 /.my_db.txlog*
+/EyeQ6_mem_platform.txlog
+/EyeQ6_mem_platform.vcd

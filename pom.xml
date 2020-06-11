@@ -17,7 +17,10 @@
 		<module>plugins/com.minres.scviewer.database.ui.swt</module>
 		<module>plugins/com.minres.scviewer.e4.application</module>
 		<module>plugins/com.minres.scviewer.ui</module>
+		<module>features/com.minres.scviewer.database.feature</module>
+		<module>features/com.minres.scviewer.ui.feature</module>
 		<module>features/com.minres.scviewer.feature</module>
+		<module>features/com.minres.scviewer.e4.feature</module>
 		<module>p2repositories//com.minres.scviewer.updateSite</module>
 		<module>com.minres.scviewer.e4.product</module>
 	</modules>
@@ -50,6 +53,29 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.tycho.extras</groupId>
+				<artifactId>tycho-source-feature-plugin</artifactId>
+				<version>${tycho-version}</version>
+
+				<executions>
+					<execution>
+						<id>source-feature</id>
+						<phase>package</phase>
+						<goals>
+							<goal>source-feature</goal>
+						</goals>
+					</execution>
+				</executions>
+
+				<configuration>
+					<excludes>
+						<!-- provide plug-ins not containing any source code -->
+						<plugin id="org.codehaus.groovy" />
+					</excludes>
+				</configuration>
 			</plugin>
 
 			<plugin>
@@ -112,29 +138,6 @@
 							<arch>x86_64</arch>
 						</environment>
 					</environments>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<groupId>org.eclipse.tycho.extras</groupId>
-				<artifactId>tycho-source-feature-plugin</artifactId>
-				<version>${tycho-version}</version>
-
-				<executions>
-					<execution>
-						<id>source-feature</id>
-						<phase>package</phase>
-						<goals>
-							<goal>source-feature</goal>
-						</goals>
-					</execution>
-				</executions>
-
-				<configuration>
-					<excludes>
-						<!-- provide plug-ins not containing any source code -->
-						<plugin id="org.codehaus.groovy" />
-					</excludes>
 				</configuration>
 			</plugin>
 
