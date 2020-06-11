@@ -12,9 +12,13 @@ package com.minres.scviewer.e4.application.parts;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.function.Function;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
@@ -34,6 +38,7 @@ import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -42,6 +47,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.TreeExpansionEvent;
+import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -146,16 +152,19 @@ public class TransactionDetails {
 
 			@Override
 			public void treeCollapsed(TreeExpansionEvent event) {
+				Object o = event.getElement();
+				TreePath[] paths = treeViewer.getExpandedTreePaths();
 				treeViewer.getSelection();
 			}
 
 			@Override
 			public void treeExpanded(TreeExpansionEvent event) {
+				Object o = event.getElement();
+				TreePath[] paths = treeViewer.getExpandedTreePaths();
 				treeViewer.getSelection();
 			}
 
 		});
-
 		// Set up the table
 		Tree tree = treeViewer.getTree();
 		tree.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -273,77 +282,110 @@ public class TransactionDetails {
 		this.waveformViewerPart=part;
 	}
 
+	class ViewSettings {
+		public ViewSettings(List<String> names, TreePath[] paths) {
+			super();
+			this.names = names;
+			this.paths = paths;
+		}
+		public List<String> names;
+		public TreePath[] paths;
+	}
+	HashMap<Integer, ViewSettings> settings = new HashMap<>();
+	
 	public void setInput(Object object) {
 		if(object instanceof ITx){
-			ArrayList<String> names = new ArrayList<>();
-			int indexInParent=getTopItemHier(names);
-			ArrayList<Boolean> states = getExpandedState(treeViewer.getTree().getItems());
+			Object oldInput = treeViewer.getInput();
+			if(oldInput!=null) {
+				final Integer hash = getAttrNameHash(oldInput);
+				final List<String> names = getTopItemHier(treeViewer.getTree().getTopItem());
+				final TreePath[] paths = treeViewer.getInput()!=null?treeViewer.getExpandedTreePaths():null;
+				settings.put(hash, new ViewSettings(names, paths));
+			}
 			treeViewer.setInput(object);
-			setExpandedState(treeViewer.getTree().getItems(), states);
-			setTopItemFromHier(names, indexInParent);
+			final Integer newHash = getAttrNameHash(object);
+			final ViewSettings newSettings = settings.get(newHash);
+			if(newSettings!=null) {
+				setExpandedState(newSettings.paths);
+				setTopItemFromHier(newSettings.names, treeViewer.getTree().getItems());
+			} else
+				setExpandedState(null);
 		} else {
 			treeViewer.setInput(null);
 		}
 
 	}
 
-	private void setExpandedState(TreeItem[] treeItems, ArrayList<Boolean> states) {
-		for (int i = 0; i < treeItems.length; i++) {
-			treeItems[i].setExpanded(states.size()>i?states.get(i):true);
-		}
-	}
+	int getAttrNameHash(Object o) {
+		if(o instanceof ITx) {
+			ITx tx = (ITx) o;
+			List<String> attr_names = tx.getAttributes().stream().map(a -> a.getName()).collect(Collectors.toList());
+			return Objects.hash(attr_names);
+		} else
+			return o.hashCode();
 
-	private ArrayList<Boolean> getExpandedState(TreeItem[] items){
-		ArrayList<Boolean> ret = new ArrayList<>();
-		for (TreeItem treeItem : items)
-			ret.add(treeItem.getItemCount()>0?treeItem.getExpanded():true);
-		return ret;
 	}
-
-	private int getTopItemHier(ArrayList<String> names){
-		int indexInParent=-1;
-		TreeItem obj = treeViewer.getTree().getTopItem();
-		if(obj!=null) {
-			names.add(0, obj.getText(0));
-			if(obj.getParentItem()!=null) {
-				TreeItem pobj=obj.getParentItem();
-				names.add(0, pobj.getText(0));
-				TreeItem[] items = pobj.getItems();
-				for (int i = 0; i < items.length; i++) {
-					if(items[i]==obj) {
-						indexInParent=i;
+	
+	private void setExpandedState(TreePath[] paths) {
+		if(paths==null)
+			treeViewer.setAutoExpandLevel(2);
+		else {
+			TransactionTreeContentProvider cp = (TransactionTreeContentProvider) treeViewer.getContentProvider();
+			Object[] elems = cp.getElements(treeViewer.getInput());
+			for(TreePath path: paths) {
+				TreeNode firstSeg = (TreeNode)path.getFirstSegment();
+				for(Object elem : elems) {
+					if(((TreeNode)elem).type == firstSeg.type) {
+						treeViewer.setExpandedState(elem, true);
+						if(firstSeg.type==TransactionDetails.Type.ATTRS && path.getSegmentCount()>1)
+							expandSubNodes(path, 1, (TreeNode)elem);
 						break;
 					}
 				}
 			}
 		}
-		return indexInParent;
 	}
 
-	private void setTopItemFromHier(ArrayList<String> names, int indexInParent) {
-		if(indexInParent<0 || names.size()==0 ) return;
-		TreeItem selItem=null;
-		for (TreeItem item : treeViewer.getTree().getItems()) { // find item from category
-			if(item.getText(0).equals(names.get(0))) {
-				if(names.size()>1) { // if we had an attribute as top item
-					TreeItem[] subItems=item.getItems();
-					for(TreeItem it : subItems) { // try to align by name
-						if(it.getText(0).equals(names.get(1))) {
-							selItem=it;
-							break;
-						}
-					}
-					if(selItem==null && indexInParent>=0 && subItems.length>0) // name based match failed so try to use position
-						selItem=subItems[subItems.length>indexInParent?indexInParent:subItems.length-1];
+	private void expandSubNodes(TreePath path, int level, TreeNode elem) {
+		if(level==path.getSegmentCount()) return;
+		TransactionTreeContentProvider cp = (TransactionTreeContentProvider) treeViewer.getContentProvider();
+		Object[] childs = cp.getChildren(elem);
+		TreeNode nextSeg = (TreeNode)path.getSegment(level);
+		for(Object child:childs) {
+			if(child instanceof TreeNode) {
+				TreeNode node = (TreeNode) child;
+				if(nextSeg.toString().equals(node.toString())) {
+					treeViewer.setExpandedState(node, true);
+					expandSubNodes(path, level+1, node);
+					break;
 				}
-				if(selItem==null) // no match in attributes so set the category as top item
-					selItem=item;
-				break;
 			}
 		}
-		if(selItem!=null)
-			treeViewer.getTree().setTopItem(selItem);
 	}
+
+	List<String> getTopItemHier(TreeItem node){
+		if(node == null) {
+			return new ArrayList<String>();
+		} else {
+			List<String> elems = getTopItemHier(node.getParentItem());
+			elems.add(node.getText(0));
+			return elems;
+		}
+	}
+	
+	private void setTopItemFromHier(List<String> names, TreeItem [] items) {
+		for (TreeItem item : items) { // find item from category
+			if(item.getText(0).equals(names.get(0))) {
+				if(names.size()==1 || item.getItemCount()==0) {
+					treeViewer.getTree().setTopItem(item);
+				} else {
+					setTopItemFromHier(names.subList(1,  names.size()), item.getItems());
+				}
+				return;
+			}
+		}
+	}
+	
 	/**
 	 * Sets the selection.
 	 *
@@ -513,7 +555,7 @@ public class TransactionDetails {
 	/**
 	 * The Class TreeNode.
 	 */
-	class TreeNode{
+	class TreeNode implements Comparable<TreeNode>{
 
 		/** The type. */
 		public Type type;
@@ -576,6 +618,24 @@ public class TransactionDetails {
 		}
 		
 		private Object[] childs=null;
+
+		@Override
+		public boolean equals(Object o) {
+			if(o instanceof TreeNode) {
+				TreeNode t = (TreeNode) o;
+				return type==t.type && hier_path.equals(t.hier_path); 
+			}
+			return false;
+		}
+		
+		@Override
+		public int compareTo(TreeNode o) {
+			int res1 = type.compareTo(o.type);
+			if(res1==0) {
+				return hier_path.compareTo(o.hier_path);
+			} else
+				return res1;
+		}
 	}
 
 	/**
