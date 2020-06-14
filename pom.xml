@@ -55,7 +55,7 @@
 				</executions>
 			</plugin>
 
-			<plugin>
+<!-- 			<plugin>
 				<groupId>org.eclipse.tycho.extras</groupId>
 				<artifactId>tycho-source-feature-plugin</artifactId>
 				<version>${tycho-version}</version>
@@ -72,12 +72,12 @@
 
 				<configuration>
 					<excludes>
-						<!-- provide plug-ins not containing any source code -->
+						provide plug-ins not containing any source code
 						<plugin id="org.codehaus.groovy" />
 					</excludes>
 				</configuration>
 			</plugin>
-
+ -->
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-p2-plugin</artifactId>
