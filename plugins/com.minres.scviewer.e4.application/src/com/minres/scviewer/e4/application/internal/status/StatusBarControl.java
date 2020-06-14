@@ -26,14 +26,10 @@ import org.eclipse.e4.ui.di.UISynchronize;
 import org.eclipse.e4.ui.model.application.ui.menu.MToolControl;
 import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.jface.action.StatusLineManager;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.ProgressBar;
 import org.osgi.service.prefs.PreferencesService;
 
 import com.minres.scviewer.e4.application.AppModelId;
-import com.minres.scviewer.e4.application.Messages;
 
 /**
  * The Class StatusBarControl.
@@ -58,9 +54,6 @@ public class StatusBarControl {
 	/** The monitor. */
 	private SyncedProgressMonitor monitor;
 	
-	/** The progress bar. */
-	private ProgressBar progressBar;
-
 	/**
 	 * Instantiates a new status bar control.
 	 *
@@ -84,9 +77,7 @@ public class StatusBarControl {
 		if (toolControl.getElementId().equals(AppModelId.TOOLCONTROL_ORG_ECLIPSE_UI_STATUSLINE)) { //$NON-NLS-1$
 			createStatusLine(parent, toolControl);
 		} else if (toolControl.getElementId().equals(AppModelId.TOOLCONTROL_ORG_ECLIPSE_UI_HEAPSTATUS)) { //$NON-NLS-1$
-			createHeapStatus(parent, toolControl);
-		} else if (toolControl.getElementId().equals(AppModelId.TOOLCONTROL_ORG_ECLIPSE_UI_PROGRESSBAR)) { //$NON-NLS-1$
-			createProgressBar(parent, toolControl);
+			new HeapStatus(parent, osgiPreverences.getSystemPreferences());
 		}
 	}
 
@@ -102,36 +93,6 @@ public class StatusBarControl {
 	}
 
 	/**
-	 * Creates the progress bar.
-	 *
-	 * @param parent the parent
-	 * @param toolControl the tool control
-	 */
-	private void createProgressBar(Composite parent, MToolControl toolControl) {
-		new Label(parent, SWT.NONE);
-		progressBar = new ProgressBar(parent, SWT.SMOOTH);
-		progressBar.setBounds(100, 10, 200, 20);
-		new Label(parent, SWT.NONE);
-		monitor=new SyncedProgressMonitor(progressBar);
-		Job.getJobManager().setProgressProvider(new ProgressProvider() {
-			@Override
-			public IProgressMonitor createMonitor(Job job) {
-				return monitor.addJob(job);
-			}
-		});
-	}
-
-	/**
-	 * Creates the heap status.
-	 *
-	 * @param parent the parent
-	 * @param toolControl the tool control
-	 */
-	private void createHeapStatus(Composite parent, MToolControl toolControl) {
-		new HeapStatus(parent, osgiPreverences.getSystemPreferences());
-	}
-
-	/**
 	 * Creates the status line.
 	 *
 	 * @param parent the parent
@@ -140,6 +101,14 @@ public class StatusBarControl {
 	private void createStatusLine(Composite parent, MToolControl toolControl) {
 		//		IEclipseContext context = modelService.getContainingContext(toolControl);
 		manager.createControl(parent);
+		monitor=new SyncedProgressMonitor(manager.getProgressMonitor());
+		Job.getJobManager().setProgressProvider(new ProgressProvider() {
+			@Override
+			public IProgressMonitor createMonitor(Job job) {
+				return monitor.addJob(job);
+			}
+		});
+
 	}
 
 	/**
@@ -160,25 +129,17 @@ public class StatusBarControl {
 	 */
 	private final class SyncedProgressMonitor extends NullProgressMonitor {
 
-		// thread-Safe via thread confinement of the UI-Thread 
-		/** The running tasks. */
-		// (means access only via UI-Thread)
-		private long runningTasks = 0L;
-		
 		/** The progress bar. */
-		private ProgressBar progressBar;
+		private IProgressMonitor progressBar;
 
 		/**
 		 * Instantiates a new synced progress monitor.
 		 *
-		 * @param progressBar the progress bar
+		 * @param iProgressMonitor the progress bar
 		 */
-		public SyncedProgressMonitor(ProgressBar progressBar) {
+		public SyncedProgressMonitor(IProgressMonitor iProgressMonitor) {
 			super();
-			this.progressBar = progressBar;
-			runningTasks=0;
-			progressBar.setSelection(0);
-			progressBar.setEnabled(false);
+			this.progressBar = iProgressMonitor;
 		}
 
 		/* (non-Javadoc)
@@ -189,13 +150,41 @@ public class StatusBarControl {
 			sync.asyncExec(new Runnable() {
 				@Override
 				public void run() {
-					runningTasks++;
-					if(runningTasks == 1) {  // --- no task is running at the moment ---
-						progressBar.setEnabled(true);
-						progressBar.setSelection(0);
-					}
-					progressBar.setMaximum(totalWork);
-					progressBar.setToolTipText(Messages.StatusBarControl_1 + runningTasks + Messages.StatusBarControl_2 + name);
+					progressBar.beginTask(name, totalWork);
+				}
+			});
+		}
+
+		/**
+		 * This implementation does nothing.
+		 * Subclasses may override this method to do something
+		 * with the name of the task.
+		 * 
+		 * @see IProgressMonitor#setTaskName(String)
+		 */
+		@Override
+		public void setTaskName(String name) {
+			sync.asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					progressBar.setTaskName(name);
+				}
+			});
+		}
+
+		/**
+		 * This implementation does nothing.
+		 * Subclasses may override this method to do interesting
+		 * processing when a subtask begins.
+		 * 
+		 * @see IProgressMonitor#subTask(String)
+		 */
+		@Override
+		public void subTask(String name) {
+			sync.asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					progressBar.subTask(name);
 				}
 			});
 		}
@@ -208,7 +197,16 @@ public class StatusBarControl {
 			sync.asyncExec(new Runnable() {
 				@Override
 				public void run() {
-					progressBar.setSelection(progressBar.getSelection() + work);
+					progressBar.worked(work);
+				}
+			});
+		}
+		@Override
+		public void done() {
+			sync.asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					progressBar.done();
 				}
 			});
 		}
@@ -228,14 +226,8 @@ public class StatusBarControl {
 							@Override
 							public void run() {
 								if(event.getResult()==null) return;
-								if(runningTasks>0) runningTasks--;
-								if (runningTasks > 0){	// --- some tasks are still running ---
-									progressBar.setToolTipText(Messages.StatusBarControl_3 + runningTasks);
-								} else { // --- all tasks are done (a reset of selection could also be done) ---
-									progressBar.setToolTipText(Messages.StatusBarControl_4);
-									progressBar.setSelection(progressBar.getMaximum());
-									progressBar.setEnabled(false);
-								}
+								if(!event.getResult().isOK())
+									progressBar.done();
 							}
 						});
 						// clean-up

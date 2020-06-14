@@ -34,13 +34,9 @@ import javax.inject.Named;
 import org.eclipse.core.internal.preferences.InstancePreferences;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.core.runtime.jobs.JobGroup;
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
@@ -535,9 +531,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
-			monitor.setTaskName(Messages.WaveformViewer_16+file.getName());
 			boolean res = database.load(file);
-			monitor.done();
 			database.addPropertyChangeListener(waveformPane);
 			return res?Status.OK_STATUS:Status.CANCEL_STATUS;
 		}
@@ -549,15 +543,14 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	protected void loadDatabase(final Map<String, String> state) {
 		fileMonitor.removeFileChangeListener(this);
-		MultiStatus fStatus= new MultiStatus("blah", IStatus.OK, Messages.WaveformViewer_13, null);
 		Job job = new Job(Messages.WaveformViewer_15) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				SubMonitor subMonitor = SubMonitor.convert(monitor, filesToLoad.size());
+				IProgressMonitor progressGroup = getJobManager().createProgressGroup(); 
 				JobGroup jobGroup = new JobGroup(Messages.WaveformViewer_15, filesToLoad.size(), filesToLoad.size());
 				filesToLoad.forEach((final File file) -> {
 					Job job = new DbLoadJob(Messages.WaveformViewer_16 + file.getName(), file);
-					job.setProgressGroup(subMonitor, 1);
+					job.setProgressGroup(progressGroup, 1);
 					job.setJobGroup(jobGroup);
 					job.schedule();
 				});
@@ -569,34 +562,28 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				if (monitor.isCanceled())
 					throw new OperationCanceledException(Messages.WaveformViewer_14);
 
-				fStatus.addAll(jobGroup.getResult());
-				return fStatus;
-			}
-		};
-		job.addJobChangeListener(new JobChangeAdapter() {
-			@Override
-			public void done(IJobChangeEvent event) {
-				IStatus result = event.getResult();
+				
+				IStatus result = jobGroup.getResult();
 				if( (!result.isMultiStatus() && result.getCode() != Status.OK_STATUS.getCode() ) ||
-				    (result.isMultiStatus() && result.getChildren().length > 0 && result.getChildren()[0].getCode() != Status.OK_STATUS.getCode() ) ){
+						(result.isMultiStatus() && result.getChildren().length > 0 && result.getChildren()[0].getCode() != Status.OK_STATUS.getCode() ) ){
 					// kill editor and pop up warning for user
 					sync.asyncExec(() -> {
 						final Display display = myParent.getDisplay();
 						MessageDialog.openWarning(display.getActiveShell(), "Error loading database", "Database cannot be loaded. Aborting...");
-					    ePartService.hidePart(myPart, true);
+						ePartService.hidePart(myPart, true);
 					});
-					return;
-				}
-				sync.asyncExec(()->{
-					waveformPane.setMaxTime(database.getMaxTime());
-					if (state != null)
-						restoreWaveformViewerState(state);
-					fileChecker = null;
-					if (checkForUpdates)
-						fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
-				});
+				} else
+					sync.asyncExec(()->{
+						waveformPane.setMaxTime(database.getMaxTime());
+						if (state != null)
+							restoreWaveformViewerState(state);
+						fileChecker = null;
+						if (checkForUpdates)
+							fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
+					});
+				return result;
 			}
-		});
+		};
 		job.setSystem(true);
 		job.schedule(1000L); // let the UI initialize so that we have a progress monitor
 	}

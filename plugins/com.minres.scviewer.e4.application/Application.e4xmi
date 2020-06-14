@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:advanced="http://www.eclipse.org/ui/2010/UIModel/application/ui/advanced" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmlns:ui="http://www.eclipse.org/ui/2010/UIModel/application/ui" xmi:id="_95PfsHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ide.application" bindingContexts="_95PfuXNmEeWBq8z1Dv39LA">
-  <children xsi:type="basic:TrimmedWindow" xmi:id="_95PfsXNmEeWBq8z1Dv39LA" label="SC Viewer" bindingContexts="_95PfunNmEeWBq8z1Dv39LA" width="980" height="700">
+  <children xsi:type="basic:TrimmedWindow" xmi:id="_95PfsXNmEeWBq8z1Dv39LA" label="SC Viewer" bindingContexts="_95PfunNmEeWBq8z1Dv39LA" width="1280" height="700">
     <children xsi:type="advanced:PerspectiveStack" xmi:id="_95QGxnNmEeWBq8z1Dv39LA">
       <children xsi:type="advanced:Perspective" xmi:id="_95QGx3NmEeWBq8z1Dv39LA">
         <children xsi:type="basic:PartSashContainer" xmi:id="_95QGyHNmEeWBq8z1Dv39LA" horizontal="true">
@@ -144,10 +144,7 @@
       <children xsi:type="menu:ToolControl" xmi:id="_YsBi8HfLEeWwZ-9vrAR2UQ" elementId="org.eclipse.ui.StatusLine" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl">
         <tags>stretch</tags>
       </children>
-      <children xsi:type="menu:ToolControl" xmi:id="_VZzJMHdHEeWwZ-9vrAR2UQ" elementId="org.eclipse.ui.HeapStatus" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.internal.status.StatusBarControl">
-        <tags>Draggable</tags>
-      </children>
-      <children xsi:type="menu:ToolControl" xmi:id="_y0ZS0HfzEeWwZ-9vrAR2UQ" elementId="org.eclipse.ui.ProgressBar" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.internal.status.StatusBarControl">
+      <children xsi:type="menu:ToolControl" xmi:id="_VZzJMHdHEeWwZ-9vrAR2UQ" elementId="org.eclipse.ui.HeapStatus" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl">
         <tags>Draggable</tags>
       </children>
     </trimBars>
