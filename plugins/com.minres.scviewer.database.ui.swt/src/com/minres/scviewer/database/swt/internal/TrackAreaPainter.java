@@ -14,7 +14,6 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.ui.WaveformColors;

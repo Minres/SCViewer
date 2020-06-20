@@ -11,8 +11,6 @@
 package com.minres.scviewer.database.swt.internal;
 
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.ui.ICursor;

@@ -3,7 +3,6 @@
 
 <product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="2.6.0.qualifier" useFeatures="true" includeLaunchers="true">
 
-
    <configIni use="default">
    </configIni>
 
@@ -17,7 +16,6 @@
    </launcherArgs>
 
    <windowImages/>
-
 
    <launcher name="scviewer">
       <linux icon="icons/SCViewer_512x512.xpm"/>
@@ -35,7 +33,6 @@
       </win>
    </launcher>
 
-
    <vm>
       <linux include="false">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8</linux>
       <macos include="false">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8</macos>
@@ -51,6 +48,9 @@
 
    <features>
       <feature id="com.minres.scviewer.e4.feature" installMode="root"/>
+      <feature id="org.eclipse.e4.rcp" installMode="root"/>
+      <feature id="org.eclipse.emf.common" installMode="root"/>
+      <feature id="org.eclipse.emf.ecore" installMode="root"/>
    </features>
 
    <configurations>

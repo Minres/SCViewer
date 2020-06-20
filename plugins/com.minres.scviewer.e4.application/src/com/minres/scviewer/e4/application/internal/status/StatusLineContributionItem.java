@@ -13,7 +13,6 @@ import org.eclipse.swt.widgets.Label;
 
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.action.LegacyActionTools;
 import org.eclipse.jface.action.StatusLineLayoutData;
 import org.eclipse.jface.resource.JFaceColors;
 

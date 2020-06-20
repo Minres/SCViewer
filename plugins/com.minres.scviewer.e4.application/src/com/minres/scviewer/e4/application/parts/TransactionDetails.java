@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.Vector;
-import java.util.function.Function;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
@@ -38,7 +37,6 @@ import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -152,15 +150,11 @@ public class TransactionDetails {
 
 			@Override
 			public void treeCollapsed(TreeExpansionEvent event) {
-				Object o = event.getElement();
-				TreePath[] paths = treeViewer.getExpandedTreePaths();
 				treeViewer.getSelection();
 			}
 
 			@Override
 			public void treeExpanded(TreeExpansionEvent event) {
-				Object o = event.getElement();
-				TreePath[] paths = treeViewer.getExpandedTreePaths();
 				treeViewer.getSelection();
 			}
 

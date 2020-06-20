@@ -39,7 +39,7 @@
 				<version>${tycho-version}</version>
 				<extensions>true</extensions>
 			</plugin>
-
+<!--
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-source-plugin</artifactId>
@@ -55,7 +55,7 @@
 				</executions>
 			</plugin>
 
-<!-- 			<plugin>
+ 			<plugin>
 				<groupId>org.eclipse.tycho.extras</groupId>
 				<artifactId>tycho-source-feature-plugin</artifactId>
 				<version>${tycho-version}</version>
