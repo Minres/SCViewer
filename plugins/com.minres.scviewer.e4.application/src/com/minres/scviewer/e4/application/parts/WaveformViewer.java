@@ -478,13 +478,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	
 	@Inject
 	@Optional
-	public void reactOnShowHoverChange(@Preference(value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
+	public void reactOnShowHoverChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
 		showHover=hover;
 	}
 	
 	@Inject
 	@Optional
-	public void reactOnReloadDatabaseChange(@Preference(value = PreferenceConstants.DATABASE_RELOAD) Boolean checkForUpdates) {
+	public void reactOnReloadDatabaseChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.DATABASE_RELOAD) Boolean checkForUpdates) {
 		if (checkForUpdates) {
 			fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
 		} else { 

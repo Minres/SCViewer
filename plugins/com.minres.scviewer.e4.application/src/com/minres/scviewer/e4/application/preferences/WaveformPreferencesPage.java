@@ -10,6 +10,9 @@
  *******************************************************************************/
 package com.minres.scviewer.e4.application.preferences;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+
 import org.eclipse.jface.preference.ColorFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 
@@ -26,6 +29,7 @@ public class WaveformPreferencesPage extends FieldEditorPreferencePage {
 	 */
 	public WaveformPreferencesPage() {
 		super(GRID);
+		setDescription(Messages.WaveformPreferencesPage_description);
 	}
 
 	/* (non-Javadoc)
@@ -33,9 +37,18 @@ public class WaveformPreferencesPage extends FieldEditorPreferencePage {
 	 */
 	@Override
 	protected void createFieldEditors() {
-
+		Field[] declaredFields = Messages.class.getDeclaredFields();
+		HashMap<String, String> staticFields = new HashMap<String, String>();
+		for (Field field : declaredFields) {
+		    if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+		        try {
+					staticFields.put(field.getName(), (String)field.get(null));
+				} catch (IllegalArgumentException | IllegalAccessException e) {}
+		    }
+		}
 		for (WaveformColors c : WaveformColors.values()) {
-			addField(new ColorFieldEditor(c.name() + "_COLOR", Messages.WaveformPreferencesPage_1 + c.name().toLowerCase(), //$NON-NLS-1$
+			addField(new ColorFieldEditor(c.name() + "_COLOR", 
+					Messages.WaveformPreferencesPage_1 + staticFields.get(c.name().toLowerCase()), //$NON-NLS-1$
 					getFieldEditorParent()));
 		}
 	}
