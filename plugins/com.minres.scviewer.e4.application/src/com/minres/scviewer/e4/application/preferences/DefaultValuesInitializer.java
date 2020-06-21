@@ -12,14 +12,14 @@ package com.minres.scviewer.e4.application.preferences;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
-import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.osgi.framework.FrameworkUtil;
 
 import com.minres.scviewer.database.ui.WaveformColors;
-import com.opcoach.e4.preferences.ScopedPreferenceStore;
 
 /**
  * The Class DefaultValuesInitializer.
@@ -27,7 +27,7 @@ import com.opcoach.e4.preferences.ScopedPreferenceStore;
 public class DefaultValuesInitializer extends AbstractPreferenceInitializer {
 
     /** The default colors. */
-    public final Color[] colors = new Color[WaveformColors.values().length];
+    public static final Color[] colors = new Color[WaveformColors.values().length];
 
 	/**
 	 * Instantiates a new default values initializer.
@@ -64,21 +64,12 @@ public class DefaultValuesInitializer extends AbstractPreferenceInitializer {
 	 */
 	@Override
 	public void initializeDefaultPreferences() {
-//		IEclipsePreferences node = DefaultScope.INSTANCE.getNode(PreferenceConstants.PREFERENCES_SCOPE);
-//		if (node != null)
-//		{
-//			node.putBoolean(PreferenceConstants.DATABASE_RELOAD, true);
-//			node.putBoolean(PreferenceConstants.SHOW_HOVER, true);
-//	        for (WaveformColors c : WaveformColors.values()) {
-//	        	node.put(c.name()+"_COLOR", StringConverter.asString(colors[c.ordinal()].getRGB())); //$NON-NLS-1$
-//	        }
-//		}
-		IPreferenceStore store = new ScopedPreferenceStore(DefaultScope.INSTANCE, PreferenceConstants.PREFERENCES_SCOPE);
-
-		store.setDefault(PreferenceConstants.DATABASE_RELOAD, true);
-		store.setDefault(PreferenceConstants.SHOW_HOVER, true);
+		IEclipsePreferences store = DefaultScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
+		
+		store.putBoolean(PreferenceConstants.DATABASE_RELOAD, true);
+		store.putBoolean(PreferenceConstants.SHOW_HOVER, true);
         for (WaveformColors c : WaveformColors.values()) {
-        	 store.setDefault(c.name()+"_COLOR", StringConverter.asString(colors[c.ordinal()].getRGB())); //$NON-NLS-1$
+        	 store.put(c.name()+"_COLOR", StringConverter.asString(colors[c.ordinal()].getRGB())); //$NON-NLS-1$
         }
 	}
 
