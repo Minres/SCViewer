@@ -28,7 +28,6 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -45,7 +44,7 @@ import com.minres.scviewer.database.ui.IWaveformViewer;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
 
-public class WaveformCanvas extends Canvas{
+public class WaveformCanvas extends Canvas {
 	
     Color[] colors = new Color[WaveformColors.values().length];
 
@@ -60,9 +59,7 @@ public class WaveformCanvas extends Canvas{
     private long maxTime;
     
     protected Point origin; /* original size */
-    
-    protected Transform transform;
-    
+        
     protected int rulerHeight=40;
     
     protected List<IPainter> painterList;
@@ -89,7 +86,7 @@ public class WaveformCanvas extends Canvas{
      *            the style of this control.
      */
     public WaveformCanvas(final Composite parent, int style) {
-        super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE | SWT.V_SCROLL | SWT.H_SCROLL);
+        super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.V_SCROLL | SWT.H_SCROLL);
     	addControlListener(new ControlAdapter() { /* resize listener. */
             public void controlResized(ControlEvent event) {
                 syncScrollBars();
@@ -102,7 +99,6 @@ public class WaveformCanvas extends Canvas{
         });
         painterList = new LinkedList<IPainter>();
         origin = new Point(0, 0);
-        transform = new Transform(getDisplay());
         selectionListeners = new LinkedList<>();
         cursorPainters= new ArrayList<>();
         wave2painterMap=new HashMap<>();
@@ -148,10 +144,6 @@ public class WaveformCanvas extends Canvas{
         colors[WaveformColors.REL_ARROW.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_MAGENTA);
         colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()] = SWTResourceManager.getColor(255, 128, 255);
 
-    }
-    
-    public long getXOffset() {
-    	return -origin.x;
     }
     
 	public void addCursoPainter(CursorPainter cursorPainter){
@@ -323,7 +315,6 @@ public class WaveformCanvas extends Canvas{
      * Dispose the garbage here
      */
     public void dispose() {
-        transform.dispose();
         for (WaveformColors c : WaveformColors.values())
             colors[c.ordinal()].dispose();
         super.dispose();
@@ -402,24 +393,16 @@ public class WaveformCanvas extends Canvas{
         vertical.setSelection(-origin.y);
         redraw();
         fireSelectionEvent();
-
     }
 
     /* Paint function */
     private void paint(GC gc) {
         Rectangle clientRect = getClientArea(); /* Canvas' painting area */
-//      clientRect.x = -origin.x;
-        clientRect.y = -origin.y;
-        // reset the transform
-        transform.identity();
-        // shift the content
-        // DO NOT SHIFT HORIZONTALLY, the range is WAY TOO BIG for float!!!
-        transform.translate(0, origin.y);
-        gc.setTransform(transform);
-        gc.setClipping(clientRect);
+        Projection p = new Projection(gc);
+        p.setTranslation(origin);
         if (painterList.size() > 0 ) {
             for (IPainter painter : painterList)
-                painter.paintArea(gc, clientRect);
+                painter.paintArea(p, clientRect);
         } else {
             gc.fillRectangle(clientRect);
             initScrollBars();

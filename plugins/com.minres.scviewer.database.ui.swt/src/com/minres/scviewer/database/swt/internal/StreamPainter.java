@@ -60,22 +60,22 @@ public class StreamPainter extends TrackPainter{
 	}
 
 	@SuppressWarnings("unchecked")
-	public void paintArea(GC gc, Rectangle area) {
+	public void paintArea(Projection proj, Rectangle area) {
 		if(stream.getEvents().size()==0) return;
 		int trackHeight=trackEntry.height/stream.getMaxConcurrency();
 		txBase=trackHeight/5;
 		txHeight=trackHeight*3/5;
 		if(trackEntry.selected) {
-			gc.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()]);
+			proj.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()]);
 		}
 		else
-			gc.setBackground(this.waveCanvas.colors[even?WaveformColors.TRACK_BG_EVEN.ordinal():WaveformColors.TRACK_BG_ODD.ordinal()]);
-		gc.setFillRule(SWT.FILL_EVEN_ODD);
-		gc.fillRectangle(area);
+			proj.setBackground(this.waveCanvas.colors[even?WaveformColors.TRACK_BG_EVEN.ordinal():WaveformColors.TRACK_BG_ODD.ordinal()]);
+		proj.setFillRule(SWT.FILL_EVEN_ODD);
+		proj.fillRectangle(area);
 		
 		long scaleFactor = this.waveCanvas.getScaleFactor();
 		long beginPos = area.x;
-		long beginTime = (beginPos + waveCanvas.getXOffset())*scaleFactor;
+		long beginTime = beginPos*scaleFactor;
 		//long endPos = beginPos + area.width;
         long endTime = beginTime + area.width*scaleFactor;
 
@@ -83,21 +83,21 @@ public class StreamPainter extends TrackPainter{
 		Entry<Long, ?> lastTx=stream.getEvents().ceilingEntry(endTime);
 		if(firstTx==null) firstTx = stream.getEvents().firstEntry();
 		if(lastTx==null) lastTx=stream.getEvents().lastEntry();
-        gc.setFillRule(SWT.FILL_EVEN_ODD);
-        gc.setLineStyle(SWT.LINE_SOLID);
-        gc.setLineWidth(1);
-        gc.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
+		proj.setFillRule(SWT.FILL_EVEN_ODD);
+		proj.setLineStyle(SWT.LINE_SOLID);
+		proj.setLineWidth(1);
+		proj.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
         
         for( int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
-        	gc.drawLine(area.x, y1, area.x+area.width, y1);
+        	proj.drawLine(area.x, y1, area.x+area.width, y1);
 		if(firstTx==lastTx) {
 			for(ITxEvent txEvent:(Collection<?  extends ITxEvent>)firstTx.getValue())
-				drawTx(gc, area, txEvent.getTransaction(), false);
+				drawTx(proj, area, txEvent.getTransaction(), false);
 		}else{
 			seenTx.clear();
 			NavigableMap<Long,?> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
 			boolean highlighed=false;
-	        gc.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
+	        proj.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
 	        
 	        for(Entry<Long, ?> entry: entries.entrySet())
 				for(ITxEvent txEvent:(Collection<?  extends ITxEvent>)entry.getValue()){
@@ -106,38 +106,38 @@ public class StreamPainter extends TrackPainter{
 					if(txEvent.getType()==ITxEvent.Type.END){
 						ITx tx = txEvent.getTransaction();
 						highlighed|=waveCanvas.currentSelection!=null && waveCanvas.currentSelection.equals(tx);
-						drawTx(gc, area, tx, false);
+						drawTx(proj, area, tx, false);
 						seenTx.remove(tx);
 					}
 				}
 			for(ITx tx:seenTx){
-				drawTx(gc, area, tx, false);
+				drawTx(proj, area, tx, false);
 			}
 			if(highlighed){
-		        gc.setForeground(this.waveCanvas.colors[WaveformColors.LINE_HIGHLITE.ordinal()]);
-		        drawTx(gc, area, waveCanvas.currentSelection, true);
+		        proj.setForeground(this.waveCanvas.colors[WaveformColors.LINE_HIGHLITE.ordinal()]);
+		        drawTx(proj, area, waveCanvas.currentSelection, true);
 			}
 		}
 	}
 	
-	protected void drawTx(GC gc, Rectangle area, ITx tx, boolean highlighted ) {
+	protected void drawTx(Projection proj, Rectangle area, ITx tx, boolean highlighted ) {
 		// compute colors
         java.awt.Color[] fallbackColors = trackEntry.getColors();
         java.awt.Color[] transColor = TrackEntry.computeColor( tx.getGenerator().getName(), fallbackColors[0], fallbackColors[1] );
         
-        gc.setBackground( toSwtColor( gc, transColor[highlighted?1:0] ) );
+        proj.setBackground( toSwtColor( proj.getGC(), transColor[highlighted?1:0] ) );
         
 		int offset = tx.getConcurrencyIndex()*this.waveCanvas.getTrackHeight();
 		Rectangle bb = new Rectangle(
-				(int)(tx.getBeginTime()/this.waveCanvas.getScaleFactor()-waveCanvas.getXOffset()), area.y+offset+txBase,
+				(int)(tx.getBeginTime()/this.waveCanvas.getScaleFactor()), area.y+offset+txBase,
 				(int)((tx.getEndTime()-tx.getBeginTime())/this.waveCanvas.getScaleFactor()), txHeight);
 
 		if(bb.x+bb.width<area.x || bb.x>area.x+area.width) return;
 		if(bb.width==0){
-			gc.drawLine(bb.x, bb.y, bb.x, bb.y+bb.height);
+			proj.drawLine(bb.x, bb.y, bb.x, bb.y+bb.height);
 		} else if(bb.width<10){
-			gc.fillRectangle(bb);
-			gc.drawRectangle(bb);
+			proj.fillRectangle(bb);
+			proj.drawRectangle(bb);
 		} else {
 			if(bb.x < area.x) {
 				bb.width = bb.width-(area.x-bb.x)+5;
@@ -149,8 +149,8 @@ public class StreamPainter extends TrackPainter{
 				bb_x2=area_x2+5;
 				bb.width= bb_x2-bb.x;
 			}
-			gc.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
-		    gc.drawRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
+			proj.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
+			proj.drawRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
 		}
 	}
 

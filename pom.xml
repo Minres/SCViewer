@@ -20,6 +20,7 @@
 		<module>features/com.minres.scviewer.database.feature</module>
 		<module>features/com.minres.scviewer.ui.feature</module>
 		<module>features/com.minres.scviewer.feature</module>
+		<module>features/com.minres.scviewer.e4.platform.feature</module>
 		<module>features/com.minres.scviewer.e4.feature</module>
 		<module>p2repositories//com.minres.scviewer.updateSite</module>
 		<module>com.minres.scviewer.e4.product</module>
@@ -39,7 +40,7 @@
 				<version>${tycho-version}</version>
 				<extensions>true</extensions>
 			</plugin>
-
+<!--
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-source-plugin</artifactId>
@@ -55,7 +56,7 @@
 				</executions>
 			</plugin>
 
-<!-- 			<plugin>
+ 			<plugin>
 				<groupId>org.eclipse.tycho.extras</groupId>
 				<artifactId>tycho-source-feature-plugin</artifactId>
 				<version>${tycho-version}</version>

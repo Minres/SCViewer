@@ -31,17 +31,18 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.eclipse.core.internal.preferences.InstancePreferences;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobGroup;
-import org.eclipse.core.runtime.preferences.ConfigurationScope;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.e4.core.di.annotations.Optional;
+import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.PersistState;
@@ -52,9 +53,7 @@ import org.eclipse.e4.ui.services.EMenuService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.StringConverter;
-import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -80,7 +79,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
-import org.osgi.service.prefs.BackingStoreException;
+import org.osgi.service.prefs.Preferences;
 
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.ITx;
@@ -108,7 +107,6 @@ import com.minres.scviewer.e4.application.internal.util.FileMonitor;
 import com.minres.scviewer.e4.application.internal.util.IFileChangeListener;
 import com.minres.scviewer.e4.application.internal.util.IModificationChecker;
 import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
-import com.opcoach.e4.preferences.ScopedPreferenceStore;
 
 /**
  * The Class WaveformViewerPart.
@@ -190,7 +188,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@Inject
 	EPartService ePartService;
 
-	IPreferenceStore store = new ScopedPreferenceStore(ConfigurationScope.INSTANCE, PreferenceConstants.PREFERENCES_SCOPE);
+	IEclipsePreferences store = null;
 
 	@Inject @Optional DesignBrowser designBrowser;
 
@@ -207,7 +205,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	private Composite myParent;
 
 	/** The files to load. */
-	ArrayList<File> filesToLoad;
+	ArrayList<File> filesToLoad = new ArrayList<>();
 
 	/** The persisted state. */
 	Map<String, String> persistedState;
@@ -227,6 +225,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	/** The file checker. */
 	IModificationChecker fileChecker;
 
+	private Boolean showHover;
+
 	/**
 	 * Creates the composite.
 	 *
@@ -235,11 +235,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param dbFactory the db factory
 	 */
 	@PostConstruct
-	public void createComposite(MPart part, Composite parent, IWaveformDbFactory dbFactory) {
+	public void createComposite(MPart part, Composite parent, IWaveformDbFactory dbFactory, @Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE) IEclipsePreferences prefs, @Preference(value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
 		disposeListenerNumber += 1;
 		
 		myPart = part;
 		myParent = parent;
+		store=prefs;
+		showHover=hover;
 		database = dbFactory.getDatabase();
 		database.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
@@ -256,7 +258,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		});
 		waveformPane = factory.createPanel(parent);
 		waveformPane.setMaxTime(0);
-		
+		setupColors();
 		//set selection to empty selection when opening a new waveformPane
 		selectionService.setSelection(new StructuredSelection());
 		
@@ -344,8 +346,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		});
 		
 		zoomLevel = waveformPane.getZoomLevels();
-		setupColors();
-		checkForUpdates = store.getBoolean(PreferenceConstants.DATABASE_RELOAD);
+		checkForUpdates = store.getBoolean(PreferenceConstants.DATABASE_RELOAD, true);
 		filesToLoad = new ArrayList<File>();
 		persistedState = part.getPersistedState();
 		Integer files = persistedState.containsKey(DATABASE_FILE + "S") //$NON-NLS-1$
@@ -374,23 +375,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				}
 			}
 		});
-		store.addPropertyChangeListener(new IPropertyChangeListener() {
-			@Override
-			public void propertyChange(org.eclipse.jface.util.PropertyChangeEvent event) {
-				if (PreferenceConstants.DATABASE_RELOAD.equals(event.getProperty())) {
-					checkForUpdates = (Boolean)event.getNewValue();
-					fileChecker = null;
-					if (checkForUpdates)
-						fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad,
-								FILE_CHECK_INTERVAL);
-					else
-						fileMonitor.removeFileChangeListener(WaveformViewer.this);
-				} else if (!PreferenceConstants.SHOW_HOVER.equals(event.getProperty())){
-					setupColors();
-				}
-			}
-		});
-		
 		waveformPane.addDisposeListener(this);
 
 		waveformPane.getWaveformControl().setData(Constants.HELP_PROVIDER_TAG, new ToolTipHelpTextProvider() {
@@ -402,7 +386,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipContentProvider() {
 			@Override
 			public boolean createContent(Composite parent, Point pt) {
-				if(!store.getBoolean(PreferenceConstants.SHOW_HOVER)) return false;
+				if(!showHover) return false;
 				List<Object> res = waveformPane.getElementsAt(pt);
 				if(res.size()>0)
 					if(res.get(0) instanceof ITx) {
@@ -472,8 +456,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
 
 						final Label label = new Label(parent, SWT.NONE);
-						//label.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-						//label.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
 						label.setText(te.waveform.getFullName());
 						label.setFont(font);
 						GridData labelGridData = new GridData();
@@ -487,35 +469,49 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		});
 	}
 
+	@Inject
+	@Optional
+	public void reactOnPrefsChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE) IEclipsePreferences prefs) {
+		prefs.addPreferenceChangeListener(this);
+		
+	}
+	
+	@Inject
+	@Optional
+	public void reactOnShowHoverChange(@Preference(value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
+		showHover=hover;
+	}
+	
+	@Inject
+	@Optional
+	public void reactOnReloadDatabaseChange(@Preference(value = PreferenceConstants.DATABASE_RELOAD) Boolean checkForUpdates) {
+		if (checkForUpdates) {
+			fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
+		} else { 
+			fileMonitor.removeFileChangeListener(WaveformViewer.this);
+			fileChecker = null;
+		}
+	}
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener#preferenceChange(org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent)
 	 */
 	@Override
 	public void preferenceChange(PreferenceChangeEvent event) {
-		InstancePreferences pref = (InstancePreferences)event.getSource();
-		if (PreferenceConstants.DATABASE_RELOAD.equals(event.getKey())) {
-			checkForUpdates = pref.getBoolean(PreferenceConstants.DATABASE_RELOAD, true);
-			fileChecker = null;
-			if (checkForUpdates)
-				fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad,
-						FILE_CHECK_INTERVAL);
-			else
-				fileMonitor.removeFileChangeListener(this);
-		} else if (!PreferenceConstants.SHOW_HOVER.equals(event.getKey())){
+		if (!PreferenceConstants.DATABASE_RELOAD.equals(event.getKey()) && !PreferenceConstants.SHOW_HOVER.equals(event.getKey())){
 			setupColors();
 		}
-		try {
-			pref.flush();
-		} catch (BackingStoreException e) { }
 	}
 
 	/**
 	 * Setup colors.
 	 */
 	protected void setupColors() {
+		Preferences defaultPrefs= store.parent().parent().node("/"+DefaultScope.SCOPE+"/"+PreferenceConstants.PREFERENCES_SCOPE);
 		HashMap<WaveformColors, RGB> colorPref = new HashMap<>();
 		for (WaveformColors c : WaveformColors.values()) {
-			String prefValue = store.getString(c.name() + "_COLOR"); //$NON-NLS-1$
+			String key = c.name() + "_COLOR";
+			String prefValue = store.get(key, defaultPrefs.get(key,  "")); //$NON-NLS-1$
 			RGB rgb = StringConverter.asRGB(prefValue);
 			colorPref.put(c, rgb);
 		}

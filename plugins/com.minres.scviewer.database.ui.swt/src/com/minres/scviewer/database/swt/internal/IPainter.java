@@ -10,11 +10,10 @@
  *******************************************************************************/
 package com.minres.scviewer.database.swt.internal;
 
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 
 public interface IPainter {
 
-	void paintArea(GC gc,Rectangle area);
+	void paintArea(Projection gc, Rectangle area);
 	
 }

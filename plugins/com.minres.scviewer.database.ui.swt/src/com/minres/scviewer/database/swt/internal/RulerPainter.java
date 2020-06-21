@@ -31,8 +31,8 @@ public class RulerPainter implements IPainter {
     }
 
     @Override
-    public void paintArea(GC gc, Rectangle area) {
-
+    public void paintArea(Projection proj, Rectangle area) {
+    	GC gc = proj.getGC();
     	Color headerFgColor=waveCanvas.getDisplay().getSystemColor(SWT.COLOR_WIDGET_FOREGROUND);
     	if(headerFgColor.isDisposed())
     		headerFgColor=SWTResourceManager.getColor(0,0,0);
@@ -44,7 +44,7 @@ public class RulerPainter implements IPainter {
         long scaleFactor=waveCanvas.getScaleFactor();
 
         long startPos=area.x*scaleFactor; 
-        long startVal=startPos + waveCanvas.getXOffset()*scaleFactor;
+        long startVal=startPos - proj.getTranslation().x*scaleFactor;
         long endPos=startPos+area.width*scaleFactor;
 
         long rulerTickMinor = rulerTickMinorC*scaleFactor;

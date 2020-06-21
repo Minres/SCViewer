@@ -79,22 +79,22 @@ public class SignalPainter extends TrackPainter {
 	}
 
 	private int getXPosEnd(long time) {
-		long ltmp = time / this.waveCanvas.getScaleFactor() - waveCanvas.getXOffset();
+		long ltmp = time / this.waveCanvas.getScaleFactor();
 		return ltmp > maxPosX ? maxPosX : (int) ltmp;
 	}
 	
-	public void paintArea(GC gc, Rectangle area) {
+	public void paintArea(Projection proj, Rectangle area) {
 		ISignal<?> signal = trackEntry.getSignal();
 		if (trackEntry.selected)
-			gc.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()]);
+			proj.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()]);
 		else
-			gc.setBackground(this.waveCanvas.colors[even ? WaveformColors.TRACK_BG_EVEN.ordinal() : WaveformColors.TRACK_BG_ODD.ordinal()]);
-		gc.setFillRule(SWT.FILL_EVEN_ODD);
-		gc.fillRectangle(area);
+			proj.setBackground(this.waveCanvas.colors[even ? WaveformColors.TRACK_BG_EVEN.ordinal() : WaveformColors.TRACK_BG_ODD.ordinal()]);
+		proj.setFillRule(SWT.FILL_EVEN_ODD);
+		proj.fillRectangle(area);
 
 		long scaleFactor = this.waveCanvas.getScaleFactor();
 		long beginPos = area.x;
-		long beginTime = (beginPos + waveCanvas.getXOffset())*scaleFactor;
+		long beginTime = beginPos*scaleFactor;
         long endTime = beginTime + area.width*scaleFactor;
 		
 		Entry<Long, ?> first = signal.getEvents().floorEntry(beginTime);
@@ -106,18 +106,17 @@ public class SignalPainter extends TrackPainter {
 		} else if (last == null) {
 			last = signal.getEvents().lastEntry();
 		}
-		gc.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
-		gc.setLineStyle(SWT.LINE_SOLID);
-		gc.setLineWidth(1);
+		proj.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
+		proj.setLineStyle(SWT.LINE_SOLID);
+		proj.setLineWidth(1);
 		NavigableMap<Long, ?> entries = signal.getEvents().subMap(first.getKey(), false, last.getKey(), true);
 		SignalChange left = new SignalChange(first);
 		SignalChange right = new SignalChange(entries.size() > 0 ? entries.firstEntry() : first);
 		maxPosX = area.x + area.width;
-		maxValX = maxPosX + (int)waveCanvas.getXOffset();
 		yOffsetT = this.waveCanvas.getTrackHeight() / 5 + area.y;
 		yOffsetM = this.waveCanvas.getTrackHeight() / 2 + area.y;
 		yOffsetB = 4 * this.waveCanvas.getTrackHeight() / 5 + area.y;
-		int xSigChangeBeginVal = Math.max(area.x + (int)waveCanvas.getXOffset(), (int) (left.time / this.waveCanvas.getScaleFactor()));
+		int xSigChangeBeginVal = Math.max(area.x, (int) (left.time / this.waveCanvas.getScaleFactor()));
 		int xSigChangeBeginPos = area.x;
 		int xSigChangeEndPos = Math.max(area.x, getXPosEnd(right.time));
 		
@@ -138,9 +137,9 @@ public class SignalPainter extends TrackPainter {
 		}
 
 		
-		SignalStencil stencil = getStencil(gc, left, entries);
+		SignalStencil stencil = getStencil(proj.getGC(), left, entries);
 		do {
-			stencil.draw(gc, area, left.value, right.value, xSigChangeBeginPos, xSigChangeEndPos, multiple);
+			stencil.draw(proj, area, left.value, right.value, xSigChangeBeginPos, xSigChangeEndPos, multiple);
 			if (right.time >= endTime)
 				break;
 			left.assign(right);
@@ -179,7 +178,7 @@ public class SignalPainter extends TrackPainter {
 
 	private interface SignalStencil {
 
-		public void draw(GC gc, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple);
+		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple);
 	}
 
 	private class MultiBitStencil implements SignalStencil {
@@ -193,7 +192,7 @@ public class SignalPainter extends TrackPainter {
 			tmpAwtFont = new java.awt.Font(fd.getName(), fd.getStyle(), height);
 		}
 
-		public void draw(GC gc, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
+		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
 			Color colorBorder = waveCanvas.colors[WaveformColors.SIGNAL0.ordinal()];
 			BitVector last = (BitVector) left;
 			if (last.getValue().toString().contains("X")) {
@@ -211,9 +210,9 @@ public class SignalPainter extends TrackPainter {
 						xEnd - 1,   yOffsetB, 
 						xBegin + 1, yOffsetB
 				};
-				gc.setForeground(colorBorder);
-				gc.drawPolygon(points);
-				gc.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_TEXT.ordinal()]);
+				proj.setForeground(colorBorder);
+				proj.drawPolygon(points);
+				proj.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_TEXT.ordinal()]);
 				//TODO: this code should be provided from a central location
 				String label = null;
 				switch(trackEntry.valueDisplay) {
@@ -226,25 +225,21 @@ public class SignalPainter extends TrackPainter {
 				default:
 					label="h'"+last.toHexString();
 				}
-				Point bb = getBoxWidth(gc, label);
+				Point bb = new Point(DUMMY_PANEL.getFontMetrics(tmpAwtFont).stringWidth(label), height);
 				if (xBegin < area.x) {
 					xBegin = area.x;
 					width = xEnd - xBegin;
 				}
 				if (width > (bb.x+1)) {
-					Rectangle old = gc.getClipping();
-					gc.setClipping(xBegin + 3, yOffsetT, xEnd - xBegin - 5, yOffsetB - yOffsetT);
-					gc.drawText(label, xBegin + 3, yOffsetM - bb.y / 2 - 1);
-					gc.setClipping(old);
+					Rectangle old = proj.getClipping();
+					proj.setClipping(xBegin + 3, yOffsetT, xEnd - xBegin - 5, yOffsetB - yOffsetT);
+					proj.drawText(label, xBegin + 3, yOffsetM - bb.y / 2 - 1);
+					proj.setClipping(old);
 				}
 			} else {
-				gc.setForeground(colorBorder);
-				gc.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
+				proj.setForeground(colorBorder);
+				proj.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
 			}
-		}
-
-		private Point getBoxWidth(GC gc, String label) {
-			return new Point(DUMMY_PANEL.getFontMetrics(tmpAwtFont).stringWidth(label), height);
 		}
 
 	}
@@ -277,25 +272,25 @@ public class SignalPainter extends TrackPainter {
 			
 		}
 
-		public void draw(GC gc, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
+		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
 			long leftVal = ((BitVector) left).toUnsignedValue();
 			long rightVal= ((BitVector) right).toUnsignedValue();
-			gc.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_REAL.ordinal()]);
+			proj.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_REAL.ordinal()]);
 			int yOffsetLeft = (int) ((leftVal-minVal) / range * (yOffsetB-yOffsetT));
 			int yOffsetRight = (int) ((rightVal-minVal) / range * (yOffsetB-yOffsetT));
 			if(continous) {
 				if (xEnd > maxPosX) {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);
+					proj.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);
 				} else {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
+					proj.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
 				}
 			} else {
 				if (xEnd > maxPosX) {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetLeft);
+					proj.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetLeft);
 				} else {
-					gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetLeft);
+					proj.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetLeft);
 					if(yOffsetRight!=yOffsetLeft) {
-						gc.drawLine(xEnd, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
+						proj.drawLine(xEnd, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
 					}
 				}
 			}
@@ -303,12 +298,12 @@ public class SignalPainter extends TrackPainter {
 	}
 
 	private class SingleBitStencil implements SignalStencil {
-		public void draw(GC gc, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
+		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
 			if (multiple) {
-				gc.setForeground(waveCanvas.colors[WaveformColors.SIGNALU.ordinal()]);
-				gc.drawLine(xBegin, yOffsetT, xBegin, yOffsetB);
+				proj.setForeground(waveCanvas.colors[WaveformColors.SIGNALU.ordinal()]);
+				proj.drawLine(xBegin, yOffsetT, xBegin, yOffsetB);
 				if(xEnd>xBegin) 
-					gc.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
+					proj.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
 			} else {
 				Color color = waveCanvas.colors[WaveformColors.SIGNALX.ordinal()];
 				int yOffset = yOffsetM;
@@ -326,11 +321,11 @@ public class SignalPainter extends TrackPainter {
 					break;
 				default:
 				}
-				gc.setForeground(color);
+				proj.setForeground(color);
 				if (xEnd > maxPosX) {
-					gc.drawLine(xBegin, yOffset, maxPosX, yOffset);
+					proj.drawLine(xBegin, yOffset, maxPosX, yOffset);
 				} else {
-					gc.drawLine(xBegin, yOffset, xEnd, yOffset);
+					proj.drawLine(xBegin, yOffset, xEnd, yOffset);
 					int yNext = yOffsetM;
 					switch (((BitVector) right).getValue()[0]) {
 					case '1':
@@ -342,7 +337,7 @@ public class SignalPainter extends TrackPainter {
 					default:
 					}
 					if (yOffset != yNext)
-						gc.drawLine(xEnd, yOffset, xEnd, yNext);
+						proj.drawLine(xEnd, yOffset, xEnd, yNext);
 				}
 			}
 		}
@@ -383,7 +378,7 @@ public class SignalPainter extends TrackPainter {
 			}
 		}
 
-		public void draw(GC gc, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
+		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
 			double leftVal = (Double) left;
 			double rightVal= (Double) right;
 			if(Double.isNaN(leftVal)) {
@@ -396,31 +391,31 @@ public class SignalPainter extends TrackPainter {
 							xEnd,   yOffsetB, 
 							xBegin, yOffsetB
 					};
-					gc.setForeground(color);
-					gc.drawPolygon(points);
-					gc.setBackground(color);
-					gc.fillPolygon(points);
+					proj.setForeground(color);
+					proj.drawPolygon(points);
+					proj.setBackground(color);
+					proj.fillPolygon(points);
 				} else {
-					gc.setForeground(color);
-					gc.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
+					proj.setForeground(color);
+					proj.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
 				}
 			} else {				
-				gc.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_REAL.ordinal()]);
+				proj.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_REAL.ordinal()]);
 				int yOffsetLeft = (int) ((leftVal-minVal) / range * (yOffsetB-yOffsetT));
 				int yOffsetRight = Double.isNaN(rightVal)?yOffsetLeft:(int) ((rightVal-minVal) / range * (yOffsetB-yOffsetT));
 				if(continous) {
 					if (xEnd > maxPosX) {
-						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);
+						proj.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);
 					} else {
-						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
+						proj.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
 					}
 				} else {
 					if (xEnd > maxPosX) {
-						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetLeft);
+						proj.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetLeft);
 					} else {
-						gc.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetLeft);
+						proj.drawLine(xBegin, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetLeft);
 						if(yOffsetRight!=yOffsetLeft) {
-							gc.drawLine(xEnd, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
+							proj.drawLine(xEnd, yOffsetB-yOffsetLeft, xEnd, yOffsetB-yOffsetRight);
 						}
 					}
 				}
