@@ -48,9 +48,7 @@
 
    <features>
       <feature id="com.minres.scviewer.e4.feature" installMode="root"/>
-      <feature id="org.eclipse.e4.rcp" installMode="root"/>
-      <feature id="org.eclipse.emf.common" installMode="root"/>
-      <feature id="org.eclipse.emf.ecore" installMode="root"/>
+      <feature id="com.minres.scviewer.e4.platform.feature" installMode="root"/>
    </features>
 
    <configurations>

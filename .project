@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>scviewer.parent</name>
+	<name>com.minres.scviewer.parent</name>
 	<comment></comment>
 	<projects>
 	</projects>
 	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.m2e.core.maven2Builder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>org.eclipse.m2e.core.maven2Nature</nature>
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1591076960924</id>
+			<id>0</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -19,7 +25,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1591076960932</id>
+			<id>0</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -28,7 +34,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1591076960936</id>
+			<id>0</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -37,7 +43,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1591076960939</id>
+			<id>0</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -46,7 +52,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1591076960950</id>
+			<id>0</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -55,7 +61,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1591076960954</id>
+			<id>0</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
