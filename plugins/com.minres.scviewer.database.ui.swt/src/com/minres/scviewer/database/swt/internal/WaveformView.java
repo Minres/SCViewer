@@ -89,11 +89,11 @@ import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
-import com.minres.scviewer.database.ui.IWaveformViewer;
+import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
 
-public class WaveformViewer implements IWaveformViewer  {
+public class WaveformView implements IWaveformView  {
 
 	private ListenerList<ISelectionChangedListener> selectionChangedListeners = new ListenerList<ISelectionChangedListener>();
 
@@ -185,8 +185,7 @@ public class WaveformViewer implements IWaveformViewer  {
 	            gc.setAlpha(128);
 	            int minX = Math.min(start.x, end.x);
 	            int width = Math.max(start.x, end.x) - minX;
-	            Point origin = waveformCanvas.getOrigin();
-	            int y_top = waveformCanvas.getRulerHeight()- origin.y;
+	            int y_top = waveformCanvas.getRulerHeight();
 	            int y_bottom = waveformCanvas.getSize().y;
 	            gc.fillRectangle(minX, y_top, width,y_bottom);
 			}
@@ -288,7 +287,7 @@ public class WaveformViewer implements IWaveformViewer  {
 	};
 	protected WaveformMouseListener waveformMouseListener = new WaveformMouseListener();
 
-	public WaveformViewer(Composite parent) {
+	public WaveformView(Composite parent) {
 		pcs=new PropertyChangeSupport(this);
 
 		trackVerticalOffset = new TreeMap<Integer, TrackEntry>();
@@ -755,7 +754,7 @@ public class WaveformViewer implements IWaveformViewer  {
 	@Override
 	public void moveSelection(GotoDirection direction, RelationType relationType) {
 		if (currentWaveformSelection!=null && currentWaveformSelection.isStream() && currentTxSelection!=null) {
-			if(relationType.equals(IWaveformViewer.NEXT_PREV_IN_STREAM)){
+			if(relationType.equals(IWaveformView.NEXT_PREV_IN_STREAM)){
 				ITxStream<? extends ITxEvent> stream = currentWaveformSelection.getStream();
 				ITx transaction = null;
 				if (direction == GotoDirection.NEXT) {

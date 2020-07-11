@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Control;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 
-public interface IWaveformViewer extends PropertyChangeListener, ISelectionProvider{
+public interface IWaveformView extends PropertyChangeListener, ISelectionProvider{
 
 	String CURSOR_PROPERTY = "cursor_time";
 	
