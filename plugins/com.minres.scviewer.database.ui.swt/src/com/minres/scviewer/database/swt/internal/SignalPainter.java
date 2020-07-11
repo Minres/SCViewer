@@ -249,7 +249,7 @@ public class SignalPainter extends TrackPainter {
 		final boolean continous;
 		private long minVal;
 		private long range;
-
+		double yRange = (yOffsetB-yOffsetT);
 		public MultiBitStencilAnalog(NavigableMap<Long, ?> entries, Object left, boolean continous, boolean signed) {
 			this.continous=continous;
 			Collection<?> values = ((NavigableMap<Long, ?>) entries).values();
@@ -276,8 +276,8 @@ public class SignalPainter extends TrackPainter {
 			long leftVal = ((BitVector) left).toUnsignedValue();
 			long rightVal= ((BitVector) right).toUnsignedValue();
 			proj.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_REAL.ordinal()]);
-			int yOffsetLeft = (int) ((leftVal-minVal) / range * (yOffsetB-yOffsetT));
-			int yOffsetRight = (int) ((rightVal-minVal) / range * (yOffsetB-yOffsetT));
+			int yOffsetLeft = (int) ((leftVal-minVal) * yRange / range);
+			int yOffsetRight = (int) ((rightVal-minVal) * yRange / range);
 			if(continous) {
 				if (xEnd > maxPosX) {
 					proj.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);
@@ -401,8 +401,8 @@ public class SignalPainter extends TrackPainter {
 				}
 			} else {				
 				proj.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_REAL.ordinal()]);
-				int yOffsetLeft = (int) ((leftVal-minVal) / range * (yOffsetB-yOffsetT));
-				int yOffsetRight = Double.isNaN(rightVal)?yOffsetLeft:(int) ((rightVal-minVal) / range * (yOffsetB-yOffsetT));
+				int yOffsetLeft = (int) ((leftVal-minVal) * (yOffsetB-yOffsetT) / range);
+				int yOffsetRight = Double.isNaN(rightVal)?yOffsetLeft:(int) ((rightVal-minVal) * (yOffsetB-yOffsetT) / range);
 				if(continous) {
 					if (xEnd > maxPosX) {
 						proj.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);
