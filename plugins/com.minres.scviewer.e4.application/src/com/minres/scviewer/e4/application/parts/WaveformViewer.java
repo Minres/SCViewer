@@ -93,10 +93,10 @@ import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.swt.ToolTipContentProvider;
 import com.minres.scviewer.database.swt.ToolTipHelpTextProvider;
-import com.minres.scviewer.database.swt.WaveformViewerFactory;
+import com.minres.scviewer.database.swt.WaveformViewFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
-import com.minres.scviewer.database.ui.IWaveformViewer;
+import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
@@ -164,10 +164,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	private static int disposeListenerNumber = 0;
 	
 	/** The factory. */
-	WaveformViewerFactory factory = new WaveformViewerFactory();
+	WaveformViewFactory factory = new WaveformViewFactory();
 
 	/** The waveform pane. */
-	private IWaveformViewer waveformPane;
+	private IWaveformView waveformPane;
 
 	/** get UISynchronize injected as field */
 	@Inject UISynchronize sync;
@@ -217,7 +217,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	private Object detailsSettings;
 
 	/** The navigation relation type. */
-	private RelationType navigationRelationType=IWaveformViewer.NEXT_PREV_IN_STREAM ;
+	private RelationType navigationRelationType=IWaveformView.NEXT_PREV_IN_STREAM ;
 
 	/** The file monitor. */
 	FileMonitor fileMonitor = new FileMonitor();
@@ -262,7 +262,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		//set selection to empty selection when opening a new waveformPane
 		selectionService.setSelection(new StructuredSelection());
 		
-		waveformPane.addPropertyChangeListener(IWaveformViewer.CURSOR_PROPERTY, new PropertyChangeListener() {
+		waveformPane.addPropertyChangeListener(IWaveformView.CURSOR_PROPERTY, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				Long time = (Long) evt.getNewValue();
@@ -272,7 +272,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 			}
 		});
-		waveformPane.addPropertyChangeListener(IWaveformViewer.MARKER_PROPERTY, new PropertyChangeListener() {
+		waveformPane.addPropertyChangeListener(IWaveformView.MARKER_PROPERTY, new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				Long time = (Long) evt.getNewValue();
@@ -478,13 +478,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	
 	@Inject
 	@Optional
-	public void reactOnShowHoverChange(@Preference(value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
+	public void reactOnShowHoverChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
 		showHover=hover;
 	}
 	
 	@Inject
 	@Optional
-	public void reactOnReloadDatabaseChange(@Preference(value = PreferenceConstants.DATABASE_RELOAD) Boolean checkForUpdates) {
+	public void reactOnReloadDatabaseChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.DATABASE_RELOAD) Boolean checkForUpdates) {
 		if (checkForUpdates) {
 			fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
 		} else { 
@@ -1215,7 +1215,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	public List<RelationType> getAllRelationTypes() {
 		List<RelationType> res =new ArrayList<>();
-		res.add(IWaveformViewer.NEXT_PREV_IN_STREAM);
+		res.add(IWaveformView.NEXT_PREV_IN_STREAM);
 		res.addAll(database.getAllRelationTypes());
 		return res;
 	}
@@ -1227,7 +1227,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	public List<RelationType> getSelectionRelationTypes() {
 		List<RelationType> res =new ArrayList<>();
-		res.add(IWaveformViewer.NEXT_PREV_IN_STREAM);
+		res.add(IWaveformView.NEXT_PREV_IN_STREAM);
 		ISelection selection = waveformPane.getSelection();
 		if(selection instanceof IStructuredSelection && !selection.isEmpty()){
 			IStructuredSelection sel=(IStructuredSelection) selection;

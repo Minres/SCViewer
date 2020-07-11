@@ -12,15 +12,15 @@ package com.minres.scviewer.database.swt;
 
 import org.eclipse.swt.widgets.Composite;
 
-import com.minres.scviewer.database.swt.internal.WaveformViewer;
-import com.minres.scviewer.database.ui.IWaveformViewer;
-import com.minres.scviewer.database.ui.IWaveformViewerFactory;
+import com.minres.scviewer.database.swt.internal.WaveformView;
+import com.minres.scviewer.database.ui.IWaveformView;
+import com.minres.scviewer.database.ui.IWaveformViewFactory;
 
-public class WaveformViewerFactory implements IWaveformViewerFactory {
+public class WaveformViewFactory implements IWaveformViewFactory {
 
 	@Override
-	public IWaveformViewer createPanel(Composite parent) {
-		return new WaveformViewer(parent);
+	public IWaveformView createPanel(Composite parent) {
+		return new WaveformView(parent);
 	}
 
 }

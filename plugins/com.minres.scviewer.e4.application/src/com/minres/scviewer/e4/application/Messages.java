@@ -41,6 +41,7 @@ public class Messages extends NLS {
 	public static String TransactionDetails_21;
 	public static String TransactionDetails_3;
 	public static String TransactionDetails_4;
+	public static String WaveformPreferencesPage_description;
 	public static String WaveformPreferencesPage_1;
 	public static String WaveformViewer_13;
 	public static String WaveformViewer_14;
@@ -61,6 +62,30 @@ public class Messages extends NLS {
 	public static String WaveStatusBarControl_6;
 	public static String WaveStatusBarControl_7;
 	public static String WaveStatusBarControl_8;
+	public static String line;
+	public static String line_highlite;
+	public static String track_bg_even;
+	public static String track_bg_odd;
+	public static String track_bg_highlite;
+	public static String tx_bg;
+	public static String tx_bg_highlite;
+	public static String tx_border;
+	public static String signal0;
+	public static String signal1;
+	public static String signalz;
+	public static String signalx;
+	public static String signalu;
+	public static String signal_text;
+	public static String signal_real;
+	public static String signal_nan;
+	public static String cursor;
+	public static String cursor_drag;
+	public static String cursor_text;
+	public static String marker;
+	public static String marker_text;
+	public static String rel_arrow;
+	public static String rel_arrow_highlite;
+
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

@@ -25,6 +25,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
@@ -40,7 +41,7 @@ import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.swt.Constants;
-import com.minres.scviewer.database.ui.IWaveformViewer;
+import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
 
@@ -48,6 +49,8 @@ public class WaveformCanvas extends Canvas {
 	
     Color[] colors = new Color[WaveformColors.values().length];
 
+    private boolean doubleBuffering = true;
+    	
     private int trackHeight = 50;
     
     private long scaleFactor = 1000000L; // 1ns
@@ -110,7 +113,7 @@ public class WaveformCanvas extends Canvas {
         painterList.add(trackAreaPainter);
         rulerPainter=new RulerPainter(this);
         painterList.add(rulerPainter);
-        arrowPainter=new ArrowPainter(this, IWaveformViewer.NEXT_PREV_IN_STREAM);
+        arrowPainter=new ArrowPainter(this, IWaveformView.NEXT_PREV_IN_STREAM);
         painterList.add(arrowPainter);
 		CursorPainter cp = new CursorPainter(this, scaleFactor * 10, cursorPainters.size()-1);
 		painterList.add(cp);
@@ -398,7 +401,18 @@ public class WaveformCanvas extends Canvas {
     /* Paint function */
     private void paint(GC gc) {
         Rectangle clientRect = getClientArea(); /* Canvas' painting area */
-        Projection p = new Projection(gc);
+        GC thisGc = gc;
+        Image d_backingImg = null;
+        if(doubleBuffering) {
+            Point p = getSize();
+            d_backingImg = new Image(getDisplay(), p.x, p.y);
+            thisGc = new GC(d_backingImg);
+            thisGc.setBackground(gc.getBackground());
+            thisGc.setForeground(gc.getForeground());
+            thisGc.setFont(gc.getFont());
+            
+        }
+        Projection p = new Projection(thisGc);
         p.setTranslation(origin);
         if (painterList.size() > 0 ) {
             for (IPainter painter : painterList)
@@ -406,6 +420,11 @@ public class WaveformCanvas extends Canvas {
         } else {
             gc.fillRectangle(clientRect);
             initScrollBars();
+        }
+        if(doubleBuffering) {
+            gc.drawImage(d_backingImg, 0, 0);
+            d_backingImg.dispose();
+            thisGc.dispose();
         }
     }
 

@@ -12,6 +12,6 @@ package com.minres.scviewer.database.ui;
 
 import org.eclipse.swt.widgets.Composite;
 
-public interface IWaveformViewerFactory {
-	public IWaveformViewer createPanel(Composite parent);
+public interface IWaveformViewFactory {
+	public IWaveformView createPanel(Composite parent);
 }

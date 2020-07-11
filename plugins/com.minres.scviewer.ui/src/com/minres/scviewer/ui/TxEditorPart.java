@@ -48,9 +48,9 @@ import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
-import com.minres.scviewer.database.swt.WaveformViewerFactory;
+import com.minres.scviewer.database.swt.WaveformViewFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
-import com.minres.scviewer.database.ui.IWaveformViewer;
+import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.ui.views.TxOutlinePage;
 
@@ -78,7 +78,7 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 
 	public static final String WAVE_ACTION_ID = "com.minres.scviewer.ui.action.AddToWave";
 
-	private IWaveformViewer txDisplay;
+	private IWaveformView txDisplay;
 
 	/** This is the root of the editor's model. */
 	private IWaveformDb database;
@@ -112,10 +112,10 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 				}		
 			}
 		});
-		WaveformViewerFactory factory = new WaveformViewerFactory();
+		WaveformViewFactory factory = new WaveformViewFactory();
 		txDisplay = factory.createPanel(parent);
 		txDisplay.setMaxTime(0);
-		txDisplay.addPropertyChangeListener(IWaveformViewer.CURSOR_PROPERTY, new PropertyChangeListener() {
+		txDisplay.addPropertyChangeListener(IWaveformView.CURSOR_PROPERTY, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 Long time = (Long) evt.getNewValue();
