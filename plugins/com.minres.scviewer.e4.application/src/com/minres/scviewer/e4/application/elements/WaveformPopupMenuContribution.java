@@ -1,7 +1,6 @@
  
 package com.minres.scviewer.e4.application.elements;
 
-import java.util.Iterator;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -34,22 +33,46 @@ public class WaveformPopupMenuContribution {
 		
 	final TrackEntry nullEntry = new TrackEntry(null);
 	
+	private boolean selHasBitVector(ISelection sel, boolean checkForDouble) {
+		if(!sel.isEmpty() && sel instanceof IStructuredSelection) {
+			for(Object elem:(IStructuredSelection)sel) {
+				if(elem instanceof TrackEntry) {
+					TrackEntry e = (TrackEntry) elem;
+					if(e.waveform instanceof ISignal<?>) {
+						Object o = ((ISignal<?>) e.waveform).getEvents().firstEntry().getValue();
+						if(checkForDouble && o instanceof Double) 
+							return true;
+						else if(o instanceof BitVector && ((BitVector)o).getWidth()>1)
+							return true;
+						else
+							return false;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	private TrackEntry getSingleTrackEntry(ISelection sel) {
+		TrackEntry entry=null;
+		if(!sel.isEmpty() && sel instanceof IStructuredSelection) {
+			for(Object elem:(IStructuredSelection)sel) {
+				if(elem instanceof TrackEntry) {
+					if(entry != null)
+						return null;
+					entry = (TrackEntry) elem;
+				}
+			}
+		}
+		return entry;
+	}
+	
 	@Evaluate
 	public boolean evaluate() {
 		Object obj = activePart.getObject();
 		if(obj instanceof WaveformViewer){
 			WaveformViewer wfv = (WaveformViewer)obj;
-			ISelection sel = wfv.getSelection();
-			if(!sel.isEmpty() && sel instanceof IStructuredSelection) {
-				Object selected = ((IStructuredSelection)sel).getFirstElement();
-				if(selected instanceof ISignal<?>) {
-					Object x = ((ISignal<?>) selected).getEvents().firstEntry().getValue();
-					if((x instanceof BitVector) && ((BitVector)x).getWidth()==1) {
-						return false;
-					} else
-						return true;
-				}
-			}
+			return selHasBitVector(wfv.getSelection(), true);
 		}
 		return false;
 	}
@@ -60,39 +83,24 @@ public class WaveformPopupMenuContribution {
 		if(obj instanceof WaveformViewer){
 			WaveformViewer wfv = (WaveformViewer)obj;
 			ISelection sel = wfv.getSelection();
-			if(!sel.isEmpty() && sel instanceof IStructuredSelection) {
-				Iterator<?> it = ((IStructuredSelection)sel).iterator();
-				Object first = it.next();
-				Object second=null;
-				if(it.hasNext()) second=it.next();
-				if(first instanceof ISignal<?>) {
-					Object o = ((ISignal<?>) first).getEvents().firstEntry().getValue();
-					//com.minres.scviewer.e4.application.menu.mulitvaluesettings
-					if((o instanceof Double) || (o instanceof BitVector)) {
-						TrackEntry entry=nullEntry;
-						if(second instanceof TrackEntry)
-							entry=(TrackEntry)second;
-						if(o instanceof BitVector) {
-						    addValueMenuItem(items, application, modelService, "hex", TrackEntry.ValueDisplay.DEFAULT, entry.valueDisplay);
-						    addValueMenuItem(items, application, modelService, "unsigned", TrackEntry.ValueDisplay.UNSIGNED, entry.valueDisplay);
-						    addValueMenuItem(items, application, modelService, "signed", TrackEntry.ValueDisplay.SIGNED, entry.valueDisplay);
-							items.add(MMenuFactory.INSTANCE.createMenuSeparator());
-							addWaveMenuItem(items, application, modelService, "bit vector", TrackEntry.WaveDisplay.DEFAULT, entry.waveDisplay);
-						}						
-						addWaveMenuItem(items, application, modelService, "analog step-wise", TrackEntry.WaveDisplay.STEP_WISE, entry.waveDisplay);
-						addWaveMenuItem(items, application, modelService, "analog continous", TrackEntry.WaveDisplay.CONTINOUS, entry.waveDisplay);
-					}
-				}
-			}
+			TrackEntry elem = getSingleTrackEntry(sel);
+			if(selHasBitVector(sel, false)) {
+				addValueMenuItem(items, application, modelService, "hex", TrackEntry.ValueDisplay.DEFAULT, elem);
+				addValueMenuItem(items, application, modelService, "unsigned", TrackEntry.ValueDisplay.UNSIGNED, elem);
+				addValueMenuItem(items, application, modelService, "signed", TrackEntry.ValueDisplay.SIGNED, elem);
+				items.add(MMenuFactory.INSTANCE.createMenuSeparator());
+				addWaveMenuItem(items, application, modelService, "bit vector", TrackEntry.WaveDisplay.DEFAULT, elem);
+			}						
+			addWaveMenuItem(items, application, modelService, "analog step-wise", TrackEntry.WaveDisplay.STEP_WISE, elem);
+			addWaveMenuItem(items, application, modelService, "analog continous", TrackEntry.WaveDisplay.CONTINOUS, elem);
 		}
-
 	}
 
 	private void addValueMenuItem(List<MMenuElement> items, MApplication application, EModelService modelService,
-			String label, TrackEntry.ValueDisplay value, TrackEntry.ValueDisplay actual) {
+			String label, TrackEntry.ValueDisplay value, TrackEntry elem) {
 		MHandledMenuItem item = MMenuFactory.INSTANCE.createHandledMenuItem();
 		item.setType(ItemType.RADIO);
-		item.setSelected(value==actual);
+		item.setSelected(elem != null && elem.valueDisplay == value);
 		item.setLabel("Show as "+label);
 		item.setContributorURI("platform:/plugin/com.minres.scviewer.e4.application");
 		List<MCommand> cmds = modelService.findElements(application, "com.minres.scviewer.e4.application.command.changevaluedisplay", MCommand.class, null);
@@ -106,10 +114,10 @@ public class WaveformPopupMenuContribution {
 	}
 	
 	private void addWaveMenuItem(List<MMenuElement> items, MApplication application, EModelService modelService,
-			String label, TrackEntry.WaveDisplay value, TrackEntry.WaveDisplay actual) {
+			String label, TrackEntry.WaveDisplay value, TrackEntry elem) {
 		MHandledMenuItem item = MMenuFactory.INSTANCE.createHandledMenuItem();
 		item.setType(ItemType.RADIO);
-		item.setSelected(value==actual);
+		item.setSelected(elem != null && elem.waveDisplay==value);
 		item.setLabel("Render "+label);
 		item.setContributorURI("platform:/plugin/com.minres.scviewer.e4.application");
 		List<MCommand> cmds = modelService.findElements(application, "com.minres.scviewer.e4.application.command.changewavedisplay", MCommand.class, null);

@@ -1,8 +1,6 @@
  
 package com.minres.scviewer.e4.application.handlers;
 
-import java.util.Iterator;
-
 import javax.inject.Named;
 
 import org.eclipse.e4.core.di.annotations.CanExecute;
@@ -34,16 +32,13 @@ public class ChangeWaveformDisplay {
 			WaveformViewer wfv = (WaveformViewer)obj;
 			ISelection sel = wfv.getSelection();
 			if(!sel.isEmpty() && sel instanceof IStructuredSelection) {
-				Iterator<?> it = ((IStructuredSelection)sel).iterator();
-				it.next();
-				if(it.hasNext()) {
-						Object second = it.next();
-						if(second instanceof TrackEntry) {
-							TrackEntry.WaveDisplay val= TrackEntry.WaveDisplay.valueOf(param);
-							((TrackEntry)second).waveDisplay=val;
-							wfv.update();
-						}
+				for(Object elem:(IStructuredSelection)sel) {
+					if(elem instanceof TrackEntry) {
+						TrackEntry.WaveDisplay val= TrackEntry.WaveDisplay.valueOf(param);
+						((TrackEntry)elem).waveDisplay=val;
+					}
 				}
+				wfv.update();
 			}
 		}
 	}

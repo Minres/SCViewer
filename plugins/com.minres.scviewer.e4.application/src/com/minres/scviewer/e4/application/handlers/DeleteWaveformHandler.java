@@ -17,23 +17,30 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
-import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
 public class DeleteWaveformHandler {
 	
+	@SuppressWarnings("unchecked")
 	@CanExecute
 	public Boolean canExecute(ESelectionService selectionService){
 		Object o = selectionService.getSelection();
-		return o instanceof IStructuredSelection && ((IStructuredSelection)o).getFirstElement() instanceof IWaveform;
+		if(o instanceof IStructuredSelection) {
+			IStructuredSelection sel = (IStructuredSelection) o;
+			if(sel.size()>0)
+				return sel.toList().stream().allMatch(e-> e instanceof TrackEntry);
+			else
+				return false;
+		} else
+			return false;
 	}
 	
 	@Execute
 	public void execute(ESelectionService selectionService, MPart activePart) {
 		Object o = activePart.getObject();
-		Object sel = selectionService.getSelection();
-		if(o instanceof WaveformViewer && ((IStructuredSelection)sel).getFirstElement() instanceof IWaveform){
-			((WaveformViewer)o).removeStreamFromList((IWaveform) ((IStructuredSelection)sel).getFirstElement());
+		if(o instanceof WaveformViewer){
+			((WaveformViewer)o).removeSelectedStreamsFromList();
 		}	
 	}	
 }

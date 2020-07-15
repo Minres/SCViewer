@@ -90,16 +90,16 @@ import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 import com.minres.scviewer.database.RelationType;
-import com.minres.scviewer.database.swt.Constants;
-import com.minres.scviewer.database.swt.ToolTipContentProvider;
-import com.minres.scviewer.database.swt.ToolTipHelpTextProvider;
-import com.minres.scviewer.database.swt.WaveformViewFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
+import com.minres.scviewer.database.ui.swt.Constants;
+import com.minres.scviewer.database.ui.swt.ToolTipContentProvider;
+import com.minres.scviewer.database.ui.swt.ToolTipHelpTextProvider;
+import com.minres.scviewer.database.ui.swt.WaveformViewFactory;
 import com.minres.scviewer.database.ui.WaveformColors;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl;
@@ -1005,55 +1005,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		setFocus();
 	}
 
-	/**
-	 * Removes the stream from list.
-	 *
-	 * @param stream the stream
-	 */
-	public void removeStreamFromList(IWaveform stream) {
-		TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
-		List<TrackEntry> streams = waveformPane.getStreamList();
-		ISelection sel = waveformPane.getSelection();
-		TrackEntry newSelection=null;
-		
-		if(sel instanceof IStructuredSelection && ((IStructuredSelection) sel).size()==2) {
-				Iterator<?> it = ((IStructuredSelection)sel).iterator();
-				it.next();
-				int idx = streams.indexOf(it.next());
-				
-				if(idx==streams.size()-1) {
-					//last stream gets deleted, no more selection
-					if(idx==0) {
-						newSelection=null;
-					}
-					//more than 1 stream left, last gets deleted, selection jumps to new last stream
-					else {
-						newSelection=streams.get(idx-1);
-					}
-				}
-				//more than 1 stream left, any stream but the last gets deleted, selection jumps to the next stream
-				else {
-					newSelection=streams.get(idx+1);
-				}
-		}
-		waveformPane.setSelection(new StructuredSelection());
-		streams.remove(trackEntry);
-		if(newSelection!=null) {
-			Object[] o = {newSelection};
-			waveformPane.setSelection(new StructuredSelection(o));
-		}
+	public void removeSelectedStreamsFromList() {
+		waveformPane.deleteSelectedTracks();
 	}
 
-	/**
-	 * Removes the streams from list.
-	 *
-	 * @param iWaveforms the i waveforms
-	 */
-	public void removeStreamsFromList(IWaveform[] iWaveforms) {
-		for (IWaveform stream : iWaveforms)
-			removeStreamFromList(stream);
+	public void removeStreamFromList(ISelection sel) {
+		waveformPane.deleteSelectedTracks();
 	}
-
 	/**
 	 * Move selected.
 	 *
