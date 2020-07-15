@@ -8,7 +8,7 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database.swt.internal;
+package com.minres.scviewer.database.ui.swt.internal;
 
 import java.util.Map.Entry;
 import java.util.TreeMap;

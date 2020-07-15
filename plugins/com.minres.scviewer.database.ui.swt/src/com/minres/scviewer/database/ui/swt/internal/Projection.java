@@ -1,4 +1,4 @@
-package com.minres.scviewer.database.swt.internal;
+package com.minres.scviewer.database.ui.swt.internal;
 
 import java.util.Arrays;
 

@@ -1,4 +1,4 @@
-package com.minres.scviewer.database.swt;
+package com.minres.scviewer.database.ui.swt;
 
 public class Constants {
 

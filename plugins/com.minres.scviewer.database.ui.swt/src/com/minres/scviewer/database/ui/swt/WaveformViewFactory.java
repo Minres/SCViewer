@@ -8,13 +8,13 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database.swt;
+package com.minres.scviewer.database.ui.swt;
 
 import org.eclipse.swt.widgets.Composite;
 
-import com.minres.scviewer.database.swt.internal.WaveformView;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformViewFactory;
+import com.minres.scviewer.database.ui.swt.internal.WaveformView;
 
 public class WaveformViewFactory implements IWaveformViewFactory {
 

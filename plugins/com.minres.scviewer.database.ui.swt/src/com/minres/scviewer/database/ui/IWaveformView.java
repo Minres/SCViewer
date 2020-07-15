@@ -51,7 +51,9 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 
 	public void setSelection(ISelection selection);
 
-	public void setSelection(ISelection selection, boolean addIfNeeded);
+	public void setSelection(ISelection selection, boolean showIfNeeded);
+
+	public void addToSelection(ISelection selection, boolean showIfNeeded);
 
 	public void moveSelection(GotoDirection direction);
 
@@ -110,4 +112,6 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	public void scrollHorizontal(int percent);
 	
 	public void addDisposeListener( DisposeListener listener );
+
+	public void deleteSelectedTracks();
 }

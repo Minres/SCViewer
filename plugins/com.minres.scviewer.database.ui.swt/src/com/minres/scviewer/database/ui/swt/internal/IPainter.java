@@ -8,16 +8,12 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database.swt.internal;
+package com.minres.scviewer.database.ui.swt.internal;
 
-import com.minres.scviewer.database.ui.TrackEntry;
+import org.eclipse.swt.graphics.Rectangle;
 
-public interface IWaveformPainter extends IPainter {
+public interface IPainter {
+
+	void paintArea(Projection gc, Rectangle area);
 	
-	public int getHeight();
-
-	public int getVerticalOffset();
-
-	public TrackEntry getTrackEntry();
-
 }

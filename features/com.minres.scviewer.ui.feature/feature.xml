@@ -17,12 +17,19 @@
       [Enter License Description here.]
    </license>
 
-   <plugin
-         id="com.minres.scviewer.database.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+   <includes
+         id="com.minres.scviewer.database.feature"
+         version="0.0.0"/>
+
+   <requires>
+      <import plugin="org.eclipse.swt" version="3.103.1" match="greaterOrEqual"/>
+      <import plugin="com.minres.scviewer.database" version="1.0.0" match="greaterOrEqual"/>
+      <import plugin="com.google.guava" version="15.0.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jface"/>
+      <import plugin="org.eclipse.equinox.registry"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.osgi"/>
+   </requires>
 
    <plugin
          id="com.minres.scviewer.database.ui.swt"

@@ -8,7 +8,7 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database.swt.internal;
+package com.minres.scviewer.database.ui.swt.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,10 +40,10 @@ import com.google.common.collect.Lists;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
-import com.minres.scviewer.database.swt.Constants;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
+import com.minres.scviewer.database.ui.swt.Constants;
 
 public class WaveformCanvas extends Canvas {
 	
