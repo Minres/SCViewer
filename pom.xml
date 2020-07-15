@@ -13,7 +13,6 @@
 		<module>plugins/com.minres.scviewer.database.text</module>
 		<module>plugins/com.minres.scviewer.database.vcd</module>
 		<module>tests/com.minres.scviewer.database.test</module>
-		<module>plugins/com.minres.scviewer.database.ui</module>
 		<module>plugins/com.minres.scviewer.database.ui.swt</module>
 		<module>plugins/com.minres.scviewer.e4.application</module>
 		<module>plugins/com.minres.scviewer.ui</module>

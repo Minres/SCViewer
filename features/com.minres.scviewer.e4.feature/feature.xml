@@ -41,7 +41,6 @@
       <import plugin="org.eclipse.e4.ui.di" version="1.1.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.e4.core.contexts" version="1.4.0" match="greaterOrEqual"/>
       <import plugin="com.minres.scviewer.database.ui.swt" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="com.minres.scviewer.database.ui"/>
       <import plugin="com.minres.scviewer.database" version="1.0.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.osgi.services" version="3.5.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.e4.core.services" version="2.0.0" match="greaterOrEqual"/>
@@ -51,17 +50,15 @@
       <import plugin="org.eclipse.equinox.preferences"/>
       <import plugin="org.eclipse.core.expressions"/>
       <import plugin="org.eclipse.e4.core.commands" version="0.11.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.e4.ui.workbench.addons.swt"/>
-      <import plugin="com.opcoach.e4.preferences"/>
       <import plugin="org.eclipse.e4.core.di.extensions"/>
       <import plugin="org.eclipse.e4.ui.css.swt.theme" version="0.10.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.resources" version="3.13.0" match="greaterOrEqual"/>
-      <import plugin="com.opcoach.e4.preferences.mainmenu" version="1.2.0" match="greaterOrEqual"/>
       <import feature="com.opcoach.e4.preferences.feature" version="1.3.0.202004072127"/>
       <import feature="org.eclipse.equinox.executable" version="3.8.700.v20200207-2156"/>
       <import feature="org.eclipse.equinox.sdk" version="3.20.100.v20200303-1901"/>
       <import feature="org.eclipse.sdk" version="4.15.0.v20200305-0155"/>
       <import feature="org.eclipse.rcptt.core" version="2.5.1.M3"/>
+      <import plugin="org.eclipse.core.commands"/>
    </requires>
 
    <plugin
