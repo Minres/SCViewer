@@ -1,4 +1,4 @@
-package com.minres.scviewer.database.swt;
+package com.minres.scviewer.database.ui.swt;
 
 import org.eclipse.swt.widgets.Widget;
 

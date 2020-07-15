@@ -1,4 +1,4 @@
-package com.minres.scviewer.database.swt.internal;
+package com.minres.scviewer.database.ui.swt.internal;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
@@ -13,9 +13,9 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Widget;
 
-import com.minres.scviewer.database.swt.Constants;
-import com.minres.scviewer.database.swt.ToolTipContentProvider;
-import com.minres.scviewer.database.swt.ToolTipHelpTextProvider;
+import com.minres.scviewer.database.ui.swt.Constants;
+import com.minres.scviewer.database.ui.swt.ToolTipContentProvider;
+import com.minres.scviewer.database.ui.swt.ToolTipHelpTextProvider;
 
 class ToolTipHandler {
 
