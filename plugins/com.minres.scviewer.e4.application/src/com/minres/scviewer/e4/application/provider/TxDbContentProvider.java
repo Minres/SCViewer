@@ -68,7 +68,9 @@ public class TxDbContentProvider implements ITreeContentProvider {
 	 */
 	@Override
 	public Object[] getElements(Object inputElement) {
-		if(inputElement instanceof IHierNode){
+		if(inputElement instanceof IWaveformDb){
+			return new Object[]{};
+		}else if(inputElement instanceof IHierNode){
 			Collection<IHierNode> res = Collections2.filter(((IHierNode)inputElement).getChildNodes(), new Predicate<IHierNode>(){
 				@Override
 				public boolean apply(IHierNode arg0) {
@@ -82,8 +84,6 @@ public class TxDbContentProvider implements ITreeContentProvider {
 			return res.toArray();
 		}else if(inputElement instanceof List<?>){
 			return ((List<?>)inputElement).toArray();
-		}else if(inputElement instanceof IWaveformDb){
-			return new Object[]{};
 		} else
 			return null;
 	}
