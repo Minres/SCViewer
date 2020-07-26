@@ -21,7 +21,6 @@ import com.google.common.collect.Collections2;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
-import com.minres.scviewer.e4.application.parts.LoadingWaveformDb;
 
 /**
  * The Class TxDbContentProvider providing the tree content of a database for the respective viewer.

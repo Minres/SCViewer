@@ -725,13 +725,13 @@ public class WaveformView implements IWaveformView  {
 							streams.add(trackEntry);
 						}
 						currentTxSelection = txSel;
-						if(trackEntry!=null) {
-							currentWaveformSelection.add((TrackEntry)sel);
-						}
+//						if(trackEntry!=null) {
+//							currentWaveformSelection.add((TrackEntry)sel);
+//						}
 						selectionChanged = true;
 					} else if (sel instanceof TrackEntry && !currentWaveformSelection.contains(sel)) {
 						currentWaveformSelection.add((TrackEntry)sel);
-						if(currentTxSelection!=null)
+						if(currentTxSelection!=null && !selectionChanged)
 							currentTxSelection=null;						
 						selectionChanged = true;
 					}            		
