@@ -9,7 +9,7 @@
 		<version>2.0.0-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
-	<artifactId>com.minres.scviewer.e4.product</artifactId>
+	<artifactId>com.minres.scviewer.e4.product_slim</artifactId>
   	<version>2.7.1-SNAPSHOT</version>
 	<packaging>eclipse-repository</packaging>
 	<groupId>com.minres.scviewer</groupId>
@@ -45,7 +45,7 @@
 					</formats>
 					<products>
 						<product>
-							<id>product</id>
+							<id>product_slim</id>
 							<archiveFileName>SCViewer-${project.version}</archiveFileName>
 							<rootFolders>
 								<macosx>SCViewer.app</macosx>
