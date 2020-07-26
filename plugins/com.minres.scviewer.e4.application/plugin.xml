@@ -23,6 +23,27 @@
       </product>
    </extension>
    <extension
+         id="product_slim"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="org.eclipse.e4.ui.workbench.swt.E4Application"
+            description="%product.description"
+            name="SCViewer">
+         <property
+               name="lifeCycleURI"
+               value="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.E4LifeCycle">
+         </property>
+         <property
+               name="appName"
+               value="SCViewer">
+         </property>
+         <property
+               name="applicationCSS"
+               value="platform:/plugin/com.minres.scviewer.e4.application/css/default.css">
+         </property>
+      </product>
+   </extension>
+   <extension
          point="org.eclipse.core.expressions.definitions">
       <definition
             id="com.minres.scviewer.e4.application.oneWaveSeleted">
