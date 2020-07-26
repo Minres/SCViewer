@@ -21,6 +21,7 @@ import com.google.common.collect.Collections2;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
+import com.minres.scviewer.e4.application.parts.LoadingWaveformDb;
 
 /**
  * The Class TxDbContentProvider providing the tree content of a database for the respective viewer.
@@ -29,24 +30,24 @@ public class TxDbContentProvider implements ITreeContentProvider {
 
 	/** The show nodes. */
 	//	private List<HierNode> nodes;
-	private boolean showNodes;
+	private boolean tabelEntries;
 
 	/**
 	 * Instantiates a new tx db content provider.
 	 */
 	public TxDbContentProvider() {
 		super();
-		this.showNodes = false;
+		this.tabelEntries = false;
 	}
 
 	/**
 	 * Instantiates a new tx db content provider.
 	 *
-	 * @param showNodes the show nodes
+	 * @param tableEntries get nodes for waveform table entries
 	 */
-	public TxDbContentProvider(boolean showNodes) {
+	public TxDbContentProvider(boolean tableEntries) {
 		super();
-		this.showNodes = showNodes;
+		this.tabelEntries = tableEntries;
 	}
 
 	/* (non-Javadoc)
@@ -60,7 +61,6 @@ public class TxDbContentProvider implements ITreeContentProvider {
 	 */
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-//		showNodes=!(newInput instanceof IHierNode);
 	}
 
 	/* (non-Javadoc)
@@ -68,13 +68,13 @@ public class TxDbContentProvider implements ITreeContentProvider {
 	 */
 	@Override
 	public Object[] getElements(Object inputElement) {
-		if(inputElement instanceof IWaveformDb){
+		if(tabelEntries && inputElement instanceof IWaveformDb){
 			return new Object[]{};
 		}else if(inputElement instanceof IHierNode){
 			Collection<IHierNode> res = Collections2.filter(((IHierNode)inputElement).getChildNodes(), new Predicate<IHierNode>(){
 				@Override
 				public boolean apply(IHierNode arg0) {
-					if(showNodes){
+					if(tabelEntries){
 						return arg0 instanceof IWaveform;
 					} else{
 						return arg0.getChildNodes().size()!=0;
