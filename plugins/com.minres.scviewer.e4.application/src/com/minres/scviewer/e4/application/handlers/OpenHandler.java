@@ -11,6 +11,7 @@
 package com.minres.scviewer.e4.application.handlers;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.e4.core.contexts.IEclipseContext;
@@ -39,12 +40,12 @@ public class OpenHandler {
 		part.setLabel(files.get(0).getName());
 		MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
 		partStack.getChildren().add(part);
-		partService.showPart(part, PartState.ACTIVATE);
+		partService.showPart(part, PartState.CREATE);
 		final IEclipseContext ctx=part.getContext();
-		files.stream()
-			.map(x -> x.getAbsolutePath())
-			.reduce((s1, s2) -> s1 + "," + s2)
-			.ifPresent(s -> ctx.modify("input", s)); //$NON-NLS-1$
+		List<String> inputs=new ArrayList<>();
+		for(File f: files)
+			inputs.add(f.getAbsolutePath());
+		ctx.modify("input", inputs);
 		ctx.modify("config", ""); //$NON-NLS-1$				
 	}
 	

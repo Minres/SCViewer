@@ -262,7 +262,8 @@ public class TransactionDetails {
 	 */
 	@Focus
 	public void setFocus() {
-		treeViewer.getTree().setFocus();
+		if(treeViewer!=null)
+			treeViewer.getTree().setFocus();
 	}
 
 	/**
