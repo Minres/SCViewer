@@ -22,8 +22,8 @@
 		<module>features/com.minres.scviewer.e4.platform.feature</module>
 		<module>features/com.minres.scviewer.e4.feature</module>
 		<module>p2repositories//com.minres.scviewer.updateSite</module>
-		<module>com.minres.scviewer.e4.product</module>
-		<module>com.minres.scviewer.e4.product_slim</module>
+		<module>products/com.minres.scviewer.e4.product</module>
+		<module>products/com.minres.scviewer.e4.product_slim</module>
 	</modules>
 
 	<properties>
