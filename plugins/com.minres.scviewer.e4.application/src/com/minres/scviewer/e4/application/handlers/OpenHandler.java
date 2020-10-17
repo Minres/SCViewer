@@ -46,7 +46,8 @@ public class OpenHandler {
 		for(File f: files)
 			inputs.add(f.getAbsolutePath());
 		ctx.modify("input", inputs);
-		ctx.modify("config", ""); //$NON-NLS-1$				
+		ctx.modify("config", ""); //$NON-NLS-1$
+		partStack.setSelectedElement(part);
 	}
 	
 }

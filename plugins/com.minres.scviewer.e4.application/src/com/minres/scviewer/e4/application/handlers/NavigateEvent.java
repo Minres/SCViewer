@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.ui.GotoDirection;
+import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
 public class NavigateEvent {
@@ -34,7 +35,7 @@ public class NavigateEvent {
 		Object sel = selectionService.getSelection();
 		if( sel instanceof IStructuredSelection) {
 			Object o= ((IStructuredSelection)sel).getFirstElement();
-			return o instanceof IWaveform || o instanceof ITx;
+			return o instanceof IWaveform || o instanceof ITx || o instanceof TrackEntry;
 		}
 		return false;
 	}

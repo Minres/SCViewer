@@ -3,11 +3,8 @@
   <children xsi:type="basic:TrimmedWindow" xmi:id="_95PfsXNmEeWBq8z1Dv39LA" label="SC Viewer" bindingContexts="_95PfunNmEeWBq8z1Dv39LA" width="1280" height="700">
     <children xsi:type="advanced:PerspectiveStack" xmi:id="_95QGxnNmEeWBq8z1Dv39LA">
       <children xsi:type="advanced:Perspective" xmi:id="_95QGx3NmEeWBq8z1Dv39LA">
-        <children xsi:type="basic:PartSashContainer" xmi:id="_uT9BIHgtEeWwZ-9vrAR2UQ" elementId="" containerData="8000">
-          <children xsi:type="basic:PartStack" xmi:id="_95QGyXNmEeWBq8z1Dv39LA" elementId="org.eclipse.editorss" containerData="7500">
-            <tags>NoAutoCollapse</tags>
-          </children>
-          <children xsi:type="basic:Part" xmi:id="_vtfm8HgtEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parts.WaveformDetails" containerData="2500" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.TransactionDetails" label="Waveform Details"/>
+        <children xsi:type="basic:PartStack" xmi:id="_95QGyXNmEeWBq8z1Dv39LA" elementId="org.eclipse.editorss" containerData="7500">
+          <tags>NoAutoCollapse</tags>
         </children>
       </children>
     </children>

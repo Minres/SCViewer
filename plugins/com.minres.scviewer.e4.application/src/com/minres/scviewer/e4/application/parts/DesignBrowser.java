@@ -64,6 +64,7 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -149,6 +150,14 @@ public class DesignBrowser {
 						treeViewer.refresh();
 					}
 				});
+			} else if("WAVEFORMS".equals(evt.getPropertyName())) {
+				treeViewer.getTree().getDisplay().asyncExec(new Runnable() {					
+					@Override
+					public void run() {
+						IWaveformDb database = waveformViewerPart.getDatabase();
+						treeViewer.setInput(Arrays.asList(database.isLoaded()?new IWaveformDb[]{database}:new IWaveformDb[]{new LoadingWaveformDb()}));
+					}
+				});
 			}
 		}
 	};
@@ -177,7 +186,8 @@ public class DesignBrowser {
 	 * @param parent the parent
 	 */
 	@PostConstruct
-	public void createComposite(Composite parent) {
+	public void createComposite(Composite parent, @Optional WaveformViewer waveformViewerPart) {
+		parent.setLayout(new FillLayout(SWT.HORIZONTAL));
 		sashForm = new SashForm(parent, SWT.BORDER | SWT.SMOOTH | SWT.VERTICAL);
 
 		top = new Composite(sashForm, SWT.NONE);
@@ -193,6 +203,8 @@ public class DesignBrowser {
 				top.removeControlListener(this);
 			}
 		});
+		if(waveformViewerPart!=null)
+			setWaveformViewer(waveformViewerPart);
 	}
 	
 	/**
@@ -366,13 +378,11 @@ public class DesignBrowser {
 	 * @param waveformViewerPart the waveform viewer part
 	 * @return the status event
 	 */
-	@SuppressWarnings("unchecked")
 	@Inject @Optional
 	public void  getActiveWaveformViewerEvent(@UIEventTopic(WaveformViewer.ACTIVE_WAVEFORMVIEW) WaveformViewer waveformViewerPart) {
-		if(this.waveformViewerPart!=null) { 
-			this.waveformViewerPart.storeDesignBrowerState(new DBState());
-		}
 		if( this.waveformViewerPart == null || this.waveformViewerPart != waveformViewerPart ) {
+			if(this.waveformViewerPart!=null)
+				this.waveformViewerPart.storeDesignBrowerState(new DBState());
 			waveformViewerPart.addDisposeListener( new DisposeListener() {
 				@Override
 				public void widgetDisposed(DisposeEvent e) {
@@ -384,7 +394,12 @@ public class DesignBrowser {
 					}
 				}
 			} );
+			setWaveformViewer(waveformViewerPart);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public void setWaveformViewer(WaveformViewer waveformViewerPart) {
 		this.waveformViewerPart=waveformViewerPart;
 		IWaveformDb database = waveformViewerPart.getDatabase();
 		Object input = treeViewer.getInput();

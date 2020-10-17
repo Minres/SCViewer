@@ -44,10 +44,6 @@ public class Projection {
 	public void setFillRule(int rule) {
 		gc.setFillRule(rule);
 	}
-	public void fillRectangle(Rectangle rect) {
-		gc.fillRectangle(rect.x+translation.x, rect.y+translation.y, rect.width, rect.height);
-	}
-
 	public void setLineStyle(int style) {
 		gc.setLineStyle(style);
 	}
@@ -67,6 +63,10 @@ public class Projection {
 
 	public GC getGC() {
 		return gc;
+	}
+
+	public void fillRectangle(Rectangle rect) {
+		gc.fillRectangle(rect.x+translation.x, rect.y+translation.y, rect.width, rect.height);
 	}
 
 	public void drawRectangle(Rectangle rect) {

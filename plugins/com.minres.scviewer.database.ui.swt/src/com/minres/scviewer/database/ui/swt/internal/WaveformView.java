@@ -52,7 +52,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -170,37 +169,11 @@ public class WaveformView implements IWaveformView  {
 		}
 	};
 	
-	class WaveformMouseListener implements MouseMoveListener, MouseListener, PaintListener {
+	class WaveformMouseListener implements PaintListener, Listener {
 		Point start, end;
 		List<Object> initialSelected;
 		boolean down=false;
 
-		@Override
-		public void mouseDoubleClick(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseDown(MouseEvent e) {
-			start=new Point(e.x, e.y);
-			end=new Point(e.x, e.y);
-			down=true;
-			if((e.stateMask&SWT.MODIFIER_MASK)!=0) return; //don't react on modifier
-			if (e.button ==  1) {	
-				initialSelected = waveformCanvas.getElementsAt(start);
-			} else if (e.button == 3) {
-				Menu topMenu= top.getMenu();
-				if(topMenu!=null) topMenu.setVisible(true);
-			}
-		}
-
-		@Override
-		public void mouseMove(MouseEvent e) {
-			if(down) {
-				end=new Point(e.x, e.y);
-				asyncUpdate(e.widget);
-			}	
-		}
-		
 		@Override
 		public void paintControl(PaintEvent e) {
 			if(down) {
@@ -214,8 +187,7 @@ public class WaveformView implements IWaveformView  {
 			}
 		}
 
-		@Override
-		public void mouseUp(MouseEvent e) {
+		private void mouseUp(MouseEvent e) {
 			down=false;
 			if(start==null) return;
 			if((e.stateMask&SWT.MODIFIER_MASK&~SWT.SHIFT)!=0) return; //don't react on modifier except shift
@@ -307,8 +279,43 @@ public class WaveformView implements IWaveformView  {
 			return time;
 		}
 
+		@Override
+		public void handleEvent(Event e) {
+			switch (e.type) {
+			case SWT.MouseWheel:
+				break;
+			case SWT.MouseDown:
+				start=new Point(e.x, e.y);
+				end=new Point(e.x, e.y);
+				down=true;
+				if((e.stateMask&SWT.MODIFIER_MASK)!=0) return; //don't react on modifier
+				if (e.button ==  1) {	
+					initialSelected = waveformCanvas.getElementsAt(start);
+				} else if (e.button == 3) {
+					Menu topMenu= top.getMenu();
+					if(topMenu!=null) topMenu.setVisible(true);
+				}
+				break;
+			case SWT.MouseUp:
+				mouseUp(new MouseEvent(e));
+				break;
+			//case SWT.MouseDoubleClick:
+				//mouseDoubleClick(new MouseEvent(e));
+				//break;
+			case SWT.MouseMove:
+				if(down) {
+					end=new Point(e.x, e.y);
+					asyncUpdate(e.widget);
+				}	
+				break;
+			default:
+				break;
+			}
+			
+		}
+
 	};
-	protected WaveformMouseListener waveformMouseListener = new WaveformMouseListener();
+	protected WaveformMouseListener waveformMouseListener  = new WaveformMouseListener();
 
 	public WaveformView(Composite parent) {
 		pcs=new PropertyChangeSupport(this);
@@ -322,7 +329,7 @@ public class WaveformView implements IWaveformView  {
 		streams = new ObservableList<>();
 		streams.addPropertyChangeListener("content", this);
 
-		top = new Composite(parent, SWT.NONE);
+		top = parent;
 		top.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 		SashForm topSash = new SashForm(top, SWT.SMOOTH);
@@ -407,9 +414,12 @@ public class WaveformView implements IWaveformView  {
 		valueListScrolled.setContent(valueList);
 
 		waveformCanvas.setMaxTime(1); 
-		waveformCanvas.addMouseListener(waveformMouseListener);
-		waveformCanvas.addMouseMoveListener(waveformMouseListener);
-		waveformCanvas.addPaintListener(waveformMouseListener);
+		waveformCanvas.addPaintListener(waveformMouseListener);	
+		waveformCanvas.addListener(SWT.MouseDown,waveformMouseListener);
+		waveformCanvas.addListener(SWT.MouseUp,waveformMouseListener);
+		//waveformCanvas.addListener(SWT.MouseDoubleClick,waveformMouseListener);
+		waveformCanvas.addListener(SWT.MouseMove,waveformMouseListener);
+		waveformCanvas.addListener(SWT.MouseWheel, waveformMouseListener);
 		
 		nameListScrolled.getVerticalBar().addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
@@ -895,7 +905,7 @@ public class WaveformView implements IWaveformView  {
 	@Override
 	public void moveCursor(GotoDirection direction) {
 		if(currentWaveformSelection.size()!=1) return;
-		TrackEntry sel = currentWaveformSelection.get(1);
+		TrackEntry sel = currentWaveformSelection.get(0);
 		long time = getCursorTime();
 		NavigableMap<Long, ?> map=null;
 		if(sel.isStream()){
