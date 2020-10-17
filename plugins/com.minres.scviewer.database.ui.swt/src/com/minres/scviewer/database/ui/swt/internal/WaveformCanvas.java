@@ -111,10 +111,10 @@ public class WaveformCanvas extends Canvas {
 		// order is important: it is bottom to top
         trackAreaPainter=new TrackAreaPainter(this);
         painterList.add(trackAreaPainter);
-        rulerPainter=new RulerPainter(this);
-        painterList.add(rulerPainter);
         arrowPainter=new ArrowPainter(this, IWaveformView.NEXT_PREV_IN_STREAM);
         painterList.add(arrowPainter);
+        rulerPainter=new RulerPainter(this);
+        painterList.add(rulerPainter);
 		CursorPainter cp = new CursorPainter(this, scaleFactor * 10, cursorPainters.size()-1);
 		painterList.add(cp);
 		cursorPainters.add(cp);
