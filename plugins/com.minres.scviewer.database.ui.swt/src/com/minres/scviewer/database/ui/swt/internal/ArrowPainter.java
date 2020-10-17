@@ -49,7 +49,7 @@ public class ArrowPainter implements IPainter {
 	
 	long scaleFactor;
 
-	boolean deferredUpdate;
+	boolean deferUpdate;
 
 	public ArrowPainter(WaveformCanvas waveCanvas, RelationType relationType) {
 		this.waveCanvas = waveCanvas;
@@ -80,12 +80,14 @@ public class ArrowPainter implements IPainter {
 	}
 
 	protected void calculateGeometries() {
-		deferredUpdate = false;
+		deferUpdate = false;
+		iRect.clear();
+		oRect.clear();
 		ITxStream<?> stream = tx.getStream();
 		IWaveformPainter painter = waveCanvas.wave2painterMap.get(stream);
 		if (painter == null) { // stream has been added but painter not yet
 								// created
-			deferredUpdate = true;
+			deferUpdate = true;
 			return;
 		}
 		int laneHeight = painter.getHeight() / stream.getMaxConcurrency();
@@ -117,11 +119,12 @@ public class ArrowPainter implements IPainter {
 		Color fgColor = waveCanvas.colors[WaveformColors.REL_ARROW.ordinal()];
 		Color highliteColor = waveCanvas.colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()];
 
-		if (deferredUpdate || (tx != null && waveCanvas.getScaleFactor() != scaleFactor)) {
+		if(tx==null) return;
+		if (!deferUpdate) {
 			scaleFactor = waveCanvas.getScaleFactor();
 			calculateGeometries();
 		}
-		if(txRectangle == null) return;
+		if(deferUpdate) return;
 		int correctionValue = (int)(selectionOffset);
 		Rectangle correctedTargetRectangle = new Rectangle(txRectangle.x+correctionValue, txRectangle.y, txRectangle.width, txRectangle.height);
 		for (LinkEntry entry : iRect) {

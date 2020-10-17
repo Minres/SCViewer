@@ -395,7 +395,7 @@ public class TransactionDetails {
 		if( part == null || ! (part.getObject() instanceof WaveformViewer ) )
 			return;
 		if(treeViewer!=null && selection!=null && !treeViewer.getTree().isDisposed()){
-			if( selection instanceof IStructuredSelection) {
+			if( selection instanceof IStructuredSelection && !selection.isEmpty()) {
 				setInput(((IStructuredSelection)selection).getFirstElement());		
 			}
 		}
