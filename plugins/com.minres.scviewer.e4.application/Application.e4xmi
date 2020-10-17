@@ -3,34 +3,8 @@
   <children xsi:type="basic:TrimmedWindow" xmi:id="_95PfsXNmEeWBq8z1Dv39LA" label="SC Viewer" bindingContexts="_95PfunNmEeWBq8z1Dv39LA" width="1280" height="700">
     <children xsi:type="advanced:PerspectiveStack" xmi:id="_95QGxnNmEeWBq8z1Dv39LA">
       <children xsi:type="advanced:Perspective" xmi:id="_95QGx3NmEeWBq8z1Dv39LA">
-        <children xsi:type="basic:PartSashContainer" xmi:id="_95QGyHNmEeWBq8z1Dv39LA" horizontal="true">
-          <children xsi:type="basic:Part" xmi:id="_95QGynNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.parts.DesignBrowser" containerData="2000" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.DesignBrowser" label="Design Browser" bindingContexts="_iQ3kQGVmEeqSQM-A6dw9ig">
-            <handlers xmi:id="_JIWOYIq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handler.addWaveformCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.AddWaveformHandler" command="_2PehEHr9EeWVM_sKoXvptg"/>
-            <menus xsi:type="menu:PopupMenu" xmi:id="_HvUl8Iq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parts.DesignBrowser.popupmenu">
-              <children xsi:type="menu:HandledMenuItem" xmi:id="_HvUl8Yq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handledmenuitem.append" label="Append after" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/append_wave.png" command="_2PehEHr9EeWVM_sKoXvptg">
-                <parameters xmi:id="_HvUl8oq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parameter.21" name="com.minres.scviewer.e4.application.command.addwaveform.where" value="after"/>
-                <parameters xmi:id="_HvUl84q-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parameter.25" name="com.minres.scviewer.e4.application.command.addwaveform.all" value="false"/>
-              </children>
-              <children xsi:type="menu:HandledMenuItem" xmi:id="_HvUl9Iq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handledmenuitem.insertbefore" label="Insert before" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/insert_wave.png" command="_2PehEHr9EeWVM_sKoXvptg">
-                <parameters xmi:id="_HvUl9Yq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parameter.22" name="com.minres.scviewer.e4.application.command.addwaveform.where" value="before"/>
-                <parameters xmi:id="_HvUl9oq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parameter.26" name="com.minres.scviewer.e4.application.command.addwaveform.all" value="false"/>
-              </children>
-              <children xsi:type="menu:HandledMenuItem" xmi:id="_HvUl94q-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handledmenuitem.appendall" label="Append all" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/append_all_waves.png" command="_2PehEHr9EeWVM_sKoXvptg">
-                <parameters xmi:id="_HvUl-Iq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parameter.23" name="com.minres.scviewer.e4.application.command.addwaveform.where" value="after"/>
-                <parameters xmi:id="_HvUl-Yq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parameter.27" name="com.minres.scviewer.e4.application.command.addwaveform.all" value="true"/>
-              </children>
-              <children xsi:type="menu:HandledMenuItem" xmi:id="_HvUl-oq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handledmenuitem.insertall" label="Insert All" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/insert_all_waves.png" command="_2PehEHr9EeWVM_sKoXvptg">
-                <parameters xmi:id="_HvUl-4q-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parameter.24" name="com.minres.scviewer.e4.application.command.addwaveform.where" value="before"/>
-                <parameters xmi:id="_HvUl_Iq-EeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.parameter.28" name="com.minres.scviewer.e4.application.command.addwaveform.all" value="true"/>
-              </children>
-            </menus>
-          </children>
-          <children xsi:type="basic:PartSashContainer" xmi:id="_uT9BIHgtEeWwZ-9vrAR2UQ" elementId="" containerData="8000">
-            <children xsi:type="basic:PartStack" xmi:id="_95QGyXNmEeWBq8z1Dv39LA" elementId="org.eclipse.editorss" containerData="7500">
-              <tags>NoAutoCollapse</tags>
-            </children>
-            <children xsi:type="basic:Part" xmi:id="_vtfm8HgtEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parts.WaveformDetails" containerData="2500" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.TransactionDetails" label="Waveform Details"/>
-          </children>
+        <children xsi:type="basic:PartStack" xmi:id="_95QGyXNmEeWBq8z1Dv39LA" elementId="org.eclipse.editorss" containerData="7500">
+          <tags>NoAutoCollapse</tags>
         </children>
       </children>
     </children>

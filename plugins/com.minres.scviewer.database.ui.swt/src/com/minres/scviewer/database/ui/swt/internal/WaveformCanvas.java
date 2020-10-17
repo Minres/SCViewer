@@ -229,10 +229,10 @@ public class WaveformCanvas extends Canvas {
     }
 
     public void setZoomLevel(int level, long centerTime) {
+    	//FIXME: keep center if zoom-out and cursor is not in view
     	long oldScaleFactor=scaleFactor;
     	if(level<0) level = 0;
     	if(level<Constants.unitMultiplier.length*Constants.unitString.length){
-    		this.level = level;
     		this.scaleFactor = (long) Math.pow(10, level/2);
     		if(level%2==1) this.scaleFactor*=3;
     		ITx tx = arrowPainter.getTx();
@@ -243,18 +243,19 @@ public class WaveformCanvas extends Canvas {
     		 * xcn = tc/newScaleFactor
     		 * t0n = (xcn-xoffs)*scaleFactor
     		 */
-    		long xc=centerTime/oldScaleFactor; // cursor total x-offset
-    		long xoffs=xc+origin.x; // cursor offset relative to left border
-    		long xcn=centerTime/scaleFactor; // new total x-offset
-    		long originX=xcn-xoffs;
-    		if(originX>0) {
-    			origin.x=(int) -originX; // new cursor time offset relative to left border
-    		}else {
-    			origin.x=0;
-    		}
+			long xc=centerTime/oldScaleFactor; // cursor total x-offset
+			long xoffs=xc+origin.x; // cursor offset relative to left border
+			long xcn=centerTime/scaleFactor; // new total x-offset
+			long originX=xcn-xoffs;
+			if(originX>0) {
+				origin.x=(int) -originX; // new cursor time offset relative to left border
+			}else {
+				origin.x=0;
+			}
     		syncScrollBars();
     		arrowPainter.setTx(tx);    		
     		redraw();
+    		this.level = level;
     	}
     }
 
@@ -400,12 +401,13 @@ public class WaveformCanvas extends Canvas {
 
     /* Paint function */
     private void paint(GC gc) {
+        Point pt = getSize();
+        if(pt.x==0  || pt.y==0) return;
         Rectangle clientRect = getClientArea(); /* Canvas' painting area */
         GC thisGc = gc;
         Image d_backingImg = null;
         if(doubleBuffering) {
-            Point p = getSize();
-            d_backingImg = new Image(getDisplay(), p.x, p.y);
+            d_backingImg = new Image(getDisplay(), pt.x, pt.y);
             thisGc = new GC(d_backingImg);
             thisGc.setBackground(gc.getBackground());
             thisGc.setForeground(gc.getForeground());

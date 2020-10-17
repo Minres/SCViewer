@@ -381,16 +381,12 @@ public class FileBrowserDialog extends TrayDialog {
 	class FileTreeLabelProvider implements ILabelProvider {
 		private List<ILabelProviderListener> listeners;
 
-		private Image file;
-
-		private Image dir;
-
 		public FileTreeLabelProvider() {
 			listeners = new ArrayList<ILabelProviderListener>();
 		}
 
 		public Image getImage(Object arg0) {
-			return ((File) arg0).isDirectory() ? folderImage : file;
+			return ((File) arg0).isDirectory() ? folderImage : fileImage;
 		}
 
 		public String getText(Object arg0) {
@@ -402,16 +398,12 @@ public class FileBrowserDialog extends TrayDialog {
 			listeners.add(arg0);
 		}
 
+		@Override
 		public void dispose() {
-			// Dispose the images
-			if (dir != null)
-				dir.dispose();
-			if (file != null)
-				file.dispose();
 		}
 
 		public boolean isLabelProperty(Object arg0, String arg1) {
-			return false;
+			return true;
 		}
 
 		public void removeListener(ILabelProviderListener arg0) {

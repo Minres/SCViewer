@@ -120,7 +120,9 @@ public class TransactionDetails {
 	 * @param parent the parent
 	 */
 	@PostConstruct
-	public void createComposite(final Composite parent) {
+	public void createComposite(final Composite parent, @Optional WaveformViewer waveformViewerPart) {
+		this.waveformViewerPart=waveformViewerPart;
+		
 		parent.setLayout(new GridLayout(1, false));
 
 		nameFilter = new Text(parent, SWT.BORDER);
@@ -262,7 +264,8 @@ public class TransactionDetails {
 	 */
 	@Focus
 	public void setFocus() {
-		treeViewer.getTree().setFocus();
+		if(treeViewer!=null)
+			treeViewer.getTree().setFocus();
 	}
 
 	/**

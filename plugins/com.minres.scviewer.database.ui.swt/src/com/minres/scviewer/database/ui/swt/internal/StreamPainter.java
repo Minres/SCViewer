@@ -135,9 +135,6 @@ public class StreamPainter extends TrackPainter{
 		if(bb.x+bb.width<area.x || bb.x>area.x+area.width) return;
 		if(bb.width==0){
 			proj.drawLine(bb.x, bb.y, bb.x, bb.y+bb.height);
-		} else if(bb.width<10){
-			proj.fillRectangle(bb);
-			proj.drawRectangle(bb);
 		} else {
 			if(bb.x < area.x) {
 				bb.width = bb.width-(area.x-bb.x)+5;
@@ -149,8 +146,9 @@ public class StreamPainter extends TrackPainter{
 				bb_x2=area_x2+5;
 				bb.width= bb_x2-bb.x;
 			}
-			proj.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
-			proj.drawRoundRectangle(bb.x, bb.y, bb.width, bb.height, 5, 5);
+			int arc = bb.width<10?1:5;
+			proj.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, arc, arc);
+			proj.drawRoundRectangle(bb.x, bb.y, bb.width, bb.height, arc, arc);
 		}
 	}
 
