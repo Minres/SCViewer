@@ -46,7 +46,7 @@
 					<products>
 						<product>
 							<id>product_slim</id>
-							<archiveFileName>SCViewer-${project.version}</archiveFileName>
+							<archiveFileName>SCViewer_slim-${project.version}</archiveFileName>
 							<rootFolders>
 								<macosx>SCViewer.app</macosx>
 							</rootFolders>
