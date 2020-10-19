@@ -49,7 +49,7 @@ public class ArrowPainter implements IPainter {
 	
 	long scaleFactor;
 
-	boolean deferredUpdate;
+	boolean deferUpdate;
 
 	public ArrowPainter(WaveformCanvas waveCanvas, RelationType relationType) {
 		this.waveCanvas = waveCanvas;
@@ -80,12 +80,14 @@ public class ArrowPainter implements IPainter {
 	}
 
 	protected void calculateGeometries() {
-		deferredUpdate = false;
+		deferUpdate = false;
+		iRect.clear();
+		oRect.clear();
 		ITxStream<?> stream = tx.getStream();
 		IWaveformPainter painter = waveCanvas.wave2painterMap.get(stream);
 		if (painter == null) { // stream has been added but painter not yet
 								// created
-			deferredUpdate = true;
+			deferUpdate = true;
 			return;
 		}
 		int laneHeight = painter.getHeight() / stream.getMaxConcurrency();
@@ -117,33 +119,27 @@ public class ArrowPainter implements IPainter {
 		Color fgColor = waveCanvas.colors[WaveformColors.REL_ARROW.ordinal()];
 		Color highliteColor = waveCanvas.colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()];
 
-		if (deferredUpdate || (tx != null && waveCanvas.getScaleFactor() != scaleFactor)) {
+		if(tx==null) return;
+		if (!deferUpdate) {
 			scaleFactor = waveCanvas.getScaleFactor();
 			calculateGeometries();
 		}
-		if(txRectangle == null) return;
+		if(deferUpdate) return;
 		int correctionValue = (int)(selectionOffset);
 		Rectangle correctedTargetRectangle = new Rectangle(txRectangle.x+correctionValue, txRectangle.y, txRectangle.width, txRectangle.height);
 		for (LinkEntry entry : iRect) {
 			Rectangle correctedRectangle = new Rectangle(entry.rectangle.x+correctionValue, entry.rectangle.y, entry.rectangle.width, entry.rectangle.height);
-			Point target = drawPath(proj, highlightType.equals(entry.relationType) ? highliteColor : fgColor,
+			drawArrow(proj, highlightType.equals(entry.relationType) ? highliteColor : fgColor,
 					correctedRectangle, correctedTargetRectangle);
-			drawArrow(proj, target);
 		}
 		for (LinkEntry entry : oRect) {
 			Rectangle correctedRectangle = new Rectangle(entry.rectangle.x+correctionValue, entry.rectangle.y, entry.rectangle.width, entry.rectangle.height);
-			Point target = drawPath(proj, highlightType.equals(entry.relationType) ? highliteColor : fgColor, correctedTargetRectangle,
+			drawArrow(proj, highlightType.equals(entry.relationType) ? highliteColor : fgColor, correctedTargetRectangle,
 					correctedRectangle);
-			drawArrow(proj, target);
 		}
 	}
 
-	protected void drawArrow(Projection proj, Point target) {
-		proj.drawLine(target.x - 8, target.y - 5, target.x, target.y);
-		proj.drawLine(target.x - 8, target.y + 5, target.x, target.y);
-	}
-
-	protected Point drawPath(Projection proj, Color fgColor, Rectangle srcRectangle, Rectangle tgtRectangle) {
+	protected void drawArrow(Projection proj, Color fgColor, Rectangle srcRectangle, Rectangle tgtRectangle) {
 		Point point1 = proj.project(new Point(srcRectangle.x, srcRectangle.y + srcRectangle.height / 2));
 		Point point2 = proj.project(new Point(tgtRectangle.x, tgtRectangle.y + tgtRectangle.height / 2));
 
@@ -160,11 +156,15 @@ public class ArrowPainter implements IPainter {
 			path.cubicTo(center.x + xCtrlOffset, center.y, point2.x - xCtrlOffset, point2.y, point2.x, point2.y);
 		} else
 			path.cubicTo(point1.x + xCtrlOffset, point1.y, point2.x - xCtrlOffset, point2.y, point2.x, point2.y);
+
 		proj.setAntialias(SWT.ON);
 		proj.setForeground(fgColor);
 		proj.getGC().drawPath(path);
 		path.dispose();
-		return point2;
+		// now draw the arrow head
+		proj.getGC().drawLine(point2.x - 8, point2.y - 5, point2.x, point2.y);
+		proj.getGC().drawLine(point2.x - 8, point2.y + 5, point2.x, point2.y);
+
 	}
 
 	class LinkEntry {

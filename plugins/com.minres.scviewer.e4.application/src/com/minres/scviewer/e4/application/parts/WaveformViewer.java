@@ -41,6 +41,8 @@ import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.e4.core.contexts.ContextInjectionFactory;
+import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.di.extensions.Preference;
 import org.eclipse.e4.core.services.events.IEventBroker;
@@ -60,6 +62,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.FocusListener;
@@ -69,6 +72,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -96,11 +100,11 @@ import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
+import com.minres.scviewer.database.ui.WaveformColors;
 import com.minres.scviewer.database.ui.swt.Constants;
 import com.minres.scviewer.database.ui.swt.ToolTipContentProvider;
 import com.minres.scviewer.database.ui.swt.ToolTipHelpTextProvider;
 import com.minres.scviewer.database.ui.swt.WaveformViewFactory;
-import com.minres.scviewer.database.ui.WaveformColors;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl;
 import com.minres.scviewer.e4.application.internal.util.FileMonitor;
@@ -166,6 +170,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	/** The factory. */
 	WaveformViewFactory factory = new WaveformViewFactory();
 
+	DesignBrowser browser = null;
+	
+	TransactionDetails detailsView = null;
+	
 	/** The waveform pane. */
 	private IWaveformView waveformPane;
 
@@ -199,7 +207,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	private boolean checkForUpdates;
 
 	/** The my part. */
-	private MPart myPart;
+	@Inject private MPart myPart;
 
 	/** The my parent. */
 	private Composite myParent;
@@ -207,6 +215,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	/** The files to load. */
 	ArrayList<File> filesToLoad = new ArrayList<>();
 
+	String partConfig = "";
+	
 	/** The persisted state. */
 	Map<String, String> persistedState;
 
@@ -225,6 +235,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	/** The file checker. */
 	IModificationChecker fileChecker;
 
+	@Inject IWaveformDbFactory dbFactory;
+	
+	@Inject Composite parent;
+	
 	private Boolean showHover;
 
 	/**
@@ -235,7 +249,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param dbFactory the db factory
 	 */
 	@PostConstruct
-	public void createComposite(MPart part, Composite parent, IWaveformDbFactory dbFactory, @Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE) IEclipsePreferences prefs, @Preference(value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
+	public void createComposite(MPart part, EMenuService menuService, @Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE) IEclipsePreferences prefs, @Preference(value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
 		disposeListenerNumber += 1;
 		
 		myPart = part;
@@ -256,7 +270,32 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				}
 			}
 		});
-		waveformPane = factory.createPanel(parent);
+		parent.setLayout(new FillLayout(SWT.HORIZONTAL));
+		SashForm sashFormTop = new SashForm(parent, SWT.BORDER | SWT.SMOOTH);
+
+		Composite left = new Composite(sashFormTop, SWT.NONE);
+		
+		IEclipseContext ctx = myPart.getContext();
+		ctx.set(WaveformViewer.class, this);
+		ctx.set(IWaveformDb.class, database);
+		ctx.set(Composite.class, left);
+
+		browser = ContextInjectionFactory.make(DesignBrowser.class, ctx);
+		
+		//Composite right = new Composite(sashFormTop, SWT.NONE);
+		SashForm sashFormRight = new SashForm(sashFormTop, SWT.BORDER | SWT.SMOOTH | SWT.VERTICAL);
+		sashFormTop.setWeights(new int[] {25, 75});
+
+		Composite rightTop = new Composite(sashFormRight, SWT.NONE);
+		Composite rightBottom = new Composite(sashFormRight, SWT.NONE);
+		sashFormRight.setWeights(new int[] {80, 20});
+		
+		waveformPane = factory.createPanel(rightTop);
+		
+		ctx.set(Composite.class, rightBottom);
+		detailsView = ContextInjectionFactory.make(TransactionDetails.class, ctx);
+		
+
 		waveformPane.setMaxTime(0);
 		setupColors();
 		//set selection to empty selection when opening a new waveformPane
@@ -614,48 +653,21 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	@Inject
 	@Optional
-	public void setPartInput(@Named("input") Object partInput, @Named("config") Object partConfig) {
-		if (partInput instanceof String) {
-			String name = (String)partInput;
-			filesToLoad = new ArrayList<File>();
-			boolean explicit = name.contains(",");
-			for(String tok: name.split(",")) {
-				File file = new File(tok);
-				if(file.isFile() && "CURRENT".equals(file.getName())){
-					file=file.getParentFile();
-				}
-				if (file.exists()) {
-					filesToLoad.add(file);
-				}
-				if(!explicit)
-					try {
-						String ext = getFileExtension(file.getName());
-						if (Messages.WaveformViewer_19.equals(ext.toLowerCase())) {
-							if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_20)))) {
-								filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_20)));
-							} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)))) {
-								filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_21)));
-							} else if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)))) {
-								filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_22)));
-							}
-						} else if (Messages.WaveformViewer_20.equals(ext.toLowerCase()) || 
-									Messages.WaveformViewer_21.equals(ext.toLowerCase()) ||
-									Messages.WaveformViewer_22.equals(ext.toLowerCase())
-								) {
-							if (askIfToLoad(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)))) {
-								filesToLoad.add(new File(renameFileExtension(file.getCanonicalPath(), Messages.WaveformViewer_19)));
-							}
-						}
-					} catch (IOException e) { // silently ignore any error
-					}
-
-			}
-			if (filesToLoad.size() > 0)
-				loadDatabase(persistedState);
-			if(partConfig instanceof String && ((String)partConfig).length()>0) {
-				loadState((String) partConfig);
-			}
+	public void setPartInput(@Named("input") List<String> partInput, @Named("config") String partConfig) {
+		for(String s:partInput) {
+			File file = new File(s);
+			if(file.isFile() && "CURRENT".equals(file.getName()))
+				file=file.getParentFile();
+			if (file.exists()) 
+				filesToLoad.add(file);
 		}
+		if(partConfig!=null) {
+			this.partConfig=partConfig;
+		}
+		if (filesToLoad.size() > 0)
+			loadDatabase(persistedState);
+		if(partConfig.length()>0)
+			loadState(partConfig);
 	}
 
 	/**
@@ -663,7 +675,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	@Focus
 	public void setFocus() {
-		waveformPane.getWaveformControl().setFocus();
+		if(waveformPane!=null) waveformPane.getWaveformControl().setFocus();
 	}
 
 	/**
@@ -756,10 +768,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		// get selected transaction	of a stream	
 		ISelection selection = waveformPane.getSelection();
 		if (!selection.isEmpty()) {
-			List<Object> t = getISelection(selection);
-			if(t.get(0) instanceof ITx) {
-				ITx tx = (ITx) t.get(0);
-				TrackEntry te = (TrackEntry) t.get(1);
+			List<Object> sel = getISelection(selection);
+			if(sel.size()>1 && sel.get(0) instanceof ITx && sel.get(1) instanceof TrackEntry) {
+				ITx tx = (ITx) sel.get(0);
+				TrackEntry te = (TrackEntry) sel.get(1);
 				// get transaction id
 				persistedState.put(SELECTED_TX_ID, Long.toString(tx.getId()));
 				//get TrackEntry name
@@ -992,13 +1004,23 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			waveformPane.getStreamList().addAll(streams);
 		} else {
 			Object first = selection.getFirstElement();
-			IWaveform stream = (first instanceof ITx) ? ((ITx) first).getStream() : (IWaveform) first;
-			TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
-			if (insert) {
-				int index = waveformPane.getStreamList().indexOf(trackEntry);
-				waveformPane.getStreamList().addAll(index, streams);
-			} else {
-				waveformPane.getStreamList().addAll(streams);
+			if(first instanceof ITx) {
+				IWaveform stream = (first instanceof ITx) ? ((ITx) first).getStream() : (IWaveform) first;
+				TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
+				if (insert) {
+					int index = waveformPane.getStreamList().indexOf(trackEntry);
+					waveformPane.getStreamList().addAll(index, streams);
+				} else {
+					waveformPane.getStreamList().addAll(streams);
+				}
+			} else if(first instanceof TrackEntry) {
+				TrackEntry trackEntry = (TrackEntry) first;
+				if (insert) {
+					int index = waveformPane.getStreamList().indexOf(trackEntry);
+					waveformPane.getStreamList().addAll(index, streams);
+				} else {
+					waveformPane.getStreamList().addAll(streams);
+				}
 			}
 
 		}
@@ -1108,7 +1130,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @return the selection
 	 */
 	public ISelection getSelection() {
-		return waveformPane.getSelection();
+		if(waveformPane!=null)
+			return waveformPane.getSelection();
+		else
+			return new StructuredSelection();
 	}
 
 	/**
@@ -1259,5 +1284,4 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, null);
     	}
     }
-
 }

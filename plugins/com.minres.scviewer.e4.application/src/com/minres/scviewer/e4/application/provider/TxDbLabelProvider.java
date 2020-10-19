@@ -63,12 +63,6 @@ public class TxDbLabelProvider implements ILabelProvider {
 	 */
 	@Override
 	public void dispose() {
-		if(loadinDatabase!=null) database.dispose();
-		if(database!=null) database.dispose();
-		if(stream!=null) stream.dispose();
-		if(folder!=null) folder.dispose();
-		if(signal!=null) signal.dispose();
-		if(wave!=null) wave.dispose();
 	}
 
 	/* (non-Javadoc)

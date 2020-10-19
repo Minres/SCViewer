@@ -123,7 +123,7 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 			    return;
 			}
 		}
-		comboViewer.getCombo().setEnabled(false);
+		if(comboViewer!=null) comboViewer.getCombo().setEnabled(false);
 	}
 
 	/* (non-Javadoc)
