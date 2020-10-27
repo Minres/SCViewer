@@ -12,11 +12,14 @@ package com.minres.scviewer.e4.application;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.INodeChangeListener;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.services.events.IEventBroker;
@@ -64,9 +67,11 @@ public class E4LifeCycle {
 	 * @param eventBroker the event broker
 	 */
 	@PostContextCreate
-	void postContextCreate(IApplicationContext appContext, final IEventBroker eventBroker) {
+	void postContextCreate(IApplicationContext appContext, final IEventBroker eventBroker,  
+			final IEclipseContext workbenchContext) {
+		
 		final String[] args = (String[])appContext.getArguments().get(IApplicationContext.APPLICATION_ARGS);
-		Options opt = new Options(args, 0, 1);
+		final Options opt = new Options(args, 0, Integer.MAX_VALUE);
 		opt.getSet()
 			.addOption("clearPersistedState", Multiplicity.ZERO_OR_ONE)
 			.addOption("c", Separator.BLANK, Multiplicity.ZERO_OR_ONE);
@@ -77,22 +82,14 @@ public class E4LifeCycle {
 		final String confFile =opt.getSet().isSet("c")?opt.getSet().getOption("c").getResultValue(0):"";
 
 		// react on the first view being created, at that time the UI is available
-		eventBroker.subscribe(UIEvents.UILifeCycle.ACTIVATE, new EventHandler() {
-			@Override
-			public void handleEvent(Event event) {
-				MPart part = (MPart) event.getProperty("ChangedElement"); //$NON-NLS-1$
-				if(part!=null){
-					IEclipseContext ctx = part.getContext();
-					OpenViewHandler openViewHandler= new OpenViewHandler();
-					if(confFile.length()>0) openViewHandler.setConfigFile(confFile);
-					ContextInjectionFactory.inject(openViewHandler, ctx);
-					eventBroker.unsubscribe(this);
-					for(String name:opt.getSet().getData()){
-						openViewHandler.openViewForFile(name);
-					}
-				}
-			}
-		});
+//		eventBroker.subscribe(UIEvents.UILifeCycle.ACTIVATE, new EventHandler() {
+//			@Override
+//			public void handleEvent(Event event) {
+//				MPart part = (MPart) event.getProperty("ChangedElement"); //$NON-NLS-1$
+//				if(part!=null){
+//				}
+//			}
+//		});
 		eventBroker.subscribe(UIEvents.UILifeCycle.APP_STARTUP_COMPLETE, new EventHandler() {
 			@Override
 			public void handleEvent(Event event) {
@@ -101,9 +98,20 @@ public class E4LifeCycle {
 					boolean isLocked = instanceLocation.isLocked();
 					if(isLocked)
 						instanceLocation.release();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				} catch (IOException e) { }
+				if(opt.getSet().getData().size()>0) {
+					MApplication app= workbenchContext.get(MApplication.class);
+					EModelService modelService = workbenchContext.get(EModelService.class);
+					EPartService partService= workbenchContext.get(EPartService.class);
+					MPart part = partService .createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
+					part.setLabel(opt.getSet().getData().get(0));
+					MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
+					partStack.getChildren().add(part);
+					partService.showPart(part, PartState.CREATE);
+					partService.showPart(part, PartState.ACTIVATE);
+					IEclipseContext ctx = part.getContext();
+					ctx.modify("input", opt.getSet().getData());
+					ctx.modify("config", confFile); //$NON-NLS-1$
 				}
 			}
 		});
@@ -134,71 +142,5 @@ public class E4LifeCycle {
 	 */
 	@ProcessRemovals
 	void processRemovals(IEclipseContext workbenchContext) {
-	}
-
-	/**
-	 * Join.
-	 *
-	 * @param tokens the tokens
-	 * @return the string
-	 */
-	String join(String[] tokens){
-		StringBuilder sb = new StringBuilder();
-		boolean first=true;
-		for(String token:tokens){
-			if(!first) sb.append(","); //$NON-NLS-1$
-			sb.append(token);
-			first=false;
-		}
-		return sb.toString();
-	}
-	
-	/**
-	 * The Class OpenViewHandler.
-	 */
-	private class OpenViewHandler {
-		
-		/** The app. */
-		@Inject MApplication app;
-		
-		/** The model service. */
-		@Inject EModelService modelService;
-		
-		/** The part service. */
-		@Inject EPartService partService;
-		
-		String confFile="";
-		/**
-		 * Open view for file.
-		 *
-		 * @param name the name
-		 */
-		public void openViewForFile(String name){
-			File file = new File(getFirstFileName(name));
-			if(!file.exists())
-				return;
-			MPart part = partService.createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
-			part.setLabel(file.getName());
-			MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
-			partStack.getChildren().add(part);
-			partService.showPart(part, PartState.ACTIVATE);
-			IEclipseContext ctx=part.getContext();
-			ctx.modify("input", name); //$NON-NLS-1$
-			//ctx.declareModifiable("input"); //$NON-NLS-1$
-			ctx.modify("config", confFile); //$NON-NLS-1$
-			//ctx.declareModifiable("config"); //$NON-NLS-1$				
-		}
-
-		private String getFirstFileName(String name) {
-			if(name.contains(",")) {
-				String[] tokens = name.split(",");
-				return tokens[0];
-			} else
-				return name;
-		}
-
-		public void setConfigFile(String confFile) {
-			this.confFile=confFile;
-		}
 	}
 }
