@@ -11,7 +11,8 @@
     <children xsi:type="basic:Part" xmi:id="__VNlAIytEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.dialog.aboutscviewer" toBeRendered="false" visible="false" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.AboutDialog" label="About SCViewer" bindingContexts="_95Pfu3NmEeWBq8z1Dv39LA"/>
     <mainMenu xmi:id="_95PfyXNmEeWBq8z1Dv39LA" elementId="menu:org.eclipse.ui.main.menu">
       <children xsi:type="menu:Menu" xmi:id="_95QGwHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.menu.file" label="File">
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_VJG3YHgvEeWwZ-9vrAR2UQ" elementId="" label="Open Database" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" mnemonics="M1+O" command="_95PfwHNmEeWBq8z1Dv39LA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_igsK0BkREeudD5MqrWoETQ" elementId="" label="Open Database" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" mnemonics="M1+O" command="_95PfwHNmEeWBq8z1Dv39LA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_VJG3YHgvEeWwZ-9vrAR2UQ" elementId="" label="Re-load Database" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/database_refresh.png" mnemonics="M1+R" command="_srACsBkREeudD5MqrWoETQ"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_e7MOYJedEeW09eyIbHsdvg" elementId="" label="Load active tab settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_page.png" command="_7-AIMJebEeW09eyIbHsdvg">
           <parameters xmi:id="_4vtYgJehEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.parameter.30" name="com.minres.scviewer.e4.application.commandparameter.loadStore" value="load"/>
         </children>
@@ -58,7 +59,8 @@
     </mainMenu>
     <trimBars xmi:id="_95QGy3NmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.main.toolbar">
       <children xsi:type="menu:ToolBar" xmi:id="_95QGzHNmEeWBq8z1Dv39LA" elementId="toolbar:org.eclipse.ui.main.toolbar">
-        <children xsi:type="menu:HandledToolItem" xmi:id="_95QGzXNmEeWBq8z1Dv39LA" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" tooltip="Open new database" command="_95PfwHNmEeWBq8z1Dv39LA"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_ZSajwBkZEeudD5MqrWoETQ" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" tooltip="Open new database" command="_95PfwHNmEeWBq8z1Dv39LA"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_95QGzXNmEeWBq8z1Dv39LA" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/database_refresh.png" tooltip="Re-load database" command="_srACsBkREeudD5MqrWoETQ"/>
         <children xsi:type="menu:HandledToolItem" xmi:id="_o9UBUJeiEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handledtoolitem.loadsettings" label="Load settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_page.png" command="_7-AIMJebEeW09eyIbHsdvg">
           <parameters xmi:id="_tQZAEJeiEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.parameter.32" name="com.minres.scviewer.e4.application.commandparameter.loadStore" value="load"/>
         </children>
@@ -133,6 +135,7 @@
   <handlers xmi:id="_V4EscIuGEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handler.setreleationtype" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SetRelationTypeHandler" command="_E9lUgIt2EeWid7xO48ZBXw"/>
   <handlers xmi:id="__99WoJebEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handler.loadStoreSettings" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.LoadStoreSettingsHandler" command="_7-AIMJebEeW09eyIbHsdvg"/>
   <handlers xmi:id="_x4pSEGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handler.0" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableHover" command="_uyeyYGtTEeqmlpoaaMHoiw"/>
+  <handlers xmi:id="_h3jU8BkWEeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.handler.reloadCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ReloadHandler" command="_srACsBkREeudD5MqrWoETQ"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
@@ -264,6 +267,7 @@
     <parameters xmi:id="_4C_asc3ZEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.commandparameter.changevaluedisplay" name="Type" optional="false"/>
   </commands>
   <commands xmi:id="_uyeyYGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.command.enablehover" commandName="Enable hover" description="Enable hover window in waveform"/>
+  <commands xmi:id="_srACsBkREeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.reload" commandName="Reload Command"/>
   <addons xmi:id="_95PfsnNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_95Pfs3NmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_95PftHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>
