@@ -577,6 +577,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param state the state
 	 */
 	protected void loadDatabase(final Map<String, String> state) {
+		loadDatabase(state, 1000L);
+	}
+
+	protected void loadDatabase(final Map<String, String> state, long delay) {
 		fileMonitor.removeFileChangeListener(this);
 		Job job = new Job(Messages.WaveformViewer_15) {
 			@Override
@@ -619,8 +623,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				return result;
 			}
 		};
+		job.setName("Load Database");
 		job.setSystem(true);
-		job.schedule(1000L); // let the UI initialize so that we have a progress monitor
+		job.schedule(delay); // let the UI initialize so that we have a progress monitor
 	}
 
 	/* (non-Javadoc)
@@ -634,16 +639,21 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			public void run() {
 				if (MessageDialog.openQuestion(display.getActiveShell(), Messages.WaveformViewer_17,
 						Messages.WaveformViewer_18)) {
-					Map<String, String> state = new HashMap<>();
-					saveWaveformViewerState(state);
-					waveformPane.getStreamList().clear();
-					database.clear();
-					if (filesToLoad.size() > 0)
-						loadDatabase(state);
+					reloadDatabase();
 				}
 			}
+
 		});
 		fileMonitor.removeFileChangeListener(this);
+	}
+
+	public void reloadDatabase() {
+		Map<String, String> state = new HashMap<>();
+		saveWaveformViewerState(state);
+		waveformPane.getStreamList().clear();
+		database.clear();
+		if (filesToLoad.size() > 0)
+			loadDatabase(state, 0L);
 	}
 
 	/**
