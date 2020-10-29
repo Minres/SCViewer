@@ -136,6 +136,7 @@
   <handlers xmi:id="__99WoJebEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handler.loadStoreSettings" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.LoadStoreSettingsHandler" command="_7-AIMJebEeW09eyIbHsdvg"/>
   <handlers xmi:id="_x4pSEGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handler.0" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableHover" command="_uyeyYGtTEeqmlpoaaMHoiw"/>
   <handlers xmi:id="_h3jU8BkWEeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.handler.reloadCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ReloadHandler" command="_srACsBkREeudD5MqrWoETQ"/>
+  <handlers xmi:id="_gn_boBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.txSearch" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler" command="_XDxTYBlEEeuiP60JNw0iiA"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
@@ -200,6 +201,10 @@
       <children xsi:type="menu:HandledMenuItem" xmi:id="_Vj4jUHXIEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.remove" label="Remove" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/cross.png" tooltip="Remove stream/waveform from list" command="_WUZ2wHXHEeWwZ-9vrAR2UQ">
         <visibleWhen xsi:type="ui:CoreExpression" xmi:id="_f6MH0HsCEeWVM_sKoXvptg" coreExpressionId="com.minres.scviewer.e4.application.oneWaveSeleted"/>
       </children>
+      <children xsi:type="menu:MenuSeparator" xmi:id="_KSB5EBmuEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.menuseparator.0"/>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_HOLGgBmuEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handledmenuitem.search" label="Search Tx..." iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/find.png" command="_XDxTYBlEEeuiP60JNw0iiA">
+        <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_HOLGgRmuEeuiP60JNw0iiA" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler"/>
+      </children>
     </menus>
     <menus xsi:type="menu:PopupMenu" xmi:id="_CxJvAHXGEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.popupmenu.wavecontext" label="Wave Menu">
       <children xsi:type="menu:HandledMenuItem" xmi:id="_7HrlwHXREeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.moveup" label="Move up" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/up_blue.png" command="_N_sOkHXHEeWwZ-9vrAR2UQ">
@@ -225,6 +230,9 @@
       <children xsi:type="menu:Menu" xmi:id="_mAA6sM1bEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.menu.view" label="View">
         <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_psvR0M1gEei6rfTGo88R-w" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.elements.WaveformPopupMenuContribution"/>
         <children xsi:type="menu:DynamicMenuContribution" xmi:id="_IQZZQM3hEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.dynamicmenucontribution.0" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.elements.WaveformPopupMenuContribution"/>
+      </children>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_NnJA4BlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handledmenuitem.search" label="Search Tx..." iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/find.png" command="_XDxTYBlEEeuiP60JNw0iiA">
+        <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_Se1voBlEEeuiP60JNw0iiA" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler"/>
       </children>
     </menus>
   </descriptors>
@@ -268,6 +276,7 @@
   </commands>
   <commands xmi:id="_uyeyYGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.command.enablehover" commandName="Enable hover" description="Enable hover window in waveform"/>
   <commands xmi:id="_srACsBkREeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.reload" commandName="Reload Command"/>
+  <commands xmi:id="_XDxTYBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.txSearch" commandName="Search Command"/>
   <addons xmi:id="_95PfsnNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_95Pfs3NmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_95PftHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>

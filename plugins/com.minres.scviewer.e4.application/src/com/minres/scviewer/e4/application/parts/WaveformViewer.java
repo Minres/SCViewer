@@ -61,7 +61,10 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -287,14 +290,28 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		sashFormTop.setWeights(new int[] {25, 75});
 
 		Composite rightTop = new Composite(sashFormRight, SWT.NONE);
-		Composite rightBottom = new Composite(sashFormRight, SWT.NONE);
-		sashFormRight.setWeights(new int[] {80, 20});
-		
+	
 		waveformPane = factory.createPanel(rightTop);
 		
-		ctx.set(Composite.class, rightBottom);
-		detailsView = ContextInjectionFactory.make(TransactionDetails.class, ctx);
+		CTabFolder tabFolder = new CTabFolder(sashFormRight, SWT.BORDER);
+		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		
+		CTabItem tbtmDetails = new CTabItem(tabFolder, SWT.NONE);
+		tbtmDetails.setText("Transaction Details");
+		
+		ctx.set(Composite.class, tabFolder);
+		detailsView = ContextInjectionFactory.make(TransactionDetails.class, ctx);
+		tbtmDetails.setControl(detailsView.getControl());
+		
+		CTabItem tbtmSearchResults = new CTabItem(tabFolder, SWT.NONE);
+		tbtmSearchResults.setText("Search Results");
+		
+		TableViewer tableViewer = new TableViewer(tabFolder, SWT.BORDER | SWT.FULL_SELECTION);
+		Table table = tableViewer.getTable();
+		tbtmSearchResults.setControl(table);
+
+		sashFormRight.setWeights(new int[] {75, 25});
+		tabFolder.setSelection(0);
 
 		waveformPane.setMaxTime(0);
 		setupColors();
@@ -1294,4 +1311,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, null);
     	}
     }
+
+	public void search(String propName, DataType type, String propValue) {
+		// TODO Auto-generated method stub
+		
+	}
 }

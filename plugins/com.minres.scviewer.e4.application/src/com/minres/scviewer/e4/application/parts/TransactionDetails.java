@@ -63,6 +63,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
@@ -113,7 +114,8 @@ public class TransactionDetails {
 	/** The waveform viewer part. */
 	private WaveformViewer waveformViewerPart;
 
-
+	private Composite top;
+	
 	/**
 	 * Creates the composite.
 	 *
@@ -123,9 +125,10 @@ public class TransactionDetails {
 	public void createComposite(final Composite parent, @Optional WaveformViewer waveformViewerPart) {
 		this.waveformViewerPart=waveformViewerPart;
 		
-		parent.setLayout(new GridLayout(1, false));
+		top = new Composite(parent, SWT.NONE);
+		top.setLayout(new GridLayout(1, false));
 
-		nameFilter = new Text(parent, SWT.BORDER);
+		nameFilter = new Text(top, SWT.BORDER);
 		nameFilter.setMessage(Messages.TransactionDetails_0);
 		nameFilter.addModifyListener(new ModifyListener() {
 			@Override
@@ -141,7 +144,7 @@ public class TransactionDetails {
 		attributeFilter = new TxAttributeFilter();
 		viewSorter = new TxAttributeViewerSorter();
 
-		treeViewer = new TreeViewer(parent);
+		treeViewer = new TreeViewer(top);
 		treeViewer.setContentProvider(new TransactionTreeContentProvider());
 		treeViewer.setLabelProvider(new TxPropertiesLabelProvider());
 		treeViewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -225,10 +228,10 @@ public class TransactionDetails {
 			}
 
 		});
-		parent.addControlListener(new ControlAdapter() {
+		top.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e) {
 				Tree table = treeViewer.getTree();
-				Rectangle area = parent.getClientArea();
+				Rectangle area = top.getClientArea();
 				Point preferredSize = table.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 				int width = area.width - 2*table.getBorderWidth();
 				if (preferredSize.y > area.height + table.getHeaderHeight()) {
@@ -259,6 +262,9 @@ public class TransactionDetails {
 		});
 	}
 
+	public Control getControl() {
+		return top;
+	}
 	/**
 	 * Sets the focus.
 	 */
