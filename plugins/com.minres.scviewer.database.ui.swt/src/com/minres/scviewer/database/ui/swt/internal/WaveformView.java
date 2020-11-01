@@ -140,7 +140,8 @@ public class WaveformView implements IWaveformView  {
 		public void mouseDown(MouseEvent e) {
 			if (e.button == 1) {
 				Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
-				entry.getValue().selected=true;
+				if(entry!=null)
+					entry.getValue().selected=true;
 			} else if (e.button == 3) {
 				Menu topMenu= top.getMenu();
 				if(topMenu!=null) topMenu.setVisible(true);
@@ -163,8 +164,8 @@ public class WaveformView implements IWaveformView  {
 					} else {
 						setSelection(new StructuredSelection(entry.getValue()), (e.stateMask & SWT.CTRL) !=0 , false);
 					}
+					lastClickedEntry = entry.getValue();
 				}
-				lastClickedEntry = entry.getValue();
 			}
 		}
 	};
@@ -191,7 +192,7 @@ public class WaveformView implements IWaveformView  {
 			down=false;
 			if(start==null) return;
 			if((e.stateMask&SWT.MODIFIER_MASK&~SWT.SHIFT)!=0) return; //don't react on modifier except shift
-			if(!start.equals(end)){
+			if(e.button ==  1 && Math.abs(e.x-start.x)>3){
 				asyncUpdate(e.widget);
 				long startTime = waveformCanvas.getTimeForOffset(start.x);
 				long endTime = waveformCanvas.getTimeForOffset(end.x);
@@ -287,9 +288,9 @@ public class WaveformView implements IWaveformView  {
 			case SWT.MouseDown:
 				start=new Point(e.x, e.y);
 				end=new Point(e.x, e.y);
-				down=true;
 				if((e.stateMask&SWT.MODIFIER_MASK)!=0) return; //don't react on modifier
 				if (e.button ==  1) {	
+					down=true;
 					initialSelected = waveformCanvas.getElementsAt(start);
 				} else if (e.button == 3) {
 					Menu topMenu= top.getMenu();
@@ -680,15 +681,13 @@ public class WaveformView implements IWaveformView  {
 	 */
 	@Override
 	public ISelection getSelection() {
+		ArrayList<Object> sel = new ArrayList<>();
 		if (currentTxSelection != null) {
-			ArrayList<Object> sel = new ArrayList<>();
 			sel.add(currentTxSelection);
-			sel.addAll(currentWaveformSelection.stream().map(e -> e.waveform).collect(Collectors.toList()));
-			return new StructuredSelection(sel.toArray());
-		} else if (currentWaveformSelection.size()>0) {
-			return new StructuredSelection(currentWaveformSelection.toArray());
-		} else
-			return new StructuredSelection();
+		}
+		// sel.addAll(currentWaveformSelection.stream().map(e -> e.waveform).collect(Collectors.toList()));
+		sel.addAll(currentWaveformSelection);
+		return new StructuredSelection(sel.toArray());
 	}
 
 	/* (non-Javadoc)

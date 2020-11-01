@@ -1,0 +1,92 @@
+package com.minres.scviewer.e4.application.parts.txTableTree;
+
+import java.math.BigInteger;
+import java.util.List;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
+
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
+
+import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.ITxAttribute;
+
+/**
+ * The Class TxAttributeFilter.
+ */
+public class TxFilter extends ViewerFilter {
+
+	/** The search string. */
+	private String searchProp;
+	/** The search type. */
+	private DataType searchType;
+	/** The search string. */
+	private String searchValue;
+
+	/**
+	 * Sets the search text.
+	 *
+	 * @param s the new search text
+	 * @param dataType 
+	 */
+	public void setSearchProp(String s, DataType type) {
+		this.searchProp = s;
+		this.searchType = type;
+	}
+	/**
+	 * Sets the search text.
+	 *
+	 * @param s the new search text
+	 */
+	public void setSearchValue(String s) {
+		this.searchValue = s; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	public boolean select(Viewer viewer, Object parentElement, Object element) {
+		if (searchValue == null || searchValue.length() == 0)
+			return true;
+		if(element instanceof ITx) {
+			ITx iTx = (ITx) element;
+			List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> searchProp.equals(a.getName())).collect(Collectors.toList());
+			if(res.size()==1) {
+				try {
+				ITxAttribute attr =res.get(0);
+				switch(searchType) {
+				case BOOLEAN: // bool
+				case ENUMERATION:
+					return searchValue.equalsIgnoreCase((String) attr.getValue());
+				case INTEGER:
+				case UNSIGNED:
+					BigInteger lval = new BigInteger(attr.getValue().toString());
+					BigInteger sval = parseBigInteger(searchValue);
+					return lval.equals(sval);
+				case STRING:
+					try {
+						return (((ITxAttribute) element).getName().toLowerCase().matches(searchValue.toLowerCase()));
+					} catch (PatternSyntaxException e) {
+						return true;
+					}
+				default:
+					break;
+				}
+				} catch(RuntimeException ex) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	private BigInteger parseBigInteger(String value) {
+		if(value.startsWith("0x") || value.startsWith("0X"))
+			return new BigInteger(value.substring(2), 16);
+		else
+			return new BigInteger(value);
+	}
+}
