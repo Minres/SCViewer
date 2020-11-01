@@ -164,8 +164,8 @@ public class WaveformView implements IWaveformView  {
 					} else {
 						setSelection(new StructuredSelection(entry.getValue()), (e.stateMask & SWT.CTRL) !=0 , false);
 					}
+					lastClickedEntry = entry.getValue();
 				}
-				lastClickedEntry = entry.getValue();
 			}
 		}
 	};

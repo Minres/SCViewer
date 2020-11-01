@@ -1,6 +1,5 @@
 package com.minres.scviewer.e4.application.parts;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -17,11 +16,9 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -166,7 +163,6 @@ public class SearchTxDialog extends TitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		//propName=propNameCombo.getItem(propNameCombo.getSelectionIndex());
 		propValue=propValueText.getText();
 		super.okPressed();
 	}

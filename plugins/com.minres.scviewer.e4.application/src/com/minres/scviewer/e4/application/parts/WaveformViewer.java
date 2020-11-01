@@ -61,7 +61,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -177,9 +176,14 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	
 	TransactionDetails detailsView = null;
 	
+	TransactionListView transactionList = null;
+	
 	/** The waveform pane. */
 	private IWaveformView waveformPane;
 
+	private CTabFolder tabFolder;
+	
+	private CTabItem tbtmSearchResults;
 	/** get UISynchronize injected as field */
 	@Inject UISynchronize sync;
 
@@ -293,7 +297,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	
 		waveformPane = factory.createPanel(rightTop);
 		
-		CTabFolder tabFolder = new CTabFolder(sashFormRight, SWT.BORDER);
+		tabFolder = new CTabFolder(sashFormRight, SWT.BORDER);
 		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		
 		CTabItem tbtmDetails = new CTabItem(tabFolder, SWT.NONE);
@@ -303,13 +307,12 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		detailsView = ContextInjectionFactory.make(TransactionDetails.class, ctx);
 		tbtmDetails.setControl(detailsView.getControl());
 		
-		CTabItem tbtmSearchResults = new CTabItem(tabFolder, SWT.NONE);
+		tbtmSearchResults = new CTabItem(tabFolder, SWT.NONE);
 		tbtmSearchResults.setText("Search Results");
 		
-		TableViewer tableViewer = new TableViewer(tabFolder, SWT.BORDER | SWT.FULL_SELECTION);
-		Table table = tableViewer.getTable();
-		tbtmSearchResults.setControl(table);
-
+		transactionList = ContextInjectionFactory.make(TransactionListView.class, ctx);
+		tbtmSearchResults.setControl(transactionList.getControl());
+		
 		sashFormRight.setWeights(new int[] {75, 25});
 		tabFolder.setSelection(0);
 
@@ -1312,8 +1315,15 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
     	}
     }
 
+    public void showSearch() {
+    	tabFolder.setSelection(tbtmSearchResults);
+    }
+    
 	public void search(String propName, DataType type, String propValue) {
-		// TODO Auto-generated method stub
-		
+//		StructuredSelection sel = (StructuredSelection) getSelection();
+//		TrackEntry e = findTrackEntry((sel).toArray());
+//		if(e==null) return;
+		tabFolder.setSelection(tbtmSearchResults);
+		transactionList.getControl().setSearchProps(propName, type, propValue);
 	}
 }

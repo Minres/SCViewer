@@ -15,11 +15,9 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 
 import com.minres.scviewer.database.ui.TrackEntry;
-import com.minres.scviewer.e4.application.parts.SearchTxDialog;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 public class SearchHandler {
 
@@ -44,13 +42,14 @@ public class SearchHandler {
 		Object obj = activePart.getObject();
 		if(obj instanceof WaveformViewer){
 			WaveformViewer wfv = (WaveformViewer)obj;
-			ISelection sel = wfv.getSelection();
-			if(sel instanceof StructuredSelection) {
-				TrackEntry e = findTrackEntry(((StructuredSelection)sel).toArray());
-				SearchTxDialog dlg = new SearchTxDialog(shell, e.getStream());
-				if (dlg.open() != Window.OK) return;
-				wfv.search(dlg.getPropName(), dlg.getPropType(), dlg.getPropValue());
-			}
+			wfv.showSearch();
+//			ISelection sel = wfv.getSelection();
+//			if(sel instanceof StructuredSelection) {
+//				TrackEntry e = findTrackEntry(((StructuredSelection)sel).toArray());
+//				SearchTxDialog dlg = new SearchTxDialog(shell, e.getStream());
+//				if (dlg.open() != Window.OK) return;
+//				wfv.search(dlg.getPropName(), dlg.getPropType(), dlg.getPropValue());
+//			}
 		}
 	}
 	
