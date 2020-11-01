@@ -62,6 +62,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -174,9 +176,14 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	
 	TransactionDetails detailsView = null;
 	
+	TransactionListView transactionList = null;
+	
 	/** The waveform pane. */
 	private IWaveformView waveformPane;
 
+	private CTabFolder tabFolder;
+	
+	private CTabItem tbtmSearchResults;
 	/** get UISynchronize injected as field */
 	@Inject UISynchronize sync;
 
@@ -287,14 +294,27 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		sashFormTop.setWeights(new int[] {25, 75});
 
 		Composite rightTop = new Composite(sashFormRight, SWT.NONE);
-		Composite rightBottom = new Composite(sashFormRight, SWT.NONE);
-		sashFormRight.setWeights(new int[] {80, 20});
-		
+	
 		waveformPane = factory.createPanel(rightTop);
 		
-		ctx.set(Composite.class, rightBottom);
-		detailsView = ContextInjectionFactory.make(TransactionDetails.class, ctx);
+		tabFolder = new CTabFolder(sashFormRight, SWT.BORDER);
+		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
 		
+		CTabItem tbtmDetails = new CTabItem(tabFolder, SWT.NONE);
+		tbtmDetails.setText("Transaction Details");
+		
+		ctx.set(Composite.class, tabFolder);
+		detailsView = ContextInjectionFactory.make(TransactionDetails.class, ctx);
+		tbtmDetails.setControl(detailsView.getControl());
+		
+		tbtmSearchResults = new CTabItem(tabFolder, SWT.NONE);
+		tbtmSearchResults.setText("Search Results");
+		
+		transactionList = ContextInjectionFactory.make(TransactionListView.class, ctx);
+		tbtmSearchResults.setControl(transactionList.getControl());
+		
+		sashFormRight.setWeights(new int[] {75, 25});
+		tabFolder.setSelection(0);
 
 		waveformPane.setMaxTime(0);
 		setupColors();
@@ -1294,4 +1314,16 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, null);
     	}
     }
+
+    public void showSearch() {
+    	tabFolder.setSelection(tbtmSearchResults);
+    }
+    
+	public void search(String propName, DataType type, String propValue) {
+//		StructuredSelection sel = (StructuredSelection) getSelection();
+//		TrackEntry e = findTrackEntry((sel).toArray());
+//		if(e==null) return;
+		tabFolder.setSelection(tbtmSearchResults);
+		transactionList.getControl().setSearchProps(propName, type, propValue);
+	}
 }
