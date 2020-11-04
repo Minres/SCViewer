@@ -43,6 +43,7 @@ public class TransactionTreeNode implements Comparable<TransactionTreeNode>{
 	 */
 	public String toString(){
 		switch(type){
+		case TX:         return element.toString();
 		case PROPS:      return Messages.TransactionDetails_10;
 		case ATTRS:	     return Messages.TransactionDetails_11;
 		case IN_REL:     return Messages.TransactionDetails_12;
