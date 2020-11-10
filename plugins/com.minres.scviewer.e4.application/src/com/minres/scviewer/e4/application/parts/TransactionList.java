@@ -1,7 +1,6 @@
 package com.minres.scviewer.e4.application.parts;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -40,6 +39,8 @@ import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.txTableTree.AbstractTransactionTreeContentProvider;
 import com.minres.scviewer.e4.application.parts.txTableTree.AttributeLabelProvider;
+import com.minres.scviewer.e4.application.parts.txTableTree.TransactionTreeNode;
+import com.minres.scviewer.e4.application.parts.txTableTree.TransactionTreeNodeType;
 import com.minres.scviewer.e4.application.parts.txTableTree.TxFilter;
 
 public class TransactionList extends Composite {
@@ -115,12 +116,14 @@ public class TransactionList extends Composite {
 				int idx = searchPropCombo.getSelectionIndex();
 				AttributeNameBean sel = attrNames.get(idx);
 				txFilter.setSearchProp(sel.getName(), sel.getType());
+				treeViewer.refresh();
 			}
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) { 
 				int idx = searchPropCombo.getSelectionIndex();
 				AttributeNameBean sel = attrNames.get(idx);
 				txFilter.setSearchProp(sel.getName(), sel.getType());
+				treeViewer.refresh();
 			}
 		});
 
@@ -131,7 +134,6 @@ public class TransactionList extends Composite {
 			public void modifyText(ModifyEvent e) {
 				txFilter.setSearchValue(((Text) e.widget).getText());
 				treeViewer.refresh();
-				//treeViewer.expandAll(false);
 			}
 		});
 
@@ -150,25 +152,21 @@ public class TransactionList extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int idx = viewPropCombo.getSelectionIndex();
-				AttributeNameBean sel = attrNames.get(idx);
-				nameLabelProvider.setShowProp(sel.getName());
+				nameLabelProvider.setShowProp(attrNames.get(idx).getName());
 				treeViewer.refresh(true);
 			}
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) { }
 		});
 
-		treeViewer = new TreeViewer(this, SWT.BORDER);
+		treeViewer = new TreeViewer(this);
 		treeViewer.setContentProvider(new AbstractTransactionTreeContentProvider(waveformViewer) {
 
-			@SuppressWarnings("rawtypes")
+			@SuppressWarnings("unchecked")
 			@Override
 			public Object[] getElements(Object inputElement) {
-				if (inputElement instanceof Object[]) {
-					return (Object[]) inputElement;
-				}
-				if (inputElement instanceof Collection) {
-					return ((Collection) inputElement).toArray();
+				if (inputElement instanceof ArrayList<?>) {
+					return ((ArrayList<ITx>) inputElement).stream().map(tx-> new TransactionTreeNode(tx, TransactionTreeNodeType.TX)).collect(Collectors.toList()).toArray();
 				}
 				return new Object[0];
 			}
@@ -181,6 +179,8 @@ public class TransactionList extends Composite {
 				Object selected = treeSelection.getFirstElement();
 				if(selected instanceof ITx){
 					waveformViewer.setSelection(new StructuredSelection(selected));
+				} else if(selected instanceof TransactionTreeNode && ((TransactionTreeNode)selected).type == TransactionTreeNodeType.TX) {
+					waveformViewer.setSelection(new StructuredSelection(((TransactionTreeNode)selected).element));
 				}
 			}
 		});
@@ -242,17 +242,18 @@ public class TransactionList extends Composite {
 				}
 
 				public void run() {
-					stream.getEvents().values().parallelStream().forEach(evtLst -> {
-						evtLst.forEach(evt -> {
-							if(evt.getType()==Type.BEGIN) {
-								eventList.add(evt.getTransaction());
-								for(ITxAttribute attr: evt.getTransaction().getAttributes()) {
+					eventList = stream.getEvents().values().parallelStream()
+							.flatMap(List::stream)
+							.filter(evt -> evt.getType()==Type.BEGIN)
+							.map(evt-> {
+								ITx tx = evt.getTransaction();
+								for(ITxAttribute attr: tx.getAttributes()) {
 									propNames.put(attr.getName(), attr.getDataType());
 								}
-							}
-						});
-					});
-					eventList = eventList.parallelStream().sorted((t1, t2)-> t1.getBeginTime().compareTo(t2.getBeginTime())).collect(Collectors.toList());
+								return tx;
+							})
+							.sorted((t1, t2)-> t1.getBeginTime().compareTo(t2.getBeginTime()))
+							.collect(Collectors.toList());
 					getDisplay().asyncExec(new Runnable() {
 						@Override
 						public void run() {
@@ -265,6 +266,7 @@ public class TransactionList extends Composite {
 								searchPropComboViewer.setInput(attrNames);
 								searchPropComboViewer.setSelection(new StructuredSelection(searchPropComboViewer.getElementAt(0)));
 							}
+							treeViewer.refresh(true);
 						}
 					});
 				}

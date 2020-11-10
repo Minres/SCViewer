@@ -49,6 +49,7 @@
    <features>
       <feature id="com.minres.scviewer.e4.feature" installMode="root"/>
       <feature id="com.minres.scviewer.e4.platform.feature" installMode="root"/>
+      <feature id="org.eclipse.equinox.p2.core.feature" installMode="root"/>
    </features>
 
    <configurations>

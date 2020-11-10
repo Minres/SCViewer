@@ -104,9 +104,20 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 				}else 
 					return new StyledString("");					 //$NON-NLS-1$
 			case TX_TIME:
-				return new StyledString("");					 //$NON-NLS-1$
-			default:
-				if (element instanceof ITxAttribute) {
+				if(element instanceof TransactionTreeNode) {
+					ITx iTx = ((TransactionTreeNode) element).element;
+					return new StyledString(waveformViewerPart.getScaledTime(iTx.getBeginTime()));
+				}
+			case VALUE:
+				if(element instanceof TransactionTreeNode) {
+					if(showProp!=null){
+						ITx iTx = ((TransactionTreeNode) element).element;
+						List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
+						if(res.size()==1)
+							return getAttrValueAsStyledString(res.get(0));
+					}
+					return new StyledString("");
+				} else if (element instanceof ITxAttribute) {
 					ITxAttribute attribute = (ITxAttribute) element;
 					return getAttrValueAsStyledString(attribute);
 				}else if(element instanceof Object[]){
