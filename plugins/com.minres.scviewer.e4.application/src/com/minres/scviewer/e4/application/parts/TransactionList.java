@@ -12,11 +12,12 @@ import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ITreeSelection;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.TreeViewerColumn;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -26,9 +27,10 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeColumn;
 
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.ITx;
@@ -73,11 +75,11 @@ public class TransactionList extends Composite {
 
 	private Text searchPropValue;
 
-	private TreeViewer treeViewer = null; 
+	private TableViewer tableViewer = null; 
 
-	private TreeColumn valueColumn = null;
-
-	private AttributeLabelProvider nameLabelProvider = null;
+	private TableColumn valueColumn = null;
+	
+	private AttributeLabelProvider valueLabelProvider = null;
 
 	private ITxStream<? extends ITxEvent> stream;
 
@@ -96,8 +98,13 @@ public class TransactionList extends Composite {
 	 */
 	public TransactionList(Composite parent, int style, WaveformViewer waveformViewer) {
 		super(parent, style);
-		setLayout(new GridLayout(3, false));
+		setLayout(new GridLayout(5, false));
 		txFilter = new TxFilter();
+
+		Label lbl1 = new Label(this, SWT.NONE);
+		lbl1.setAlignment(SWT.RIGHT);
+		lbl1.setText("Property to match:");
+		lbl1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 
 		searchPropComboViewer = new ComboViewer(this, SWT.NONE);
 		searchPropComboViewer.setLabelProvider(new LabelProvider() {
@@ -116,26 +123,33 @@ public class TransactionList extends Composite {
 				int idx = searchPropCombo.getSelectionIndex();
 				AttributeNameBean sel = attrNames.get(idx);
 				txFilter.setSearchProp(sel.getName(), sel.getType());
-				treeViewer.refresh();
+				tableViewer.refresh();
 			}
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) { 
 				int idx = searchPropCombo.getSelectionIndex();
 				AttributeNameBean sel = attrNames.get(idx);
 				txFilter.setSearchProp(sel.getName(), sel.getType());
-				treeViewer.refresh();
+				tableViewer.refresh();
 			}
 		});
 
 		searchPropValue = new Text(this, SWT.BORDER);
-		searchPropValue.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		GridData gd_searchPropValue = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		gd_searchPropValue.minimumWidth = 50;
+		searchPropValue.setLayoutData(gd_searchPropValue);
 		searchPropValue.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
 				txFilter.setSearchValue(((Text) e.widget).getText());
-				treeViewer.refresh();
+				tableViewer.refresh();
 			}
 		});
+
+		Label lbl2 = new Label(this, SWT.NONE);
+		lbl2.setAlignment(SWT.RIGHT);
+		lbl2.setText("Property to show:");
+		lbl2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
 
 		viewPropComboViewer = new ComboViewer(this, SWT.NONE);
 		viewPropComboViewer.setLabelProvider(new LabelProvider() {
@@ -152,15 +166,15 @@ public class TransactionList extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int idx = viewPropCombo.getSelectionIndex();
-				nameLabelProvider.setShowProp(attrNames.get(idx).getName());
-				treeViewer.refresh(true);
+				valueLabelProvider.setShowProp(attrNames.get(idx).getName());
+				tableViewer.refresh(true);
 			}
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) { }
 		});
 
-		treeViewer = new TreeViewer(this);
-		treeViewer.setContentProvider(new AbstractTransactionTreeContentProvider(waveformViewer) {
+		tableViewer = new TableViewer(this);
+		tableViewer.setContentProvider(new AbstractTransactionTreeContentProvider(waveformViewer) {
 
 			@SuppressWarnings("unchecked")
 			@Override
@@ -171,66 +185,65 @@ public class TransactionList extends Composite {
 				return new Object[0];
 			}
 		});
-		treeViewer.addFilter(txFilter);
-		treeViewer.addDoubleClickListener(new IDoubleClickListener() {
+		tableViewer.addFilter(txFilter);
+		tableViewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event) {
-				ITreeSelection treeSelection = treeViewer.getStructuredSelection();
-				Object selected = treeSelection.getFirstElement();
-				if(selected instanceof ITx){
-					waveformViewer.setSelection(new StructuredSelection(selected));
-				} else if(selected instanceof TransactionTreeNode && ((TransactionTreeNode)selected).type == TransactionTreeNodeType.TX) {
-					waveformViewer.setSelection(new StructuredSelection(((TransactionTreeNode)selected).element));
+				ISelection treeSelection = tableViewer.getSelection();
+				if(treeSelection instanceof IStructuredSelection) {
+					Object selected = ((IStructuredSelection)treeSelection).getFirstElement();
+					if(selected instanceof ITx){
+						waveformViewer.setSelection(new StructuredSelection(selected));
+					} else if(selected instanceof TransactionTreeNode && ((TransactionTreeNode)selected).type == TransactionTreeNodeType.TX) {
+						waveformViewer.setSelection(new StructuredSelection(((TransactionTreeNode)selected).element));
+					}
 				}
 			}
 		});
 		
-		Tree tree = treeViewer.getTree();
-		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
+		Table table = tableViewer.getTable();
+		table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 5, 1));
 
-		TreeViewerColumn nameColumnViewer = new TreeViewerColumn(treeViewer, SWT.NONE);
-		TreeColumn nameColumn = nameColumnViewer.getColumn();
+		TableViewerColumn nameColumnViewer = new TableViewerColumn(tableViewer, SWT.NONE);
+		TableColumn nameColumn = nameColumnViewer.getColumn();
 		nameColumn.setWidth(200);
 		nameColumn.setText("Tx ID");
 		nameColumn.setResizable(true);
 		nameColumnViewer.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewer, AttributeLabelProvider.NAME)));
 
-		TreeViewerColumn timeColumnViewer = new TreeViewerColumn(treeViewer, SWT.NONE);
-		TreeColumn timeColumn = timeColumnViewer.getColumn();
+		TableViewerColumn timeColumnViewer = new TableViewerColumn(tableViewer, SWT.NONE);
+		TableColumn timeColumn = timeColumnViewer.getColumn();
 		timeColumn.setAlignment(SWT.RIGHT);
 		timeColumn.setWidth(150);
 		timeColumn.setText("Start time");
 		timeColumn.setResizable(true);
 		timeColumnViewer.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewer, AttributeLabelProvider.TX_TIME)));
 
-		TreeViewerColumn typeColumnViewer = new TreeViewerColumn(treeViewer, SWT.NONE);
-		TreeColumn typeColumn = typeColumnViewer.getColumn();
-		typeColumn.setAlignment(SWT.RIGHT);
-		typeColumn.setWidth(150);
-		typeColumn.setText("Type");
-		typeColumn.setResizable(true);
-		typeColumnViewer.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewer, AttributeLabelProvider.TYPE)));
-
-		TreeViewerColumn valueColumnViewer = new TreeViewerColumn(treeViewer, SWT.NONE);
+		TableViewerColumn valueColumnViewer = new TableViewerColumn(tableViewer, SWT.NONE);
 		valueColumn = valueColumnViewer.getColumn();
 		valueColumn.setWidth(150);
-		valueColumn.setText("Value");
+		valueColumn.setText("Property Value");
 		valueColumn.setResizable(true);
-		nameLabelProvider= new AttributeLabelProvider(waveformViewer, AttributeLabelProvider.VALUE);
-		valueColumnViewer.setLabelProvider(new DelegatingStyledCellLabelProvider(nameLabelProvider));
+		valueLabelProvider= new AttributeLabelProvider(waveformViewer, AttributeLabelProvider.VALUE);
+		valueColumnViewer.setLabelProvider(new DelegatingStyledCellLabelProvider(valueLabelProvider));
 
 		// Turn on the header and the lines
-		tree.setHeaderVisible(true);
-		tree.setLinesVisible(true);
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
 	}
 
 	public void setInput(TrackEntry trackEntry) {
 		if(trackEntry==null || !trackEntry.isStream()) {
 			attrNames.clear();
-			treeViewer.setInput(emptyList);
+			tableViewer.setInput(emptyList);
 		} else { 
 			stream=trackEntry.getStream();
-			treeViewer.setInput(emptyList);
+			tableViewer.setInput(emptyList);
 			new Thread() {
 				private ConcurrentHashMap<String, DataType> propNames=new ConcurrentHashMap<String, DataType>();
 
@@ -257,7 +270,7 @@ public class TransactionList extends Composite {
 					getDisplay().asyncExec(new Runnable() {
 						@Override
 						public void run() {
-							treeViewer.setInput(eventList);
+							tableViewer.setInput(eventList);
 							attrNames.clear();
 							attrNames.addAll(getEntries());
 							searchPropComboViewer.getCombo().select(0);
@@ -266,7 +279,7 @@ public class TransactionList extends Composite {
 								searchPropComboViewer.setInput(attrNames);
 								searchPropComboViewer.setSelection(new StructuredSelection(searchPropComboViewer.getElementAt(0)));
 							}
-							treeViewer.refresh(true);
+							tableViewer.refresh(true);
 						}
 					});
 				}
