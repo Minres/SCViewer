@@ -72,6 +72,13 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 				return new StyledString(iTx.getId().toString());
 			case TX_TIME:
 				return new StyledString(waveformViewerPart.getScaledTime(iTx.getBeginTime()));
+			case TYPE:
+				if(showProp!=null){
+					List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
+					if(res.size()==1)
+						return new StyledString(res.get(0).getDataType().toString());
+				}
+				return new StyledString("");
 			case VALUE:
 				if(showProp!=null){
 					List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
@@ -95,13 +102,21 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 				} else 
 					return new StyledString(element.toString());
 			case TYPE:
-				if (element instanceof ITxAttribute) {
+				if(element instanceof TransactionTreeNode) {
+					if(showProp!=null){
+						ITx iTx = ((TransactionTreeNode) element).element;
+						List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
+						if(res.size()==1)
+							return new StyledString(res.get(0).getDataType().toString());
+					}
+					return new StyledString("");
+				} else if (element instanceof ITxAttribute) {
 					ITxAttribute attribute = (ITxAttribute) element;
 					return new StyledString(attribute.getDataType().toString());
-				}else if(element instanceof Object[]){
+				} else if(element instanceof Object[]){
 					Object[] elements = (Object[]) element;
 					return new StyledString(elements[field].toString());
-				}else 
+				} else 
 					return new StyledString("");					 //$NON-NLS-1$
 			case TX_TIME:
 				if(element instanceof TransactionTreeNode) {
@@ -120,7 +135,7 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 				} else if (element instanceof ITxAttribute) {
 					ITxAttribute attribute = (ITxAttribute) element;
 					return getAttrValueAsStyledString(attribute);
-				}else if(element instanceof Object[]){
+				} else if(element instanceof Object[]){
 					Object[] elements = (Object[]) element;
 					Object o = elements[field];
 					if(o instanceof ITx) {

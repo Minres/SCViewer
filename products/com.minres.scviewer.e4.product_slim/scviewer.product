@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="SCViewer" uid="product_slim" id="com.minres.scviewer.e4.application.product_slim" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="2.9.1.qualifier" useFeatures="false" includeLaunchers="true">
+<product name="SCViewer" uid="product_slim" id="com.minres.scviewer.e4.application.product_slim" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="2.9.2.qualifier" useFeatures="false" includeLaunchers="true">
 
    <configIni use="default">
    </configIni>
