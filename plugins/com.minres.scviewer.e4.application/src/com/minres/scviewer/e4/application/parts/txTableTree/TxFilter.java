@@ -40,7 +40,7 @@ public class TxFilter extends ViewerFilter {
 	 * @param s the new search text
 	 */
 	public void setSearchValue(String s) {
-		this.searchValue = s; //$NON-NLS-1$ //$NON-NLS-2$
+		this.searchValue = s;
 	}
 
 	/* (non-Javadoc)
@@ -50,11 +50,15 @@ public class TxFilter extends ViewerFilter {
 	public boolean select(Viewer viewer, Object parentElement, Object element) {
 		if (searchValue == null || searchValue.length() == 0)
 			return true;
-		if(element instanceof ITx) {
-			ITx iTx = (ITx) element;
-			List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> searchProp.equals(a.getName())).collect(Collectors.toList());
-			if(res.size()==1) {
-				try {
+		ITx iTx = null;
+		if(element instanceof ITx) 
+			iTx = (ITx) element;
+		else if(element instanceof TransactionTreeNode && ((TransactionTreeNode)element).type == TransactionTreeNodeType.TX)
+			iTx = ((TransactionTreeNode)element).element;
+		if(iTx==null) return true;
+		List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> searchProp.equals(a.getName())).collect(Collectors.toList());
+		if(res.size()==1) {
+			try {
 				ITxAttribute attr =res.get(0);
 				switch(searchType) {
 				case BOOLEAN: // bool
@@ -74,11 +78,9 @@ public class TxFilter extends ViewerFilter {
 				default:
 					break;
 				}
-				} catch(RuntimeException ex) {
-					return false;
-				}
+			} catch(RuntimeException ex) {
+				return false;
 			}
-			return true;
 		}
 		return false;
 	}

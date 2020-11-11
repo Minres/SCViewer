@@ -54,6 +54,7 @@
         <children xsi:type="menu:HandledMenuItem" xmi:id="_JTXBgYl_EeWxJ_wPkM6yGQ" elementId="" label="Preferences" command="_AxH6sIl_EeWxJ_wPkM6yGQ"/>
       </children>
       <children xsi:type="menu:Menu" xmi:id="_95QGxHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.menu.help" label="Help">
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_UQRi0B07EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handledmenuitem.checkforupdate" visible="false" label="Check for Update" enabled="false" command="_-9ED4B06EeuiP60JNw0iiA"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGxXNmEeWBq8z1Dv39LA" label="About" command="_95PfxnNmEeWBq8z1Dv39LA"/>
       </children>
     </mainMenu>
@@ -137,6 +138,7 @@
   <handlers xmi:id="_x4pSEGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handler.0" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableHover" command="_uyeyYGtTEeqmlpoaaMHoiw"/>
   <handlers xmi:id="_h3jU8BkWEeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.handler.reloadCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ReloadHandler" command="_srACsBkREeudD5MqrWoETQ"/>
   <handlers xmi:id="_gn_boBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.txSearch" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler" command="_XDxTYBlEEeuiP60JNw0iiA"/>
+  <handlers xmi:id="_CCEtAB07EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.update" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.UpdateHandler" command="_-9ED4B06EeuiP60JNw0iiA"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
@@ -277,6 +279,7 @@
   <commands xmi:id="_uyeyYGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.command.enablehover" commandName="Enable hover" description="Enable hover window in waveform"/>
   <commands xmi:id="_srACsBkREeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.reload" commandName="Reload Command"/>
   <commands xmi:id="_XDxTYBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.txSearch" commandName="Search Command"/>
+  <commands xmi:id="_-9ED4B06EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.command.update" commandName="Update"/>
   <addons xmi:id="_95PfsnNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_95Pfs3NmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_95PftHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>

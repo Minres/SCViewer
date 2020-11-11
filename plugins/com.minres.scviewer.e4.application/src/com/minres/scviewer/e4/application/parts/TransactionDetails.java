@@ -137,7 +137,6 @@ public class TransactionDetails {
 
 		treeViewer = new TreeViewer(top);
 		treeViewer.setContentProvider(new AbstractTransactionTreeContentProvider(waveformViewerPart) {
-			
 			@Override
 			public Object[] getElements(Object element) {
 				return new Object[]{

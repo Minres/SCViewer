@@ -46,38 +46,39 @@ public abstract class AbstractTransactionTreeContentProvider implements ITreeCon
 	@Override
 	public Object[] getChildren(Object element) {
 		if(element instanceof ITx) {
-			return new Object[]{
-					new TransactionTreeNode((ITx)element, TransactionTreeNodeType.ATTRS)  
-			};
+			return new Object[]{new TransactionTreeNode((ITx)element, TransactionTreeNodeType.ATTRS)};
 		} else if(element instanceof TransactionTreeNode){
-			TransactionTreeNode propertyHolder=(TransactionTreeNode) element;
-			if(propertyHolder.type == TransactionTreeNodeType.PROPS){
+			TransactionTreeNode node=(TransactionTreeNode) element;
+			switch(node.type) {
+			case PROPS:
 				return new Object[][]{
-					{Messages.TransactionDetails_1, Messages.TransactionDetails_16, propertyHolder.element.getStream().getFullName()},
-					{Messages.TransactionDetails_2, Messages.TransactionDetails_16, propertyHolder.element.getGenerator().getName()},
-					{Messages.TransactionDetails_19, Messages.TransactionDetails_20, waveformViewerPart.getScaledTime(propertyHolder.element.getBeginTime())},
-					{Messages.TransactionDetails_21, Messages.TransactionDetails_20, waveformViewerPart.getScaledTime(propertyHolder.element.getEndTime())}
+					{Messages.TransactionDetails_1, Messages.TransactionDetails_16, node.element.getStream().getFullName()},
+					{Messages.TransactionDetails_2, Messages.TransactionDetails_16, node.element.getGenerator().getName()},
+					{Messages.TransactionDetails_19, Messages.TransactionDetails_20, waveformViewerPart.getScaledTime(node.element.getBeginTime())},
+					{Messages.TransactionDetails_21, Messages.TransactionDetails_20, waveformViewerPart.getScaledTime(node.element.getEndTime())}
 				};
-			}else if(propertyHolder.type == TransactionTreeNodeType.ATTRS || propertyHolder.type == TransactionTreeNodeType.HIER)
-				return propertyHolder.getAttributeListForHier();
-			else if(propertyHolder.type == TransactionTreeNodeType.IN_REL){
-				Vector<Object[] > res = new Vector<>();
-				for(ITxRelation rel:propertyHolder.element.getIncomingRelations()){
-					res.add(new Object[]{
+			case TX:
+			case ATTRS:
+			case HIER:
+				return node.getAttributeListForHier();
+			case IN_REL:
+				Vector<Object[] > res_in = new Vector<>();
+				for(ITxRelation rel:node.element.getIncomingRelations()){
+					res_in.add(new Object[]{
 							rel.getRelationType(), 
 							rel.getSource().getGenerator().getName(), 
 							rel.getSource()});
 				}
-				return res.toArray();
-			} else if(propertyHolder.type == TransactionTreeNodeType.OUT_REL){
-				Vector<Object[] > res = new Vector<>();
-				for(ITxRelation rel:propertyHolder.element.getOutgoingRelations()){
-					res.add(new Object[]{
+				return res_in.toArray();
+			case OUT_REL:
+				Vector<Object[] > res_out = new Vector<>();
+				for(ITxRelation rel:node.element.getOutgoingRelations()){
+					res_out.add(new Object[]{
 							rel.getRelationType(), 
 							rel.getTarget().getGenerator().getName(), 
 							rel.getTarget()});
 				}
-				return res.toArray();
+				return res_out.toArray();
 			}
 		}
 		return null;
