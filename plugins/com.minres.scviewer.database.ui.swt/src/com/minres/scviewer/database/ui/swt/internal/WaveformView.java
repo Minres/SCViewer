@@ -336,15 +336,19 @@ public class WaveformView implements IWaveformView  {
 		SashForm topSash = new SashForm(top, SWT.SMOOTH);
 		topSash.setBackground(topSash.getDisplay().getSystemColor(SWT.COLOR_GRAY));
 				
-		Composite composite = new Composite(topSash, SWT.NONE);
-		composite.setLayout(new FillLayout(SWT.HORIZONTAL));
+		Composite namePane  = new Composite(topSash, SWT.NONE);
+		Composite rightPane = new Composite(topSash, SWT.NONE);
+		rightPane.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-		waveformCanvas = new WaveformCanvas(topSash, SWT.NONE);
+		SashForm rightSash = new SashForm(rightPane, SWT.SMOOTH);
+		rightSash.setBackground(SWTResourceManager.getColor(SWT.COLOR_GRAY));
 
-		SashForm leftSash = new SashForm(composite, SWT.SMOOTH);
-		leftSash.setBackground(SWTResourceManager.getColor(SWT.COLOR_GRAY));
+		Composite valuePane = new Composite(rightSash, SWT.NONE);
+		waveformCanvas      = new WaveformCanvas(rightSash, SWT.NONE);
 
-		Composite namePane = createTextPane(leftSash, "Name");
+		// create the name pane
+		createTextPane(namePane, "Name");
+		
 		namePaneHeader= namePane.getChildren()[0];
 		namePane.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
 
@@ -380,7 +384,8 @@ public class WaveformView implements IWaveformView  {
 		nameList.addMouseListener(nameValueMouseListener);
 		nameListScrolled.setContent(nameList);
 
-		Composite valuePane = createTextPane(leftSash, "Value");
+		createTextPane(valuePane, "Value");
+		
 		valuePane.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
 		valueListScrolled = new ScrolledComposite(valuePane, SWT.H_SCROLL | SWT.V_SCROLL);
 		valueListScrolled.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
@@ -445,8 +450,8 @@ public class WaveformView implements IWaveformView  {
 				valueListScrolled.setOrigin(valueListScrolled.getOrigin().x, y);
 			}
 		});
-		topSash.setWeights(new int[] { 30, 70 });
-		leftSash.setWeights(new int[] { 75, 25 });
+		topSash.setWeights(new int[] { 25, 75 });
+		rightSash.setWeights(new int[] { 10, 90 });
 
 		createStreamDragSource(nameList);
 		createStreamDragSource(valueList);
@@ -459,8 +464,7 @@ public class WaveformView implements IWaveformView  {
 		toolTipHandler.activateHoverHelp(waveformCanvas);
 	}
 
-	private Composite createTextPane(SashForm leftSash, String text) {
-		Composite namePane = new Composite(leftSash, SWT.NONE);
+	private void createTextPane(Composite namePane, String text) {
 		GridLayout gl_namePane = new GridLayout(1, false);
 		gl_namePane.verticalSpacing = 0;
 		gl_namePane.marginWidth = 0;
@@ -480,7 +484,6 @@ public class WaveformView implements IWaveformView  {
 		GridData gd_nameSep = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		gd_nameSep.heightHint = 2;
 		nameSep.setLayoutData(gd_nameSep);
-		return namePane;
 	}
 
 	@Override
