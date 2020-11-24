@@ -273,8 +273,8 @@ public class TransactionList extends Composite {
 							tableViewer.setInput(eventList);
 							attrNames.clear();
 							attrNames.addAll(getEntries());
-							searchPropComboViewer.getCombo().select(0);
-							txFilter.setSearchProp(attrNames.get(0).getName(), attrNames.get(0).getType());
+							if(attrNames.size()>0)
+								txFilter.setSearchProp(attrNames.get(0).getName(), attrNames.get(0).getType());
 							if (searchPropComboViewer!=null) {
 								searchPropComboViewer.setInput(attrNames);
 								searchPropComboViewer.setSelection(new StructuredSelection(searchPropComboViewer.getElementAt(0)));
