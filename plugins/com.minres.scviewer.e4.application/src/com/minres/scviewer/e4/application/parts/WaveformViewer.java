@@ -181,9 +181,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	/** The waveform pane. */
 	private IWaveformView waveformPane;
 
-	private CTabFolder tabFolder;
-	
-	private CTabItem tbtmSearchResults;
 	/** get UISynchronize injected as field */
 	@Inject UISynchronize sync;
 
@@ -278,44 +275,32 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			}
 		});
 		parent.setLayout(new FillLayout(SWT.HORIZONTAL));
-		SashForm sashFormTop = new SashForm(parent, SWT.BORDER | SWT.SMOOTH);
-
-		Composite left = new Composite(sashFormTop, SWT.NONE);
 		
 		IEclipseContext ctx = myPart.getContext();
 		ctx.set(WaveformViewer.class, this);
 		ctx.set(IWaveformDb.class, database);
-		ctx.set(Composite.class, left);
 
+		SashForm topSash = new SashForm(parent, SWT.BORDER | SWT.SMOOTH | SWT.HORIZONTAL);
+		Composite left = new Composite(topSash, SWT.NONE);
+		SashForm middleSash = new SashForm(topSash, SWT.BORDER | SWT.SMOOTH | SWT.VERTICAL);
+		Composite right = new Composite(topSash, SWT.NONE);
+		topSash.setWeights(new int[] {20, 60, 20});
+
+		Composite middleTop = new Composite(middleSash, SWT.NONE);
+		Composite middleBottom = new Composite(middleSash, SWT.NONE);
+		middleSash.setWeights(new int[] {75, 25});
+
+		ctx.set(Composite.class, left);
 		browser = ContextInjectionFactory.make(DesignBrowser.class, ctx);
 		
-		//Composite right = new Composite(sashFormTop, SWT.NONE);
-		SashForm sashFormRight = new SashForm(sashFormTop, SWT.BORDER | SWT.SMOOTH | SWT.VERTICAL);
-		sashFormTop.setWeights(new int[] {25, 75});
-
-		Composite rightTop = new Composite(sashFormRight, SWT.NONE);
-	
-		waveformPane = factory.createPanel(rightTop);
-		
-		tabFolder = new CTabFolder(sashFormRight, SWT.BORDER);
-		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND_GRADIENT));
-		
-		CTabItem tbtmDetails = new CTabItem(tabFolder, SWT.NONE);
-		tbtmDetails.setText("Transaction Details");
-		
-		ctx.set(Composite.class, tabFolder);
+		ctx.set(Composite.class, right);
 		detailsView = ContextInjectionFactory.make(TransactionDetails.class, ctx);
-		tbtmDetails.setControl(detailsView.getControl());
-		
-		tbtmSearchResults = new CTabItem(tabFolder, SWT.NONE);
-		tbtmSearchResults.setText("Search Results");
-		
-		transactionList = ContextInjectionFactory.make(TransactionListView.class, ctx);
-		tbtmSearchResults.setControl(transactionList.getControl());
-		
-		sashFormRight.setWeights(new int[] {75, 25});
-		tabFolder.setSelection(0);
 
+		waveformPane = factory.createPanel(middleTop);
+		
+		ctx.set(Composite.class, middleBottom);
+		transactionList = ContextInjectionFactory.make(TransactionListView.class, ctx);
+		
 		waveformPane.setMaxTime(0);
 		setupColors();
 		//set selection to empty selection when opening a new waveformPane
@@ -1314,16 +1299,11 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, null);
     	}
     }
-
-    public void showSearch() {
-    	tabFolder.setSelection(tbtmSearchResults);
-    }
     
 	public void search(String propName, DataType type, String propValue) {
 //		StructuredSelection sel = (StructuredSelection) getSelection();
 //		TrackEntry e = findTrackEntry((sel).toArray());
 //		if(e==null) return;
-		tabFolder.setSelection(tbtmSearchResults);
 		transactionList.getControl().setSearchProps(propName, type, propValue);
 	}
 }

@@ -41,8 +41,6 @@ public class SearchHandler {
 	public void execute(Shell shell, MPart activePart){
 		Object obj = activePart.getObject();
 		if(obj instanceof WaveformViewer){
-			WaveformViewer wfv = (WaveformViewer)obj;
-			wfv.showSearch();
 //			ISelection sel = wfv.getSelection();
 //			if(sel instanceof StructuredSelection) {
 //				TrackEntry e = findTrackEntry(((StructuredSelection)sel).toArray());

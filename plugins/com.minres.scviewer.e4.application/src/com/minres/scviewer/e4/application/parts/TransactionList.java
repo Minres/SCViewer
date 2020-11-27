@@ -13,8 +13,10 @@ import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
@@ -23,6 +25,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -98,6 +101,8 @@ public class TransactionList extends Composite {
 	 */
 	public TransactionList(Composite parent, int style, WaveformViewer waveformViewer) {
 		super(parent, style);
+		parent.setLayout(new FillLayout());
+
 		setLayout(new GridLayout(5, false));
 		txFilter = new TxFilter();
 
@@ -186,10 +191,10 @@ public class TransactionList extends Composite {
 			}
 		});
 		tableViewer.addFilter(txFilter);
-		tableViewer.addDoubleClickListener(new IDoubleClickListener() {
+		tableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
-			public void doubleClick(DoubleClickEvent event) {
-				ISelection treeSelection = tableViewer.getSelection();
+			public void selectionChanged(SelectionChangedEvent event) {
+				ISelection treeSelection = event.getSelection();
 				if(treeSelection instanceof IStructuredSelection) {
 					Object selected = ((IStructuredSelection)treeSelection).getFirstElement();
 					if(selected instanceof ITx){
@@ -230,11 +235,6 @@ public class TransactionList extends Composite {
 		// Turn on the header and the lines
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
-		new Label(this, SWT.NONE);
-		new Label(this, SWT.NONE);
-		new Label(this, SWT.NONE);
-		new Label(this, SWT.NONE);
-		new Label(this, SWT.NONE);
 	}
 
 	public void setInput(TrackEntry trackEntry) {
