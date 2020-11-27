@@ -48,6 +48,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -114,6 +115,7 @@ public class TransactionDetails {
 	 */
 	@PostConstruct
 	public void createComposite(final Composite parent, @Optional WaveformViewer waveformViewerPart) {
+		parent.setLayout(new FillLayout());
 		this.waveformViewerPart=waveformViewerPart;
 		
 		top = new Composite(parent, SWT.NONE);
@@ -378,6 +380,7 @@ public class TransactionDetails {
 	}
 	
 	private void setTopItemFromHier(List<String> names, TreeItem [] items) {
+		if(names.size()==0) return;
 		for (TreeItem item : items) { // find item from category
 			if(item.getText(0).equals(names.get(0))) {
 				if(names.size()==1 || item.getItemCount()==0) {

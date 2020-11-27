@@ -2,6 +2,8 @@ package com.minres.scviewer.e4.application.parts.txTableTree;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,8 @@ public class TxFilter extends ViewerFilter {
 	private DataType searchType;
 	/** The search string. */
 	private String searchValue;
+	
+	private Pattern pattern=null;
 
 	/**
 	 * Sets the search text.
@@ -41,6 +45,14 @@ public class TxFilter extends ViewerFilter {
 	 */
 	public void setSearchValue(String s) {
 		this.searchValue = s;
+		if(searchType==DataType.STRING) {
+			try {
+			    //pattern = Pattern.compile(searchValue, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+			    pattern = Pattern.compile(searchValue);
+			} catch (PatternSyntaxException e) {
+				pattern = null;
+			}
+		}
 	}
 
 	/* (non-Javadoc)
@@ -70,9 +82,10 @@ public class TxFilter extends ViewerFilter {
 					BigInteger sval = parseBigInteger(searchValue);
 					return lval.equals(sval);
 				case STRING:
-					try {
-						return (((ITxAttribute) element).getName().toLowerCase().matches(searchValue.toLowerCase()));
-					} catch (PatternSyntaxException e) {
+					if(pattern!=null) {
+					    Matcher matcher = pattern.matcher( attr.getValue().toString());
+					    return matcher.find();
+					} else {
 						return true;
 					}
 				default:

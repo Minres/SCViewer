@@ -43,13 +43,14 @@ public class TxAttributeFilter extends ViewerFilter {
 				return true;
 			}
 		} 
-		if(element instanceof Object[]) {
-			try {
-				return (((Object[])element)[0]).toString().toLowerCase().matches(searchString.toLowerCase());	
-			} catch (PatternSyntaxException e) {
-				return true;
-			}
-		}
-		return false;
+//		if(element instanceof Object[]) {
+//			try {
+//				return (((Object[])element)[0]).toString().toLowerCase().matches(searchString.toLowerCase());	
+//			} catch (PatternSyntaxException e) {
+//				return true;
+//			}
+//		}
+//		return false;
+		return true;
 	}
 }
