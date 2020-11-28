@@ -16,8 +16,6 @@ public interface IWaveform extends IHierNode {
 
 	public Long getId();
 
-	public String getKind();
-
 	public IWaveformDb getDb();
 	
 	public Boolean equals(IWaveform other);
@@ -28,8 +26,8 @@ public interface IWaveform extends IHierNode {
 
 	public IEvent[] getEventsBeforeTime(Long time);
 	
-	public Class<?> getType();
+	public WaveformType getType();
 	
-	public int getMaxConcurrency();
+	public int getWidth();
 
 }

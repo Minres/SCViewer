@@ -13,9 +13,6 @@ package com.minres.scviewer.database.ui;
 
 import java.awt.Color;
 
-import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ITxEvent;
-import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 
 public class TrackEntry {
@@ -105,20 +102,8 @@ public class TrackEntry {
 		signalColors[1] = highlightedFallbackColor;
 	}
 	
-	public boolean isStream(){
-		return waveform instanceof ITxStream<?>;
-	}
-
-	public ITxStream<? extends ITxEvent> getStream(){
-		return (ITxStream<?>) waveform;
-	}
-
-	public boolean isSignal(){
-		return waveform instanceof ISignal<?>;
-	}
-	
-	public ISignal<?> getSignal(){
-		return (ISignal<?>) waveform;
+	public IWaveform getWaveform(){
+		return waveform;
 	}
 
 	@Override

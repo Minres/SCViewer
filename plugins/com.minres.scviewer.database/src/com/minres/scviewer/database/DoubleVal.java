@@ -2,7 +2,7 @@ package com.minres.scviewer.database;
 
 public class DoubleVal implements IEvent {
 
-	final double value;
+	public final double value;
 	
 	public DoubleVal(double value) {
 		this.value=value;
@@ -14,8 +14,8 @@ public class DoubleVal implements IEvent {
 	}
 
 	@Override
-	public Class<?> getType() {
-		return this.getClass();
+	public WaveformType getType() {
+		return WaveformType.SIGNAL;
 	}
 
 	@Override

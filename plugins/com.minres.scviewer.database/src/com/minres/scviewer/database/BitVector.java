@@ -173,8 +173,8 @@ public class BitVector implements IEvent {
 	}
 
 	@Override
-	public Class<?> getType() {
-		return this.getClass();
+	public WaveformType getType() {
+		return WaveformType.SIGNAL;
 	}
 
 	@Override

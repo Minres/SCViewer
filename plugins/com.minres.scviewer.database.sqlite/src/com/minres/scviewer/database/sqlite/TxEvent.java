@@ -14,6 +14,7 @@ import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxEvent;
+import com.minres.scviewer.database.WaveformType;
 
 public class TxEvent implements ITxEvent {
 
@@ -52,7 +53,7 @@ public class TxEvent implements ITxEvent {
 	}
 
 	@Override
-	public Class<?> getType() {
-		return TxEvent.class;
+	public WaveformType getType() {
+		return WaveformType.TRANSACTION;
 	}
 }

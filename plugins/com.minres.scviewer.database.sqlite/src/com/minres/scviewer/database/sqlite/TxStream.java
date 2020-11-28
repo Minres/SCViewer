@@ -28,6 +28,7 @@ import com.minres.scviewer.database.ITxGenerator;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
@@ -77,11 +78,6 @@ public class TxStream extends HierNode implements IWaveform {
 		return (long) scvStream.getId();
 	}
 
-	@Override
-	public String getKind() {
-		return scvStream.getKind();
-	}
-
 	public List<ITxGenerator> getGenerators() {
 		if(generators==null){
 			SQLiteDatabaseSelectHandler<ScvGenerator> handler = new SQLiteDatabaseSelectHandler<ScvGenerator>(
@@ -100,7 +96,7 @@ public class TxStream extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public int getMaxConcurrency() {
+	public int getWidth() {
 		if(maxConcurrency==null){
 			java.sql.Connection connection=null;
 			java.sql.Statement statement=null;
@@ -205,8 +201,8 @@ public class TxStream extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public Class<?> getType() {
-		return TxEvent.class;
+	public WaveformType getType() {
+		return WaveformType.TRANSACTION;
 	}
 
 }

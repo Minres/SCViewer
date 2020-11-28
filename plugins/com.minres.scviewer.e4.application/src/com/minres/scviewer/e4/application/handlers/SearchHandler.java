@@ -17,6 +17,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.widgets.Shell;
 
+import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 public class SearchHandler {
@@ -31,7 +32,7 @@ public class SearchHandler {
 				Object[] elem = ((StructuredSelection)sel).toArray();
 				if(elem.length ==0) return false;
 				TrackEntry e = findTrackEntry(elem);
-				return e!=null && e.isStream();
+				return e!=null && e.waveform.getType()==WaveformType.TRANSACTION;
 			}
 		}
 		return false;

@@ -82,7 +82,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				.make()
 				// NPE here --->
 				parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
-				streams.each{ TxStream  stream -> stream.getMaxConcurrency() }
+				streams.each{ TxStream  stream -> stream.getWidth() }
 				return true
 			}
 		} catch (IndexOutOfBoundsException e) {
@@ -97,6 +97,9 @@ public class TextDbLoader implements IWaveformDbLoader{
 			System.out.println("---->>> Exception "+e.toString()+" caught while loading database");
 			//System.out.println("---->>> Exception "+e.toString()+" caught while loading database. StackTrace following... ");
 			//e.printStackTrace()
+		} catch(Error e) {
+			System.out.println("---->>> Exception "+e.toString()+" caught while loading database. StackTrace following... ");
+			e.printStackTrace()
 		}
 		return false;
 	}

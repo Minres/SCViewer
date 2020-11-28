@@ -6,6 +6,6 @@ public interface IEvent {
 
 	public EventKind getKind();
 	
-	public Class<?> getType();
+	public WaveformType getType();
 
 }

@@ -16,6 +16,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,13 +79,15 @@ import org.eclipse.wb.swt.SWTResourceManager;
 
 import com.google.common.collect.Lists;
 import com.minres.scviewer.database.BitVector;
-import com.minres.scviewer.database.ISignal;
+import com.minres.scviewer.database.DoubleVal;
+import com.minres.scviewer.database.EventKind;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxRelation;
-import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.IWaveformView;
@@ -251,17 +254,11 @@ public class WaveformView implements IWaveformView  {
 				Entry<Long, ?> floorEntry=null, ceilEntry=null;
 				if(o instanceof TrackEntry){ 
 					TrackEntry entry = (TrackEntry) o;
-					if(entry.waveform instanceof ISignal<?>){
-						NavigableMap<Long, ?> map = ((ISignal<?>)entry.waveform).getEvents();
-						floorEntry = map.floorEntry(time);
-						ceilEntry = map.ceilingEntry(time);
-					} else if (entry.waveform instanceof ITxStream<?>){
-						NavigableMap<Long, ?> map = ((ITxStream<?>)entry.waveform).getEvents();
-						floorEntry = map.floorEntry(time);
-						ceilEntry = map.ceilingEntry(time);
-					}
+					NavigableMap<Long, IEvent[]> map = entry.waveform.getEvents();
+					floorEntry = map.floorEntry(time);
+					ceilEntry = map.ceilingEntry(time);
 				} else if(o instanceof ITx){
-					NavigableMap<Long, ?> map = ((ITx)o).getStream().getEvents();
+					NavigableMap<Long, IEvent[]> map = ((ITx)o).getStream().getEvents();
 					floorEntry = map.floorEntry(time);
 					ceilEntry = map.ceilingEntry(time);
 				}
@@ -522,11 +519,11 @@ public class WaveformView implements IWaveformView  {
 		for (TrackEntry streamEntry : streams) {
 			streamEntry.height = waveformCanvas.getTrackHeight();
 			streamEntry.vOffset=trackVerticalHeight;
-			if (streamEntry.isStream()) {
+			if (streamEntry.waveform.getType()==WaveformType.TRANSACTION) {
 				streamEntry.currentValue="";
-				streamEntry.height *= streamEntry.getStream().getMaxConcurrency();
+				streamEntry.height *= streamEntry.waveform.getWidth();
 				painter = new StreamPainter(waveformCanvas, even, streamEntry);
-			} else if (streamEntry.isSignal()) {
+			} else if (streamEntry.waveform.getType()==WaveformType.SIGNAL) {
 				streamEntry.currentValue="---";
 				painter = new SignalPainter(waveformCanvas, even, streamEntry);
 			}
@@ -563,11 +560,10 @@ public class WaveformView implements IWaveformView  {
 	private void updateValueList(){
 		final Long time = getCursorTime();
 		for(TrackEntry entry:streams){
-			if(entry.isSignal()){
-				ISignal<?> signal = (ISignal<?>) entry.waveform;
-				Object value = signal.getWaveformValueBeforeTime(time);
-				if(value instanceof BitVector){
-					BitVector bv = (BitVector) value;
+			if(entry.waveform.getType() == WaveformType.SIGNAL){
+				IEvent[] value = entry.waveform.getEventsBeforeTime(time);
+				if(value[0] instanceof BitVector){
+					BitVector bv = (BitVector) value[0];
 					if(bv.getWidth()==1)
 						entry.currentValue="b'"+bv;
 					else {
@@ -583,27 +579,28 @@ public class WaveformView implements IWaveformView  {
 							entry.currentValue="h'"+bv.toHexString();
 						}
 					}
-				} else if(value instanceof Double){
-					Double val = (Double) value;
+				} else if(value[0] instanceof DoubleVal){
+					Double val = ((DoubleVal) value[0]).value;
 					if(val>0.001)
 						entry.currentValue=String.format("%1$,.3f", val);
 					else
 						entry.currentValue=Double.toString(val);
 				}
-			} else if(entry.isStream()){
-				ITxStream<?> stream = (ITxStream<?>) entry.waveform;
-				ITx[] resultsList = new ITx[stream.getMaxConcurrency()];
-				Entry<Long, List<ITxEvent>> firstTx=stream.getEvents().floorEntry(time);
+			} else if(entry.waveform.getType() == WaveformType.TRANSACTION){
+				ITx[] resultsList = new ITx[entry.waveform.getWidth()];
+				Entry<Long, IEvent[]> firstTx=entry.waveform.getEvents().floorEntry(time);
 				if(firstTx!=null){
 					do {
-						for(ITxEvent evt:firstTx.getValue()){
-							ITx tx=evt.getTransaction();
-							if(evt.getType()==ITxEvent.Type.BEGIN && tx.getBeginTime()<=time && tx.getEndTime()>=time){
+						for(IEvent evt:firstTx.getValue()){
+							if(evt instanceof ITxEvent) {
+							ITx tx=((ITxEvent)evt).getTransaction();
+							if(evt.getKind()==EventKind.BEGIN && tx.getBeginTime()<=time && tx.getEndTime()>=time){
 								if(resultsList[tx.getConcurrencyIndex()]==null)
-									resultsList[tx.getConcurrencyIndex()]= evt.getTransaction();
+									resultsList[tx.getConcurrencyIndex()]= ((ITxEvent)evt).getTransaction();
+							}
 							}
 						}
-						firstTx=stream.getEvents().lowerEntry(firstTx.getKey());	
+						firstTx=entry.waveform.getEvents().lowerEntry(firstTx.getKey());	
 					}while(firstTx!=null && !isArrayFull(resultsList));
 					entry.currentValue="";
 					boolean separator=false;
@@ -804,15 +801,14 @@ public class WaveformView implements IWaveformView  {
 		else if(currentWaveformSelection.size()!=1) return;
 		if(selectedWaveform==null)
 			selectedWaveform = currentWaveformSelection.get(1);
-		if (selectedWaveform!=null && selectedWaveform.isStream() && currentTxSelection!=null) {
+		if (selectedWaveform!=null && selectedWaveform.waveform.getType()==WaveformType.TRANSACTION && currentTxSelection!=null) {
 			if(relationType.equals(IWaveformView.NEXT_PREV_IN_STREAM)){
-				ITxStream<? extends ITxEvent> stream = selectedWaveform.getStream();
 				ITx transaction = null;
 				if (direction == GotoDirection.NEXT) {
-					List<ITxEvent> thisEntryList = stream.getEvents().get(currentTxSelection.getBeginTime());
+					ITxEvent[] thisEntryList = (ITxEvent[]) selectedWaveform.waveform.getEvents().get(currentTxSelection.getBeginTime());
 					boolean meFound=false;
 					for (ITxEvent evt : thisEntryList) {
-						if (evt.getType() == ITxEvent.Type.BEGIN) {
+						if (evt.getKind() == EventKind.BEGIN) {
 							if(meFound){
 								transaction = evt.getTransaction();
 								break;
@@ -821,42 +817,42 @@ public class WaveformView implements IWaveformView  {
 						}
 					}
 					if (transaction == null){
-						Entry<Long, List<ITxEvent>> entry = stream.getEvents().higherEntry(currentTxSelection.getBeginTime());
+						Entry<Long, IEvent[]> entry = selectedWaveform.waveform.getEvents().higherEntry(currentTxSelection.getBeginTime());
 						if (entry != null) do {
-							for (ITxEvent evt : entry.getValue()) {
-								if (evt.getType() == ITxEvent.Type.BEGIN) {
-									transaction = evt.getTransaction();
+							for (IEvent evt : entry.getValue()) {
+								if (evt instanceof ITxEvent && evt.getKind() == EventKind.BEGIN) {
+									transaction = ((ITxEvent)evt).getTransaction();
 									break;
 								}
 							}
 							if (transaction == null)
-								entry = stream.getEvents().higherEntry(entry.getKey());
+								entry = selectedWaveform.waveform.getEvents().higherEntry(entry.getKey());
 						} while (entry != null && transaction == null);
 					}
 				} else if (direction == GotoDirection.PREV) {
-					List<ITxEvent> thisEntryList = stream.getEvents().get(currentTxSelection.getBeginTime());
+					IEvent[] thisEntryList = selectedWaveform.waveform.getEvents().get(currentTxSelection.getBeginTime());
 					boolean meFound=false;
-					for (ITxEvent evt :  Lists.reverse(thisEntryList)) {
-						if (evt.getType() == ITxEvent.Type.BEGIN) {
+					for (IEvent evt :  Lists.reverse(Arrays.asList(thisEntryList))) {
+						if (evt instanceof ITxEvent && evt.getKind() == EventKind.BEGIN) {
 							if(meFound){
-								transaction = evt.getTransaction();
+								transaction = ((ITxEvent)evt).getTransaction();
 								break;
 							}
-							meFound|= evt.getTransaction().equals(currentTxSelection);
+							meFound|= ((ITxEvent)evt).getTransaction().equals(currentTxSelection);
 						}
 					}
 					if (transaction == null){
-						Entry<Long, List<ITxEvent>> entry = stream.getEvents().lowerEntry(currentTxSelection.getBeginTime());
+						Entry<Long, IEvent[]> entry = selectedWaveform.waveform.getEvents().lowerEntry(currentTxSelection.getBeginTime());
 						if (entry != null)
 							do {
-								for (ITxEvent evt : Lists.reverse(entry.getValue())) {
-									if (evt.getType() == ITxEvent.Type.BEGIN) {
-										transaction = evt.getTransaction();
+								for (IEvent evt : Lists.reverse(Arrays.asList(thisEntryList))) {
+									if (evt instanceof ITxEvent && evt.getKind() == EventKind.BEGIN) {
+										transaction = ((ITxEvent)evt).getTransaction();
 										break;
 									}
 								}
 								if (transaction == null)
-									entry = stream.getEvents().lowerEntry(entry.getKey());
+									entry = selectedWaveform.waveform.getEvents().lowerEntry(entry.getKey());
 							} while (entry != null && transaction == null);
 					}
 				}
@@ -896,8 +892,8 @@ public class WaveformView implements IWaveformView  {
 	}
 	
 	private boolean streamsVisible(ITxRelation relation) {
-		final ITxStream<ITxEvent> src = relation.getSource().getStream();
-		final ITxStream<ITxEvent> tgt = relation.getTarget().getStream();
+		final IWaveform src = relation.getSource().getStream();
+		final IWaveform tgt = relation.getTarget().getStream();
 		return streams.stream().anyMatch(x -> x.waveform == src) && streams.stream().anyMatch(x -> x.waveform == tgt);
 	}
 
@@ -910,10 +906,10 @@ public class WaveformView implements IWaveformView  {
 		TrackEntry sel = currentWaveformSelection.get(0);
 		long time = getCursorTime();
 		NavigableMap<Long, ?> map=null;
-		if(sel.isStream()){
-			map=sel.getStream().getEvents();
-		} else if(sel.isSignal()){
-			map=sel.getSignal().getEvents();
+		if(sel.waveform.getType()==WaveformType.TRANSACTION){
+			map=sel.waveform.getEvents();
+		} else if(sel.waveform.getType()==WaveformType.SIGNAL){
+			map=sel.waveform.getEvents();
 		}
 		if(map!=null){
 			Entry<Long, ?> entry=direction==GotoDirection.PREV?map.lowerEntry(time):map.higherEntry(time);
@@ -981,15 +977,15 @@ public class WaveformView implements IWaveformView  {
 				if (lastKey == firstKey) {
 					TrackEntry trackEntry=trackVerticalOffset.get(firstKey);
 					IWaveform w = trackEntry.waveform;
-					if (w instanceof ITxStream<?>)
-						subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
+					if (w.getType()==WaveformType.TRANSACTION)
+						subArea.height *= w.getWidth();
 					drawTextFormat(gc, subArea, firstKey, w.getFullName(), trackEntry.selected);
 				} else {
 					for (Entry<Integer, TrackEntry> entry : trackVerticalOffset.subMap(firstKey, true, lastKey, true).entrySet()) {
 						IWaveform w = entry.getValue().waveform;
 						subArea.height = waveformCanvas.getTrackHeight();
-						if (w instanceof ITxStream<?>)
-							subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
+						if (w.getType()==WaveformType.TRANSACTION)
+							subArea.height *= w.getWidth();
 						drawTextFormat(gc, subArea, entry.getKey(), w.getFullName(), entry.getValue().selected);
 					}
 				}
@@ -1008,16 +1004,16 @@ public class WaveformView implements IWaveformView  {
 				if (lastKey == firstKey) {
 					TrackEntry trackEntry=trackVerticalOffset.get(firstKey);
 					IWaveform w = trackEntry.waveform;
-					if (w instanceof ITxStream<?>)
-						subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
+					if (w.getType()==WaveformType.TRANSACTION)
+						subArea.height *= w.getWidth();
 					drawValue(gc, subArea, firstKey, trackEntry.currentValue, trackEntry.selected);
 				} else {
 					for (Entry<Integer, TrackEntry> entry : trackVerticalOffset.subMap(firstKey, true, lastKey, true)
 							.entrySet()) {
 						IWaveform w = entry.getValue().waveform;
 						subArea.height = waveformCanvas.getTrackHeight();
-						if (w instanceof ITxStream<?>)
-							subArea.height *= ((ITxStream<?>) w).getMaxConcurrency();
+						if (w.getType()==WaveformType.TRANSACTION)
+							subArea.height *= w.getWidth();
 						drawValue(gc, subArea, entry.getKey(), entry.getValue().currentValue, entry.getValue().selected);
 					}
 				}

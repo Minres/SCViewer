@@ -18,6 +18,7 @@ import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
+import com.minres.scviewer.database.WaveformType;
 
 public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 
@@ -25,12 +26,8 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	private String fullName;
 
-	private final String kind = "signal";
-	
 	private final int width;
 
-	private final T dummy = null;
-	
 	private IWaveformDb db;
 
 	private NavigableMap<Long, IEvent[]> values;
@@ -78,15 +75,6 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public String getKind() {
-		return kind;
-	}
-
-	public int getWidth() {
-		return width;
-	}
-
-	@Override
 	public IWaveformDb getDb() {
 		return db;
 	}
@@ -128,13 +116,13 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public Class<?> getType() {
-		return dummy.getClass();
+	public WaveformType getType() {
+		return WaveformType.SIGNAL;
 	}
 
 	@Override
-	public int getMaxConcurrency() {
-		return 1;
+	public int getWidth() {
+		return width;
 	}
 
 }

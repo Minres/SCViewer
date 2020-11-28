@@ -1,16 +1,15 @@
-package com.minres.scviewer.database.text
+package com.minres.scviewer.database.text;
 
-import com.minres.scviewer.database.ITxRelation
+import com.minres.scviewer.database.ITxRelation;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.RelationType;
 
 class TxRelation implements ITxRelation {
-	Tx source
+	final Tx source;
 	
-	Tx target
+	final Tx target;
 	
-	RelationType relationType
-	
+	final RelationType relationType;
 	
 	public TxRelation(RelationType relationType, Tx source, Tx target) {
 		this.source = source;

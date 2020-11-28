@@ -16,7 +16,7 @@ import com.minres.scviewer.database.ITxAttributeType
 import com.minres.scviewer.database.ITxAttribute
 
 class TxAttributeTypeFactory {
-	private static final instance = new TxAttributeTypeFactory()
+	static final TxAttributeTypeFactory instance = new TxAttributeTypeFactory()
 	
 	def attributes = [:]
 	

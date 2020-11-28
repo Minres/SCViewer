@@ -23,7 +23,6 @@ import org.eclipse.swt.widgets.Display;
 
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxRelation;
-import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.ui.WaveformColors;
 
@@ -83,14 +82,13 @@ public class ArrowPainter implements IPainter {
 		deferUpdate = false;
 		iRect.clear();
 		oRect.clear();
-		ITxStream<?> stream = tx.getStream();
-		IWaveformPainter painter = waveCanvas.wave2painterMap.get(stream);
+		IWaveformPainter painter = waveCanvas.wave2painterMap.get(tx.getStream());
 		if (painter == null) { // stream has been added but painter not yet
 								// created
 			deferUpdate = true;
 			return;
 		}
-		int laneHeight = painter.getHeight() / stream.getMaxConcurrency();
+		int laneHeight = painter.getHeight() / tx.getStream().getWidth();
 		txRectangle = new Rectangle((int) (tx.getBeginTime() / scaleFactor),
 				waveCanvas.rulerHeight + painter.getVerticalOffset() + laneHeight * tx.getConcurrencyIndex(),
 				(int) ((tx.getEndTime() - tx.getBeginTime()) / scaleFactor), laneHeight);
@@ -102,9 +100,8 @@ public class ArrowPainter implements IPainter {
 		for (ITxRelation iTxRelation : relations) {
 			ITx otherTx = useTarget ? iTxRelation.getTarget() : iTxRelation.getSource();
 			if (waveCanvas.wave2painterMap.containsKey(otherTx.getStream())) {
-				ITxStream<?> stream = otherTx.getStream();
-				IWaveformPainter painter = waveCanvas.wave2painterMap.get(stream);
-				int laneHeight = painter.getHeight() / stream.getMaxConcurrency();
+				IWaveformPainter painter = waveCanvas.wave2painterMap.get(otherTx.getStream());
+				int laneHeight = painter.getHeight() / tx.getStream().getWidth();
 				Rectangle bb = new Rectangle((int) (otherTx.getBeginTime() / scaleFactor),
 						waveCanvas.rulerHeight + painter.getVerticalOffset()
 								+ laneHeight * otherTx.getConcurrencyIndex(),

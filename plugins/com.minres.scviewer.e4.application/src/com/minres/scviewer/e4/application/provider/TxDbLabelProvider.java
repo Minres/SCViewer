@@ -18,10 +18,8 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.wb.swt.ResourceManager;
 
-import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.IHierNode;
-import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ITxStream;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.e4.application.parts.LoadingWaveformDb;
 
@@ -91,14 +89,21 @@ public class TxDbLabelProvider implements ILabelProvider {
 				return loadinDatabase;
 			else
 				return database;
-		}else if(element instanceof ITxStream){
-			return stream;
-		}else if(element instanceof ISignal<?>){
-			Object o = ((ISignal<?>)element).getEvents().firstEntry().getValue();
-			if(o instanceof BitVector && ((BitVector)o).getWidth()==1)
-				return signal;
-			else 
-				return wave;
+		}else if(element instanceof IWaveform){
+			switch(((IWaveform) element).getType()) {
+			case TRANSACTION:
+				return stream;
+			case FILTER:
+				break;
+			case SIGNAL:
+				if(((IWaveform) element).getWidth()==1)
+					return signal;
+				else 
+					return wave;
+			default:
+				break;
+			}
+			return wave;
 		}else if(element instanceof IHierNode){
 			return folder;
 		} else

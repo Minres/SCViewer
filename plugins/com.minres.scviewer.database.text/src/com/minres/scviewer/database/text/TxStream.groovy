@@ -23,6 +23,7 @@ import org.mapdb.Serializer
 import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb
+import com.minres.scviewer.database.WaveformType
 import com.minres.scviewer.database.ITxGenerator
 import com.minres.scviewer.database.EventKind
 import com.minres.scviewer.database.HierNode;
@@ -38,8 +39,6 @@ class TxStream extends HierNode implements IWaveform {
 	
 	String fullName
 	
-	String kind
-	
 	def generators = []
 	
 	int maxConcurrency
@@ -51,7 +50,6 @@ class TxStream extends HierNode implements IWaveform {
 		this.id=id
 		this.database=loader.db
 		this.fullName=name
-		this.kind=kind
 		this.maxConcurrency=0
 		//events = new TreeMap<Long, List<ITxEvent>>()
 		events = loader.mapDb.treeMap(name).keySerializer(Serializer.LONG).createOrOpen();
@@ -67,7 +65,7 @@ class TxStream extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public int getMaxConcurrency() {
+	public int getWidth() {
 		if(!maxConcurrency){
 			generators.each {TxGenerator generator ->
 				generator.transactions.each{ Tx tx ->
@@ -97,9 +95,12 @@ class TxStream extends HierNode implements IWaveform {
 
 	private putEvent(ITxEvent event){
 		if(!events.containsKey(event.time)) 
-			events.put(event.time, [event])
-		else
-			events[event.time]<<event
+			events.put(event.time, [event] as IEvent[])
+		else {
+			def entries = events[event.time] as List
+			entries<<event
+			events.put(event.time, entries as IEvent[])
+		}
 	}
 	
 	@Override
@@ -127,8 +128,8 @@ class TxStream extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public Class<?> getType() {
-		return TxEvent.class;
+	public WaveformType getType() {
+		return WaveformType.TRANSACTION;
 	}
 
 }

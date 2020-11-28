@@ -24,26 +24,28 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.BitVector;
-import com.minres.scviewer.database.ISignal;
+import com.minres.scviewer.database.DoubleVal;
+import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
 
 public class SignalPainter extends TrackPainter {
 	private class SignalChange {
 		long time;
-		Object value;
+		IEvent value;
 		boolean fromMap;
 
-		public SignalChange(Entry<Long, ?> entry) {
+		public SignalChange(Entry<Long, IEvent[]> entry) {
 			time = entry.getKey();
-			value = entry.getValue();
+			value = entry.getValue()[0];
 			fromMap = true;
 		}
 
-		public void set(Entry<Long, ?> entry, Long actTime) {
+		public void set(Entry<Long, IEvent[]> entry, Long actTime) {
 			if (entry != null) {
 				time = entry.getKey();
-				value = entry.getValue();
+				value = entry.getValue()[0];
 				fromMap = true;
 			} else {
 				time = actTime;
@@ -84,7 +86,7 @@ public class SignalPainter extends TrackPainter {
 	}
 	
 	public void paintArea(Projection proj, Rectangle area) {
-		ISignal<?> signal = trackEntry.getSignal();
+		IWaveform signal = trackEntry.waveform;
 		if (trackEntry.selected)
 			proj.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()]);
 		else
@@ -97,8 +99,8 @@ public class SignalPainter extends TrackPainter {
 		long beginTime = beginPos*scaleFactor;
         long endTime = beginTime + area.width*scaleFactor;
 		
-		Entry<Long, ?> first = signal.getEvents().floorEntry(beginTime);
-		Entry<Long, ?> last = signal.getEvents().floorEntry(endTime);
+		Entry<Long, IEvent[]> first = signal.getEvents().floorEntry(beginTime);
+		Entry<Long, IEvent[]> last = signal.getEvents().floorEntry(endTime);
 		if (first == null) {
 			if (last == null)
 				return;
@@ -109,7 +111,7 @@ public class SignalPainter extends TrackPainter {
 		proj.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
 		proj.setLineStyle(SWT.LINE_SOLID);
 		proj.setLineWidth(1);
-		NavigableMap<Long, ?> entries = signal.getEvents().subMap(first.getKey(), false, last.getKey(), true);
+		NavigableMap<Long, IEvent[]> entries = signal.getEvents().subMap(first.getKey(), false, last.getKey(), true);
 		SignalChange left = new SignalChange(first);
 		SignalChange right = new SignalChange(entries.size() > 0 ? entries.firstEntry() : first);
 		maxPosX = area.x + area.width;
@@ -150,7 +152,7 @@ public class SignalPainter extends TrackPainter {
 			if (xSigChangeEndPos == xSigChangeBeginPos) {
 				multiple = true;
 				long eTime = (xSigChangeBeginPos + 1) * this.waveCanvas.getScaleFactor();
-				Entry<Long, ?> entry = entries.floorEntry(eTime);
+				Entry<Long, IEvent[]> entry = entries.floorEntry(eTime);
 				if(entry!=null && entry.getKey()> right.time)
 					right.set(entry, endTime);
 				xSigChangeEndPos = getXPosEnd(eTime);
@@ -158,8 +160,8 @@ public class SignalPainter extends TrackPainter {
 		} while (left.time < endTime);
 	}
 
-	private SignalStencil getStencil(GC gc, SignalChange left, NavigableMap<Long, ?> entries) {
-		Object val = left.value;
+	private SignalStencil getStencil(GC gc, SignalChange left, NavigableMap<Long, IEvent[]> entries) {
+		IEvent val = left.value;
 		if(val instanceof BitVector) {
 			BitVector bv = (BitVector) val;
 			if(bv.getWidth()==1)
@@ -170,7 +172,7 @@ public class SignalPainter extends TrackPainter {
 				return new MultiBitStencilAnalog(entries, left.value, 
 						trackEntry.waveDisplay==TrackEntry.WaveDisplay.CONTINOUS,
 						trackEntry.valueDisplay==TrackEntry.ValueDisplay.SIGNED);
-		} else if (val instanceof Double)
+		} else if (val instanceof DoubleVal)
 			return new RealStencil(entries, left.value, trackEntry.waveDisplay==TrackEntry.WaveDisplay.CONTINOUS);
 		else
 			return null;
@@ -178,7 +180,7 @@ public class SignalPainter extends TrackPainter {
 
 	private interface SignalStencil {
 
-		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple);
+		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple);
 	}
 
 	private class MultiBitStencil implements SignalStencil {
@@ -192,7 +194,7 @@ public class SignalPainter extends TrackPainter {
 			tmpAwtFont = new java.awt.Font(fd.getName(), fd.getStyle(), height);
 		}
 
-		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
+		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
 			Color colorBorder = waveCanvas.colors[WaveformColors.SIGNAL0.ordinal()];
 			BitVector last = (BitVector) left;
 			if (last.getValue().toString().contains("X")) {
@@ -250,18 +252,19 @@ public class SignalPainter extends TrackPainter {
 		private long minVal;
 		private long range;
 		double yRange = (yOffsetB-yOffsetT);
-		public MultiBitStencilAnalog(NavigableMap<Long, ?> entries, Object left, boolean continous, boolean signed) {
+		public MultiBitStencilAnalog(NavigableMap<Long, IEvent[]> entries, Object left, boolean continous, boolean signed) {
 			this.continous=continous;
-			Collection<?> values = ((NavigableMap<Long, ?>) entries).values();
+			Collection<IEvent[]> values = entries.values();
 			minVal=((BitVector) left).toUnsignedValue();
 			range=2;
 			if(!values.isEmpty()) {
 				long maxVal=minVal;
-				for (Object e : entries.values()) {
-					long v = ((BitVector)e).toUnsignedValue();
-					maxVal=Math.max(maxVal, v);
-					minVal=Math.min(minVal, v);
-				}
+				for (IEvent[] tp : entries.values())
+					for(IEvent e: tp) {
+						long v = ((BitVector)e).toUnsignedValue();
+						maxVal=Math.max(maxVal, v);
+						minVal=Math.min(minVal, v);
+					}
 				if(maxVal==minVal) {
 					maxVal--;
 					minVal++;
@@ -272,7 +275,7 @@ public class SignalPainter extends TrackPainter {
 			
 		}
 
-		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
+		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
 			long leftVal = ((BitVector) left).toUnsignedValue();
 			long rightVal= ((BitVector) right).toUnsignedValue();
 			proj.setForeground(waveCanvas.colors[WaveformColors.SIGNAL_REAL.ordinal()]);
@@ -298,7 +301,7 @@ public class SignalPainter extends TrackPainter {
 	}
 
 	private class SingleBitStencil implements SignalStencil {
-		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
+		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
 			if (multiple) {
 				proj.setForeground(waveCanvas.colors[WaveformColors.SIGNALU.ordinal()]);
 				proj.drawLine(xBegin, yOffsetT, xBegin, yOffsetB);
@@ -351,9 +354,9 @@ public class SignalPainter extends TrackPainter {
 		
 		boolean continous=true;
 		
-		public RealStencil(NavigableMap<Long, ?> entries, Object left, boolean continous) {
+		public RealStencil(NavigableMap<Long, IEvent[]> entries, Object left, boolean continous) {
 			this.continous=continous;
-			Collection<?> values = ((NavigableMap<Long, ?>) entries).values();
+			Collection<IEvent[]> values = ((NavigableMap<Long, IEvent[]>) entries).values();
 			minVal=(Double) left;
 			range=2.0;
 			if(!values.isEmpty()) {
@@ -378,9 +381,9 @@ public class SignalPainter extends TrackPainter {
 			}
 		}
 
-		public void draw(Projection proj, Rectangle area, Object left, Object right, int xBegin, int xEnd, boolean multiple) {
-			double leftVal = (Double) left;
-			double rightVal= (Double) right;
+		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
+			double leftVal = ((DoubleVal) left).value;
+			double rightVal= ((DoubleVal) right).value;
 			if(Double.isNaN(leftVal)) {
 				Color color = waveCanvas.colors[WaveformColors.SIGNAL_NAN.ordinal()];
 				int width = xEnd - xBegin;

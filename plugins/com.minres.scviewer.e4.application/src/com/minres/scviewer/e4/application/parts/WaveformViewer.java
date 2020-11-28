@@ -62,8 +62,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -88,6 +86,7 @@ import org.eclipse.swt.widgets.Widget;
 import org.osgi.service.prefs.Preferences;
 
 import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITxEvent;
@@ -790,7 +789,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				// get transaction id
 				persistedState.put(SELECTED_TX_ID, Long.toString(tx.getId()));
 				//get TrackEntry name
-				String name = te.getStream().getFullName();
+				String name = te.waveform.getFullName();
 				persistedState.put(SELECTED_TRACKENTRY_NAME, name);
 			}
 		}
@@ -874,11 +873,11 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					if(te.waveform.getFullName().compareTo(trackentryName)==0) {
 						boolean found = false;
 						// TODO: find transaction by time? To avoid 3x for-loop
-						for( List<ITxEvent> lev : te.getStream().getEvents().values() ) {
+						for( IEvent[] lev : te.waveform.getEvents().values() ) {
 							if(lev == null) continue;
-							for(ITxEvent itxe : lev) {
-								if(itxe == null) continue;
-								ITx itx = itxe.getTransaction();
+							for(IEvent itxe : lev) {
+								if(itxe == null || !(itxe instanceof ITxEvent)) continue;
+								ITx itx = ((ITxEvent)itxe).getTransaction();
 								if(itx.getId() == txId) {
 									found = true;
 									ArrayList<Object> selectionList = new ArrayList<Object>();
