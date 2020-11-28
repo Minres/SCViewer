@@ -123,7 +123,9 @@ public class TransactionList extends Composite {
 		searchPropComboViewer.setContentProvider(new ObservableListContentProvider<AttributeNameBean>());
 		searchPropComboViewer.setInput(attrNames);
 		Combo searchPropCombo = searchPropComboViewer.getCombo();
-		searchPropCombo.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, false, 1, 1));
+		GridData gd_searchProp = new GridData(SWT.LEFT, SWT.FILL, false, false, 1, 1);
+		gd_searchProp.widthHint=100;
+		searchPropCombo.setLayoutData(gd_searchProp);
 		searchPropCombo.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -170,7 +172,9 @@ public class TransactionList extends Composite {
 		viewPropComboViewer.setContentProvider(new ObservableListContentProvider<AttributeNameBean>());
 		viewPropComboViewer.setInput(attrNames);
 		Combo viewPropCombo = viewPropComboViewer.getCombo();
-		viewPropCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		GridData gd_viewProp = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_viewProp.widthHint=100;
+		viewPropCombo.setLayoutData(gd_viewProp);
 		viewPropCombo.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
