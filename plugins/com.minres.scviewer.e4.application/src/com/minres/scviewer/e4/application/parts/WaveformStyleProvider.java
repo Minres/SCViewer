@@ -29,7 +29,8 @@ public class WaveformStyleProvider implements IWaveformStyleProvider {
 	// list of random colors
 	private static Color[][] randomColors;
 
-
+	private int trackHeigth=25;
+	
 	public WaveformStyleProvider() {
 		setupDefaults();
 	}
@@ -91,7 +92,8 @@ public class WaveformStyleProvider implements IWaveformStyleProvider {
 			RGB rgb = StringConverter.asRGB(prefValue);
 			colorPref.put(c, rgb);
 		}
-	}
+		trackHeigth = store.getInt(PreferenceConstants.TRACK_HEIGHT, defaultPrefs.getInt(PreferenceConstants.TRACK_HEIGHT,  25)); //$NON-NLS-1$
+	}	
 	/** 
 	 * needs redraw() afterwards
 	 * @param colourMap
@@ -118,7 +120,7 @@ public class WaveformStyleProvider implements IWaveformStyleProvider {
 
 	@Override
 	public int getTrackHeight() {
-		return 25;
+		return trackHeigth;
 	}
 	@Override
 	public Color getColor(WaveformColors type) {
