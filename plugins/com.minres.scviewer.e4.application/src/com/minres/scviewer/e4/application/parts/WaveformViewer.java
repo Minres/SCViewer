@@ -37,7 +37,6 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobGroup;
-import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -55,7 +54,6 @@ import org.eclipse.e4.ui.services.EMenuService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -70,7 +68,6 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -83,7 +80,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
-import org.osgi.service.prefs.Preferences;
 
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.IEvent;
@@ -101,7 +97,6 @@ import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
-import com.minres.scviewer.database.ui.WaveformColors;
 import com.minres.scviewer.database.ui.swt.Constants;
 import com.minres.scviewer.database.ui.swt.ToolTipContentProvider;
 import com.minres.scviewer.database.ui.swt.ToolTipHelpTextProvider;
@@ -301,7 +296,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		transactionList = ContextInjectionFactory.make(TransactionListView.class, ctx);
 		
 		waveformPane.setMaxTime(0);
-		setupColors();
 		//set selection to empty selection when opening a new waveformPane
 		selectionService.setSelection(new StructuredSelection());
 		
@@ -510,6 +504,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				return false;
 			}
 		});
+		setupColors();
 	}
 
 	@Inject
@@ -550,15 +545,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * Setup colors.
 	 */
 	protected void setupColors() {
-		Preferences defaultPrefs= store.parent().parent().node("/"+DefaultScope.SCOPE+"/"+PreferenceConstants.PREFERENCES_SCOPE);
-		HashMap<WaveformColors, RGB> colorPref = new HashMap<>();
-		for (WaveformColors c : WaveformColors.values()) {
-			String key = c.name() + "_COLOR";
-			String prefValue = store.get(key, defaultPrefs.get(key,  "")); //$NON-NLS-1$
-			RGB rgb = StringConverter.asRGB(prefValue);
-			colorPref.put(c, rgb);
-		}
-		waveformPane.setColors(colorPref);
+		waveformPane.setStyleProvider(new WaveformStyleProvider(store));
 	}
 	
 	class DbLoadJob extends Job {

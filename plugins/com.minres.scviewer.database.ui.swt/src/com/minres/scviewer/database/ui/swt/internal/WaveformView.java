@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -57,10 +56,8 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.layout.FillLayout;
@@ -90,9 +87,9 @@ import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.tx.ITxRelation;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
+import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
-import com.minres.scviewer.database.ui.WaveformColors;
 import com.minres.scviewer.database.ui.swt.Constants;
 
 public class WaveformView implements IWaveformView  {
@@ -129,11 +126,11 @@ public class WaveformView implements IWaveformView  {
 
 	int selectedMarker = 0;
 
-	private int trackVerticalHeight;
+	private int tracksVerticalHeight;
 
 	private TreeMap<Integer, TrackEntry> trackVerticalOffset;
-
-	private Font nameFont, nameFontB;
+	
+	private IWaveformStyleProvider styleProvider;
 
 	protected TrackEntry lastClickedEntry;
 
@@ -315,14 +312,13 @@ public class WaveformView implements IWaveformView  {
 	};
 	protected WaveformMouseListener waveformMouseListener  = new WaveformMouseListener();
 
-	public WaveformView(Composite parent) {
+	public WaveformView(Composite parent, IWaveformStyleProvider styleProvider) {
+		this.styleProvider=styleProvider;
+		
 		pcs=new PropertyChangeSupport(this);
 
 		trackVerticalOffset = new TreeMap<Integer, TrackEntry>();
-		trackVerticalHeight=0;
-
-		nameFont = parent.getDisplay().getSystemFont();
-		nameFontB = SWTResourceManager.getBoldFont(nameFont);
+		tracksVerticalHeight=0;
 
 		streams = new ObservableList<>();
 		streams.addPropertyChangeListener("content", this);
@@ -341,7 +337,7 @@ public class WaveformView implements IWaveformView  {
 		rightSash.setBackground(SWTResourceManager.getColor(SWT.COLOR_GRAY));
 
 		Composite valuePane = new Composite(rightSash, SWT.NONE);
-		waveformCanvas      = new WaveformCanvas(rightSash, SWT.NONE);
+		waveformCanvas      = new WaveformCanvas(rightSash, SWT.NONE, styleProvider);
 
 		// create the name pane
 		createTextPane(namePane, "Name");
@@ -508,17 +504,17 @@ public class WaveformView implements IWaveformView  {
 	}
 
 	public void update() {
-		trackVerticalHeight = 0;
+		tracksVerticalHeight = 0;
 		int nameMaxWidth = 0;
 		IWaveformPainter painter = null;
 		trackVerticalOffset.clear();
 		waveformCanvas.clearAllWaveformPainter(false);
 		boolean even = true;
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
-		tl.setFont(nameFontB);
+		tl.setFont(styleProvider.getNameFont());
 		for (TrackEntry streamEntry : streams) {
-			streamEntry.height = waveformCanvas.getTrackHeight();
-			streamEntry.vOffset=trackVerticalHeight;
+			streamEntry.height = styleProvider.getTrackHeight();
+			streamEntry.vOffset=tracksVerticalHeight;
 			if (streamEntry.waveform.getType()==WaveformType.TRANSACTION) {
 				streamEntry.currentValue="";
 				streamEntry.height *= streamEntry.waveform.getWidth();
@@ -528,15 +524,15 @@ public class WaveformView implements IWaveformView  {
 				painter = new SignalPainter(waveformCanvas, even, streamEntry);
 			}
 			waveformCanvas.addWaveformPainter(painter, false);
-			trackVerticalOffset.put(trackVerticalHeight, streamEntry);
+			trackVerticalOffset.put(tracksVerticalHeight, streamEntry);
 			tl.setText(streamEntry.waveform.getFullName());
 			nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width);
-			trackVerticalHeight += streamEntry.height;
+			tracksVerticalHeight += streamEntry.height;
 			even = !even;
 		}
 		waveformCanvas.syncScrollBars();
-		nameList.setSize(nameMaxWidth + 15, trackVerticalHeight);
-		nameListScrolled.setMinSize(nameMaxWidth + 15, trackVerticalHeight);
+		nameList.setSize(nameMaxWidth + 15, tracksVerticalHeight);
+		nameListScrolled.setMinSize(nameMaxWidth + 15, tracksVerticalHeight);
 		nameList.redraw();
 		updateValueList();
 		waveformCanvas.redraw();
@@ -548,7 +544,7 @@ public class WaveformView implements IWaveformView  {
 
 	private int calculateValueWidth() {
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
-		tl.setFont(nameFontB);
+		tl.setFont(styleProvider.getNameFontHighlite());
 		int valueMaxWidth = 0;
 		for (TrackEntry v : streams) {
 			tl.setText(v.currentValue);
@@ -615,8 +611,8 @@ public class WaveformView implements IWaveformView  {
 			}
 		}
 		int width = calculateValueWidth();
-		valueList.setSize(width, trackVerticalHeight);
-		valueListScrolled.setMinSize(width, trackVerticalHeight);
+		valueList.setSize(width, tracksVerticalHeight);
+		valueListScrolled.setMinSize(width, tracksVerticalHeight);
 		valueListScrolled.redraw();
 	}
 	
@@ -734,9 +730,6 @@ public class WaveformView implements IWaveformView  {
 							streams.add(trackEntry);
 						}
 						currentTxSelection = txSel;
-//						if(trackEntry!=null) {
-//							currentWaveformSelection.add((TrackEntry)sel);
-//						}
 						selectionChanged = true;
 					} else if (sel instanceof TrackEntry && !currentWaveformSelection.contains(sel)) {
 						currentWaveformSelection.add((TrackEntry)sel);
@@ -973,7 +966,7 @@ public class WaveformView implements IWaveformView  {
 				if (firstKey == null)
 					firstKey = trackVerticalOffset.firstKey();
 				Integer lastKey = trackVerticalOffset.floorKey(rect.y + rect.height);
-				Rectangle subArea = new Rectangle(rect.x, 0, rect.width, waveformCanvas.getTrackHeight());
+				Rectangle subArea = new Rectangle(rect.x, 0, rect.width, styleProvider.getTrackHeight());
 				if (lastKey == firstKey) {
 					TrackEntry trackEntry=trackVerticalOffset.get(firstKey);
 					IWaveform w = trackEntry.waveform;
@@ -983,7 +976,7 @@ public class WaveformView implements IWaveformView  {
 				} else {
 					for (Entry<Integer, TrackEntry> entry : trackVerticalOffset.subMap(firstKey, true, lastKey, true).entrySet()) {
 						IWaveform w = entry.getValue().waveform;
-						subArea.height = waveformCanvas.getTrackHeight();
+						subArea.height = styleProvider.getTrackHeight();
 						if (w.getType()==WaveformType.TRANSACTION)
 							subArea.height *= w.getWidth();
 						drawTextFormat(gc, subArea, entry.getKey(), w.getFullName(), entry.getValue().selected);
@@ -1000,7 +993,7 @@ public class WaveformView implements IWaveformView  {
 				if (firstKey == null)
 					firstKey = trackVerticalOffset.firstKey();
 				Integer lastKey = trackVerticalOffset.floorKey(rect.y + rect.height);
-				Rectangle subArea = new Rectangle(rect.x, 0, rect.width, waveformCanvas.getTrackHeight());
+				Rectangle subArea = new Rectangle(rect.x, 0, rect.width, styleProvider.getTrackHeight());
 				if (lastKey == firstKey) {
 					TrackEntry trackEntry=trackVerticalOffset.get(firstKey);
 					IWaveform w = trackEntry.waveform;
@@ -1011,7 +1004,7 @@ public class WaveformView implements IWaveformView  {
 					for (Entry<Integer, TrackEntry> entry : trackVerticalOffset.subMap(firstKey, true, lastKey, true)
 							.entrySet()) {
 						IWaveform w = entry.getValue().waveform;
-						subArea.height = waveformCanvas.getTrackHeight();
+						subArea.height = styleProvider.getTrackHeight();
 						if (w.getType()==WaveformType.TRANSACTION)
 							subArea.height *= w.getWidth();
 						drawValue(gc, subArea, entry.getKey(), entry.getValue().currentValue, entry.getValue().selected);
@@ -1023,10 +1016,10 @@ public class WaveformView implements IWaveformView  {
 
 	protected void drawValue(GC gc, Rectangle subArea, Integer yOffset, String value, boolean highlite) {
 		int beginIndex=0;
-		for(int offset=0; offset<subArea.height; offset+=waveformCanvas.getTrackHeight()){
+		for(int offset=0; offset<subArea.height; offset+=styleProvider.getTrackHeight()){
 			int endIndex=value.indexOf('|', beginIndex);
 			String str = endIndex<0?value.substring(beginIndex):value.substring(beginIndex, endIndex);
-			drawTextFormat(gc, new Rectangle(subArea.x, subArea.y, subArea.width, waveformCanvas.getTrackHeight()), yOffset+offset, str, highlite);
+			drawTextFormat(gc, new Rectangle(subArea.x, subArea.y, subArea.width, styleProvider.getTrackHeight()), yOffset+offset, str, highlite);
 			beginIndex=endIndex<0?beginIndex:endIndex+1;
 		}
 	}
@@ -1037,13 +1030,13 @@ public class WaveformView implements IWaveformView  {
 			gc.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_SELECTION));
 			gc.setForeground(SWTResourceManager.getColor(SWT.COLOR_LIST_SELECTION_TEXT));
 			gc.fillRectangle(subArea.x, subArea.y + yOffset, subArea.width, subArea.height);
-			gc.setFont(nameFontB);
+			gc.setFont(styleProvider.getNameFontHighlite());
 		} else {
 			gc.setBackground(namePaneHeader.getBackground());
 			gc.setForeground(namePaneHeader.getForeground());
-			gc.setFont(nameFont);
+			gc.setFont(styleProvider.getNameFont());
 		}
-		gc.drawText(value, subArea.x + 5, subArea.y + yOffset + (waveformCanvas.getTrackHeight() - size.y) / 2, true);
+		gc.drawText(value, subArea.x + 5, subArea.y + yOffset + (styleProvider.getTrackHeight() - size.y) / 2, true);
 	}
 
 
@@ -1143,7 +1136,7 @@ public class WaveformView implements IWaveformView  {
 		dragSource.setTransfer(types);
 		dragSource.addDragListener(new DragSourceAdapter() {
 			public void dragStart(DragSourceEvent event) {
-				if (event.y < trackVerticalHeight) {
+				if (event.y < tracksVerticalHeight) {
 					event.doit = true;
 					LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(currentWaveformSelection));
 				}
@@ -1248,7 +1241,7 @@ public class WaveformView implements IWaveformView  {
 
 			public void dropAccept(DropTargetEvent event) {
 				Point offset = canvas.toControl(event.x, event.y); 
-				if (event.detail != DND.DROP_MOVE || offset.y > trackVerticalOffset.lastKey() + waveformCanvas.getTrackHeight()) {
+				if (event.detail != DND.DROP_MOVE || offset.y > trackVerticalOffset.lastKey() + styleProvider.getTrackHeight()) {
 					event.detail = DND.DROP_NONE;
 				}
 			}
@@ -1357,11 +1350,6 @@ public class WaveformView implements IWaveformView  {
 	}
 
 	@Override
-	public void setColors(HashMap<WaveformColors, RGB> colourMap) {
-		waveformCanvas.initColors(colourMap);
-	}
-
-	@Override
 	public long getBaselineTime() {
 		return -waveformCanvas.getScaleFactorPow10()*waveformCanvas.getOrigin().x;
 	}
@@ -1394,8 +1382,16 @@ public class WaveformView implements IWaveformView  {
 	}
 	
 	/// probably not the way it should be done
-	public void addDisposeListener( DisposeListener listener ) {
+	@Override
+	public void addDisposeListener(DisposeListener listener ) {
 		waveformCanvas.addDisposeListener(listener);
+	}
+
+	@Override
+	public void setStyleProvider(IWaveformStyleProvider styleProvider) {
+		this.styleProvider=styleProvider;
+		waveformCanvas.setStyleProvider(styleProvider);
+		update();
 	}
 
 }

@@ -75,9 +75,9 @@ public class CursorPainter implements IPainter, ICursor {
 			int x = (int) (time/scaleFactor);
 			// distance of marker from the top of Canvas' painting area
 			int top = id<0?area.y:area.y+15;
-			Color drawColor=waveCanvas.colors[id<0?WaveformColors.CURSOR.ordinal():WaveformColors.MARKER.ordinal()];
-			Color dragColor = waveCanvas.colors[WaveformColors.CURSOR_DRAG.ordinal()];
-			Color textColor=waveCanvas.colors[id<0?WaveformColors.CURSOR_TEXT.ordinal():WaveformColors.MARKER_TEXT.ordinal()];
+			Color drawColor=waveCanvas.styleProvider.getColor(id<0?WaveformColors.CURSOR:WaveformColors.MARKER);
+			Color dragColor = waveCanvas.styleProvider.getColor(WaveformColors.CURSOR_DRAG);
+			Color textColor=waveCanvas.styleProvider.getColor(id<0?WaveformColors.CURSOR_TEXT:WaveformColors.MARKER_TEXT);
 			if(x>=beginPos && x<=maxValX){
 				proj.setForeground(isDragging?dragColor:drawColor);
 				proj.drawLine(x, top, x, area.y+area.height);

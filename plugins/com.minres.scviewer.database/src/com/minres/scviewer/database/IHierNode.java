@@ -39,7 +39,7 @@ public interface IHierNode extends Comparable<IHierNode>{
 	
 	public void setName(String name);
 	
-	public void setParentName(String name);
+	public void setParent(IHierNode parent);
 
 	public List<IHierNode> getChildNodes();
 

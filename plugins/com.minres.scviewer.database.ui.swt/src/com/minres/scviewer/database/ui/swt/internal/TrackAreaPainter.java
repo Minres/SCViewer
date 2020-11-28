@@ -36,7 +36,7 @@ public class TrackAreaPainter implements IPainter {
 
 	public void paintArea(Projection proj, Rectangle a) {
 	    Rectangle area = proj.unProject(new Rectangle(a.x, a.y+waveCanvas.rulerHeight, a.width, a.height-waveCanvas.rulerHeight));
-	    proj.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_EVEN.ordinal()]);
+	    proj.setBackground(this.waveCanvas.styleProvider.getColor(WaveformColors.TRACK_BG_EVEN));
 	    proj.setFillRule(SWT.FILL_EVEN_ODD);
 	    proj.fillRectangle(area);
 		if(trackVerticalOffset.size()>0){

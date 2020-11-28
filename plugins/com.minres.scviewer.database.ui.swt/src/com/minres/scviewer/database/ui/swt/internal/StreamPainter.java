@@ -67,10 +67,10 @@ public class StreamPainter extends TrackPainter{
 		txBase=trackHeight/5;
 		txHeight=trackHeight*3/5;
 		if(trackEntry.selected) {
-			proj.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()]);
+			proj.setBackground(this.waveCanvas.styleProvider.getColor(WaveformColors.TRACK_BG_HIGHLITE));
 		}
 		else
-			proj.setBackground(this.waveCanvas.colors[even?WaveformColors.TRACK_BG_EVEN.ordinal():WaveformColors.TRACK_BG_ODD.ordinal()]);
+			proj.setBackground(this.waveCanvas.styleProvider.getColor(even?WaveformColors.TRACK_BG_EVEN:WaveformColors.TRACK_BG_ODD));
 		proj.setFillRule(SWT.FILL_EVEN_ODD);
 		proj.fillRectangle(area);
 
@@ -87,7 +87,7 @@ public class StreamPainter extends TrackPainter{
 		proj.setFillRule(SWT.FILL_EVEN_ODD);
 		proj.setLineStyle(SWT.LINE_SOLID);
 		proj.setLineWidth(1);
-		proj.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
+		proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 
 		for( int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
 			proj.drawLine(area.x, y1, area.x+area.width, y1);
@@ -98,7 +98,7 @@ public class StreamPainter extends TrackPainter{
 			seenTx.clear();
 			NavigableMap<Long, IEvent[]> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
 			boolean highlighed=false;
-			proj.setForeground(this.waveCanvas.colors[WaveformColors.LINE.ordinal()]);
+			proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 
 			for(Entry<Long, IEvent[]> entry: entries.entrySet())
 				for(IEvent evt:entry.getValue()){
@@ -116,7 +116,7 @@ public class StreamPainter extends TrackPainter{
 				drawTx(proj, area, tx, false);
 			}
 			if(highlighed){
-				proj.setForeground(this.waveCanvas.colors[WaveformColors.LINE_HIGHLITE.ordinal()]);
+				proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE_HIGHLITE));
 				drawTx(proj, area, waveCanvas.currentSelection, true);
 			}
 		}
@@ -129,7 +129,7 @@ public class StreamPainter extends TrackPainter{
 
 		proj.setBackground( toSwtColor( proj.getGC(), transColor[highlighted?1:0] ) );
 
-		int offset = tx.getConcurrencyIndex()*this.waveCanvas.getTrackHeight();
+		int offset = tx.getConcurrencyIndex()*this.waveCanvas.styleProvider.getTrackHeight();
 		Rectangle bb = new Rectangle(
 				(int)(tx.getBeginTime()/this.waveCanvas.getScaleFactor()), area.y+offset+txBase,
 				(int)((tx.getEndTime()-tx.getBeginTime())/this.waveCanvas.getScaleFactor()), txHeight);
@@ -155,7 +155,7 @@ public class StreamPainter extends TrackPainter{
 	}
 
 	public ITx getClicked(Point point) {
-		int lane=point.y/waveCanvas.getTrackHeight();
+		int lane=point.y/waveCanvas.styleProvider.getTrackHeight();
 		Entry<Long, IEvent[]> firstTx=stream.getEvents().floorEntry(point.x*waveCanvas.getScaleFactor());
 		if(firstTx!=null){
 			do {

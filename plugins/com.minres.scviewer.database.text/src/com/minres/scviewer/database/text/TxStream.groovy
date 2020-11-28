@@ -76,7 +76,7 @@ class TxStream extends HierNode implements IWaveform {
 			def rowendtime = [0]
 			events.keySet().each{long time ->
 				def value=events.get(time)
-				def starts=value.findAll{ITxEvent event ->event.type==EventKind.BEGIN}
+				def starts=value.findAll{IEvent event ->event.kind==EventKind.BEGIN}
 				starts.each {ITxEvent event ->
 					Tx tx = event.transaction
 					def rowIdx = 0

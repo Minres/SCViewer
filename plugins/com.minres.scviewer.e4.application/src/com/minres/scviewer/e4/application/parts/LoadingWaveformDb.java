@@ -38,7 +38,7 @@ public class LoadingWaveformDb implements IWaveformDb {
 	}
 
 	@Override
-	public void setParentName(String name) {
+	public void setParent(IHierNode name) {
 	}
 
 	@Override

@@ -152,18 +152,8 @@ public class BitVector implements IEvent {
                 currentWord >>= 2;
             }
         }
-        for(int i=width; i<64; i++) {
-        	if(bitOffset==0) currentWord = packedValues[wordOffset];
-        	res|=lastVal<<i;
-        	bitOffset += 2;
-            if (bitOffset == 32) {
-                wordOffset++;
-                bitOffset = 0;
-            } else {
-                currentWord >>= 2;
-            }
-        	
-        }
+        if(lastVal!=0)
+        	res |= -1l<<width;
 		return res;
 	}
 

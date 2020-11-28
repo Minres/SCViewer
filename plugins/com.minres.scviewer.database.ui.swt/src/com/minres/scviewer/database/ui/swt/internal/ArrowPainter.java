@@ -30,7 +30,7 @@ public class ArrowPainter implements IPainter {
 	
 	private final int xCtrlOffset = 50;
 
-	private final int yCtrlOffset = 30;
+	private int yCtrlOffset = 30;
 
 	private WaveformCanvas waveCanvas;
 
@@ -101,11 +101,12 @@ public class ArrowPainter implements IPainter {
 			ITx otherTx = useTarget ? iTxRelation.getTarget() : iTxRelation.getSource();
 			if (waveCanvas.wave2painterMap.containsKey(otherTx.getStream())) {
 				IWaveformPainter painter = waveCanvas.wave2painterMap.get(otherTx.getStream());
-				int laneHeight = painter.getHeight() / tx.getStream().getWidth();
-				Rectangle bb = new Rectangle((int) (otherTx.getBeginTime() / scaleFactor),
-						waveCanvas.rulerHeight + painter.getVerticalOffset()
-								+ laneHeight * otherTx.getConcurrencyIndex(),
-						(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor), laneHeight);
+				int height = waveCanvas.styleProvider.getTrackHeight();
+				Rectangle bb = new Rectangle(
+						(int) (otherTx.getBeginTime() / scaleFactor),
+						waveCanvas.rulerHeight + painter.getVerticalOffset() + height * otherTx.getConcurrencyIndex(),
+						(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
+						height);
 				res.add(new LinkEntry(bb, iTxRelation.getRelationType()));
 			}
 		}
@@ -113,8 +114,9 @@ public class ArrowPainter implements IPainter {
 
 	@Override
 	public void paintArea(Projection proj, Rectangle clientRect) {
-		Color fgColor = waveCanvas.colors[WaveformColors.REL_ARROW.ordinal()];
-		Color highliteColor = waveCanvas.colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()];
+		yCtrlOffset = waveCanvas.styleProvider.getTrackHeight()/2;
+		Color fgColor = waveCanvas.styleProvider.getColor(WaveformColors.REL_ARROW);
+		Color highliteColor = waveCanvas.styleProvider.getColor(WaveformColors.REL_ARROW_HIGHLITE);
 
 		if(tx==null) return;
 		if (!deferUpdate) {

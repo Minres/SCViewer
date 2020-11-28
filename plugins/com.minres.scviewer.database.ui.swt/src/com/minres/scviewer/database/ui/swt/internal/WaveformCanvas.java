@@ -23,36 +23,30 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.ScrollBar;
-import org.eclipse.wb.swt.SWTResourceManager;
 
 import com.google.common.collect.Lists;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
-import com.minres.scviewer.database.ui.WaveformColors;
 import com.minres.scviewer.database.ui.swt.Constants;
 
 public class WaveformCanvas extends Canvas {
 	
-    Color[] colors = new Color[WaveformColors.values().length];
-
     private boolean doubleBuffering = true;
     	
-    private int trackHeight = 50;
-    
+    IWaveformStyleProvider styleProvider;
+        
     private long scaleFactor = 1000000L; // 1ns
     
     String unit="ns";
@@ -88,8 +82,9 @@ public class WaveformCanvas extends Canvas {
      * @param style
      *            the style of this control.
      */
-    public WaveformCanvas(final Composite parent, int style) {
+    public WaveformCanvas(final Composite parent, int style, IWaveformStyleProvider styleProvider) {
         super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.V_SCROLL | SWT.H_SCROLL);
+        this.styleProvider=styleProvider;
     	addControlListener(new ControlAdapter() { /* resize listener. */
             public void controlResized(ControlEvent event) {
                 syncScrollBars();
@@ -107,7 +102,6 @@ public class WaveformCanvas extends Canvas {
         wave2painterMap=new HashMap<>();
         
         initScrollBars();
-        initColors(null);
 		// order is important: it is bottom to top
         trackAreaPainter=new TrackAreaPainter(this);
         painterList.add(trackAreaPainter);
@@ -122,31 +116,6 @@ public class WaveformCanvas extends Canvas {
 		painterList.add(marker);
 		cursorPainters.add(marker);
 		wave2painterMap=new HashMap<>();
-    	// fall back initialization
-        colors[WaveformColors.LINE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-        colors[WaveformColors.LINE_HIGHLITE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_CYAN);
-        colors[WaveformColors.TRACK_BG_EVEN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_BLACK);
-        colors[WaveformColors.TRACK_BG_ODD.ordinal()] = SWTResourceManager.getColor(40, 40, 40);
-        colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()] = SWTResourceManager.getColor(40, 40, 80);
-        colors[WaveformColors.TX_BG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
-        colors[WaveformColors.TX_BG_HIGHLITE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GREEN);
-        colors[WaveformColors.TX_BORDER.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-        colors[WaveformColors.SIGNAL0.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
-        colors[WaveformColors.SIGNAL1.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
-        colors[WaveformColors.SIGNALZ.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_YELLOW);
-        colors[WaveformColors.SIGNALX.ordinal()] = SWTResourceManager.getColor(255,  51,  51);
-        colors[WaveformColors.SIGNALU.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
-        colors[WaveformColors.SIGNAL_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
-        colors[WaveformColors.SIGNAL_REAL.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
-        colors[WaveformColors.SIGNAL_NAN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-        colors[WaveformColors.CURSOR.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-        colors[WaveformColors.CURSOR_DRAG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GRAY);
-        colors[WaveformColors.CURSOR_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
-        colors[WaveformColors.MARKER.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GRAY);
-        colors[WaveformColors.MARKER_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
-        colors[WaveformColors.REL_ARROW.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_MAGENTA);
-        colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()] = SWTResourceManager.getColor(255, 128, 255);
-
     }
     
 	public void addCursoPainter(CursorPainter cursorPainter){
@@ -154,17 +123,6 @@ public class WaveformCanvas extends Canvas {
 		cursorPainters.add(cursorPainter);
 	}
 	
-    public void initColors(HashMap<WaveformColors, RGB> colourMap) {
-        Display d = getDisplay();
-        if (colourMap != null) {
-            for (WaveformColors c : WaveformColors.values()) {
-                if (colourMap.containsKey(c))
-                    colors[c.ordinal()] = new Color(d, colourMap.get(c));
-            }
-            redraw();
-        }
-    }
-
     public void setHighliteRelation(RelationType relationType){
     	if(arrowPainter!=null){
     		boolean redraw = arrowPainter.getHighlightType()!=relationType; 
@@ -203,15 +161,6 @@ public class WaveformCanvas extends Canvas {
 
     public void setMaxTime(long maxTime) {
         this.maxTime = maxTime;
-        syncScrollBars();
-    }
-
-    public int getTrackHeight() {
-        return trackHeight;
-    }
-
-    public void setTrackHeight(int trackHeight) {
-        this.trackHeight = trackHeight;
         syncScrollBars();
     }
 
@@ -314,15 +263,6 @@ public class WaveformCanvas extends Canvas {
     public List<CursorPainter> getCursorPainters() {
 		return cursorPainters;
 	}
-
-	/**
-     * Dispose the garbage here
-     */
-    public void dispose() {
-        for (WaveformColors c : WaveformColors.values())
-            colors[c.ordinal()].dispose();
-        super.dispose();
-    }
 
     /* Initialize the scrollbar and register listeners. */
     private void initScrollBars() {
@@ -459,7 +399,7 @@ public class WaveformCanvas extends Canvas {
         int x = i - origin.x;
         for(IPainter p: wave2painterMap.values()){
         	if (p instanceof StreamPainter && ((StreamPainter)p).getStream()==iWaveform) {
-        		result.add(((StreamPainter) p).getClicked(new Point(x, trackHeight/2)));
+        		result.add(((StreamPainter) p).getClicked(new Point(x, styleProvider.getTrackHeight()/2)));
         	}
         }
         return result;
@@ -486,10 +426,10 @@ public class WaveformCanvas extends Canvas {
         }
         for (IWaveformPainter painter : wave2painterMap.values()) {
             if (painter instanceof StreamPainter && ((StreamPainter) painter).getStream() == tx.getStream()) {
-                int top = painter.getVerticalOffset() + trackHeight * tx.getConcurrencyIndex();
-                int bottom = top + trackHeight;
+                int top = painter.getVerticalOffset() + styleProvider.getTrackHeight() * tx.getConcurrencyIndex();
+                int bottom = top + styleProvider.getTrackHeight();
                 if (top < -origin.y) {
-                    setOrigin(origin.x, -(top-trackHeight));
+                    setOrigin(origin.x, -(top-styleProvider.getTrackHeight()));
                 } else if (bottom > (size.y - origin.y)) {
                     setOrigin(origin.x, size.y - bottom);
                 }
@@ -508,9 +448,9 @@ public class WaveformCanvas extends Canvas {
                 if((sb.getStyle()&SWT.SCROLLBAR_OVERLAY)!=0 && sb.isVisible()) // TODO: check on other platform than MacOSX
                 	size.y-=  getHorizontalBar().getSize().y;
                 int top = te.vOffset;
-                int bottom = top + trackHeight;
+                int bottom = top + styleProvider.getTrackHeight();
                 if (top < -origin.y) {
-                    setOrigin(origin.x, -(top-trackHeight));
+                    setOrigin(origin.x, -(top-styleProvider.getTrackHeight()));
                 } else if (bottom > (size.y - origin.y)) {
                     setOrigin(origin.x, size.y - bottom);
                 }
@@ -569,4 +509,9 @@ public class WaveformCanvas extends Canvas {
     long getMinVisibleTime() {
     	return origin.x * scaleFactor;
     }
+
+	public void setStyleProvider(IWaveformStyleProvider styleProvider) {
+		this.styleProvider=styleProvider;
+		redraw();
+	}
 }

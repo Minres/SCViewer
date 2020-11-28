@@ -75,15 +75,6 @@ public class E4LifeCycle {
 		}
 		final String confFile =opt.getSet().isSet("c")?opt.getSet().getOption("c").getResultValue(0):"";
 
-		// react on the first view being created, at that time the UI is available
-//		eventBroker.subscribe(UIEvents.UILifeCycle.ACTIVATE, new EventHandler() {
-//			@Override
-//			public void handleEvent(Event event) {
-//				MPart part = (MPart) event.getProperty("ChangedElement"); //$NON-NLS-1$
-//				if(part!=null){
-//				}
-//			}
-//		});
 		eventBroker.subscribe(UIEvents.UILifeCycle.APP_STARTUP_COMPLETE, new EventHandler() {
 			@Override
 			public void handleEvent(Event event) {
