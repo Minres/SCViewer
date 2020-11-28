@@ -15,12 +15,11 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import com.minres.scviewer.database.HierNode;
-import com.minres.scviewer.database.ISignal;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
-import com.minres.scviewer.database.IWaveformEvent;
 
-public class VCDSignal<T> extends HierNode implements ISignal<T> {
+public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	private long id;
 
@@ -34,7 +33,7 @@ public class VCDSignal<T> extends HierNode implements ISignal<T> {
 	
 	private IWaveformDb db;
 
-	private TreeMap<Long, T> values;
+	private NavigableMap<Long, IEvent[]> values;
 	
 	public VCDSignal(IWaveformDb db, String name) {
 		this(db, 0, name, 1);
@@ -50,17 +49,17 @@ public class VCDSignal<T> extends HierNode implements ISignal<T> {
 		fullName=name;
 		this.id=id;
 		this.width=width;
-		this.values=new TreeMap<Long, T>();
+		this.values=new TreeMap<Long, IEvent[]>();
 	}
 
-	@SuppressWarnings("unchecked")
-	public VCDSignal(ISignal<T> other, int id, String name) {
+	public VCDSignal(VCDSignal<T> other, int id, String name) {
 		super(name);
 		fullName=name;
 		this.id=id;
 		assert(other instanceof VCDSignal<?>);
-		this.width=((VCDSignal<? extends IWaveformEvent>)other).width;
-		this.values=((VCDSignal<T>)other).values;
+		VCDSignal<T> o = (VCDSignal<T>)other;
+		this.width=o.width;
+		this.values=o.values;
 		this.db=other.getDb();
 	}
 
@@ -93,22 +92,30 @@ public class VCDSignal<T> extends HierNode implements ISignal<T> {
 	}
 
 	public void addSignalChange(Long time, T value){
-		values.put(time, value);
+		if(values.containsKey(time)) {
+			IEvent[] oldV = values.get(time);
+			IEvent[] newV = new IEvent[oldV.length+1];
+			System.arraycopy(oldV, 0, newV, 0, oldV.length);
+			newV[oldV.length]=value;
+			values.put(time, newV);
+		} else {
+			values.put(time, new IEvent[] {value});
+		}
 	}
 	
 	@Override
-	public NavigableMap<Long, T> getEvents() {
+	public NavigableMap<Long, IEvent[]> getEvents() {
 		return values;
 	}
 
 	@Override
-	public T getWaveformValueAtTime(Long time) {
+	public IEvent[] getEventsAtTime(Long time) {
 		return values.get(time);
 	}
 
     @Override
-    public T getWaveformValueBeforeTime(Long time) {
-    	Entry<Long, T> e = values.floorEntry(time);
+    public IEvent[] getEventsBeforeTime(Long time) {
+    	Entry<Long, IEvent[]> e = values.floorEntry(time);
     	if(e==null)
     		return null;
     	else
@@ -125,6 +132,9 @@ public class VCDSignal<T> extends HierNode implements ISignal<T> {
 		return dummy.getClass();
 	}
 
-
+	@Override
+	public int getMaxConcurrency() {
+		return 1;
+	}
 
 }

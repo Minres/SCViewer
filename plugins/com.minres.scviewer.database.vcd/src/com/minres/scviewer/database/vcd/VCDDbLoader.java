@@ -24,7 +24,8 @@ import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
 import com.minres.scviewer.database.BitVector;
-import com.minres.scviewer.database.ISignal;
+import com.minres.scviewer.database.DoubleVal;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
@@ -96,7 +97,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 		if(!res) throw new InputFormatException();
 		// calculate max time of database
 		for(IWaveform waveform:signals) {
-			NavigableMap<Long, ?> events =((ISignal<?>)waveform).getEvents();
+			NavigableMap<Long, IEvent[]> events =waveform.getEvents();
 			if(events.size()>0)
 				maxTime= Math.max(maxTime, events.lastKey());
 		}
@@ -108,8 +109,8 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 					Object val = events.lastEntry().getValue();
 					if(val instanceof BitVector) {
 						((VCDSignal<BitVector>)s).addSignalChange(maxTime, (BitVector) val);
-					} else if(val instanceof Double)
-						((VCDSignal<Double>)s).addSignalChange(maxTime, (Double) val);
+					} else if(val instanceof DoubleVal)
+						((VCDSignal<DoubleVal>)s).addSignalChange(maxTime, (DoubleVal) val);
 				}
 			}
 		}
@@ -162,8 +163,8 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 		int id = signals.size();
 		assert(width>=0);
 		if(width==0) {
-			signals.add( i<0 ? new VCDSignal<Double>(db, id, netName, width) :
-				new VCDSignal<Double>((VCDSignal<Double>)signals.get(i), id, netName));			
+			signals.add( i<0 ? new VCDSignal<DoubleVal>(db, id, netName, width) :
+				new VCDSignal<DoubleVal>((VCDSignal<DoubleVal>)signals.get(i), id, netName));			
 		} else if(width>0){
 			signals.add( i<0 ? new VCDSignal<BitVector>(db, id, netName, width) :
 				new VCDSignal<BitVector>((VCDSignal<BitVector>)signals.get(i), id, netName));
@@ -188,7 +189,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	public void appendTransition(int signalId, long currentTime, BitVector value) {
 		VCDSignal<BitVector> signal = (VCDSignal<BitVector>) signals.get(signalId);
 		Long time = currentTime* TIME_RES;
-		signal.getEvents().put(time, value);
+		signal.addSignalChange(time, value);
 	}
 	
 	/* (non-Javadoc)
@@ -197,11 +198,9 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void appendTransition(int signalId, long currentTime, double value) {
-		VCDSignal<?> signal = (VCDSignal<?>) signals.get(signalId);
+		VCDSignal<DoubleVal> signal = (VCDSignal<DoubleVal>) signals.get(signalId);
 		Long time = currentTime* TIME_RES;
-		if(signal.getWidth()==0){
-			((VCDSignal<Double>)signal).getEvents().put(time, value);
-		}
+		signal.addSignalChange(time, new DoubleVal(value));
 	}
 	
 	/* (non-Javadoc)

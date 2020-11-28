@@ -20,10 +20,9 @@ import java.util.List;
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxAttribute;
-import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxGenerator;
 import com.minres.scviewer.database.ITxRelation;
-import com.minres.scviewer.database.ITxStream;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvStream;
@@ -55,7 +54,7 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public ITxStream<ITxEvent> getStream() {
+	public IWaveform getStream() {
 		return trStream;
 	}
 

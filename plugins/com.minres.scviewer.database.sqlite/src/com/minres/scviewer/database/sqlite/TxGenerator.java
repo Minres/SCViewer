@@ -13,18 +13,17 @@ package com.minres.scviewer.database.sqlite;
 import java.util.List;
 
 import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxGenerator;
-import com.minres.scviewer.database.ITxStream;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
 
 public class TxGenerator implements ITxGenerator {
 
-	private ITxStream<ITxEvent>  stream;
+	private IWaveform  stream;
 	
 	private ScvGenerator scvGenerator;
 
-	public TxGenerator(ITxStream<ITxEvent>  stream, ScvGenerator scvGenerator) {
+	public TxGenerator(IWaveform stream, ScvGenerator scvGenerator) {
 		this.stream=stream;
 		this.scvGenerator=scvGenerator;
 	}
@@ -35,7 +34,7 @@ public class TxGenerator implements ITxGenerator {
 	}
 
 	@Override
-	public ITxStream<ITxEvent> getStream() {
+	public IWaveform getStream() {
 		return stream;
 	}
 

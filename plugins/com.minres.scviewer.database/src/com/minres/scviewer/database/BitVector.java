@@ -10,7 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
-public class BitVector {
+public class BitVector implements IEvent {
 
 	private final int width;
 	
@@ -165,6 +165,21 @@ public class BitVector {
         	
         }
 		return res;
+	}
+
+	@Override
+	public EventKind getKind() {
+		return EventKind.SINGLE;
+	}
+
+	@Override
+	public Class<?> getType() {
+		return this.getClass();
+	}
+
+	@Override
+	public IEvent duplicate() throws CloneNotSupportedException {
+		return (IEvent)this.clone();
 	}
 }
 

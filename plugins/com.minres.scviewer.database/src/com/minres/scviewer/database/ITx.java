@@ -17,7 +17,7 @@ public interface ITx extends Comparable<ITx>{
 
 	public Long getId();
 	
-	public ITxStream<ITxEvent> getStream();
+	public IWaveform getStream();
 	
 	public ITxGenerator getGenerator();
 	

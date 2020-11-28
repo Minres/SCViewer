@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
+import java.util.NavigableMap;
 
 public interface IWaveform extends IHierNode {
 
@@ -20,5 +21,15 @@ public interface IWaveform extends IHierNode {
 	public IWaveformDb getDb();
 	
 	public Boolean equals(IWaveform other);
+
+	public NavigableMap<Long, IEvent[]> getEvents();
+
+	public IEvent[] getEventsAtTime(Long time);
+
+	public IEvent[] getEventsBeforeTime(Long time);
+	
+	public Class<?> getType();
+	
+	public int getMaxConcurrency();
 
 }

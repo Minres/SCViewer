@@ -14,7 +14,7 @@ import java.util.List;
 
 public interface ITxGenerator {
 	public Long getId();
-	public ITxStream<ITxEvent> getStream();
+	public IWaveform getStream();
 	public String getName();
 	public List<ITx> getTransactions();
 }

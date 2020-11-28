@@ -25,12 +25,11 @@ import org.junit.Test;
 
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
-import com.minres.scviewer.database.ISignal;
+import com.minres.scviewer.database.EventKind;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.ITxEvent;
-import com.minres.scviewer.database.ITxEvent.Type;
-import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
@@ -71,13 +70,11 @@ public class DatabaseServicesTest {
 		assertEquals(14,  waves.size());
 		assertEquals(2,  waveformDb.getChildNodes().size());
 		IWaveform bus_data_wave = waves.get(0);
-		ISignal<?> bus_data_sig = (ISignal<?>) bus_data_wave;
-		Entry<Long, ?> bus_data_entry = bus_data_sig.getEvents().floorEntry(1400000000L);
-		assertTrue("01111000".equals(bus_data_entry.getValue().toString()));
+		Entry<Long, IEvent[]> bus_data_entry = bus_data_wave.getEvents().floorEntry(1400000000L);
+		assertTrue("01111000".equals(bus_data_entry.getValue()[0].toString()));
 		IWaveform rw_wave = waves.get(2);
-		ISignal<?> rw_sig = (ISignal<?>) rw_wave;
-		Entry<Long, ?> rw_entry = rw_sig.getEvents().floorEntry(2360000000L);
-		assertTrue("1".equals(rw_entry.getValue().toString()));
+		Entry<Long, IEvent[]> rw_entry = rw_wave.getEvents().floorEntry(2360000000L);
+		assertTrue("1".equals(rw_entry.getValue()[0].toString()));
 	}
 
 	@Test
@@ -119,19 +116,17 @@ public class DatabaseServicesTest {
 		assertEquals(1,  waveformDb.getChildNodes().size());
 		List<IWaveform> waves = waveformDb.getAllWaves();
 		assertEquals(3,  waves.size());
-		IWaveform wave = waves.get(0);
-		assertTrue(wave instanceof ITxStream<?>);
-		ITxStream<?> stream = (ITxStream<?>) wave;
-		assertEquals(2,  stream.getGenerators().size());
-		NavigableMap<Long, List<ITxEvent>> eventsList = stream.getEvents();
+		IWaveform stream = waves.get(0);
+		NavigableMap<Long, IEvent[]> eventsList = stream.getEvents();
 		assertEquals(27, eventsList.size());
-		Entry<Long, List<ITxEvent>> eventEntry = eventsList.firstEntry();
+		Entry<Long, IEvent[]> eventEntry = eventsList.firstEntry();
 		assertEquals(100000000L, (long) eventEntry.getKey());
-		List<ITxEvent> events = eventEntry.getValue();
-		assertEquals(1, events.size());
-		ITxEvent event = events.get(0);
-		assertEquals(Type.BEGIN, event.getType());
-		ITx tx = event.getTransaction();
+		IEvent[] events = eventEntry.getValue();
+		assertEquals(1, events.length);
+		IEvent event = events[0];
+		assertEquals(EventKind.BEGIN, event.getKind());
+		assertTrue(event instanceof ITxEvent);
+		ITx tx = ((ITxEvent)event).getTransaction();
 		assertEquals(3L,  (long) tx.getId());
 		List<ITxAttribute> attrs = tx.getAttributes();
 		assertEquals(1, attrs.size());

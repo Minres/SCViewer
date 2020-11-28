@@ -14,19 +14,17 @@ import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.Vector;
 
+import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.HierNode;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.ITxGenerator;
-import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.RelationType;
@@ -36,7 +34,7 @@ import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
 import com.minres.scviewer.database.sqlite.tables.ScvStream;
 import com.minres.scviewer.database.sqlite.tables.ScvTx;
 
-public class TxStream extends HierNode implements ITxStream<ITxEvent> {
+public class TxStream extends HierNode implements IWaveform {
 
 	private IDatabase database;
 
@@ -52,7 +50,7 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	
 	private Integer maxConcurrency;
 	
-	private TreeMap<Long, List<ITxEvent>> events;
+	private TreeMap<Long, IEvent[]> events;
 
 	private List<RelationType> usedRelationsList;
 	
@@ -84,7 +82,6 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 		return scvStream.getKind();
 	}
 
-	@Override
 	public List<ITxGenerator> getGenerators() {
 		if(generators==null){
 			SQLiteDatabaseSelectHandler<ScvGenerator> handler = new SQLiteDatabaseSelectHandler<ScvGenerator>(
@@ -136,12 +133,12 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	}
 
 	@Override
-	public  NavigableMap<Long, List<ITxEvent>> getEvents(){
+	public  NavigableMap<Long, IEvent[]> getEvents(){
 		if(events==null){
-			events=new TreeMap<Long, List<ITxEvent>>();
+			events=new TreeMap<Long, IEvent[]>();
 			for(Entry<Integer, ITx> entry:getTransactions().entrySet()){
-				putEvent(new TxEvent(TxEvent.Type.BEGIN, entry.getValue()));
-				putEvent(new TxEvent(TxEvent.Type.END, entry.getValue()));
+				putEvent(new TxEvent(EventKind.BEGIN, entry.getValue()));
+				putEvent(new TxEvent(EventKind.END, entry.getValue()));
 			}	
 		}
 		return events;
@@ -149,12 +146,14 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 
 	private void putEvent(TxEvent ev){
 		Long time = ev.getTime();
-		if(!events.containsKey(time)){
-			Vector<ITxEvent> vector=new Vector<ITxEvent>();
-			vector.add(ev);
-			events.put(time,  vector);
+		if(events.containsKey(time)) {
+			IEvent[] oldV = events.get(time);
+			IEvent[] newV = new IEvent[oldV.length+1];
+			System.arraycopy(oldV, 0, newV, 0, oldV.length);
+			newV[oldV.length]=ev;
+			events.put(time, newV);
 		} else {
-			events.get(time).add(ev);
+			events.put(time, new IEvent[] {ev});
 		}
 	}
 
@@ -177,7 +176,7 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	}
 
 	@Override
-	public Collection<ITxEvent> getWaveformEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(Long time) {
 		return getEvents().get(time);
 	}
 
@@ -194,6 +193,20 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	@Override
 	public Boolean equals(IWaveform other) {
 		return(other instanceof TxStream && this.getId().equals(other.getId()));
+	}
+
+	@Override
+	public IEvent[] getEventsBeforeTime(Long time) {
+    	Entry<Long, IEvent[]> e = events.floorEntry(time);
+    	if(e==null)
+    		return null;
+    	else
+    		return  events.floorEntry(time).getValue();
+	}
+
+	@Override
+	public Class<?> getType() {
+		return TxEvent.class;
 	}
 
 }

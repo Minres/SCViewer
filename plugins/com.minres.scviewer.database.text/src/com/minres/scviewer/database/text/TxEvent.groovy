@@ -1,36 +1,41 @@
 package com.minres.scviewer.database.text;
 
+import com.minres.scviewer.database.EventKind
 import com.minres.scviewer.database.ITx
 import com.minres.scviewer.database.ITxEvent
-import com.minres.scviewer.database.IWaveformEvent
 
 class TxEvent implements ITxEvent {
 
-	final ITxEvent.Type type;
+	final EventKind kind;
 	
 	final Tx transaction;
 	
 	final Long time
 	
-	TxEvent(ITxEvent.Type type, ITx transaction) {
+	TxEvent(EventKind kind, ITx transaction) {
 		super();
-		this.type = type;
+		this.kind = kind;
 		this.transaction = transaction;
-		this.time = type==ITxEvent.Type.BEGIN?transaction.beginTime:transaction.endTime
+		this.time = kind==EventKind.BEGIN?transaction.beginTime:transaction.endTime
 	}
 
 	@Override
-	IWaveformEvent duplicate() throws CloneNotSupportedException {
+	ITxEvent duplicate() throws CloneNotSupportedException {
 		new TxEvent(type, transaction, time)
 	}
 
-	@Override
-	int compareTo(IWaveformEvent o) {
-		time.compareTo(o.time)
-	}
+//	@Override
+//	int compareTo(IWaveformEvent o) {
+//		time.compareTo(o.time)
+//	}
 
 	@Override
 	String toString() {
-		type.toString()+"@"+time+" of tx #"+transaction.id;
+		kind.toString()+"@"+time+" of tx #"+transaction.id;
+	}
+
+	@Override
+	Class<?> getType() {
+		return this.getClass();
 	}
 }
