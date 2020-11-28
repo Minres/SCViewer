@@ -83,5 +83,10 @@ public class DefaultWaveformStyleProvider implements IWaveformStyleProvider {
 		// TODO Auto-generated method stub
 		return colors[type.ordinal()];
 	}
+	@Override
+	public Color[] computeColor(String name) {
+		return new Color[] {SWTResourceManager.getColor( 200,0,0), SWTResourceManager.getColor( 255,0,0)};
+
+	}
 
 }

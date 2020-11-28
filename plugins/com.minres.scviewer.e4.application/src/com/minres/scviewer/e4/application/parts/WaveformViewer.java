@@ -504,7 +504,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				return false;
 			}
 		});
-		setupColors();
+		waveformPane.setStyleProvider(new WaveformStyleProvider(store));
 	}
 
 	@Inject
@@ -537,17 +537,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@Override
 	public void preferenceChange(PreferenceChangeEvent event) {
 		if (!PreferenceConstants.DATABASE_RELOAD.equals(event.getKey()) && !PreferenceConstants.SHOW_HOVER.equals(event.getKey())){
-			setupColors();
-		}
+			waveformPane.setStyleProvider(new WaveformStyleProvider(store));		}
 	}
 
-	/**
-	 * Setup colors.
-	 */
-	protected void setupColors() {
-		waveformPane.setStyleProvider(new WaveformStyleProvider(store));
-	}
-	
 	class DbLoadJob extends Job {
 		final File file;
 		public DbLoadJob(String name, final File file) {
@@ -809,7 +801,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		for (int i = 0; i < waves; i++) {
 			IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
 			if (waveform != null) {
-				TrackEntry t = new TrackEntry(waveform);
+				TrackEntry t = waveformPane.addWaveform(waveform, -1);
 				//check if t is selected
 				boolean isSelected = Boolean.valueOf(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED));
 				if(isSelected) {
@@ -826,8 +818,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					t.waveDisplay=WaveDisplay.valueOf(s);
 			}
 		}
-		if (res.size() > 0)
-			waveformPane.getStreamList().addAll(res);
 		Integer cursorLength = state.containsKey(SHOWN_CURSOR+"S")?Integer.parseInt(state.get(SHOWN_CURSOR + "S")):0; //$NON-NLS-1$ //$NON-NLS-2$
 		List<ICursor> cursors = waveformPane.getCursorList();
 		if (cursorLength == cursors.size()) {
@@ -997,12 +987,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param insert the insert
 	 */
 	public void addStreamsToList(IWaveform[] iWaveforms, boolean insert) {
-		List<TrackEntry> streams = new LinkedList<>();
-		for (IWaveform stream : iWaveforms)
-			streams.add(new TrackEntry(stream));
 		IStructuredSelection selection = (IStructuredSelection) waveformPane.getSelection();
 		if (selection.size() == 0) {
-			waveformPane.getStreamList().addAll(streams);
+			for (IWaveform waveform : iWaveforms)
+				waveformPane.addWaveform(waveform, -1);
 		} else {
 			Object first = selection.getFirstElement();
 			if(first instanceof ITx) {
@@ -1010,17 +998,21 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
 				if (insert) {
 					int index = waveformPane.getStreamList().indexOf(trackEntry);
-					waveformPane.getStreamList().addAll(index, streams);
+					for (IWaveform waveform : iWaveforms)
+						waveformPane.addWaveform(waveform, index++);
 				} else {
-					waveformPane.getStreamList().addAll(streams);
+					for (IWaveform waveform : iWaveforms)
+						waveformPane.addWaveform(waveform, -1);
 				}
 			} else if(first instanceof TrackEntry) {
 				TrackEntry trackEntry = (TrackEntry) first;
 				if (insert) {
 					int index = waveformPane.getStreamList().indexOf(trackEntry);
-					waveformPane.getStreamList().addAll(index, streams);
+					for (IWaveform waveform : iWaveforms)
+						waveformPane.addWaveform(waveform, index++);
 				} else {
-					waveformPane.getStreamList().addAll(streams);
+					for (IWaveform waveform : iWaveforms)
+						waveformPane.addWaveform(waveform, -1);
 				}
 			}
 

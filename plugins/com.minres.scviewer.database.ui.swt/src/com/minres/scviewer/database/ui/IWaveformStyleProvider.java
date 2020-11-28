@@ -12,4 +12,6 @@ public interface IWaveformStyleProvider {
 	int getTrackHeight();
 
 	Color getColor(WaveformColors type);
+
+	Color[] computeColor(String name);
 }

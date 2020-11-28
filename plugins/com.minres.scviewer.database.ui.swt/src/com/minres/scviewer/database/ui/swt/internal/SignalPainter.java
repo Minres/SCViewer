@@ -28,7 +28,6 @@ import com.minres.scviewer.database.DoubleVal;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.ui.TrackEntry;
-import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.WaveformColors;
 
 public class SignalPainter extends TrackPainter {

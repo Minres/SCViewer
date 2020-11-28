@@ -20,13 +20,14 @@ import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
 
 public class WaveformStyleProvider implements IWaveformStyleProvider {
 
-	Composite parent;
+	private Composite parent;
 	
 	private Font nameFont;
 	
-	private Font nameFontB;
+	private Color[] colors = new Color[WaveformColors.values().length];
 
-    Color[] colors = new Color[WaveformColors.values().length];
+	// list of random colors
+	private static Color[][] randomColors;
 
 
 	public WaveformStyleProvider() {
@@ -34,8 +35,9 @@ public class WaveformStyleProvider implements IWaveformStyleProvider {
 	}
 
 	private void setupDefaults() {
-		nameFont = Display.getCurrent().getSystemFont();
-		nameFontB = SWTResourceManager.getBoldFont(nameFont);
+		Display display = Display.getCurrent();
+		
+		nameFont = display.getSystemFont();
         colors[WaveformColors.LINE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
         colors[WaveformColors.LINE_HIGHLITE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_CYAN);
         colors[WaveformColors.TRACK_BG_EVEN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_BLACK);
@@ -59,6 +61,24 @@ public class WaveformStyleProvider implements IWaveformStyleProvider {
         colors[WaveformColors.MARKER_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
         colors[WaveformColors.REL_ARROW.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_MAGENTA);
         colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()] = SWTResourceManager.getColor(255, 128, 255);
+		randomColors = new Color[][] {
+				{ SWTResourceManager.getColor( 170,  66,  37 ), SWTResourceManager.getColor( 190,  66,  37 ) },
+				{ SWTResourceManager.getColor(  96,  74, 110 ), SWTResourceManager.getColor(  96,  74, 130 ) },
+				{ SWTResourceManager.getColor( 133, 105, 128 ), SWTResourceManager.getColor( 153, 105, 128 ) },
+				{ SWTResourceManager.getColor(   0, 126, 135 ), SWTResourceManager.getColor(   0, 126, 155 ) },
+				{ SWTResourceManager.getColor( 243, 146,  75 ), SWTResourceManager.getColor( 255, 146,  75 ) },
+				{ SWTResourceManager.getColor( 206, 135, 163 ), SWTResourceManager.getColor( 226, 135, 163 ) },
+				{ SWTResourceManager.getColor( 124, 103,  74 ), SWTResourceManager.getColor( 144, 103,  74 ) },
+				{ SWTResourceManager.getColor( 194, 187, 169 ), SWTResourceManager.getColor( 214, 187, 169 ) },
+				{ SWTResourceManager.getColor( 104,  73,  71 ), SWTResourceManager.getColor( 124,  73,  71 ) },
+				{ SWTResourceManager.getColor(  75, 196, 213 ), SWTResourceManager.getColor(  75, 196, 233 ) },
+				{ SWTResourceManager.getColor( 206, 232, 229 ), SWTResourceManager.getColor( 206, 252, 229 ) },
+				{ SWTResourceManager.getColor( 169, 221, 199 ), SWTResourceManager.getColor( 169, 241, 199 ) },
+				{ SWTResourceManager.getColor( 100, 165, 197 ), SWTResourceManager.getColor( 100, 165, 217 ) },
+				{ SWTResourceManager.getColor( 150, 147, 178 ), SWTResourceManager.getColor( 150, 147, 198 ) },
+				{ SWTResourceManager.getColor( 200, 222, 182 ), SWTResourceManager.getColor( 200, 242, 182 ) },
+				{ SWTResourceManager.getColor( 147, 208, 197 ), SWTResourceManager.getColor( 147, 228, 197 ) }
+		};
 	}
 	
 	public WaveformStyleProvider(IEclipsePreferences store) {
@@ -105,4 +125,16 @@ public class WaveformStyleProvider implements IWaveformStyleProvider {
 		return colors[type.ordinal()];
 	}
 
+	@Override
+	public Color[] computeColor (String streamValue) {
+		Color[] result = new Color[] {SWTResourceManager.getColor( 200,0,0), SWTResourceManager.getColor( 255,0,0)};
+		// assign "random" color here, one name always results in the same color!
+		if( streamValue!=null && randomColors.length > 0 ) {
+			int index = Math.abs(streamValue.hashCode()) % randomColors.length;
+			result[0] = randomColors[index][0];
+			result[1] = randomColors[index][1];
+		}
+		return result;
+	}
+	
 }

@@ -10,7 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
-import java.awt.Color;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -723,10 +722,7 @@ public class WaveformView implements IWaveformView  {
 						ITx txSel = (ITx) sel;
 						TrackEntry trackEntry = getEntryForStream(txSel.getStream());
 						if(trackEntry==null && addIfNeeded){
-							trackEntry=new TrackEntry(txSel.getStream());
-							// compute fallback colors
-							Color fallbackColors[] = TrackEntry.computeColor(txSel.getStream().getName(), TrackEntry.fallbackColor, TrackEntry.highlightedFallbackColor);
-							trackEntry.setColor(fallbackColors[0], fallbackColors[1]);
+							trackEntry=new TrackEntry(txSel.getStream(), styleProvider);
 							streams.add(trackEntry);
 						}
 						currentTxSelection = txSel;
@@ -1392,6 +1388,16 @@ public class WaveformView implements IWaveformView  {
 		this.styleProvider=styleProvider;
 		waveformCanvas.setStyleProvider(styleProvider);
 		update();
+	}
+
+	@Override
+	public TrackEntry addWaveform(IWaveform waveform, int idx) {
+		TrackEntry e = new TrackEntry(waveform, styleProvider);
+		if(idx<0)
+			getStreamList().add(e);
+		else
+			getStreamList().add(idx, e);
+		return e;
 	}
 
 }

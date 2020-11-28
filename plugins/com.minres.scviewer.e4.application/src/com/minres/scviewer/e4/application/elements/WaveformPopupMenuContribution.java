@@ -32,7 +32,7 @@ public class WaveformPopupMenuContribution {
 	
 	@Inject MPart activePart;
 		
-	final TrackEntry nullEntry = new TrackEntry(null);
+	final TrackEntry nullEntry = new TrackEntry(null, null);
 	
 	private boolean selHasBitVector(ISelection sel, boolean checkForDouble) {
 		if(!sel.isEmpty() && sel instanceof IStructuredSelection) {

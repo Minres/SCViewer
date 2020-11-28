@@ -112,4 +112,6 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	public void addDisposeListener( DisposeListener listener );
 
 	public void deleteSelectedTracks();
+
+	public TrackEntry addWaveform(IWaveform waveform, int pos);
 }

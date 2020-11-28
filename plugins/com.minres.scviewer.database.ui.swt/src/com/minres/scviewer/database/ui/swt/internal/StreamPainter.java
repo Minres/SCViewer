@@ -16,7 +16,7 @@ import java.util.NavigableMap;
 import java.util.TreeSet;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
@@ -44,20 +44,6 @@ public class StreamPainter extends TrackPainter{
 		this.waveCanvas = waveCanvas;
 		this.stream=trackEntry.waveform;
 		this.seenTx=new TreeSet<ITx>();
-	}
-
-	/*
-	 * convert java.awt.Color to org.eclipse.swt.graphics.Color 
-	 */
-	static org.eclipse.swt.graphics.Color toSwtColor( GC gc, java.awt.Color awtColor ){
-		return new org.eclipse.swt.graphics.Color( gc.getDevice(), awtColor.getRed(), awtColor.getGreen(), awtColor.getBlue() );
-	}
-
-	static org.eclipse.swt.graphics.Color[] toSwtColors( GC gc, java.awt.Color[] awtColors ){
-		org.eclipse.swt.graphics.Color[] swtColors = new org.eclipse.swt.graphics.Color[awtColors.length];
-		for( int i=0; i<awtColors.length; i++ )
-			swtColors[i] = toSwtColor( gc, awtColors[i] );
-		return swtColors;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -124,10 +110,9 @@ public class StreamPainter extends TrackPainter{
 
 	protected void drawTx(Projection proj, Rectangle area, ITx tx, boolean highlighted ) {
 		// compute colors
-		java.awt.Color[] fallbackColors = trackEntry.getColors();
-		java.awt.Color[] transColor = TrackEntry.computeColor( tx.getGenerator().getName(), fallbackColors[0], fallbackColors[1] );
+		Color[] transColor = waveCanvas.styleProvider.computeColor( tx.getGenerator().getName());
 
-		proj.setBackground( toSwtColor( proj.getGC(), transColor[highlighted?1:0] ) );
+		proj.setBackground(transColor[highlighted?1:0]);
 
 		int offset = tx.getConcurrencyIndex()*this.waveCanvas.styleProvider.getTrackHeight();
 		Rectangle bb = new Rectangle(
