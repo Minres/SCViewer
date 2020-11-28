@@ -70,7 +70,7 @@
                   </count>
  				<iterate
            operator="or">
-       				<instanceof value="com.minres.scviewer.database.ITx"/>
+       				<instanceof value="com.minres.scviewer.database.tx.ITx"/>
     			</iterate>      
             </and>
             </with>

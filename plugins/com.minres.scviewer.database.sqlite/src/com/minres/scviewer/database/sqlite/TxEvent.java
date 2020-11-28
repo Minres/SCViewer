@@ -12,9 +12,9 @@ package com.minres.scviewer.database.sqlite;
 
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.WaveformType;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxEvent;
 
 public class TxEvent implements ITxEvent {
 

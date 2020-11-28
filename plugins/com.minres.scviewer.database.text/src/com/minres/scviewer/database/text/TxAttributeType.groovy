@@ -12,7 +12,7 @@ package com.minres.scviewer.database.text
 
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
-import com.minres.scviewer.database.ITxAttributeType;
+import com.minres.scviewer.database.tx.ITxAttributeType
 
 class TxAttributeType implements ITxAttributeType {
 	String name

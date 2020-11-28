@@ -18,8 +18,8 @@ import org.eclipse.jface.viewers.Viewer;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.minres.scviewer.database.IHierNode;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxAttribute;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
 
 /**
  * The Class TxPropertiesContentProvider. Not used atm

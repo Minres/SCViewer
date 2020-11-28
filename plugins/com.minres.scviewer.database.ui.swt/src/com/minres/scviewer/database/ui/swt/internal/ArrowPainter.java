@@ -21,9 +21,9 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxRelation;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxRelation;
 import com.minres.scviewer.database.ui.WaveformColors;
 
 public class ArrowPainter implements IPainter {

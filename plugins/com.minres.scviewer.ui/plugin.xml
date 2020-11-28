@@ -67,7 +67,7 @@
                id="com.minres.scviewer.ui.propertySectionAll"
                tab="com.minres.scviewer.ui.propertyTabTransaction">
             <input
-                  type="com.minres.scviewer.database.ITx">
+                  type="com.minres.scviewer.database.tx.ITx">
             </input>
          </propertySection>
          <propertySection
@@ -76,7 +76,7 @@
                id="com.minres.scviewer.ui.propertySectionAttributes"
                tab="com.minres.scviewer.ui.propertyTabAttributes">
             <input
-                  type="com.minres.scviewer.database.ITx">
+                  type="com.minres.scviewer.database.tx.ITx">
             </input>
          </propertySection>
          <propertySection
@@ -85,7 +85,7 @@
                id="com.minres.scviewer.ui.propertySectionRelated"
                tab="com.minres.scviewer.ui.propertyTabRelated">
             <input
-                  type="com.minres.scviewer.database.ITx">
+                  type="com.minres.scviewer.database.tx.ITx">
             </input>
          </propertySection>
       </propertySections>
@@ -93,7 +93,7 @@
    <extension
          point="org.eclipse.core.runtime.adapters">
       <factory
-            adaptableType="com.minres.scviewer.database.ITx"
+            adaptableType="com.minres.scviewer.database.tx.ITx"
             class="com.minres.scviewer.ui.adapter.TxAdapterFactory">
          <adapter
                type="org.eclipse.ui.views.properties.IPropertySource">
@@ -465,7 +465,7 @@
                   </count>
  				<iterate
            operator="or">
-       				<instanceof value="com.minres.scviewer.database.ITx"/>
+       				<instanceof value="com.minres.scviewer.database.tx.ITx"/>
     			</iterate>      
             </and>
             </with>

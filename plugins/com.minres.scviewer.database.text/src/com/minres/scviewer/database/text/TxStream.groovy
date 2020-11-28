@@ -20,16 +20,16 @@ import java.util.Map.Entry
 
 import org.mapdb.Serializer
 
-import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb
 import com.minres.scviewer.database.WaveformType
-import com.minres.scviewer.database.ITxGenerator
+import com.minres.scviewer.database.tx.ITx
+import com.minres.scviewer.database.tx.ITxEvent
+import com.minres.scviewer.database.tx.ITxGenerator
 import com.minres.scviewer.database.EventKind
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent
 import com.minres.scviewer.database.IHierNode
-import com.minres.scviewer.database.ITx
 
 class TxStream extends HierNode implements IWaveform {
 

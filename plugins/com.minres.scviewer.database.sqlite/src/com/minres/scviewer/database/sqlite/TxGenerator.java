@@ -12,10 +12,10 @@ package com.minres.scviewer.database.sqlite;
 
 import java.util.List;
 
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxGenerator;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxGenerator;
 
 public class TxGenerator implements ITxGenerator {
 

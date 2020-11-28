@@ -29,8 +29,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 
-import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.parts.PartListener;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;

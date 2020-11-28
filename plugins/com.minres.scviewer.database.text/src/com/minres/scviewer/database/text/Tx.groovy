@@ -11,6 +11,9 @@
 package com.minres.scviewer.database.text
 
 import com.minres.scviewer.database.*
+import com.minres.scviewer.database.tx.ITx
+import com.minres.scviewer.database.tx.ITxAttribute
+import com.minres.scviewer.database.tx.ITxRelation
 
 class Tx implements ITx {
 	

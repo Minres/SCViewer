@@ -22,9 +22,9 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
 

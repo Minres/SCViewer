@@ -27,12 +27,12 @@ import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxAttribute;
-import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
+import com.minres.scviewer.database.tx.ITxEvent;
 
 public class DatabaseServicesTest {
 

@@ -10,9 +10,9 @@
  *******************************************************************************/
 package com.minres.scviewer.database.sqlite;
 
-import com.minres.scviewer.database.ITxRelation;
-import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxRelation;
 
 public class TxRelation implements ITxRelation {
 

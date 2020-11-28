@@ -13,7 +13,7 @@ package com.minres.scviewer.ui.adapter;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.ui.views.properties.IPropertySource;
 
-import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.tx.ITx;
 
 public class TxAdapterFactory implements IAdapterFactory {
 

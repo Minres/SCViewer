@@ -8,8 +8,13 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database;
+package com.minres.scviewer.database.tx;
 
-public interface ITxAttribute extends ITxAttributeType {
-	public Object getValue();
+import com.minres.scviewer.database.AssociationType;
+import com.minres.scviewer.database.DataType;
+
+public interface ITxAttributeType {
+	public String getName();
+	public DataType getDataType();
+	public AssociationType getType();
 }

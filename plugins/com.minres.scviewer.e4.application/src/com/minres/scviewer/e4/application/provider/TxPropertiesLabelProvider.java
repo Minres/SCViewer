@@ -17,7 +17,7 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 
-import com.minres.scviewer.database.ITxAttribute;
+import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.e4.application.parts.TransactionDetails;
 
 /**

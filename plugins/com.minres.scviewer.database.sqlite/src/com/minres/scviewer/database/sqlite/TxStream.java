@@ -23,8 +23,6 @@ import java.util.TreeMap;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxGenerator;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.RelationType;
@@ -34,6 +32,8 @@ import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
 import com.minres.scviewer.database.sqlite.tables.ScvStream;
 import com.minres.scviewer.database.sqlite.tables.ScvTx;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxGenerator;
 
 public class TxStream extends HierNode implements IWaveform {
 
