@@ -13,7 +13,6 @@ package com.minres.scviewer.database.internal;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,12 +23,11 @@ import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
-import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
 
 public class WaveformDb extends HierNode implements IWaveformDb {
 
-	private static List<IWaveformDbLoader> loaders=new LinkedList<IWaveformDbLoader>();
+	private static List<IWaveformDbLoader> loaders=new LinkedList<>();
 
 	private boolean loaded;
 
@@ -55,7 +53,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 
 	public WaveformDb() {
 		super();
-		waveforms = new HashMap<String, IWaveform>();
+		waveforms = new HashMap<>();
 		relationTypes=new ArrayList<>();
 		maxTime=0L;
 	}
@@ -72,7 +70,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 
 	@Override
 	public List<IWaveform> getAllWaves() {
-		return new ArrayList<IWaveform>(waveforms.values());
+		return new ArrayList<>(waveforms.values());
 	}
 
 	@Override
@@ -121,9 +119,8 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 		return loaded;
 	}
 
-	private void buildHierarchyNodes() throws InputFormatException{
+	private void buildHierarchyNodes() {
 		for(IWaveform stream:getAllWaves()){
-			//updateMaxTime(stream);
 			String[] hier = stream.getName().split("\\.");
 			IHierNode node = this;
 			for(int i=0; i<hier.length-1; ++i){
@@ -152,14 +149,9 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 	}
 
 	private void sortRecursive(IHierNode node) {
-		Collections.sort(node.getChildNodes(), new Comparator<IHierNode>() {
-			@Override
-			public int compare(IHierNode o1, IHierNode o2) {
-				return o1.getName().compareTo(o2.getName());			}
-			
-		});
+		Collections.sort(node.getChildNodes(), (IHierNode o1, IHierNode o2) -> o1.getName().compareTo(o2.getName()));
 		for(IHierNode n:node.getChildNodes()) {
-			if(n.getChildNodes().size()>0)
+			if(!n.getChildNodes().isEmpty())
 				sortRecursive(n);
 		}
 	}

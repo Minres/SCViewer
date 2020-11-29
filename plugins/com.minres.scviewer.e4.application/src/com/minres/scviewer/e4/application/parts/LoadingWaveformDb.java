@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.minres.scviewer.database.IDerivedWaveform;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
@@ -83,6 +84,11 @@ public class LoadingWaveformDb implements IWaveformDb {
 
 	@Override
 	public void clear() {
+	}
+
+	@Override
+	public IDerivedWaveform deriveWaveform() {
+		return null;
 	}
 
 }

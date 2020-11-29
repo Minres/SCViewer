@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015, 2020 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,17 +10,10 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
-import java.io.File;
-import java.util.Collection;
+/**
+ * The Interface IDerivedWaveform.
+ */
+public interface IDerivedWaveform extends IWaveform {
 
-public interface IWaveformDbLoader {
-	
-	public boolean load(IWaveformDb db, File inp) throws InputFormatException;
-	
-	public Long getMaxTime();
-	
-	public Collection<IWaveform> getAllWaves() ;
-	
-	public Collection<RelationType> getAllRelationTypes() ;
-	
+	void addSourceWaveform(IWaveform waveform);
 }

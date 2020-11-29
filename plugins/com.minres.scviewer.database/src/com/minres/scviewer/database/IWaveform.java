@@ -18,7 +18,7 @@ public interface IWaveform extends IHierNode {
 
 	public IWaveformDb getDb();
 	
-	public Boolean equals(IWaveform other);
+	public boolean isSame(IWaveform other);
 
 	public NavigableMap<Long, IEvent[]> getEvents();
 

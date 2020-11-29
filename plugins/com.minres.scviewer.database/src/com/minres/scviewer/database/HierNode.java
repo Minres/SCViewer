@@ -26,7 +26,7 @@ public class HierNode implements IHierNode {
 	protected PropertyChangeSupport pcs;
 
 	public HierNode() {
-		childs = new ArrayList<IHierNode>();
+		childs = new ArrayList<>();
 		pcs=new PropertyChangeSupport(this);
 	}
 
@@ -83,6 +83,11 @@ public class HierNode implements IHierNode {
 	@Override
 	public int compareTo(IHierNode o) {
 		return getFullName().compareTo(o.getFullName());
+	}
+
+	@Override
+	public IDerivedWaveform deriveWaveform() {
+		return null;
 	}
 
 }

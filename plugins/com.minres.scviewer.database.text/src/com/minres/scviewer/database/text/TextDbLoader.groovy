@@ -25,6 +25,7 @@ import com.minres.scviewer.database.DataType
 import com.minres.scviewer.database.IWaveform
 import com.minres.scviewer.database.IWaveformDb
 import com.minres.scviewer.database.IWaveformDbLoader
+import com.minres.scviewer.database.InputFormatException
 import com.minres.scviewer.database.RelationType
 import com.minres.scviewer.database.tx.ITxGenerator
 
@@ -62,7 +63,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 	static final byte[] x = "scv_tr_stream".bytes
 
 	@Override
-	boolean load(IWaveformDb db, File file) throws Exception {
+	boolean load(IWaveformDb db, File file) throws InputFormatException {
 		if(file.isDirectory() || !file.exists()) return false;
 		this.db=db
 		this.streams=[]

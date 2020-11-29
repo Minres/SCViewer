@@ -25,4 +25,4 @@ public enum DataType {
 	POINTER, // T*
 	ARRAY, // T[N]
 	STRING // string, std::string
-};
+}

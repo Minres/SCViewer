@@ -114,7 +114,7 @@ class TxStream extends HierNode implements IWaveform {
 	}
 	
 	@Override
-	public Boolean equals(IWaveform other) {
+	public boolean isSame(IWaveform other) {
 		return(other instanceof TxStream && this.getId()==other.getId());
 	}
 

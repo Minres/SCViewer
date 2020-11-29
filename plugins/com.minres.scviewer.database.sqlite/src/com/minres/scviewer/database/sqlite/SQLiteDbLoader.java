@@ -13,7 +13,6 @@ package com.minres.scviewer.database.sqlite;
 import java.beans.IntrospectionException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
@@ -24,6 +23,7 @@ import java.util.List;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
+import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabase;
@@ -42,16 +42,13 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	
 	private ScvSimProps scvSimProps;
 		
-	public SQLiteDbLoader() {
-	}
-
 	@Override
 	public Long getMaxTime() {
-		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<ScvTxEvent>(ScvTxEvent.class,
+		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
 				database, "time = (SELECT MAX(time) FROM ScvTxEvent)");
 		try {
 			List<ScvTxEvent> event = handler.selectObjects();
-			if(event.size()>0)
+			if(!event.isEmpty())
 				return event.get(0).getTime()*scvSimProps.getTime_resolution();
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
 				| InvocationTargetException | SQLException | IntrospectionException e) {
@@ -62,8 +59,8 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 
 	@Override
 	public Collection<IWaveform> getAllWaves() {
-		SQLiteDatabaseSelectHandler<ScvStream> handler = new SQLiteDatabaseSelectHandler<ScvStream>(ScvStream.class, database);
-		List<IWaveform> streams=new ArrayList<IWaveform>();
+		SQLiteDatabaseSelectHandler<ScvStream> handler = new SQLiteDatabaseSelectHandler<>(ScvStream.class, database);
+		List<IWaveform> streams=new ArrayList<>();
 		try {
 			for(ScvStream scvStream:handler.selectObjects()){
 				TxStream stream = new TxStream(database, db, scvStream);
@@ -72,7 +69,6 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 			}
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
 				| InvocationTargetException | SQLException | IntrospectionException e) {
-//			e.printStackTrace();
 		}
 		return streams;
 	}
@@ -80,25 +76,21 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	private byte[] x = "SQLite format 3".getBytes();
 
 	@Override
-	public boolean load(IWaveformDb db, File file) throws Exception {
+	public boolean load(IWaveformDb db, File file) throws InputFormatException {
 		if(file.isDirectory() || !file.exists()) return false;
 		this.db=db;
-		try {
-			FileInputStream fis = new FileInputStream(file);
+		try(FileInputStream fis = new FileInputStream(file)) {
 			byte[] buffer = new byte[x.length];
 			int read = fis.read(buffer, 0, x.length);
-			fis.close();
 			if (read == x.length)
 				for (int i = 0; i < x.length; i++)
 					if (buffer[i] != x[i])	return false;
-		} catch(FileNotFoundException e) {
-			return false;
-		} catch(IOException e) { //if an I/O error occurs
+		} catch(IOException e) {
 			return false;
 		}
 		database=new SQLiteDatabase(file.getAbsolutePath());
 		database.setData("TIMERESOLUTION", 1L);
-		SQLiteDatabaseSelectHandler<ScvSimProps> handler = new SQLiteDatabaseSelectHandler<ScvSimProps>(ScvSimProps.class, database);
+		SQLiteDatabaseSelectHandler<ScvSimProps> handler = new SQLiteDatabaseSelectHandler<>(ScvSimProps.class, database);
 		try {
 			for(ScvSimProps simProps:handler.selectObjects()){
 				scvSimProps=simProps;

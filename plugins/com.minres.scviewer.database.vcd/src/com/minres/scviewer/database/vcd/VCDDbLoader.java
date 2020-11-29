@@ -14,11 +14,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableMap;
-import java.util.Stack;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
@@ -37,39 +37,30 @@ import com.minres.scviewer.database.RelationType;
  */
 public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 
-	
+
 	/** The Constant TIME_RES. */
-	private static final Long TIME_RES = 1000L; // ps;
+	private static final Long TIME_RES = 1000L; // ps
 
 	/** The db. */
 	private IWaveformDb db;
-	
+
 	/** The module stack. */
-	private Stack<String> moduleStack;
-	
+	private ArrayDeque<String> moduleStack;
+
 	/** The signals. */
 	private List<IWaveform> signals;
-	
+
 	/** The max time. */
 	private long maxTime;
-	
-	/**
-	 * Instantiates a new VCD db.
-	 */
-	public VCDDbLoader() {
-	}
 
 	private static boolean isGzipped(File f) {
-		InputStream is = null;
-		try {
-			is = new FileInputStream(f);
+		try (InputStream is = new FileInputStream(f)) {
 			byte [] signature = new byte[2];
 			int nread = is.read( signature ); //read the gzip signature
 			return nread == 2 && signature[ 0 ] == (byte) 0x1f && signature[ 1 ] == (byte) 0x8b;
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			return false;
-		} finally {
-			try { is.close();} catch (IOException e) { }
 		}
 	}
 
@@ -79,21 +70,27 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean load(IWaveformDb db, File file) throws Exception {
+	public boolean load(IWaveformDb db, File file) throws InputFormatException {
 		if(file.isDirectory() || !file.exists()) return false;
 		this.db=db;
 		this.maxTime=0;
-		String name = file.getCanonicalFile().getName();
-		if(!(name.endsWith(".vcd") ||
-				name.endsWith(".vcdz") ||
-				name.endsWith(".vcdgz")  ||
-				name.endsWith(".vcd.gz")) )
-			return false;
-		signals = new Vector<IWaveform>();
-		moduleStack= new Stack<String>();
-		FileInputStream fis = new FileInputStream(file);
-		boolean res = new VCDFileParser(false).load(isGzipped(file)?new GZIPInputStream(fis):fis, this);
-		moduleStack=null;
+		boolean res = false;
+		try {
+			String name = file.getCanonicalFile().getName();
+			if(!(name.endsWith(".vcd") ||
+					name.endsWith(".vcdz") ||
+					name.endsWith(".vcdgz")  ||
+					name.endsWith(".vcd.gz")) )
+				return false;
+			signals = new Vector<>();
+			moduleStack= new ArrayDeque<>();
+			FileInputStream fis = new FileInputStream(file);
+			res = new VCDFileParser(false).load(isGzipped(file)?new GZIPInputStream(fis):fis, this);
+			moduleStack=null;
+		} catch(IOException e) { 
+			moduleStack=null;
+			throw new InputFormatException();
+		}
 		if(!res) throw new InputFormatException();
 		// calculate max time of database
 		for(IWaveform waveform:signals) {
@@ -159,9 +156,8 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Integer newNet(String name, int i, int width) {
-		String netName = moduleStack.empty()? name: moduleStack.lastElement()+"."+name;
+		String netName = moduleStack.isEmpty()? name: moduleStack.peek()+"."+name;
 		int id = signals.size();
-		assert(width>=0);
 		if(width==0) {
 			signals.add( i<0 ? new VCDSignal<DoubleVal>(db, id, netName, width) :
 				new VCDSignal<DoubleVal>((VCDSignal<DoubleVal>)signals.get(i), id, netName));			
@@ -191,7 +187,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 		Long time = currentTime* TIME_RES;
 		signal.addSignalChange(time, value);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see com.minres.scviewer.database.vcd.ITraceBuilder#appendTransition(int, long, com.minres.scviewer.database.vcd.BitVector)
 	 */
@@ -202,7 +198,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 		Long time = currentTime* TIME_RES;
 		signal.addSignalChange(time, new DoubleVal(value));
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see com.minres.scviewer.database.IWaveformDbLoader#getAllRelationTypes()
 	 */

@@ -17,7 +17,8 @@ import com.minres.scviewer.database.tx.ITxRelation;
 public class TxRelation implements ITxRelation {
 
 	RelationType relationType;
-	Tx source, target;
+	Tx source;
+	Tx target;
 
 	public TxRelation(RelationType relationType, Tx source, Tx target) {
 		this.source = source;

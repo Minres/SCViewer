@@ -1184,7 +1184,7 @@ public class WaveformView implements IWaveformView  {
 
 	public TrackEntry getEntryForStream(IWaveform source) {
 		for(TrackEntry trackEntry:streams)
-			if(trackEntry.waveform.equals(source)) return trackEntry;
+			if(trackEntry.waveform.isSame(source)) return trackEntry;
 		return null;
 	}
 

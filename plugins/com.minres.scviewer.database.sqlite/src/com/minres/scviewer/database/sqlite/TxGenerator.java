@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.sqlite;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.minres.scviewer.database.IWaveform;
@@ -45,7 +46,7 @@ public class TxGenerator implements ITxGenerator {
 
 	@Override
 	public List<ITx> getTransactions() {
-		return null;
+		return new ArrayList<>();
 	}
 
 }

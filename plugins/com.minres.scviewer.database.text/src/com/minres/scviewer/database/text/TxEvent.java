@@ -33,11 +33,6 @@ class TxEvent implements ITxEvent {
 		return new TxEvent(kind, transaction, time);
 	}
 
-//	@Override
-//	int compareTo(IWaveformEvent o) {
-//		time.compareTo(o.time)
-//	}
-
 	@Override
 	public
 	String toString() {

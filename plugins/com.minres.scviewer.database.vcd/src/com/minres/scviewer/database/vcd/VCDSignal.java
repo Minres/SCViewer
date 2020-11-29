@@ -46,18 +46,16 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 		fullName=name;
 		this.id=id;
 		this.width=width;
-		this.values=new TreeMap<Long, IEvent[]>();
+		this.values=new TreeMap<>();
 	}
 
-	public VCDSignal(VCDSignal<T> other, int id, String name) {
+	public VCDSignal(VCDSignal<T> o, int id, String name) {
 		super(name);
 		fullName=name;
 		this.id=id;
-		assert(other instanceof VCDSignal<?>);
-		VCDSignal<T> o = (VCDSignal<T>)other;
 		this.width=o.width;
 		this.values=o.values;
-		this.db=other.getDb();
+		this.db=o.getDb();
 	}
 
 	@Override
@@ -105,13 +103,13 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
     public IEvent[] getEventsBeforeTime(Long time) {
     	Entry<Long, IEvent[]> e = values.floorEntry(time);
     	if(e==null)
-    		return null;
+    		return new IEvent[] {};
     	else
-    		return  values.floorEntry(time).getValue();
+    		return values.floorEntry(time).getValue();
     }
 
 	@Override
-	public Boolean equals(IWaveform other) {
+	public boolean isSame(IWaveform other) {
 		return( other instanceof VCDSignal<?> && this.getId().equals(other.getId()));
 	}
 
