@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
@@ -140,7 +141,7 @@ public class SignalPainter extends TrackPainter {
 
 		
 		SignalStencil stencil = getStencil(proj.getGC(), left, entries);
-		do {
+		if(stencil!=null) do {
 			stencil.draw(proj, area, left.value, right.value, xSigChangeBeginPos, xSigChangeEndPos, multiple);
 			if (right.time >= endTime)
 				break;
@@ -197,9 +198,9 @@ public class SignalPainter extends TrackPainter {
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
 			Color colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL0);
 			BitVector last = (BitVector) left;
-			if (last.getValue().toString().contains("X")) {
+			if (Arrays.toString(last.getValue()).contains("X")) {
 				colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNALX);
-			} else if (last.getValue().toString().contains("Z")) {
+			} else if (Arrays.toString(last.getValue()).contains("Z")) {
 				colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNALZ);
 			}
 			int width = xEnd - xBegin;
@@ -215,7 +216,6 @@ public class SignalPainter extends TrackPainter {
 				proj.setForeground(colorBorder);
 				proj.drawPolygon(points);
 				proj.setForeground(waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL_TEXT));
-				//TODO: this code should be provided from a central location
 				String label = null;
 				switch(trackEntry.valueDisplay) {
 				case SIGNED:
@@ -351,7 +351,8 @@ public class SignalPainter extends TrackPainter {
 
 	private class RealStencil implements SignalStencil {
 
-		double minVal, range;
+		double minVal;
+		double range;
 		
 		final double scaleFactor = 1.05;
 		
@@ -359,22 +360,23 @@ public class SignalPainter extends TrackPainter {
 		
 		public RealStencil(NavigableMap<Long, IEvent[]> entries, Object left, boolean continous) {
 			this.continous=continous;
-			Collection<IEvent[]> values = ((NavigableMap<Long, IEvent[]>) entries).values();
+			Collection<IEvent[]> values = entries.values();
 			minVal=(Double) left;
 			range=2.0;
 			if(!values.isEmpty()) {
 				double maxVal=minVal;
-				for (Object e : entries.values()) {
-					double v = ((Double)e);
-					if(Double.isNaN(maxVal))
-						maxVal=v;
-					else if(!Double.isNaN(v))
-						maxVal=Math.max(maxVal, v);
-					if(Double.isNaN(minVal))
-						minVal=v;
-					else if(!Double.isNaN(v))
-						minVal=Math.min(minVal, v);
-				}
+				for (IEvent[] val : entries.values())
+					for(IEvent e:val) {
+						double v = ((DoubleVal)e).value;
+						if(Double.isNaN(maxVal))
+							maxVal=v;
+						else if(!Double.isNaN(v))
+							maxVal=Math.max(maxVal, v);
+						if(Double.isNaN(minVal))
+							minVal=v;
+						else if(!Double.isNaN(v))
+							minVal=Math.min(minVal, v);
+					}
 				if(Double.isNaN(maxVal)){
 					maxVal=minVal=0.0;
 				}

@@ -35,15 +35,15 @@ public class StreamPainter extends TrackPainter{
 	 */
 	private final WaveformCanvas waveCanvas;
 	private IWaveform stream;
-	private int txBase, txHeight;
-	private boolean even;
+	private int txBase;
+	private int txHeight;
 	private TreeSet<ITx> seenTx;
 
 	public StreamPainter(WaveformCanvas waveCanvas, boolean even, TrackEntry trackEntry) {
 		super(trackEntry, even);
 		this.waveCanvas = waveCanvas;
 		this.stream=trackEntry.waveform;
-		this.seenTx=new TreeSet<ITx>();
+		this.seenTx=new TreeSet<>();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -63,7 +63,6 @@ public class StreamPainter extends TrackPainter{
 		long scaleFactor = this.waveCanvas.getScaleFactor();
 		long beginPos = area.x;
 		long beginTime = beginPos*scaleFactor;
-		//long endPos = beginPos + area.width;
 		long endTime = beginTime + area.width*scaleFactor;
 
 		Entry<Long, ?> firstTx=stream.getEvents().floorEntry(beginTime);
@@ -127,11 +126,11 @@ public class StreamPainter extends TrackPainter{
 				bb.width = bb.width-(area.x-bb.x)+5;
 				bb.x=area.x-5;
 			}
-			int bb_x2 = bb.x+bb.width;
-			int area_x2 = area.x+area.width;
-			if(bb_x2>area_x2){
-				bb_x2=area_x2+5;
-				bb.width= bb_x2-bb.x;
+			int bbX2 = bb.x+bb.width;
+			int areaX2 = area.x+area.width;
+			if(bbX2>areaX2){
+				bbX2=areaX2+5;
+				bb.width= bbX2-bb.x;
 			}
 			int arc = bb.width<10?1:5;
 			proj.fillRoundRectangle(bb.x, bb.y, bb.width, bb.height, arc, arc);

@@ -21,8 +21,8 @@ import org.eclipse.wb.swt.SWTResourceManager;
 public class RulerPainter implements IPainter {
     protected WaveformCanvas waveCanvas;
     
-    static final int rulerTickMinorC = 10;
-    static final int rulerTickMajorC = 100;
+    static final int RULER_TICK_MINOR = 10;
+    static final int RULER_TICK_MAJOR = 100;
        
 	static final DecimalFormat df = new DecimalFormat("#.00####"); 
 
@@ -47,8 +47,8 @@ public class RulerPainter implements IPainter {
         long startVal=startPos - proj.getTranslation().x*scaleFactor;
         long endPos=startPos+area.width*scaleFactor;
 
-        long rulerTickMinor = rulerTickMinorC*scaleFactor;
-        long rulerTickMajor = rulerTickMajorC*scaleFactor;
+        long rulerTickMinor = RULER_TICK_MINOR*scaleFactor;
+        long rulerTickMajor = RULER_TICK_MAJOR*scaleFactor;
 
         int minorTickY = waveCanvas.rulerHeight-5;
         int majorTickY = waveCanvas.rulerHeight-15;
@@ -68,13 +68,13 @@ public class RulerPainter implements IPainter {
         gc.drawLine(area.x, area.y+bottom, area.x+area.width, area.y+bottom);
         
         for (long pos = startMinorIncrPos, tick = startMinorIncrVal; pos < endPos; pos+= rulerTickMinor, tick += rulerTickMinor) {
-            int x0_pos = (int) (pos/scaleFactor);
-            long x0_val = tick/scaleFactor;
+            int x0Pos = (int) (pos/scaleFactor);
+            long x0Val = tick/scaleFactor;
             if ((tick % rulerTickMajor) == 0) {
-                gc.drawText(df.format(x0_val*unitMultiplier)+unit, x0_pos, area.y+textY);
-                gc.drawLine(x0_pos, area.y+majorTickY, x0_pos,area.y+ bottom);
+                gc.drawText(df.format(x0Val*unitMultiplier)+unit, x0Pos, area.y+textY);
+                gc.drawLine(x0Pos, area.y+majorTickY, x0Pos,area.y+ bottom);
             } else {
-                gc.drawLine(x0_pos, area.y+minorTickY, x0_pos, area.y+bottom);
+                gc.drawLine(x0Pos, area.y+minorTickY, x0Pos, area.y+bottom);
             }
         }
     }

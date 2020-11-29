@@ -1093,7 +1093,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				
     	boolean foundZoom=false;
 		//try to find existing zoomlevel where scaleFactor*clientAreaWidth >= maxTime, if one is found set it as new zoomlevel
-		for (int level=0; level<Constants.unitMultiplier.length*Constants.unitString.length; level++){
+		for (int level=0; level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length; level++){
 			long scaleFactor = (long) Math.pow(10, level/2);
 		    if(level%2==1) scaleFactor*=3;
 		    if(scaleFactor*clientAreaWidth >= maxTime) {
@@ -1103,7 +1103,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		    }
 		}
 		//if no zoom level is found, set biggest one available
-		if(!foundZoom) setZoomLevel(Constants.unitMultiplier.length*Constants.unitString.length-1);
+		if(!foundZoom) setZoomLevel(Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length-1);
 				
 		updateAll();
 	}

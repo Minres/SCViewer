@@ -17,7 +17,6 @@ public class TrackEntry {
 
 	IWaveformStyleProvider styleProvider;
 	
-	
 	public enum ValueDisplay {
 		DEFAULT, SIGNED, UNSIGNED
 
@@ -49,10 +48,6 @@ public class TrackEntry {
 		selected=false;
 	}
 	
-	public IWaveform getWaveform(){
-		return waveform;
-	}
-
 	@Override
     public boolean equals(Object obj) {
 		if(obj instanceof TrackEntry){

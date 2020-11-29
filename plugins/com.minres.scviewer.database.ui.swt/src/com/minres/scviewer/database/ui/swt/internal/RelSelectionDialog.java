@@ -24,7 +24,7 @@ class RelSelectionDialog extends Dialog {
 	
 	private ITxRelation selected = null;
 	
-	public RelSelectionDialog(Shell shell, ArrayList<ITxRelation> candidates, boolean target) {
+	public RelSelectionDialog(Shell shell, java.util.List<ITxRelation> candidates, boolean target) {
 		super(shell);
 		entries = candidates;
 		entryTx = entries.stream().map(r->target?r.getTarget():r.getSource()).collect(Collectors.toCollection(ArrayList::new));

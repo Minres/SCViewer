@@ -63,7 +63,7 @@ public class CursorPainter implements IPainter, ICursor {
 	
 	public void paintArea(Projection proj, Rectangle clientRect) {
 		Rectangle area = proj.unProject(clientRect);
-		if(this.waveCanvas.painterList.size()>0){
+		if(!waveCanvas.painterList.isEmpty()){
 			
 			long scaleFactor=waveCanvas.getScaleFactor();
 			long beginPos = area.x;
@@ -83,7 +83,7 @@ public class CursorPainter implements IPainter, ICursor {
 				proj.drawLine(x, top, x, area.y+area.height);
 				proj.setBackground(drawColor);
 				proj.setForeground(textColor);
-				Double dTime=new Double(time);
+				double dTime=time;
 				proj.drawText((dTime/waveCanvas.getScaleFactorPow10())+waveCanvas.getUnitStr(), x+1, top);
 			}
 		}

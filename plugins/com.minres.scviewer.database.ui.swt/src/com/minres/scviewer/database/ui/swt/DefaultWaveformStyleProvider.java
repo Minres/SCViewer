@@ -1,6 +1,6 @@
 package com.minres.scviewer.database.ui.swt;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -54,7 +54,7 @@ public class DefaultWaveformStyleProvider implements IWaveformStyleProvider {
 	 * needs redraw() afterwards
 	 * @param colourMap
 	 */
-    public void initColors(HashMap<WaveformColors, RGB> colourMap) {
+    public void initColors(Map<WaveformColors, RGB> colourMap) {
         Display d = parent.getDisplay();
         if (colourMap != null) {
             for (WaveformColors c : WaveformColors.values()) {
@@ -80,7 +80,6 @@ public class DefaultWaveformStyleProvider implements IWaveformStyleProvider {
 	}
 	@Override
 	public Color getColor(WaveformColors type) {
-		// TODO Auto-generated method stub
 		return colors[type.ordinal()];
 	}
 	@Override

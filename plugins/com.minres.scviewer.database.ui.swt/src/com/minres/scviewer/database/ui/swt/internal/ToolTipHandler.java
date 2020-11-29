@@ -26,7 +26,7 @@ class ToolTipHandler {
 	private Widget tipWidget; // widget this tooltip is hovering over
 	private Point  tipPosition; // the position being hovered over
 
-	private static final int hoverYOffset = 1;
+	private static final int HOVER_YOFFSET = 1;
 
 	/**
 	 * Creates a new tooltip handler
@@ -45,56 +45,57 @@ class ToolTipHandler {
 	 */
 	public void activateHoverHelp(final Control control) {
 		Listener listener = new Listener () {
-			Shell tip = null;
+			Shell shell = null;
 			@Override
 			public void handleEvent (Event event) {
 				switch (event.type) {
-				case SWT.KeyDown:{
-					if (tip != null && tip.isVisible() && event.keyCode == SWT.F2) {
-						tip.setFocus();
-						break;
-					} 
-				}
+				case SWT.KeyDown:
+					if (shell != null && shell.isVisible() && event.keyCode == SWT.F2)
+						shell.setFocus();
+					break;
 				case SWT.Dispose:
 				case SWT.MouseMove:
-				case SWT.MouseDown: {
-					if (tip != null){
-						tip.dispose ();
-						tip = null;
+				case SWT.MouseDown:
+					if (shell != null){
+						shell.dispose ();
+						shell = null;
 						tipWidget=null;
 					}
 					break;
+				case SWT.MouseHover:
+					createHoverWindow(control, event);
+					break;
+				default:
+					/* do nothing */	
 				}
-				case SWT.MouseHover: {
-					Object o = control.getData(Constants.CONTENT_PROVIDER_TAG);
-					if(o != null && o instanceof ToolTipContentProvider) {
-						ToolTipContentProvider provider = ((ToolTipContentProvider)o);
-						Point pt = new Point (event.x, event.y);
-						tipPosition = control.toDisplay(pt);
-						if (tip != null  && !tip.isDisposed ()) tip.dispose ();
-						tip = new Shell (parentShell, SWT.NO_FOCUS | SWT.TOOL);
-						tip.setBackground (display.getSystemColor (SWT.COLOR_INFO_BACKGROUND));
-						GridLayout layout = new GridLayout(1, true);
-						layout.verticalSpacing=0;
-						layout.horizontalSpacing=0;
-						layout.marginWidth = 0;
-						layout.marginHeight = 0;
-						tip.setLayout(layout);
-						boolean visible = provider.createContent(tip, pt);
-						tip.pack();
-						tip.setSize(tip.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-						setHoverLocation(tip, tipPosition);	
-						tip.setVisible (visible);
-						if(visible)
-							tipWidget=event.widget;
-					}
-				}
+			}
+			private void createHoverWindow(final Control control, Event event) {
+				Object o = control.getData(Constants.CONTENT_PROVIDER_TAG);
+				if(o instanceof ToolTipContentProvider) {
+					ToolTipContentProvider provider = ((ToolTipContentProvider)o);
+					Point pt = new Point (event.x, event.y);
+					tipPosition = control.toDisplay(pt);
+					if (shell != null  && !shell.isDisposed ()) shell.dispose ();
+					shell = new Shell (parentShell, SWT.NO_FOCUS | SWT.TOOL);
+					shell.setBackground (display.getSystemColor (SWT.COLOR_INFO_BACKGROUND));
+					GridLayout layout = new GridLayout(1, true);
+					layout.verticalSpacing=0;
+					layout.horizontalSpacing=0;
+					layout.marginWidth = 0;
+					layout.marginHeight = 0;
+					shell.setLayout(layout);
+					boolean visible = provider.createContent(shell, pt);
+					shell.pack();
+					shell.setSize(shell.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+					setHoverLocation(shell, tipPosition);	
+					shell.setVisible (visible);
+					if(visible)
+						tipWidget=event.widget;
 				}
 			}
 		};
 		control.addListener (SWT.Dispose, listener);
 		control.addListener (SWT.KeyDown, listener);
-		//control.addListener (SWT.MouseMove, listener);
 		control.addListener (SWT.MouseHover, listener);
 		control.addListener (SWT.MouseDown, listener);
 
@@ -119,11 +120,6 @@ class ToolTipHandler {
 				helpShell.open();
 			}
 		});
-		//		control.addKeyListener(KeyListener.keyPressedAdapter( e-> {
-		//				if (e.keyCode == SWT.F2 && shell.isVisible()) {
-		//                    shell.setFocus();
-		//                }
-		//		}));
 	}
 
 	/**
@@ -136,7 +132,7 @@ class ToolTipHandler {
 		Rectangle displayBounds = shell.getDisplay().getBounds();
 		Rectangle shellBounds = shell.getBounds();
 		shellBounds.x = Math.max(Math.min(position.x, displayBounds.width - shellBounds.width), 0);
-		shellBounds.y = Math.max(Math.min(position.y + hoverYOffset, displayBounds.height - shellBounds.height), 0);
+		shellBounds.y = Math.max(Math.min(position.y + HOVER_YOFFSET, displayBounds.height - shellBounds.height), 0);
 		shell.setBounds(shellBounds);
 	}
 }

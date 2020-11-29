@@ -20,7 +20,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.GC;
@@ -86,16 +85,13 @@ public class WaveformCanvas extends Canvas {
         super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.V_SCROLL | SWT.H_SCROLL);
         this.styleProvider=styleProvider;
     	addControlListener(new ControlAdapter() { /* resize listener. */
-            public void controlResized(ControlEvent event) {
+			@Override
+			public void controlResized(ControlEvent event) {
                 syncScrollBars();
             }
         });
-        addPaintListener(new PaintListener() { /* paint listener. */
-            public void paintControl(final PaintEvent event) {
-                paint(event.gc);
-            }
-        });
-        painterList = new LinkedList<IPainter>();
+        addPaintListener((final PaintEvent event) -> paint(event.gc));
+        painterList = new LinkedList<>();
         origin = new Point(0, 0);
         selectionListeners = new LinkedList<>();
         cursorPainters= new ArrayList<>();
@@ -169,7 +165,7 @@ public class WaveformCanvas extends Canvas {
     }
     
     public int getMaxZoomLevel(){
-    	return Constants.unitMultiplier.length*Constants.unitString.length-1;
+    	return Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length-1;
     }
 
     public void setZoomLevel(int level) {
@@ -181,8 +177,8 @@ public class WaveformCanvas extends Canvas {
     	//FIXME: keep center if zoom-out and cursor is not in view
     	long oldScaleFactor=scaleFactor;
     	if(level<0) level = 0;
-    	if(level<Constants.unitMultiplier.length*Constants.unitString.length){
-    		this.scaleFactor = (long) Math.pow(10, level/2);
+    	if(level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length){
+    		this.scaleFactor = (long) Math.pow(10, level/2d);
     		if(level%2==1) this.scaleFactor*=3;
     		ITx tx = arrowPainter.getTx();
     		arrowPainter.setTx(null);
@@ -213,17 +209,17 @@ public class WaveformCanvas extends Canvas {
     }
 
     public long getScaleFactorPow10() {
-    	int scale = level/Constants.unitMultiplier.length;
+    	int scale = level/Constants.UNIT_MULTIPLIER.length;
     	double res = Math.pow(1000, scale);
     	return (long) res;
     }
 
     public String getUnitStr(){
-        return Constants.unitString[level/Constants.unitMultiplier.length];
+        return Constants.UNIT_STRING[level/Constants.UNIT_MULTIPLIER.length];
     }
      
     public int getUnitMultiplier(){
-        return Constants.unitMultiplier[level%Constants.unitMultiplier.length];
+        return Constants.UNIT_MULTIPLIER[level%Constants.UNIT_MULTIPLIER.length];
     }
     
     public long getTimeForOffset(int xOffset){
@@ -245,7 +241,7 @@ public class WaveformCanvas extends Canvas {
     }
     
     void clearAllWaveformPainter(boolean update) {
-        trackAreaPainter.getTrackVerticalOffset().clear();
+        trackAreaPainter.trackVerticalOffset.clear();
         wave2painterMap.clear();
         if(update) syncScrollBars();
     }
@@ -270,8 +266,9 @@ public class WaveformCanvas extends Canvas {
         horizontal.setEnabled(false);
         horizontal.setVisible(true);
         horizontal.addSelectionListener(new SelectionAdapter() {
+			@Override
             public void widgetSelected(SelectionEvent event) {
-                if (painterList.size() == 0)
+                if (painterList.isEmpty())
                     return;
                 setOrigin(-((ScrollBar) event.widget).getSelection(), origin.y);
             }
@@ -280,8 +277,9 @@ public class WaveformCanvas extends Canvas {
         vertical.setEnabled(false);
         vertical.setVisible(true);
         vertical.addSelectionListener(new SelectionAdapter() {
+			@Override
             public void widgetSelected(SelectionEvent event) {
-                if (painterList.size() == 0)
+                if (painterList.isEmpty())
                     return;
                 setOrigin(origin.x, -((ScrollBar) event.widget).getSelection());
             }
@@ -294,7 +292,7 @@ public class WaveformCanvas extends Canvas {
      * :<b> transform, image size, client area</b>.
      */
     public void syncScrollBars() {
-        if (painterList.size() == 0) {
+        if (painterList.isEmpty()) {
             redraw();
             return;
         }
@@ -302,14 +300,14 @@ public class WaveformCanvas extends Canvas {
         long width = maxTime / scaleFactor;
         Rectangle clientArea=getClientArea();
         ScrollBar horizontal = getHorizontalBar();
-        horizontal.setIncrement((int) (getClientArea().width / 100));
+        horizontal.setIncrement(getClientArea().width / 100);
         horizontal.setPageIncrement(getClientArea().width);
         int clientWidthw = clientArea.width;
         if (width > clientWidthw) { /* image is wider than client area */
         	horizontal.setMinimum(0);
             horizontal.setMaximum((int)width);
             horizontal.setEnabled(true);
-            if (((int) -origin.x) > horizontal.getMaximum() - clientWidthw) {
+            if (-origin.x > horizontal.getMaximum() - clientWidthw) {
                 origin.x = -horizontal.getMaximum() + clientWidthw;
             }
         } else { /* image is narrower than client area */
@@ -319,18 +317,18 @@ public class WaveformCanvas extends Canvas {
         horizontal.setSelection(-origin.x);
 
         ScrollBar vertical = getVerticalBar();
-        vertical.setIncrement((int) (getClientArea().height / 100));
-        vertical.setPageIncrement((int) (getClientArea().height));
+        vertical.setIncrement(getClientArea().height / 100);
+        vertical.setPageIncrement(getClientArea().height);
         int clientHeighth = clientArea.height;
         if (height > clientHeighth) { /* image is higher than client area */
             vertical.setMinimum(0);
             vertical.setMaximum(height);
             vertical.setEnabled(true);
-            if (((int) -origin.y) > vertical.getMaximum() - clientHeighth) {
+            if ( -origin.y > vertical.getMaximum() - clientHeighth) {
                 origin.y = -vertical.getMaximum() + clientHeighth;
             }
         } else { /* image is less higher than client area */
-            vertical.setMaximum((int) (clientHeighth));
+            vertical.setMaximum(clientHeighth);
             vertical.setEnabled(false);
         }
         vertical.setThumb(clientHeighth);
@@ -345,10 +343,10 @@ public class WaveformCanvas extends Canvas {
         if(pt.x==0  || pt.y==0) return;
         Rectangle clientRect = getClientArea(); /* Canvas' painting area */
         GC thisGc = gc;
-        Image d_backingImg = null;
+        Image dBackingImg = null;
         if(doubleBuffering) {
-            d_backingImg = new Image(getDisplay(), pt.x, pt.y);
-            thisGc = new GC(d_backingImg);
+        	dBackingImg = new Image(getDisplay(), pt.x, pt.y);
+            thisGc = new GC(dBackingImg);
             thisGc.setBackground(gc.getBackground());
             thisGc.setForeground(gc.getForeground());
             thisGc.setFont(gc.getFont());
@@ -356,7 +354,7 @@ public class WaveformCanvas extends Canvas {
         }
         Projection p = new Projection(thisGc);
         p.setTranslation(origin);
-        if (painterList.size() > 0 ) {
+        if (!painterList.isEmpty() ) {
             for (IPainter painter : painterList)
                 painter.paintArea(p, clientRect);
         } else {
@@ -364,8 +362,8 @@ public class WaveformCanvas extends Canvas {
             initScrollBars();
         }
         if(doubleBuffering) {
-            gc.drawImage(d_backingImg, 0, 0);
-            d_backingImg.dispose();
+            gc.drawImage(dBackingImg, 0, 0);
+            if(dBackingImg!=null) dBackingImg.dispose();
             thisGc.dispose();
         }
     }
@@ -376,7 +374,7 @@ public class WaveformCanvas extends Canvas {
             if (p instanceof TrackAreaPainter) {
                 int y = point.y - origin.y;
                 int x = point.x - origin.x;
-                Entry<Integer, IWaveformPainter> entry = trackAreaPainter.getTrackVerticalOffset().floorEntry(y);
+                Entry<Integer, IWaveformPainter> entry = trackAreaPainter.trackVerticalOffset.floorEntry(y);
                 if (entry != null) {
                     if (entry.getValue() instanceof StreamPainter) {
                     	ITx tx = ((StreamPainter) entry.getValue()).getClicked(new Point(x, y - entry.getKey()));
@@ -397,7 +395,7 @@ public class WaveformCanvas extends Canvas {
     public List<Object> getEntriesAtPosition(IWaveform iWaveform, int i) {
     	LinkedList<Object> result=new LinkedList<>();
         int x = i - origin.x;
-        for(IPainter p: wave2painterMap.values()){
+        for(IWaveformPainter p: wave2painterMap.values()){
         	if (p instanceof StreamPainter && ((StreamPainter)p).getStream()==iWaveform) {
         		result.add(((StreamPainter) p).getClicked(new Point(x, styleProvider.getTrackHeight()/2)));
         	}
@@ -442,10 +440,9 @@ public class WaveformCanvas extends Canvas {
         	TrackEntry te = painter.getTrackEntry();
         	if(te.waveform == waveform) {
                 Point size = getSize();
-                //size.x -= getVerticalBar().getSize().x + 2;
                 size.y -=+rulerHeight;
                 ScrollBar sb = getHorizontalBar();
-                if((sb.getStyle()&SWT.SCROLLBAR_OVERLAY)!=0 && sb.isVisible()) // TODO: check on other platform than MacOSX
+                if((sb.getStyle()&SWT.SCROLLBAR_OVERLAY)!=0 && sb.isVisible())
                 	size.y-=  getHorizontalBar().getSize().y;
                 int top = te.vOffset;
                 int bottom = top + styleProvider.getTrackHeight();

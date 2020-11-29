@@ -28,7 +28,7 @@ import com.minres.scviewer.database.ui.WaveformColors;
 
 public class ArrowPainter implements IPainter {
 	
-	private final int xCtrlOffset = 50;
+	private static final float X_CTRL_OFFSET = 50;
 
 	private int yCtrlOffset = 30;
 
@@ -151,10 +151,10 @@ public class ArrowPainter implements IPainter {
 		path.moveTo(point1.x, point1.y);
 		if (point1.y == point2.y) {
 			Point center = new Point((point1.x + point2.x) / 2, point1.y - yCtrlOffset);
-			path.cubicTo(point1.x + xCtrlOffset, point1.y, center.x - xCtrlOffset, center.y, center.x, center.y);
-			path.cubicTo(center.x + xCtrlOffset, center.y, point2.x - xCtrlOffset, point2.y, point2.x, point2.y);
+			path.cubicTo(point1.x + X_CTRL_OFFSET, point1.y, center.x - X_CTRL_OFFSET, center.y, center.x, center.y);
+			path.cubicTo(center.x + X_CTRL_OFFSET, center.y, point2.x - X_CTRL_OFFSET, point2.y, point2.x, point2.y);
 		} else
-			path.cubicTo(point1.x + xCtrlOffset, point1.y, point2.x - xCtrlOffset, point2.y, point2.x, point2.y);
+			path.cubicTo(point1.x + X_CTRL_OFFSET, point1.y, point2.x - X_CTRL_OFFSET, point2.y, point2.x, point2.y);
 
 		proj.setAntialias(SWT.ON);
 		proj.setForeground(fgColor);
@@ -167,8 +167,8 @@ public class ArrowPainter implements IPainter {
 	}
 
 	class LinkEntry {
-		public Rectangle rectangle;
-		public RelationType relationType;
+		public final Rectangle rectangle;
+		public final RelationType relationType;
 
 		public LinkEntry(Rectangle rectangle, RelationType relationType) {
 			super();
