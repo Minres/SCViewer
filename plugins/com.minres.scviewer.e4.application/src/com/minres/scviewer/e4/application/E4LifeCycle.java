@@ -13,6 +13,7 @@ package com.minres.scviewer.e4.application;
 import java.io.IOException;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.e4.core.contexts.IEclipseContext;
@@ -30,8 +31,10 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.osgi.service.datalocation.Location;
+import org.eclipse.swt.widgets.Display;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
+import org.eclipse.e4.core.services.log.Logger;
 
 import com.minres.scviewer.e4.application.options.Options;
 import com.minres.scviewer.e4.application.options.Options.Multiplicity;
@@ -45,6 +48,8 @@ import com.minres.scviewer.e4.application.options.Options.Separator;
  **/
 public class E4LifeCycle {
 
+	@Inject private Logger logger;
+	
 	/**
 	 * Post construct.
 	 *
@@ -70,10 +75,9 @@ public class E4LifeCycle {
 			.addOption("clearPersistedState", Multiplicity.ZERO_OR_ONE)
 			.addOption("c", Separator.BLANK, Multiplicity.ZERO_OR_ONE);
 		if (!opt.check(Options.DEFAULT_SET, true, false)) {
-			System.err.println(opt.getCheckErrors());
+			logger.error(opt.getCheckErrors());
 			System.exit(1);
 		}
-		final String confFile =opt.getSet().isSet("c")?opt.getSet().getOption("c").getResultValue(0):"";
 
 		eventBroker.subscribe(UIEvents.UILifeCycle.APP_STARTUP_COMPLETE, new EventHandler() {
 			@Override
@@ -84,19 +88,22 @@ public class E4LifeCycle {
 					if(isLocked)
 						instanceLocation.release();
 				} catch (IOException e) { }
-				if(opt.getSet().getData().size()>0) {
-					MApplication app= workbenchContext.get(MApplication.class);
-					EModelService modelService = workbenchContext.get(EModelService.class);
-					EPartService partService= workbenchContext.get(EPartService.class);
-					MPart part = partService .createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
-					part.setLabel(opt.getSet().getData().get(0));
-					MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
-					partStack.getChildren().add(part);
-					partService.showPart(part, PartState.CREATE);
-					partService.showPart(part, PartState.ACTIVATE);
-					IEclipseContext ctx = part.getContext();
-					ctx.modify("input", opt.getSet().getData());
-					ctx.modify("config", confFile); //$NON-NLS-1$
+				if(!opt.getSet().getData().isEmpty()) {
+					Display.getCurrent().timerExec (100, () -> {
+						MApplication app= workbenchContext.get(MApplication.class);
+						EModelService modelService = workbenchContext.get(EModelService.class);
+						EPartService partService= workbenchContext.get(EPartService.class);
+						MPart part = partService .createPart("com.minres.scviewer.e4.application.partdescriptor.waveformviewer"); //$NON-NLS-1$
+						part.setLabel(opt.getSet().getData().get(0));
+						MPartStack partStack = (MPartStack)modelService.find("org.eclipse.editorss", app); //$NON-NLS-1$
+						partStack.getChildren().add(part);
+						partService.showPart(part, PartState.CREATE);
+						partService.showPart(part, PartState.ACTIVATE);
+						IEclipseContext ctx = part.getContext();
+						ctx.modify("input", opt.getSet().getData());
+						String confFile =opt.getSet().isSet("c")?opt.getSet().getOption("c").getResultValue(0):"";
+						ctx.modify("config", confFile); //$NON-NLS-1$
+					});
 				}
 			}
 		});
@@ -109,6 +116,7 @@ public class E4LifeCycle {
 	 */
 	@PreSave
 	void preSave(IEclipseContext workbenchContext) {
+		/* nothing to be done here */
 	}
 
 	/**
@@ -118,6 +126,7 @@ public class E4LifeCycle {
 	 */
 	@ProcessAdditions
 	void processAdditions(IEclipseContext workbenchContext) {
+		/* nothing to be done here */
 	}
 
 	/**
@@ -127,5 +136,6 @@ public class E4LifeCycle {
 	 */
 	@ProcessRemovals
 	void processRemovals(IEclipseContext workbenchContext) {
+		/* nothing to be done here */
 	}
 }
