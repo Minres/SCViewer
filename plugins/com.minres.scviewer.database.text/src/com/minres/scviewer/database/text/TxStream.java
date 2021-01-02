@@ -40,8 +40,20 @@ class TxStream extends HierNode implements IWaveform, Serializable {
 			
 	private ArrayList<ITxGenerator> generators = new ArrayList<ITxGenerator>();
 	
-	private int maxConcurrency;
+	private int maxConcurrency = 0;
 	
+	private int concurrency = 0;
+
+	void setConcurrency(int concurrency) {
+		this.concurrency = concurrency;
+		if(concurrency>maxConcurrency)
+			maxConcurrency = concurrency;
+	}
+
+	int getConcurrency() {
+		return this.concurrency;
+	}
+
 	private BTreeMap<Long, IEvent[]> events;
 	
 	@SuppressWarnings("unchecked")
@@ -59,45 +71,9 @@ class TxStream extends HierNode implements IWaveform, Serializable {
 
 	@Override
 	public int getWidth() {
-		if(maxConcurrency==0){
-			for(ITxGenerator generator:getGenerators()) {
-				for(ITx tx:generator.getTransactions()){
-					putEvent(new TxEvent(EventKind.BEGIN, tx));
-					putEvent(new TxEvent(EventKind.END, tx));
-				}
-			}
-			ArrayList<Long> rowendtime = new ArrayList<Long>();
-			rowendtime.add(0l);
-			for(Long time: events.keySet()){
-				IEvent[] value=events.get(time);
-				Arrays.asList(value).stream().filter(event -> event.getKind()==EventKind.BEGIN).forEach(event -> {
-					ITx tx = ((ITxEvent)event).getTransaction();
-					int rowIdx = 0;
-					for(rowIdx=0; rowIdx<rowendtime.size() && rowendtime.get(rowIdx)>tx.getBeginTime(); rowIdx++);
-					if(rowendtime.size()<=rowIdx)
-						rowendtime.add(tx.getEndTime());
-					else
-						rowendtime.set(rowIdx, tx.getEndTime());
-					((Tx)tx).setConcurrencyIndex(rowIdx);
-					
-				});
-			}
-			maxConcurrency=rowendtime.size();
-		}
 		return maxConcurrency;
 	}
 
-	private void putEvent(ITxEvent event){
-		if(!events.containsKey(event.getTime())) 
-			events.put(event.getTime(), new ITxEvent[]{event} );
-		else {
-			IEvent[] entries = events.get(event.getTime());
-			IEvent[] newEntries = Arrays.copyOf(entries, entries.length+1);
-			newEntries[entries.length]=event;
-			events.put(event.getTime(), newEntries);
-		}
-	}
-	
 	@Override
 	public NavigableMap<Long, IEvent[]> getEvents() {
 		return (NavigableMap<Long, IEvent[]>)events;
