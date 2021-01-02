@@ -16,20 +16,22 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Map.Entry
 
 import org.mapdb.Serializer
 
-import com.minres.scviewer.database.ITxEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb
-import com.minres.scviewer.database.IWaveformEvent
-import com.minres.scviewer.database.ITxGenerator
+import com.minres.scviewer.database.WaveformType
+import com.minres.scviewer.database.tx.ITx
+import com.minres.scviewer.database.tx.ITxEvent
+import com.minres.scviewer.database.tx.ITxGenerator
+import com.minres.scviewer.database.EventKind
 import com.minres.scviewer.database.HierNode;
+import com.minres.scviewer.database.IEvent
 import com.minres.scviewer.database.IHierNode
-import com.minres.scviewer.database.ITxStream
-import com.minres.scviewer.database.ITx
 
-class TxStream extends HierNode implements ITxStream {
+class TxStream extends HierNode implements IWaveform {
 
 	Long id
 	
@@ -37,20 +39,17 @@ class TxStream extends HierNode implements ITxStream {
 	
 	String fullName
 	
-	String kind
-	
 	def generators = []
 	
 	int maxConcurrency
 	
-	private TreeMap<Long, List<ITxEvent>> events
+	private TreeMap<Long, IEvent[]> events
 	
 	TxStream(TextDbLoader loader, int id, String name, String kind){
 		super(name)
 		this.id=id
 		this.database=loader.db
 		this.fullName=name
-		this.kind=kind
 		this.maxConcurrency=0
 		//events = new TreeMap<Long, List<ITxEvent>>()
 		events = loader.mapDb.treeMap(name).keySerializer(Serializer.LONG).createOrOpen();
@@ -66,18 +65,18 @@ class TxStream extends HierNode implements ITxStream {
 	}
 
 	@Override
-	public int getMaxConcurrency() {
+	public int getWidth() {
 		if(!maxConcurrency){
 			generators.each {TxGenerator generator ->
 				generator.transactions.each{ Tx tx ->
-					putEvent(new TxEvent(ITxEvent.Type.BEGIN, tx))
-					putEvent(new TxEvent(ITxEvent.Type.END, tx))
+					putEvent(new TxEvent(EventKind.BEGIN, tx))
+					putEvent(new TxEvent(EventKind.END, tx))
 				}
 			}
 			def rowendtime = [0]
 			events.keySet().each{long time ->
 				def value=events.get(time)
-				def starts=value.findAll{ITxEvent event ->event.type==ITxEvent.Type.BEGIN}
+				def starts=value.findAll{IEvent event ->event.kind==EventKind.BEGIN}
 				starts.each {ITxEvent event ->
 					Tx tx = event.transaction
 					def rowIdx = 0
@@ -96,24 +95,41 @@ class TxStream extends HierNode implements ITxStream {
 
 	private putEvent(ITxEvent event){
 		if(!events.containsKey(event.time)) 
-			events.put(event.time, [event])
-		else
-			events[event.time]<<event
+			events.put(event.time, [event] as IEvent[])
+		else {
+			def entries = events[event.time] as List
+			entries<<event
+			events.put(event.time, entries as IEvent[])
+		}
 	}
 	
 	@Override
-	public NavigableMap getEvents() {
+	public NavigableMap<Long, IEvent[]> getEvents() {
 		return events;
 	}
 
 	@Override
-	public Collection getWaveformEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(Long time) {
 		return events.get(time);
 	}
 	
 	@Override
-	public Boolean equals(IWaveform other) {
+	public boolean isSame(IWaveform other) {
 		return(other instanceof TxStream && this.getId()==other.getId());
+	}
+
+	@Override
+	public IEvent[] getEventsBeforeTime(Long time) {
+    	Entry<Long, IEvent[]> e = events.floorEntry(time);
+    	if(e==null)
+    		return null;
+    	else
+    		return  events.floorEntry(time).getValue();
+	}
+
+	@Override
+	public WaveformType getType() {
+		return WaveformType.TRANSACTION;
 	}
 
 }

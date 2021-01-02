@@ -48,8 +48,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.views.properties.tabbed.AbstractPropertySection;
 import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
 
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxRelation;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxRelation;
 
 public class RelatedProperty extends AbstractPropertySection implements ISelectionProvider, ISelectionChangedListener {
 

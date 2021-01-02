@@ -10,14 +10,15 @@
  *******************************************************************************/
 package com.minres.scviewer.database.sqlite;
 
-import com.minres.scviewer.database.ITxRelation;
-import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxRelation;
 
 public class TxRelation implements ITxRelation {
 
 	RelationType relationType;
-	Tx source, target;
+	Tx source;
+	Tx target;
 
 	public TxRelation(RelationType relationType, Tx source, Tx target) {
 		this.source = source;

@@ -8,13 +8,15 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database;
+package com.minres.scviewer.database.tx;
 
+import com.minres.scviewer.database.RelationType;
 
-public interface IWaveformEvent extends Comparable<IWaveformEvent>{
+public interface ITxRelation {
 
-	public Long getTime();
-
-	public IWaveformEvent duplicate() throws CloneNotSupportedException;
-
+	RelationType getRelationType();
+	
+	ITx getSource();
+	
+	ITx getTarget();
 }

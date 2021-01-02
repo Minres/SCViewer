@@ -16,7 +16,7 @@ import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.PropertyDescriptor;
 
-import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.tx.ITx;
 
 public class ITransactionPropertySource implements IPropertySource {
 

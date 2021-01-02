@@ -5,8 +5,8 @@ import java.util.Vector;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxRelation;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxRelation;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 

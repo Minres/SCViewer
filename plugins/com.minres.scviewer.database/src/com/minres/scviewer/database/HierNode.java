@@ -19,25 +19,26 @@ public class HierNode implements IHierNode {
 
 	protected String name;
 	
-	protected String parentName;
+	protected IHierNode parent = null;
 	
 	protected ArrayList<IHierNode> childs;
 	
 	protected PropertyChangeSupport pcs;
 
 	public HierNode() {
-		childs = new ArrayList<IHierNode>();
+		childs = new ArrayList<>();
 		pcs=new PropertyChangeSupport(this);
 	}
 
 	public HierNode(String name) {
-		this(name, "");
-	}
-
-	public HierNode(String name, String parentName) {
 		this();
 		this.name=name;
-		this.parentName=parentName;
+	}
+
+	public HierNode(String name, IHierNode parent) {
+		this();
+		this.name=name;
+		this.parent=parent;
 	}
 
 	@Override
@@ -53,8 +54,8 @@ public class HierNode implements IHierNode {
 
 	@Override
 	public String getFullName() {
-		if(parentName!=null && parentName.length()>0)
-			return parentName+"."+name;
+		if(parent!=null)
+			return parent.getFullName()+"."+name;
 		else
 			return name;
 	}
@@ -70,8 +71,8 @@ public class HierNode implements IHierNode {
 	}
 
 	@Override
-	public void setParentName(String name) {
-		this.parentName=name;
+	public void setParent(IHierNode parent) {
+		this.parent=parent;
 	}
 
 	@Override
@@ -81,7 +82,12 @@ public class HierNode implements IHierNode {
 
 	@Override
 	public int compareTo(IHierNode o) {
-		return name.compareTo(o.getName());
+		return getFullName().compareTo(o.getFullName());
+	}
+
+	@Override
+	public IDerivedWaveform deriveWaveform() {
+		return null;
 	}
 
 }

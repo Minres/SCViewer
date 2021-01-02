@@ -8,12 +8,15 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database;
+package com.minres.scviewer.database.tx;
 
-public interface ITxEvent extends IWaveformEvent {
-	enum Type {BEGIN, END};
-	
-	public ITx getTransaction();
-	
-	public Type getType();
+import java.util.List;
+
+import com.minres.scviewer.database.IWaveform;
+
+public interface ITxGenerator {
+	public Long getId();
+	public IWaveform getStream();
+	public String getName();
+	public List<ITx> getTransactions();
 }

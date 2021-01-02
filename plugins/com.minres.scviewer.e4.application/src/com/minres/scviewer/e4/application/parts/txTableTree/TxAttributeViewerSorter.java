@@ -3,7 +3,7 @@ package com.minres.scviewer.e4.application.parts.txTableTree;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 
-import com.minres.scviewer.database.ITxAttribute;
+import com.minres.scviewer.database.tx.ITxAttribute;
 
 /**
  * The Class TxAttributeViewerSorter.

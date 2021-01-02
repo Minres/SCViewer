@@ -8,28 +8,13 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database;
+package com.minres.scviewer.database.tx;
 
-import java.util.Collection;
-import java.util.List;
+import com.minres.scviewer.database.AssociationType;
+import com.minres.scviewer.database.DataType;
 
-public interface ITx extends Comparable<ITx>{
-
-	public Long getId();
-	
-	public ITxStream<ITxEvent> getStream();
-	
-	public ITxGenerator getGenerator();
-	
-	public Long getBeginTime();
-	
-	public Long getEndTime();
-	
-	public int getConcurrencyIndex();
-	
-	public List<ITxAttribute> getAttributes();
-	
-	public Collection<ITxRelation> getIncomingRelations();
-
-	public Collection<ITxRelation> getOutgoingRelations();
+public interface ITxAttributeType {
+	public String getName();
+	public DataType getDataType();
+	public AssociationType getType();
 }

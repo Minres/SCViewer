@@ -12,8 +12,8 @@ package com.minres.scviewer.database.sqlite;
 
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
-import com.minres.scviewer.database.ITxAttribute;
 import com.minres.scviewer.database.sqlite.tables.ScvTxAttribute;
+import com.minres.scviewer.database.tx.ITxAttribute;
 
 public class TxAttribute implements ITxAttribute{
 

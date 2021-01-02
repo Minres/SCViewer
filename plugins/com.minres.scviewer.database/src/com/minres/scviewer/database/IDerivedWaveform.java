@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015, 2020 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,8 +10,10 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
-public interface ITxAttributeType {
-	public String getName();
-	public DataType getDataType();
-	public AssociationType getType();
+/**
+ * The Interface IDerivedWaveform.
+ */
+public interface IDerivedWaveform extends IWaveform {
+
+	void addSourceWaveform(IWaveform waveform);
 }

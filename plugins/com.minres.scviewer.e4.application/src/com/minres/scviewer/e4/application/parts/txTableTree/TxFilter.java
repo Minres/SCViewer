@@ -11,8 +11,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 
 import com.minres.scviewer.database.DataType;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxAttribute;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
 
 /**
  * The Class TxAttributeFilter.

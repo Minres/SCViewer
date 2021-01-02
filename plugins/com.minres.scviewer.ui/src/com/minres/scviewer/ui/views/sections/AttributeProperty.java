@@ -45,8 +45,8 @@ import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
 
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
-import com.minres.scviewer.database.ITxAttribute;
-import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
 
 public class AttributeProperty extends AbstractPropertySection implements ISelectionProvider {
 

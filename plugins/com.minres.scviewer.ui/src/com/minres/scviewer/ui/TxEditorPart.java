@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,7 +77,7 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 
 	public static final String WAVE_ACTION_ID = "com.minres.scviewer.ui.action.AddToWave";
 
-	private IWaveformView txDisplay;
+	private IWaveformView waveformView;
 
 	/** This is the root of the editor's model. */
 	private IWaveformDb database;
@@ -106,23 +105,23 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 					myParent.getDisplay().syncExec(new Runnable() {						
 						@Override
 						public void run() {
-							txDisplay.setMaxTime(database.getMaxTime());
+							waveformView.setMaxTime(database.getMaxTime());
 						}
 					});
 				}		
 			}
 		});
 		WaveformViewFactory factory = new WaveformViewFactory();
-		txDisplay = factory.createPanel(parent);
-		txDisplay.setMaxTime(0);
-		txDisplay.addPropertyChangeListener(IWaveformView.CURSOR_PROPERTY, new PropertyChangeListener() {
+		waveformView = factory.createPanel(parent);
+		waveformView.setMaxTime(0);
+		waveformView.addPropertyChangeListener(IWaveformView.CURSOR_PROPERTY, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 Long time = (Long) evt.getNewValue();
                 cursorStatusLineItem.setText("Cursor: "+ time/1000000+"ns");
             }
         });
-		getSite().setSelectionProvider(txDisplay);
+		getSite().setSelectionProvider(waveformView);
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -133,8 +132,8 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 				}
 			}
 		}).run();
-		zoomStatusLineItem.setText("Zoom level: "+zoomLevel[txDisplay.getZoomLevel()]);
-		cursorStatusLineItem.setText("Cursor: "+ txDisplay.getCursorTime()/1000000+"ns");
+		zoomStatusLineItem.setText("Zoom level: "+zoomLevel[waveformView.getZoomLevel()]);
+		cursorStatusLineItem.setText("Cursor: "+ waveformView.getCursorTime()/1000000+"ns");
 		MenuManager menuMgr = new MenuManager("#PopupMenu");
 //		menuMgr.setRemoveAllWhenShown(true);
 //		menuMgr.addMenuListener(new IMenuListener() {
@@ -142,9 +141,9 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 //				fillContextMenu(manager);
 //			}
 //		});
-		Menu menu = menuMgr.createContextMenu(txDisplay.getControl());
-		txDisplay.getControl().setMenu(menu);
-		getSite().registerContextMenu(menuMgr, txDisplay);
+		Menu menu = menuMgr.createContextMenu(waveformView.getControl());
+		waveformView.getControl().setMenu(menu);
+		getSite().registerContextMenu(menuMgr, waveformView);
 
 	}
 
@@ -204,7 +203,7 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 				pm.beginTask("Loading database "+files[0].getName(), files.length);
 				try {
 					database.load(files[0]);
-					database.addPropertyChangeListener(txDisplay);
+					database.addPropertyChangeListener(waveformView);
 					pm.worked(1);
 					if(pm.isCanceled()) return;
 					if(files.length==2){
@@ -236,16 +235,14 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 	}
 
 	protected void updateTxDisplay() {
-		txDisplay.setMaxTime(database.getMaxTime());
+		waveformView.setMaxTime(database.getMaxTime());
 		if(TxEditorPart.this.getEditorInput() instanceof TxEditorInput &&
 				((TxEditorInput) TxEditorPart.this.getEditorInput()).getStreamNames().size()>0){
-			LinkedList<TrackEntry> entries= new LinkedList<>();
 			for(String streamName:((TxEditorInput) TxEditorPart.this.getEditorInput()).getStreamNames()){
-				IWaveform stream = database.getStreamByName(streamName);
-				if(stream!=null)
-					entries.add(new TrackEntry(stream));
+				IWaveform waveform = database.getStreamByName(streamName);
+				if(waveform!=null)
+					waveformView.addWaveform(waveform, -1);
 			}
-			txDisplay.getStreamList().addAll(entries);
 		}
 	}
 
@@ -335,9 +332,9 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 	public void addStreamToList(IWaveform obj){
 		if(getEditorInput() instanceof TxEditorInput && !((TxEditorInput) getEditorInput()).getStreamNames().contains(obj.getFullName())){
 			((TxEditorInput) getEditorInput()).getStreamNames().add(obj.getFullName());
-			txDisplay.getStreamList().add(new TrackEntry(obj));
+			waveformView.addWaveform(obj, -1);
 		} else
-			txDisplay.getStreamList().add(new TrackEntry(obj));
+			waveformView.addWaveform(obj, -1);
 
 	}
 
@@ -351,13 +348,13 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 			((TxEditorInput) getEditorInput()).getStreamNames().remove(waveform.getFullName());
 		}
 		TrackEntry entry=null;
-		for(TrackEntry e:txDisplay.getStreamList()) {
+		for(TrackEntry e:waveformView.getStreamList()) {
 			if(e.waveform==waveform) {
 				entry=e;
 				break;
 			}
 		}
-		txDisplay.getStreamList().remove(entry);
+		waveformView.getStreamList().remove(entry);
 	}
 
 	public void removeStreamsFromList(IWaveform[] iWaveforms){
@@ -366,20 +363,20 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 	}
 
 	public List<TrackEntry> getStreamList(){
-		return txDisplay.getStreamList();
+		return waveformView.getStreamList();
 	}
 
 	public void setSelection(final ISelection selection){
 		myParent.getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				txDisplay.setSelection(selection);
+				waveformView.setSelection(selection);
 			}
 		});
 	}
 
 	public ISelection getSelection(){
-		return txDisplay.getSelection();
+		return waveformView.getSelection();
 	}
 	
 	@Override
@@ -388,19 +385,19 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 	}
 
 	public void moveSelection(GotoDirection next) {
-		txDisplay.moveSelection( next);		
+		waveformView.moveSelection( next);		
 	}
 
 	public void setZoomLevel(Integer level) {
-		txDisplay.setZoomLevel(level);
+		waveformView.setZoomLevel(level);
 	}
 
 	public void setZoomFit() {
-		txDisplay.setZoomLevel(6);		
+		waveformView.setZoomLevel(6);		
 	}
 
 	public int getZoomLevel() {
-		return txDisplay.getZoomLevel();
+		return waveformView.getZoomLevel();
 	}
 
 	public void removeSelected() {

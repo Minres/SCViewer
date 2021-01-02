@@ -10,12 +10,12 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
-public class BitVector {
+public class BitVector implements IEvent {
 
 	private final int width;
-	
+
 	private int[] packedValues;
-	
+
 	public BitVector(int netWidth) {
 		this.width=netWidth;
 		packedValues = new int[(netWidth+15)/16];
@@ -31,19 +31,19 @@ public class BitVector {
 	}
 
 	public char[] getValue() {
-        int bitOffset = 0;
-        int wordOffset = 0;
-        char[] res = new char[width];
-        // Copy values out of packed array
-        for (int i = 0; i < width; i++) {
-            int currentWord = (packedValues[wordOffset] >> bitOffset)&3;
-        	res[width-i-1]=BitValue.fromInt(currentWord).toChar();
-            bitOffset += 2;
-            if (bitOffset == 32) {
-                wordOffset++;
-                bitOffset = 0;
-            }
-        }
+		int bitOffset = 0;
+		int wordOffset = 0;
+		char[] res = new char[width];
+		// Copy values out of packed array
+		for (int i = 0; i < width; i++) {
+			int currentWord = (packedValues[wordOffset] >> bitOffset)&3;
+			res[width-i-1]=BitValue.fromInt(currentWord).toChar();
+			bitOffset += 2;
+			if (bitOffset == 32) {
+				wordOffset++;
+				bitOffset = 0;
+			}
+		}
 		return res;
 	}
 
@@ -68,7 +68,7 @@ public class BitVector {
 	public String toString(){
 		return new String(getValue());
 	}
-	
+
 	public String toHexString(){
 		int resWidth=(width-1)/4+1;
 		char[] value=getValue();
@@ -76,33 +76,34 @@ public class BitVector {
 		for(int i=resWidth-1; i>=0; i--){
 			int digit=0;
 			for(int j=3; j>=0; j--){
-				if((4*i+j)>=value.length) continue;
-				BitValue val = BitValue.fromChar(value[4*i+j]);
-				switch(val) {
-				case X:
-				case Z:
-					res[i]=val.toChar();
-					continue;
-				case ONE:
-					digit+=1<<(3-j);
-					break;
-				default:
-					break;
+				if((4*i+j)<value.length) {
+					BitValue val = BitValue.fromChar(value[4*i+j]);
+					switch(val) {
+					case X:
+					case Z:
+						res[i]=val.toChar();
+						continue;
+					case ONE:
+						digit+=1<<(3-j);
+						break;
+					default:
+						break;
+					}
 				}
 			}
 			res[i]=Character.forDigit(digit, 16); //((digit < 10) ? '0' + digit : 'a' + digit -10)
 		}
 		return new String(res);		
 	}
-	
+
 	public long toUnsignedValue() {
 		long res = 0;
-        int bitOffset = 0;
-        int wordOffset = 0;
-        int currentWord = 0;
-        // Copy values out of packed array
-        for (int i = 0; i < width; i++) {
-            if(bitOffset==0) currentWord = packedValues[wordOffset];
+		int bitOffset = 0;
+		int wordOffset = 0;
+		int currentWord = 0;
+		// Copy values out of packed array
+		for (int i = 0; i < width; i++) {
+			if(bitOffset==0) currentWord = packedValues[wordOffset];
 			switch (currentWord & 3) {
 			case 1:
 				res|=1<<i;
@@ -113,27 +114,27 @@ public class BitVector {
 			default:
 				break;
 			}
-            bitOffset += 2;
-            if (bitOffset == 32) {
-                wordOffset++;
-                bitOffset = 0;
-            } else {
-                currentWord >>= 2;
-            }
-        }
-        return res;
+			bitOffset += 2;
+			if (bitOffset == 32) {
+				wordOffset++;
+				bitOffset = 0;
+			} else {
+				currentWord >>= 2;
+			}
+		}
+		return res;
 	}
-	
+
 	public long toSignedValue() {
 		long res = 0;
-        int bitOffset = 0;
-        int wordOffset = 0;
-        int currentWord = 0;
-        int lastVal=0;
-        // Copy values out of packed array
-        for (int i = 0; i < width; i++) {
-        	if(bitOffset==0) currentWord = packedValues[wordOffset];
-        	lastVal=0;
+		int bitOffset = 0;
+		int wordOffset = 0;
+		int currentWord = 0;
+		int lastVal=0;
+		// Copy values out of packed array
+		for (int i = 0; i < width; i++) {
+			if(bitOffset==0) currentWord = packedValues[wordOffset];
+			lastVal=0;
 			switch (currentWord & 3) {
 			case 1:
 				res|=1<<i;
@@ -144,27 +145,32 @@ public class BitVector {
 				return 0;
 			default:
 			}
-            bitOffset += 2;
-            if (bitOffset == 32) {
-                wordOffset++;
-                bitOffset = 0;
-            } else {
-                currentWord >>= 2;
-            }
-        }
-        for(int i=width; i<64; i++) {
-        	if(bitOffset==0) currentWord = packedValues[wordOffset];
-        	res|=lastVal<<i;
-        	bitOffset += 2;
-            if (bitOffset == 32) {
-                wordOffset++;
-                bitOffset = 0;
-            } else {
-                currentWord >>= 2;
-            }
-        	
-        }
+			bitOffset += 2;
+			if (bitOffset == 32) {
+				wordOffset++;
+				bitOffset = 0;
+			} else {
+				currentWord >>= 2;
+			}
+		}
+		if(lastVal!=0)
+			res |= -1l<<width;
 		return res;
+	}
+
+	@Override
+	public EventKind getKind() {
+		return EventKind.SINGLE;
+	}
+
+	@Override
+	public WaveformType getType() {
+		return WaveformType.SIGNAL;
+	}
+
+	@Override
+	public IEvent duplicate() throws CloneNotSupportedException {
+		return (IEvent)this.clone();
 	}
 }
 

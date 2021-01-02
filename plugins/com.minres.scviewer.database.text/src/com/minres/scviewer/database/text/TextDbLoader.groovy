@@ -22,12 +22,12 @@ import groovy.io.FileType
 
 import com.minres.scviewer.database.AssociationType
 import com.minres.scviewer.database.DataType
-import com.minres.scviewer.database.ITxGenerator
-import com.minres.scviewer.database.ITxStream
 import com.minres.scviewer.database.IWaveform
 import com.minres.scviewer.database.IWaveformDb
 import com.minres.scviewer.database.IWaveformDbLoader
+import com.minres.scviewer.database.InputFormatException
 import com.minres.scviewer.database.RelationType
+import com.minres.scviewer.database.tx.ITxGenerator
 
 public class TextDbLoader implements IWaveformDbLoader{
 
@@ -63,7 +63,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 	static final byte[] x = "scv_tr_stream".bytes
 
 	@Override
-	boolean load(IWaveformDb db, File file) throws Exception {
+	boolean load(IWaveformDb db, File file) throws InputFormatException {
 		if(file.isDirectory() || !file.exists()) return false;
 		this.db=db
 		this.streams=[]
@@ -83,7 +83,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				.make()
 				// NPE here --->
 				parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file))
-				streams.each{ TxStream  stream -> stream.getMaxConcurrency() }
+				streams.each{ TxStream  stream -> stream.getWidth() }
 				return true
 			}
 		} catch (IndexOutOfBoundsException e) {
@@ -98,6 +98,9 @@ public class TextDbLoader implements IWaveformDbLoader{
 			System.out.println("---->>> Exception "+e.toString()+" caught while loading database");
 			//System.out.println("---->>> Exception "+e.toString()+" caught while loading database. StackTrace following... ");
 			//e.printStackTrace()
+		} catch(Error e) {
+			System.out.println("---->>> Exception "+e.toString()+" caught while loading database. StackTrace following... ");
+			e.printStackTrace()
 		}
 		return false;
 	}
@@ -163,7 +166,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				case "scv_tr_generator":
 					if ((matcher = line =~ /^scv_tr_generator\s+\(ID\s+(\d+),\s+name\s+"([^"]+)",\s+scv_tr_stream\s+(\d+),$/)) {
 						def id = Integer.parseInt(matcher[0][1])
-						ITxStream stream=streamsById[Integer.parseInt(matcher[0][3])]
+						TxStream stream=streamsById[Integer.parseInt(matcher[0][3])] as TxStream
 						generator=new TxGenerator(id, stream, matcher[0][2])
 						stream.generators<<generator
 						generatorsById[id]=generator

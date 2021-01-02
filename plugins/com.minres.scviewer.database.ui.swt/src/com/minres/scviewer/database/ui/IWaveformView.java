@@ -11,7 +11,6 @@
 package com.minres.scviewer.database.ui;
 
 import java.beans.PropertyChangeListener;
-import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.jface.viewers.ISelection;
@@ -19,7 +18,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Control;
 
 import com.minres.scviewer.database.IWaveform;
@@ -36,6 +34,8 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	public void addSelectionChangedListener(ISelectionChangedListener listener);
 
 	public void removeSelectionChangedListener(ISelectionChangedListener listener);
+	
+	public void setStyleProvider(IWaveformStyleProvider styleProvider);
 	
 	public void update();
 
@@ -103,8 +103,6 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 
 	public List<ICursor> getCursorList();
 
-	public void setColors(HashMap<WaveformColors, RGB> colourMap);
-
 	public long getBaselineTime();
 
 	public void setBaselineTime(Long scale);
@@ -114,4 +112,6 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	public void addDisposeListener( DisposeListener listener );
 
 	public void deleteSelectedTracks();
+
+	public TrackEntry addWaveform(IWaveform waveform, int pos);
 }

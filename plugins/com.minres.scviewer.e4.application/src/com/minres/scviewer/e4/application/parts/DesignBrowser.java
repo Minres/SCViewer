@@ -77,9 +77,9 @@ import org.eclipse.wb.swt.SWTResourceManager;
 
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IHierNode;
-import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
+import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.handlers.AddWaveformHandler;
 import com.minres.scviewer.e4.application.provider.TxDbContentProvider;

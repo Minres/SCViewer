@@ -15,7 +15,7 @@ import java.util.Collection;
 
 public interface IWaveformDbLoader {
 	
-	public boolean load(IWaveformDb db, File inp) throws Exception;
+	public boolean load(IWaveformDb db, File inp) throws InputFormatException;
 	
 	public Long getMaxTime();
 	

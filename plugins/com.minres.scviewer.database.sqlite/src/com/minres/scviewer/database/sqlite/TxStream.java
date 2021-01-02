@@ -14,48 +14,47 @@ import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
-import java.util.Vector;
 
+import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.HierNode;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxEvent;
-import com.minres.scviewer.database.ITxGenerator;
-import com.minres.scviewer.database.ITxStream;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
 import com.minres.scviewer.database.sqlite.tables.ScvStream;
 import com.minres.scviewer.database.sqlite.tables.ScvTx;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxGenerator;
 
-public class TxStream extends HierNode implements ITxStream<ITxEvent> {
+public class TxStream extends HierNode implements IWaveform {
 
 	private IDatabase database;
 
 	private String fullName;
-	
+
 	private IWaveformDb db;
-	
+
 	private ScvStream scvStream;
-	
+
 	private TreeMap<Integer, TxGenerator> generators;
-	
+
 	private TreeMap<Integer, ITx> transactions;
-	
+
 	private Integer maxConcurrency;
-	
-	private TreeMap<Long, List<ITxEvent>> events;
+
+	private TreeMap<Long, IEvent[]> events;
 
 	private List<RelationType> usedRelationsList;
-	
+
 	public TxStream(IDatabase database, IWaveformDb waveformDb, ScvStream scvStream) {
 		super(scvStream.getName());
 		this.database=database;
@@ -79,17 +78,11 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 		return (long) scvStream.getId();
 	}
 
-	@Override
-	public String getKind() {
-		return scvStream.getKind();
-	}
-
-	@Override
 	public List<ITxGenerator> getGenerators() {
 		if(generators==null){
-			SQLiteDatabaseSelectHandler<ScvGenerator> handler = new SQLiteDatabaseSelectHandler<ScvGenerator>(
+			SQLiteDatabaseSelectHandler<ScvGenerator> handler = new SQLiteDatabaseSelectHandler<>(
 					ScvGenerator.class, database, "stream="+scvStream.getId());
-			generators=new TreeMap<Integer, TxGenerator>();
+			generators=new TreeMap<>();
 			try {
 				for(ScvGenerator scvGenerator:handler.selectObjects()){
 					generators.put(scvGenerator.getId(), new TxGenerator(this, scvGenerator));
@@ -99,22 +92,20 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 				e.printStackTrace();
 			}
 		}
-		return new ArrayList<ITxGenerator>(generators.values());
+		return new ArrayList<>(generators.values());
 	}
 
 	@Override
-	public int getMaxConcurrency() {
+	public int getWidth() {
 		if(maxConcurrency==null){
-			java.sql.Connection connection=null;
-			java.sql.Statement statement=null;
-			java.sql.ResultSet resultSet=null;
-			try {
-				connection = database.createConnection();
-				statement = connection.createStatement();
-				StringBuilder sb = new StringBuilder();
-				sb.append("SELECT MAX(concurrencyLevel) as concurrencyLevel FROM ScvTx where stream=");
-				sb.append(scvStream.getId());
-				resultSet = statement.executeQuery(sb.toString());
+			StringBuilder sb = new StringBuilder();
+			sb.append("SELECT MAX(concurrencyLevel) as concurrencyLevel FROM ScvTx where stream=");
+			sb.append(scvStream.getId());
+			try(
+					java.sql.Connection connection = database.createConnection();
+					java.sql.Statement statement = connection.createStatement();
+					java.sql.ResultSet resultSet = statement.executeQuery(sb.toString());
+					) {
 				while (resultSet.next()) {
 					if(maxConcurrency==null) maxConcurrency=0;
 					Object value = resultSet.getObject("concurrencyLevel");
@@ -123,12 +114,6 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 				}
 			} catch (SQLException e) {
 				if(maxConcurrency==null) maxConcurrency=0;
-			} finally {
-				try{
-				if(resultSet!=null) resultSet.close();
-				if(statement!=null) statement.close();
-				if(connection!=null) connection.close();
-				} catch (SQLException e) {	}
 			}
 			maxConcurrency+=1;
 		}
@@ -136,12 +121,12 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	}
 
 	@Override
-	public  NavigableMap<Long, List<ITxEvent>> getEvents(){
+	public  NavigableMap<Long, IEvent[]> getEvents(){
 		if(events==null){
-			events=new TreeMap<Long, List<ITxEvent>>();
+			events=new TreeMap<>();
 			for(Entry<Integer, ITx> entry:getTransactions().entrySet()){
-				putEvent(new TxEvent(TxEvent.Type.BEGIN, entry.getValue()));
-				putEvent(new TxEvent(TxEvent.Type.END, entry.getValue()));
+				putEvent(new TxEvent(EventKind.BEGIN, entry.getValue()));
+				putEvent(new TxEvent(EventKind.END, entry.getValue()));
 			}	
 		}
 		return events;
@@ -149,20 +134,22 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 
 	private void putEvent(TxEvent ev){
 		Long time = ev.getTime();
-		if(!events.containsKey(time)){
-			Vector<ITxEvent> vector=new Vector<ITxEvent>();
-			vector.add(ev);
-			events.put(time,  vector);
+		if(events.containsKey(time)) {
+			IEvent[] oldV = events.get(time);
+			IEvent[] newV = new IEvent[oldV.length+1];
+			System.arraycopy(oldV, 0, newV, 0, oldV.length);
+			newV[oldV.length]=ev;
+			events.put(time, newV);
 		} else {
-			events.get(time).add(ev);
+			events.put(time, new IEvent[] {ev});
 		}
 	}
 
 	protected Map<Integer, ITx> getTransactions() {
 		if(transactions==null){
 			if(generators==null) getGenerators();
-			transactions = new TreeMap<Integer, ITx>();
-			SQLiteDatabaseSelectHandler<ScvTx> handler = new SQLiteDatabaseSelectHandler<ScvTx>(ScvTx.class, database,
+			transactions = new TreeMap<>();
+			SQLiteDatabaseSelectHandler<ScvTx> handler = new SQLiteDatabaseSelectHandler<>(ScvTx.class, database,
 					"stream="+scvStream.getId());
 			try {
 				for(ScvTx scvTx:handler.selectObjects()){
@@ -177,14 +164,14 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	}
 
 	@Override
-	public Collection<ITxEvent> getWaveformEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(Long time) {
 		return getEvents().get(time);
 	}
 
 	public void setRelationTypeList(List<RelationType> usedRelationsList){
 		this.usedRelationsList=usedRelationsList;
 	}
-	
+
 	public RelationType getRelationType(String name) {
 		RelationType relType=RelationType.create(name);
 		if(!usedRelationsList.contains(relType)) usedRelationsList.add(relType);
@@ -192,8 +179,22 @@ public class TxStream extends HierNode implements ITxStream<ITxEvent> {
 	}
 
 	@Override
-	public Boolean equals(IWaveform other) {
+	public boolean isSame(IWaveform other) {
 		return(other instanceof TxStream && this.getId().equals(other.getId()));
+	}
+
+	@Override
+	public IEvent[] getEventsBeforeTime(Long time) {
+		Entry<Long, IEvent[]> e = events.floorEntry(time);
+		if(e==null)
+			return new IEvent[]{};
+		else
+			return  events.floorEntry(time).getValue();
+	}
+
+	@Override
+	public WaveformType getType() {
+		return WaveformType.TRANSACTION;
 	}
 
 }

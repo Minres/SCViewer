@@ -20,7 +20,7 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
-import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 

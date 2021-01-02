@@ -18,12 +18,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.minres.scviewer.database.AssociationType;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxAttribute;
-import com.minres.scviewer.database.ITxEvent;
-import com.minres.scviewer.database.ITxGenerator;
-import com.minres.scviewer.database.ITxRelation;
-import com.minres.scviewer.database.ITxStream;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvStream;
@@ -31,6 +26,10 @@ import com.minres.scviewer.database.sqlite.tables.ScvTx;
 import com.minres.scviewer.database.sqlite.tables.ScvTxAttribute;
 import com.minres.scviewer.database.sqlite.tables.ScvTxEvent;
 import com.minres.scviewer.database.sqlite.tables.ScvTxRelation;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
+import com.minres.scviewer.database.tx.ITxGenerator;
+import com.minres.scviewer.database.tx.ITxRelation;
 
 public class Tx implements ITx {
 
@@ -39,8 +38,10 @@ public class Tx implements ITx {
 	private TxGenerator trGenerator;
 	private ScvTx scvTx;
 	private List<ITxAttribute> attributes;
-	private Long begin, end;
-	private List<ITxRelation> incoming, outgoing;
+	private Long begin;
+	private Long end;
+	private List<ITxRelation> incoming;
+	private List<ITxRelation> outgoing;
 	
 	public Tx(IDatabase database, TxStream trStream, TxGenerator trGenerator, ScvTx scvTx) {
 		this.database=database;
@@ -55,7 +56,7 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public ITxStream<ITxEvent> getStream() {
+	public IWaveform getStream() {
 		return trStream;
 	}
 
@@ -72,7 +73,7 @@ public class Tx implements ITx {
 	@Override
 	public Long getBeginTime() {
 		if(begin==null){
-		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<ScvTxEvent>(ScvTxEvent.class,
+		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
 				database, "tx="+scvTx.getId()+" AND type="+ AssociationType.BEGIN.ordinal());
 		try {
 			for(ScvTxEvent scvEvent:handler.selectObjects()){
@@ -88,7 +89,7 @@ public class Tx implements ITx {
 	@Override
 	public Long getEndTime() {
 		if(end==null){
-		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<ScvTxEvent>(ScvTxEvent.class,
+		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
 				database, "tx="+scvTx.getId()+" AND type="+ AssociationType.END.ordinal());
 		try {
 			for(ScvTxEvent scvEvent:handler.selectObjects()){
@@ -104,10 +105,10 @@ public class Tx implements ITx {
 	@Override
 	public List<ITxAttribute> getAttributes() {
 		if(attributes==null){
-			SQLiteDatabaseSelectHandler<ScvTxAttribute> handler = new SQLiteDatabaseSelectHandler<ScvTxAttribute>(
+			SQLiteDatabaseSelectHandler<ScvTxAttribute> handler = new SQLiteDatabaseSelectHandler<>(
 					ScvTxAttribute.class, database, "tx="+scvTx.getId());
 			try {
-				attributes = new ArrayList<ITxAttribute>();
+				attributes = new ArrayList<>();
 				for(ScvTxAttribute scvAttribute:handler.selectObjects()){
 					attributes.add(new TxAttribute(this, scvAttribute));
 					
@@ -122,10 +123,10 @@ public class Tx implements ITx {
 	@Override
 	public Collection<ITxRelation> getIncomingRelations() {
 		if(incoming==null){
-			SQLiteDatabaseSelectHandler<ScvTxRelation> handler = new SQLiteDatabaseSelectHandler<ScvTxRelation>(
+			SQLiteDatabaseSelectHandler<ScvTxRelation> handler = new SQLiteDatabaseSelectHandler<>(
 					ScvTxRelation.class, database, "sink="+scvTx.getId());
 			try {
-				incoming = new ArrayList<ITxRelation>();
+				incoming = new ArrayList<>();
 				for(ScvTxRelation scvRelation:handler.selectObjects()){
 					incoming.add(createRelation(scvRelation, false));
 				}
@@ -139,10 +140,10 @@ public class Tx implements ITx {
 	@Override
 	public Collection<ITxRelation> getOutgoingRelations() {
 		if(outgoing==null){
-			SQLiteDatabaseSelectHandler<ScvTxRelation> handler = new SQLiteDatabaseSelectHandler<ScvTxRelation>(
+			SQLiteDatabaseSelectHandler<ScvTxRelation> handler = new SQLiteDatabaseSelectHandler<>(
 					ScvTxRelation.class, database, "src="+scvTx.getId());
 			try {
-				outgoing = new ArrayList<ITxRelation>();
+				outgoing = new ArrayList<>();
 				for(ScvTxRelation scvRelation:handler.selectObjects()){
 					outgoing.add(createRelation(scvRelation, true));
 				}
@@ -155,7 +156,7 @@ public class Tx implements ITx {
 
 	private ITxRelation createRelation(ScvTxRelation rel, boolean outgoing) {
 		int otherId = outgoing?rel.getSink():rel.getSrc();
-		SQLiteDatabaseSelectHandler<ScvTx> handler = new SQLiteDatabaseSelectHandler<ScvTx>(ScvTx.class, database,
+		SQLiteDatabaseSelectHandler<ScvTx> handler = new SQLiteDatabaseSelectHandler<>(ScvTx.class, database,
 				"id="+otherId);
 		try {
 			List<ScvTx> res = handler.selectObjects();

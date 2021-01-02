@@ -25,7 +25,7 @@ public class TrackAreaPainter implements IPainter {
 	 */
 	private final WaveformCanvas waveCanvas;
 
-	TreeMap<Integer, IWaveformPainter> trackVerticalOffset;
+	final TreeMap<Integer, IWaveformPainter> trackVerticalOffset;
 	/**
 	 * @param txDisplay
 	 */
@@ -36,7 +36,7 @@ public class TrackAreaPainter implements IPainter {
 
 	public void paintArea(Projection proj, Rectangle a) {
 	    Rectangle area = proj.unProject(new Rectangle(a.x, a.y+waveCanvas.rulerHeight, a.width, a.height-waveCanvas.rulerHeight));
-	    proj.setBackground(this.waveCanvas.colors[WaveformColors.TRACK_BG_EVEN.ordinal()]);
+	    proj.setBackground(this.waveCanvas.styleProvider.getColor(WaveformColors.TRACK_BG_EVEN));
 	    proj.setFillRule(SWT.FILL_EVEN_ODD);
 	    proj.fillRectangle(area);
 		if(trackVerticalOffset.size()>0){
@@ -44,7 +44,7 @@ public class TrackAreaPainter implements IPainter {
 			if(firstKey==null) firstKey=trackVerticalOffset.firstKey();
 			Integer lastKey = trackVerticalOffset.floorKey(area.y+area.height);
 			Rectangle subArea = new Rectangle(area.x, 0, area.width, 0);
-			if(lastKey==firstKey){
+			if(lastKey.equals(firstKey)){
 				subArea.y=firstKey;
 				IWaveformPainter p = trackVerticalOffset.get(firstKey);
 				subArea.height=p.getHeight();
@@ -59,10 +59,6 @@ public class TrackAreaPainter implements IPainter {
 		}
 	}
 
-	public TreeMap<Integer, IWaveformPainter> getTrackVerticalOffset() {
-		return trackVerticalOffset;
-	}
-	
 	public void addTrackPainter(IWaveformPainter trackPainter){
 		trackVerticalOffset.put(trackPainter.getVerticalOffset()+waveCanvas.rulerHeight, trackPainter);
 		

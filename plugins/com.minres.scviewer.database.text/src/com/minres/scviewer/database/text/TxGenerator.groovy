@@ -13,17 +13,15 @@ package com.minres.scviewer.database.text
 import java.util.ArrayList;
 import java.util.List;
 
-import com.minres.scviewer.database.ITxAttributeType
-import com.minres.scviewer.database.ITxAttribute;
-import com.minres.scviewer.database.ITxEvent;
-import com.minres.scviewer.database.ITxGenerator;
-import com.minres.scviewer.database.ITxStream;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.IWaveformEvent;
+import com.minres.scviewer.database.IWaveform
+import com.minres.scviewer.database.tx.ITx
+import com.minres.scviewer.database.tx.ITxAttribute
+import com.minres.scviewer.database.tx.ITxAttributeType
+import com.minres.scviewer.database.tx.ITxGenerator
 
 class TxGenerator implements ITxGenerator{
 	Long id
-	TxStream stream
+	IWaveform stream
 	String name
 	Boolean active = false
 	ArrayList<ITx> transactions=[]
@@ -39,7 +37,7 @@ class TxGenerator implements ITxGenerator{
 		this.name=name
 	}
 	
-	ITxStream<? extends ITxEvent> getStream(){
+	IWaveform getStream(){
 		return stream;
 	}
 	

@@ -14,8 +14,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
 
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxRelation;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxRelation;
 
 class RelSelectionDialog extends Dialog {
 	private java.util.List<ITxRelation> entries;
@@ -24,7 +24,7 @@ class RelSelectionDialog extends Dialog {
 	
 	private ITxRelation selected = null;
 	
-	public RelSelectionDialog(Shell shell, ArrayList<ITxRelation> candidates, boolean target) {
+	public RelSelectionDialog(Shell shell, java.util.List<ITxRelation> candidates, boolean target) {
 		super(shell);
 		entries = candidates;
 		entryTx = entries.stream().map(r->target?r.getTarget():r.getSource()).collect(Collectors.toCollection(ArrayList::new));

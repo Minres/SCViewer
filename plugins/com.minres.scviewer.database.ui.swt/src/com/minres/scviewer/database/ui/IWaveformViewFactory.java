@@ -14,4 +14,6 @@ import org.eclipse.swt.widgets.Composite;
 
 public interface IWaveformViewFactory {
 	public IWaveformView createPanel(Composite parent);
+
+	public IWaveformView createPanel(Composite parent, IWaveformStyleProvider styleProvider);
 }

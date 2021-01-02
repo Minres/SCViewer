@@ -12,10 +12,8 @@ package com.minres.scviewer.database.internal;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -25,16 +23,13 @@ import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
-import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
 
 public class WaveformDb extends HierNode implements IWaveformDb {
 
-	private static List<IWaveformDbLoader> loaders=new LinkedList<IWaveformDbLoader>();
+	private static List<IWaveformDbLoader> loaders=new LinkedList<>();
 
 	private boolean loaded;
-
-	private List<IHierNode> childNodes;
 
 	private List<RelationType> relationTypes;
 	
@@ -58,7 +53,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 
 	public WaveformDb() {
 		super();
-		waveforms = new HashMap<String, IWaveform>();
+		waveforms = new HashMap<>();
 		relationTypes=new ArrayList<>();
 		maxTime=0L;
 	}
@@ -75,7 +70,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 
 	@Override
 	public List<IWaveform> getAllWaves() {
-		return new ArrayList<IWaveform>(waveforms.values());
+		return new ArrayList<>(waveforms.values());
 	}
 
 	@Override
@@ -93,7 +88,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 					buildHierarchyNodes() ;
 					relationTypes.addAll(loader.getAllRelationTypes());
 					pcs.firePropertyChange("WAVEFORMS", null, waveforms);
-					pcs.firePropertyChange("CHILDS", null, childNodes);
+					pcs.firePropertyChange("CHILDS", null, childs);
 					loaded = true;
 					return true;
 				}
@@ -116,7 +111,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 	@Override
 	public void clear() {
 		waveforms.clear();
-		childNodes.clear();
+		childs.clear();
 		loaded=false;
 	}
 
@@ -124,62 +119,41 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 		return loaded;
 	}
 
-	private void buildHierarchyNodes() throws InputFormatException{
-		childNodes= new ArrayList<IHierNode>();
+	private void buildHierarchyNodes() {
 		for(IWaveform stream:getAllWaves()){
-			//updateMaxTime(stream);
 			String[] hier = stream.getName().split("\\.");
 			IHierNode node = this;
-			List<String> path=new LinkedList<String>();
-			path.add(name);
-			for(String name:hier){
-				IHierNode n1 = null;
+			for(int i=0; i<hier.length-1; ++i){
+				String name = hier[i];
+				IHierNode childNode = null;
 				for (IHierNode n : node.getChildNodes()) {
 					if (n.getName().equals(name)) {
-						n1=n;
+						childNode=n;
 						break;
 					}
 				}
-				if(name.equals(hier[hier.length-1])){ //leaf
-					if(n1!=null) {
-						if(n1 instanceof HierNode){
-							node.getChildNodes().remove(n1);
-							stream.getChildNodes().addAll(n1.getChildNodes());
-							Collections.sort(stream.getChildNodes());
-						} else {
-							throw new InputFormatException();
-						}
-					}
-					stream.setName(name);
-					stream.setParentName(join(path, "."));
-					node.getChildNodes().add(stream);
-					Collections.sort(node.getChildNodes());
-					node=stream;
-				} else { // intermediate
-					if(n1 != null) {
-						node=n1;
-					} else {
-						HierNode newNode = new HierNode(name, join(path, "."));
-						node.getChildNodes().add(newNode);
-						Collections.sort(node.getChildNodes());
-						node=newNode;
-					}
+				if(childNode != null) {
+					node = childNode;
+					break;
 				}
-				path.add(name);
+				HierNode newNode = new HierNode(name, node);
+				node.getChildNodes().add(newNode);
+				node=newNode;
+					
 			}
+			node.getChildNodes().add(stream);
+			stream.setParent(node);
+			stream.setName(hier[hier.length-1]);
 		}
+		sortRecursive(this);
 	}
 
-	private static String join(Collection<?> col, String delim) {
-	    StringBuilder sb = new StringBuilder();
-	    Iterator<?> iter = col.iterator();
-	    if (iter.hasNext())
-	        sb.append(iter.next().toString());
-	    while (iter.hasNext()) {
-	        sb.append(delim);
-	        sb.append(iter.next().toString());
-	    }
-	    return sb.toString();
+	private void sortRecursive(IHierNode node) {
+		Collections.sort(node.getChildNodes(), (IHierNode o1, IHierNode o2) -> o1.getName().compareTo(o2.getName()));
+		for(IHierNode n:node.getChildNodes()) {
+			if(!n.getChildNodes().isEmpty())
+				sortRecursive(n);
+		}
 	}
 
 	@Override

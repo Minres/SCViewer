@@ -12,6 +12,7 @@ package com.minres.scviewer.e4.application.preferences;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IntegerFieldEditor;
 
 import com.minres.scviewer.e4.application.Messages;
 
@@ -37,6 +38,8 @@ public class SCViewerPreferencesPage extends FieldEditorPreferencePage {
 		addField(new BooleanFieldEditor(PreferenceConstants.DATABASE_RELOAD, Messages.SCViewerPreferencesPage_0,
 				getFieldEditorParent()));
 		addField(new BooleanFieldEditor(PreferenceConstants.SHOW_HOVER, Messages.SCViewerPreferencesPage_1,
+				getFieldEditorParent()));
+		addField(new IntegerFieldEditor(PreferenceConstants.TRACK_HEIGHT, Messages.SCViewerPreferencesPage_2,
 				getFieldEditorParent()));
 
 	}

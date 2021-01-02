@@ -8,19 +8,8 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database;
+package com.minres.scviewer.database.tx;
 
-import java.util.NavigableMap;
-
-
-public interface ISignal<T> extends IWaveform{
-
-	public NavigableMap<Long, T> getEvents();
-
-	public T getWaveformValueAtTime(Long time);
-
-	public T getWaveformValueBeforeTime(Long time);
-	
-	public Class<?> getType();
+public interface ITxAttribute extends ITxAttributeType {
+	public Object getValue();
 }
-

@@ -57,7 +57,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
-import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.parts.txTableTree.AttributeLabelProvider;
 import com.minres.scviewer.e4.application.parts.txTableTree.AbstractTransactionTreeContentProvider;

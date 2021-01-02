@@ -37,7 +37,6 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobGroup;
-import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -55,15 +54,12 @@ import org.eclipse.e4.ui.services.EMenuService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.resource.StringConverter;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -72,7 +68,6 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -85,24 +80,23 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
-import org.osgi.service.prefs.Preferences;
 
 import com.minres.scviewer.database.DataType;
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxAttribute;
-import com.minres.scviewer.database.ITxEvent;
-import com.minres.scviewer.database.ITxRelation;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
+import com.minres.scviewer.database.tx.ITxEvent;
+import com.minres.scviewer.database.tx.ITxRelation;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
-import com.minres.scviewer.database.ui.WaveformColors;
 import com.minres.scviewer.database.ui.swt.Constants;
 import com.minres.scviewer.database.ui.swt.ToolTipContentProvider;
 import com.minres.scviewer.database.ui.swt.ToolTipHelpTextProvider;
@@ -302,7 +296,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		transactionList = ContextInjectionFactory.make(TransactionListView.class, ctx);
 		
 		waveformPane.setMaxTime(0);
-		setupColors();
 		//set selection to empty selection when opening a new waveformPane
 		selectionService.setSelection(new StructuredSelection());
 		
@@ -511,6 +504,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				return false;
 			}
 		});
+		waveformPane.setStyleProvider(new WaveformStyleProvider(store));
 	}
 
 	@Inject
@@ -543,25 +537,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@Override
 	public void preferenceChange(PreferenceChangeEvent event) {
 		if (!PreferenceConstants.DATABASE_RELOAD.equals(event.getKey()) && !PreferenceConstants.SHOW_HOVER.equals(event.getKey())){
-			setupColors();
-		}
+			waveformPane.setStyleProvider(new WaveformStyleProvider(store));		}
 	}
 
-	/**
-	 * Setup colors.
-	 */
-	protected void setupColors() {
-		Preferences defaultPrefs= store.parent().parent().node("/"+DefaultScope.SCOPE+"/"+PreferenceConstants.PREFERENCES_SCOPE);
-		HashMap<WaveformColors, RGB> colorPref = new HashMap<>();
-		for (WaveformColors c : WaveformColors.values()) {
-			String key = c.name() + "_COLOR";
-			String prefValue = store.get(key, defaultPrefs.get(key,  "")); //$NON-NLS-1$
-			RGB rgb = StringConverter.asRGB(prefValue);
-			colorPref.put(c, rgb);
-		}
-		waveformPane.setColors(colorPref);
-	}
-	
 	class DbLoadJob extends Job {
 		final File file;
 		public DbLoadJob(String name, final File file) {
@@ -790,7 +768,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				// get transaction id
 				persistedState.put(SELECTED_TX_ID, Long.toString(tx.getId()));
 				//get TrackEntry name
-				String name = te.getStream().getFullName();
+				String name = te.waveform.getFullName();
 				persistedState.put(SELECTED_TRACKENTRY_NAME, name);
 			}
 		}
@@ -823,7 +801,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		for (int i = 0; i < waves; i++) {
 			IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
 			if (waveform != null) {
-				TrackEntry t = new TrackEntry(waveform);
+				TrackEntry t = waveformPane.addWaveform(waveform, -1);
 				//check if t is selected
 				boolean isSelected = Boolean.valueOf(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED));
 				if(isSelected) {
@@ -840,8 +818,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					t.waveDisplay=WaveDisplay.valueOf(s);
 			}
 		}
-		if (res.size() > 0)
-			waveformPane.getStreamList().addAll(res);
 		Integer cursorLength = state.containsKey(SHOWN_CURSOR+"S")?Integer.parseInt(state.get(SHOWN_CURSOR + "S")):0; //$NON-NLS-1$ //$NON-NLS-2$
 		List<ICursor> cursors = waveformPane.getCursorList();
 		if (cursorLength == cursors.size()) {
@@ -874,11 +850,11 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					if(te.waveform.getFullName().compareTo(trackentryName)==0) {
 						boolean found = false;
 						// TODO: find transaction by time? To avoid 3x for-loop
-						for( List<ITxEvent> lev : te.getStream().getEvents().values() ) {
+						for( IEvent[] lev : te.waveform.getEvents().values() ) {
 							if(lev == null) continue;
-							for(ITxEvent itxe : lev) {
-								if(itxe == null) continue;
-								ITx itx = itxe.getTransaction();
+							for(IEvent itxe : lev) {
+								if(itxe == null || !(itxe instanceof ITxEvent)) continue;
+								ITx itx = ((ITxEvent)itxe).getTransaction();
 								if(itx.getId() == txId) {
 									found = true;
 									ArrayList<Object> selectionList = new ArrayList<Object>();
@@ -1011,12 +987,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param insert the insert
 	 */
 	public void addStreamsToList(IWaveform[] iWaveforms, boolean insert) {
-		List<TrackEntry> streams = new LinkedList<>();
-		for (IWaveform stream : iWaveforms)
-			streams.add(new TrackEntry(stream));
 		IStructuredSelection selection = (IStructuredSelection) waveformPane.getSelection();
 		if (selection.size() == 0) {
-			waveformPane.getStreamList().addAll(streams);
+			for (IWaveform waveform : iWaveforms)
+				waveformPane.addWaveform(waveform, -1);
 		} else {
 			Object first = selection.getFirstElement();
 			if(first instanceof ITx) {
@@ -1024,17 +998,21 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				TrackEntry trackEntry = waveformPane.getEntryForStream(stream);
 				if (insert) {
 					int index = waveformPane.getStreamList().indexOf(trackEntry);
-					waveformPane.getStreamList().addAll(index, streams);
+					for (IWaveform waveform : iWaveforms)
+						waveformPane.addWaveform(waveform, index++);
 				} else {
-					waveformPane.getStreamList().addAll(streams);
+					for (IWaveform waveform : iWaveforms)
+						waveformPane.addWaveform(waveform, -1);
 				}
 			} else if(first instanceof TrackEntry) {
 				TrackEntry trackEntry = (TrackEntry) first;
 				if (insert) {
 					int index = waveformPane.getStreamList().indexOf(trackEntry);
-					waveformPane.getStreamList().addAll(index, streams);
+					for (IWaveform waveform : iWaveforms)
+						waveformPane.addWaveform(waveform, index++);
 				} else {
-					waveformPane.getStreamList().addAll(streams);
+					for (IWaveform waveform : iWaveforms)
+						waveformPane.addWaveform(waveform, -1);
 				}
 			}
 
@@ -1115,7 +1093,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				
     	boolean foundZoom=false;
 		//try to find existing zoomlevel where scaleFactor*clientAreaWidth >= maxTime, if one is found set it as new zoomlevel
-		for (int level=0; level<Constants.unitMultiplier.length*Constants.unitString.length; level++){
+		for (int level=0; level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length; level++){
 			long scaleFactor = (long) Math.pow(10, level/2);
 		    if(level%2==1) scaleFactor*=3;
 		    if(scaleFactor*clientAreaWidth >= maxTime) {
@@ -1125,7 +1103,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		    }
 		}
 		//if no zoom level is found, set biggest one available
-		if(!foundZoom) setZoomLevel(Constants.unitMultiplier.length*Constants.unitString.length-1);
+		if(!foundZoom) setZoomLevel(Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length-1);
 				
 		updateAll();
 	}

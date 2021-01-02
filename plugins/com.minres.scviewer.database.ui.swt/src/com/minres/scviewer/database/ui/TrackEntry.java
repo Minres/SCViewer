@@ -11,66 +11,11 @@
 package com.minres.scviewer.database.ui;
 
 
-import java.awt.Color;
-
-import com.minres.scviewer.database.ISignal;
-import com.minres.scviewer.database.ITxEvent;
-import com.minres.scviewer.database.ITxStream;
 import com.minres.scviewer.database.IWaveform;
 
 public class TrackEntry {
 
- 	// color info
-	public static Color fallbackColor = new Color(200,0,0);
-	public static Color highlightedFallbackColor = new Color(255,0,0);
-	private Color[]signalColors;
-	
-	// list of random colors
-	private static Color[][] randomColors = {
-			{ new Color( 170,  66,  37 ), new Color ( 190,  66,  37 ) },
-			{ new Color(  96,  74, 110 ), new Color (  96,  74, 130 ) },
-			{ new Color( 133, 105, 128 ), new Color ( 153, 105, 128 ) },
-			{ new Color(   0, 126, 135 ), new Color (   0, 126, 155 ) },
-			{ new Color( 243, 146,  75 ), new Color ( 255, 146,  75 ) },
-			{ new Color( 206, 135, 163 ), new Color ( 226, 135, 163 ) },
-			{ new Color( 124, 103,  74 ), new Color ( 144, 103,  74 ) },
-			{ new Color( 194, 187, 169 ), new Color ( 214, 187, 169 ) },
-			{ new Color( 104,  73,  71 ), new Color ( 124,  73,  71 ) },
-			{ new Color(  75, 196, 213 ), new Color (  75, 196, 233 ) },
-			{ new Color( 206, 232, 229 ), new Color ( 206, 252, 229 ) },
-			{ new Color( 169, 221, 199 ), new Color ( 169, 241, 199 ) },
-			{ new Color( 100, 165, 197 ), new Color ( 100, 165, 217 ) },
-			{ new Color( 150, 147, 178 ), new Color ( 150, 147, 198 ) },
-			{ new Color( 200, 222, 182 ), new Color ( 200, 242, 182 ) },
-			{ new Color( 147, 208, 197 ), new Color ( 147, 228, 197 ) }
-	};
-	
-	public static Color[] computeColor (String streamValue, Color fallback, Color highlightedFallback) {
-	
-		Color[]result = new Color[2];
-				
-		result[0] = fallback;
-		result[1] = highlightedFallback;
-
-		// assign "random" color here, one name always results in the same color!
-		if( streamValue!=null && randomColors.length > 0 ) {
-			int index = Math.abs(streamValue.hashCode()) % randomColors.length;
-			result[0] = randomColors[index][0];
-			result[1] = randomColors[index][1];
-		}
-		
-		return result;
-		
-	}
-	
-	public void setColor(Color changedColor, Color highlightColor) {
-		signalColors[0] = changedColor;
-		signalColors[1] = highlightColor;
-	}
-	
-	public Color[] getColors() {
-		return signalColors;
-	}
+	IWaveformStyleProvider styleProvider;
 	
 	public enum ValueDisplay {
 		DEFAULT, SIGNED, UNSIGNED
@@ -95,32 +40,14 @@ public class TrackEntry {
 	
 	public WaveDisplay waveDisplay = WaveDisplay.DEFAULT;
 	
-	public TrackEntry(IWaveform waveform) {
+	public TrackEntry(IWaveform waveform, IWaveformStyleProvider styleProvider) {
 		this.waveform = waveform;
+		this.styleProvider=styleProvider;
 		vOffset=0;
 		height=0;
 		selected=false;
-		signalColors = new Color[2];
-		signalColors[0] = fallbackColor;
-		signalColors[1] = highlightedFallbackColor;
 	}
 	
-	public boolean isStream(){
-		return waveform instanceof ITxStream<?>;
-	}
-
-	public ITxStream<? extends ITxEvent> getStream(){
-		return (ITxStream<?>) waveform;
-	}
-
-	public boolean isSignal(){
-		return waveform instanceof ISignal<?>;
-	}
-	
-	public ISignal<?> getSignal(){
-		return (ISignal<?>) waveform;
-	}
-
 	@Override
     public boolean equals(Object obj) {
 		if(obj instanceof TrackEntry){

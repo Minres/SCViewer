@@ -10,16 +10,18 @@
  *******************************************************************************/
 package com.minres.scviewer.database.sqlite;
 
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxEvent;
-import com.minres.scviewer.database.IWaveformEvent;
+import com.minres.scviewer.database.EventKind;
+import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.WaveformType;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxEvent;
 
 public class TxEvent implements ITxEvent {
 
-	private final Type type;
+	private final EventKind type;
 	private ITx tx;
 	
-	public TxEvent(Type type, ITx tx) {
+	public TxEvent(EventKind type, ITx tx) {
 		super();
 		this.type = type;
 		this.tx = tx;
@@ -27,17 +29,12 @@ public class TxEvent implements ITxEvent {
 
 	@Override
 	public Long getTime() {
-		return type==Type.BEGIN?tx.getBeginTime():tx.getEndTime();
+		return type==EventKind.BEGIN?tx.getBeginTime():tx.getEndTime();
 	}
 
 	@Override
-	public IWaveformEvent duplicate() throws CloneNotSupportedException {
+	public IEvent duplicate() throws CloneNotSupportedException {
 		return new TxEvent(type, tx);
-	}
-
-	@Override
-	public int compareTo(IWaveformEvent o) {
-		return getTime().compareTo(o.getTime());
 	}
 
 	@Override
@@ -46,12 +43,17 @@ public class TxEvent implements ITxEvent {
 	}
 
 	@Override
-	public Type getType() {
+	public EventKind getKind() {
 		return type;
 	}
 
 	@Override
 	public String toString() {
 		return type.toString()+"@"+getTime()+" of tx #"+tx.getId();
+	}
+
+	@Override
+	public WaveformType getType() {
+		return WaveformType.TRANSACTION;
 	}
 }
