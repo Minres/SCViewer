@@ -41,8 +41,6 @@ public class TxStream extends HierNode implements IWaveform {
 
 	private String fullName;
 
-	private IWaveformDb db;
-
 	private ScvStream scvStream;
 
 	private TreeMap<Integer, TxGenerator> generators;
@@ -55,17 +53,11 @@ public class TxStream extends HierNode implements IWaveform {
 
 	private List<RelationType> usedRelationsList;
 
-	public TxStream(IDatabase database, IWaveformDb waveformDb, ScvStream scvStream) {
+	public TxStream(IDatabase database, ScvStream scvStream) {
 		super(scvStream.getName());
 		this.database=database;
 		fullName=scvStream.getName();
 		this.scvStream=scvStream;
-		db=waveformDb;
-	}
-
-	@Override
-	public IWaveformDb getDb() {
-		return db;
 	}
 
 	@Override

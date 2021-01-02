@@ -96,21 +96,14 @@ public class TextDbLoader implements IWaveformDbLoader{
 				parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file));
 				for(IWaveform stream: streams){ stream.getWidth(); }
 				return true;
-			}
-		} catch (IndexOutOfBoundsException e) {
-			return false;
-		} catch (IllegalArgumentException e) {
-			return false;
-		} catch(EOFException e) {
-			return true;
-		} catch(Exception e) {
+			} else 
+				return false;
+		} catch(IllegalArgumentException|ArrayIndexOutOfBoundsException e) {
+		} catch(Throwable e) {
 			System.out.println("---->>> Exception "+e.toString()+" caught while loading database");
 			e.printStackTrace();
-		} catch(Error e) {
-			System.out.println("---->>> Exception "+e.toString()+" caught while loading database. StackTrace following... ");
-			e.printStackTrace();
 		}
-		return false;
+		return true;
 	}
 
 	private static boolean isTxfile(InputStream istream) {

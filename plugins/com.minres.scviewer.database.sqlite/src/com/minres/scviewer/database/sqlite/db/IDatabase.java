@@ -16,6 +16,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import com.minres.scviewer.database.IWaveformDb;
+
 /**
  *
  * Creates a connection to a database.
@@ -58,4 +60,6 @@ public interface IDatabase {
 	public void setData(String name, Object value);
 	
 	public Object getData(String name); 
+	
+	public IWaveformDb getWaveformDb();
 } 

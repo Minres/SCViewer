@@ -26,12 +26,7 @@ import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.RelationType;
 
-public class WaveformDb extends HierNode implements IWaveformDb, Serializable {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3274692080405194894L;
+public class WaveformDb extends HierNode implements IWaveformDb {
 
 	private static List<IWaveformDbLoader> loaders=new LinkedList<>();
 

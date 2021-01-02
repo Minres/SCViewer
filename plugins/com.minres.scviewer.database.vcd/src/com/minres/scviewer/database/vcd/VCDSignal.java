@@ -28,21 +28,18 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	private final int width;
 
-	private IWaveformDb db;
-
 	private NavigableMap<Long, IEvent[]> values;
 	
-	public VCDSignal(IWaveformDb db, String name) {
-		this(db, 0, name, 1);
+	public VCDSignal(String name) {
+		this(0, name, 1);
 	}
 
-	public VCDSignal(IWaveformDb db, int id, String name) {
-		this(db, id,name,1);
+	public VCDSignal(int id, String name) {
+		this(id,name,1);
 	}
 
-	public VCDSignal(IWaveformDb db, int id, String name, int width) {
+	public VCDSignal(int id, String name, int width) {
 		super(name);
-		this.db=db;
 		fullName=name;
 		this.id=id;
 		this.width=width;
@@ -55,7 +52,6 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 		this.id=id;
 		this.width=o.width;
 		this.values=o.values;
-		this.db=o.getDb();
 	}
 
 	@Override
@@ -70,11 +66,6 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	@Override
 	public Long getId() {
 		return id;
-	}
-
-	@Override
-	public IWaveformDb getDb() {
-		return db;
 	}
 
 	public void addSignalChange(Long time, T value){

@@ -20,9 +20,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 
+import com.minres.scviewer.database.IWaveformDb;
+
 public class SQLiteDatabase implements IDatabase {
 
 	protected String dbFileName;
+	
+	protected IWaveformDb waveformDb;
 	
 	protected HashMap<String, Object> props;
 	
@@ -39,9 +43,10 @@ public class SQLiteDatabase implements IDatabase {
 		}
     }
     
-	public SQLiteDatabase(String dbFileName) {
+	public SQLiteDatabase(String dbFileName, IWaveformDb waveformDb) {
 		super();
 		this.dbFileName = dbFileName;
+		this.waveformDb = waveformDb;
 		props = new HashMap<String, Object>();
 	}
 
@@ -87,6 +92,11 @@ public class SQLiteDatabase implements IDatabase {
 	@Override
 	public Object getData(String name){
 		return props.get(name);
+	}
+
+	@Override
+	public IWaveformDb getWaveformDb() {
+		return waveformDb;
 	}
 
 }

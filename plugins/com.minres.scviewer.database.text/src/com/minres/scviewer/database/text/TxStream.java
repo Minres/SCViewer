@@ -24,7 +24,6 @@ import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
@@ -38,9 +37,7 @@ class TxStream extends HierNode implements IWaveform, Serializable {
 	private static final long serialVersionUID = 6721893017334753858L;
 
 	private Long id;
-	
-	private IWaveformDb database;
-		
+			
 	private ArrayList<ITxGenerator> generators = new ArrayList<ITxGenerator>();
 	
 	private int maxConcurrency;
@@ -51,7 +48,6 @@ class TxStream extends HierNode implements IWaveform, Serializable {
 	TxStream(TextDbLoader loader, Long id, String name, String kind){
 		super(name);
 		this.id=id;
-		this.database=loader.db;
 		this.maxConcurrency=0;
 		//events = new TreeMap<Long, List<ITxEvent>>()
 		events = (BTreeMap<Long, IEvent[]>) loader.mapDb.treeMap(name).keySerializer(Serializer.LONG).createOrOpen();
@@ -59,11 +55,6 @@ class TxStream extends HierNode implements IWaveform, Serializable {
 
 	List<ITxGenerator> getGenerators(){
 		return generators;
-	}
-
-	@Override
-	public IWaveformDb getDb() {
-		return database;
 	}
 
 	@Override
