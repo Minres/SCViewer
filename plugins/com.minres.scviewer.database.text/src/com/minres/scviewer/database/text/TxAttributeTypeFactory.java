@@ -8,31 +8,30 @@
  * Contributors:
  *     IT Just working - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database.text
+package com.minres.scviewer.database.text;
+
+import java.util.HashMap;
 
 import com.minres.scviewer.database.AssociationType;
-import com.minres.scviewer.database.DataType
-import com.minres.scviewer.database.tx.ITxAttribute
-import com.minres.scviewer.database.tx.ITxAttributeType
+import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.database.tx.ITxAttributeType;
 
-class TxAttributeTypeFactory {
-	static final TxAttributeTypeFactory instance = new TxAttributeTypeFactory()
+public class TxAttributeTypeFactory {
+	public static final TxAttributeTypeFactory INSTANCE = new TxAttributeTypeFactory();
 	
-	def attributes = [:]
+	HashMap<String, ITxAttributeType> attributes = new HashMap<>();
 	
-	private TxAttributeTypeFactory() {
-		TxAttributeTypeFactory.metaClass.constructor = {-> instance }
-	}
+	private TxAttributeTypeFactory() {}
 	
 	ITxAttributeType getAttrType(String name, DataType dataType, AssociationType type){
-		def key = name+":"+dataType.toString()
-		ITxAttributeType res
+		String key = name+":"+dataType.toString();
+		ITxAttributeType res;
 		if(attributes.containsKey(key)){
-			res=attributes[key]
+			res=attributes.get(key);
 		} else {
-			res=new TxAttributeType(name, dataType, type)
-			attributes[key]=res
+			res=new TxAttributeType(name, dataType, type);
+			attributes.put(key, res);
 		}
-		return res
+		return res;
 	}
 }

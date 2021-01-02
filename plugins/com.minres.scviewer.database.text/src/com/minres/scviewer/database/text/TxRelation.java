@@ -1,10 +1,17 @@
 package com.minres.scviewer.database.text;
 
+import java.io.Serializable;
+
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxRelation;
 
-class TxRelation implements ITxRelation {
+class TxRelation implements ITxRelation, Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -347668857680574140L;
+
 	final Tx source;
 	
 	final Tx target;
