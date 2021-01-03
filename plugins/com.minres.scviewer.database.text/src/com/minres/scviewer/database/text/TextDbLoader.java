@@ -52,9 +52,9 @@ public class TextDbLoader implements IWaveformDbLoader{
 
 	DB mapDb;
     
-    TreeMap<Long, TxStream> txStreams;
+    Map<Long, TxStream> txStreams;
     
-    TreeMap<Long, TxGenerator> txGenerators;
+    Map<Long, TxGenerator> txGenerators;
     
     BTreeMap<Long, ScvTx> transactions;
     
@@ -121,8 +121,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 			return false;
 		}
 		transactions=txSink.create();
-		txStreams=new TreeMap<>(parser.streamsById);
-		txGenerators=new TreeMap<>(parser.generatorsById);
+		txStreams=new HashMap<>(parser.streamsById);
+		txGenerators=new HashMap<>(parser.generatorsById);
 		txCache.clear();
 		return true;
 	}

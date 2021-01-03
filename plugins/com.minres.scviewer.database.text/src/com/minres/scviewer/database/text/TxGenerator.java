@@ -10,20 +10,14 @@
  *******************************************************************************/
 package com.minres.scviewer.database.text;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
-import com.minres.scviewer.database.tx.ITxAttributeType;
 import com.minres.scviewer.database.tx.ITxGenerator;
 
-class TxGenerator implements ITxGenerator, Serializable{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1477511353554904763L;
+class TxGenerator implements ITxGenerator {
 
 	Long id;
 
@@ -33,11 +27,11 @@ class TxGenerator implements ITxGenerator, Serializable{
 	
 	Boolean active = false;
 	
-	ArrayList<ITx> transactions=new ArrayList<ITx>();
+	List<ITx> transactions=new ArrayList<>();
 	
-	ArrayList<TxAttributeType> beginAttrs = new ArrayList<>();
+	List<TxAttributeType> beginAttrs = new ArrayList<>();
 	
-	ArrayList<TxAttributeType> endAttrs= new ArrayList<>();
+	List<TxAttributeType> endAttrs= new ArrayList<>();
 
 	TxGenerator(Long id, TxStream stream, String name){
 		this.id=id;
