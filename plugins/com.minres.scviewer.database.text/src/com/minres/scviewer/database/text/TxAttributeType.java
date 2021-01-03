@@ -28,10 +28,6 @@ class TxAttributeType implements ITxAttributeType, Serializable {
 	
 	private AssociationType type;
 	
-	static ITxAttributeType getAttrType(String name, DataType dataType, AssociationType type){
-		return TxAttributeTypeFactory.INSTANCE.getAttrType(name, dataType, type);
-	}
-	
 	TxAttributeType(String name, DataType dataType, AssociationType type){
 		this.name=name;
 		this.dataType=dataType;

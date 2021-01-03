@@ -11,7 +11,6 @@
 package com.minres.scviewer.database.text;
 
 import java.io.BufferedReader;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,69 +20,72 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import org.mapdb.BTreeMap;
 import org.mapdb.DB;
+import org.mapdb.DB.TreeMapSink;
 import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
+import org.mapdb.serializer.SerializerArrayTuple;
 
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
-import com.minres.scviewer.database.tx.ITxGenerator;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttributeType;
 
 public class TextDbLoader implements IWaveformDbLoader{
 
 	private Long maxTime=0L;
 
-	IWaveformDb db;
-
-	List<IWaveform> streams;
-
 	Map<String, RelationType> relationTypes=new HashMap<String, RelationType>();
 
 	DB mapDb;
+    
+    TreeMap<Long, TxStream> txStreams;
+    
+    TreeMap<Long, TxGenerator> txGenerators;
+    
+    BTreeMap<Long, ScvTx> transactions;
+    
+    BTreeMap<Long[], ScvRelation> relations; 
 
-	public TextDbLoader() {
-	}
+    BTreeMap<String[], TxAttributeType> attributeTypes; 
 
-	@Override
+    HashMap<Long, Tx> txCache = new HashMap<>();
+
+    @Override
 	public Long getMaxTime() {
 		return maxTime;
 	}
 
 	@Override
 	public Collection<IWaveform> getAllWaves() {
-		return streams;
-	}
-
-	public Map<Long, ITxGenerator> getGeneratorsById() {
-		TreeMap<Long, ITxGenerator> res = new TreeMap<Long, ITxGenerator>();
-		for(IWaveform stream: streams){ for(ITxGenerator it: ((TxStream)stream).getGenerators()){res.put(it.getId(), it);} }
-		return res;
+		return new ArrayList<>(txStreams.values());
 	}
 
 	static final byte[] x = "scv_tr_stream".getBytes();
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public	boolean load(IWaveformDb db, File file) throws InputFormatException {
 		if(file.isDirectory() || !file.exists()) return false;
-		this.db=db;
-		this.streams = new ArrayList<>();
 		TextDbParser parser = new TextDbParser(this);
 		boolean gzipped = isGzipped(file);
 		try {
 		if(!isTxfile(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file)))
 			return false;
-		} catch(Throwable e) {
+		} catch(Exception e) {
 			throw new InputFormatException();
 		}
 		File mapDbFile;
@@ -94,7 +96,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 		}
 		mapDbFile.delete(); // we just need a file name
 		mapDbFile.deleteOnExit();
-		this.mapDb = DBMaker
+		mapDb = DBMaker
 				.fileDB(mapDbFile)
 				.fileMmapEnableIfSupported()
 				.fileMmapPreclearDisable()
@@ -102,15 +104,26 @@ public class TextDbLoader implements IWaveformDbLoader{
 				.allocateStartSize(64*1024*1024)
 				.allocateIncrement(64*1024*1024)
 				.make();
+		TreeMapSink<Long, ScvTx> txSink = mapDb.treeMap("transactions", Serializer.LONG,Serializer.JAVA).createFromSink();
+		relations = mapDb
+				.treeMap("relations", new SerializerArrayTuple(Serializer.LONG, Serializer.LONG) ,Serializer.JAVA)
+				.createOrOpen();
+		attributeTypes = mapDb
+				.treeMap("attributeTypes", new SerializerArrayTuple(Serializer.STRING, Serializer.STRING) ,Serializer.JAVA)
+				.createOrOpen();
 		try {
-				parser.parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file));
+		      parser.setTransactionSink(txSink).setRelationMap(relations);
+		      parser.parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file));
 		} catch(IllegalArgumentException|ArrayIndexOutOfBoundsException e) {
-		} catch(Throwable e) {
+		} catch(Exception e) {
 			System.out.println("---->>> Exception "+e.toString()+" caught while loading database");
 			e.printStackTrace();
 			return false;
 		}
-		streams.addAll(parser.streamsById.values());
+		transactions=txSink.create();
+		txStreams=new TreeMap<>(parser.streamsById);
+		txGenerators=new TreeMap<>(parser.generatorsById);
+		txCache.clear();
 		return true;
 	}
 
@@ -149,18 +162,35 @@ public class TextDbLoader implements IWaveformDbLoader{
 		static final Pattern begin_attribute = Pattern.compile("^begin_attribute \\(ID (\\d+), name \"([^\"]+)\", type \"([^\"]+)\"\\)$");
 		static final Pattern end_attribute = Pattern.compile("^end_attribute \\(ID (\\d+), name \"([^\"]+)\", type \"([^\"]+)\"\\)$");
 
-		HashMap<Long, TxStream> streamsById = new HashMap<Long, TxStream>();
-		HashMap<Long, TxGenerator> generatorsById = new HashMap<Long, TxGenerator>();
-		HashMap<Long, Tx> transactionsById = new HashMap<Long, Tx>();
-		TxGenerator generator = null;
-		Tx transaction = null;
-		boolean endTransaction=false;
+		HashMap<Long, TxStream> streamsById = new HashMap<>();
+		
+		HashMap<Long, TxGenerator> generatorsById = new HashMap<>();
+		
+		HashMap<Long, ScvTx> transactionsById = new HashMap<>();
+				
 		final TextDbLoader loader;
-		BufferedReader reader =null;
+		
+		BufferedReader reader = null;
+		
+		TxGenerator generator = null;
+		
+		private TreeMapSink<Long, ScvTx> txSink;
+
+		private BTreeMap<Long[], ScvRelation> relations;
 
 		public TextDbParser(TextDbLoader loader) {
 			super();
 			this.loader = loader;
+		}
+
+		public TextDbParser setTransactionSink(TreeMapSink<Long, ScvTx> sink) {
+			this.txSink=sink;
+			return this;
+		}
+
+		public TextDbParser setRelationMap(BTreeMap<Long[], ScvRelation> relations) {
+			this.relations=relations;
+			return this;
 		}
 
 		void parseInput(InputStream inputStream) throws IOException{
@@ -174,6 +204,18 @@ public class TextDbLoader implements IWaveformDbLoader{
 				parseLine(curLine, nextLine);
 		}
 
+		private TxAttributeType getAttrType(String name, DataType dataType, AssociationType type){
+			String[] key = new String[] {name, dataType.toString()};
+			TxAttributeType res;
+			if(loader.attributeTypes.containsKey(key)){
+				res=loader.attributeTypes.get(key);
+			} else {
+				res=new TxAttributeType(name, dataType, type);
+				loader.attributeTypes.put(key, res);
+			}
+			return res;
+		}
+
 		private String parseLine(String curLine, String nextLine) throws IOException{
 			String[] tokens = curLine.split("\\s+");
 			if("tx_record_attribute".equals(tokens[0])){//matcher = line =~ /^tx_record_attribute\s+(\d+)\s+"([^"]+)"\s+(\S+)\s*=\s*(.+)$/
@@ -181,54 +223,62 @@ public class TextDbLoader implements IWaveformDbLoader{
 				String name = tokens[2].substring(1, tokens[2].length());
 				DataType type = DataType.valueOf(tokens[3]);
 				String remaining = tokens.length>5?String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length-1)):"";
-				transactionsById.get(id).getAttributes().add(new TxAttribute(name, type, AssociationType.RECORD, remaining));
+				TxAttributeType attrType = getAttrType(name, type, AssociationType.RECORD);
+				transactionsById.get(id).attributes.add(new TxAttribute(attrType, remaining));
 			} else if("tx_begin".equals(tokens[0])){
 				Long id = Long.parseLong(tokens[1]);
-				TxGenerator gen=generatorsById.get(Long.parseLong(tokens[2]));
-				TxStream stream = (TxStream) gen.getStream();
+				Long genId = Long.parseLong(tokens[2]);
+				TxGenerator gen=generatorsById.get(genId);
+				ScvTx tx = new ScvTx(id, gen.stream.getId(), genId, Long.parseLong(tokens[3])*stringToScale(tokens[4]));
+				transactionsById.put(id, tx);
+				loader.maxTime = loader.maxTime>tx.beginTime?loader.maxTime:tx.beginTime;
+				TxStream stream = streamsById.get(gen.stream.getId());
 				stream.setConcurrency(stream.getConcurrency()+1);
-				transaction = new Tx(id, gen.getStream(), gen, Long.parseLong(tokens[3])*stringToScale(tokens[4]));
-				gen.getTransactions().add(transaction);
-				transactionsById.put(id, transaction);
-				loader.maxTime = loader.maxTime>transaction.getBeginTime()?loader.maxTime:transaction.getBeginTime();
 				if(nextLine!=null && nextLine.charAt(0)=='a') {
 					int idx=0;
 					while(nextLine!=null && nextLine.charAt(0)=='a') {
 						String[] attrTokens=nextLine.split("\\s+");
-						TxAttribute attr = new TxAttribute(gen.getBeginAttrs().get(idx), attrTokens[1]);
-						transaction.getAttributes().add(attr);
+						TxAttribute attr = new TxAttribute(gen.beginAttrs.get(idx), attrTokens[1]);
+						tx.attributes.add(attr);
 						idx++;
 						nextLine=reader.readLine();
 					}
 				}
+				txSink.put(tx.id, tx);
 			} else if("tx_end".equals(tokens[0])){//matcher = line =~ /^tx_end\s+(\d+)\s+(\d+)\s+(\d+)\s+([munpf]?s)/
 				Long id = Long.parseLong(tokens[1]);
-				transaction = transactionsById.get(id);
-				assert Integer.parseInt(tokens[2])==transaction.getGenerator().getId();
-				transaction.setEndTime(Long.parseLong(tokens[3])*stringToScale(tokens[4]));
-				loader.maxTime = loader.maxTime>transaction.getEndTime()?loader.maxTime:transaction.getEndTime();
-				TxGenerator gen = (TxGenerator) transaction.getGenerator();
-				TxStream stream = (TxStream) gen.getStream();
+				ScvTx tx = transactionsById.get(id);
+				assert Long.parseLong(tokens[2])==tx.generatorId;
+				tx.endTime=Long.parseLong(tokens[3])*stringToScale(tokens[4]);
+				loader.maxTime = loader.maxTime>tx.endTime?loader.maxTime:tx.endTime;
+				TxGenerator gen = generatorsById.get(tx.generatorId);
+				TxStream stream = streamsById.get(gen.stream.getId());
+				if(tx.beginTime==tx.endTime)
+					stream.addEvent(new TxEvent(loader, EventKind.SINGLE, id, tx.beginTime));
+				else {
+					stream.addEvent(new TxEvent(loader, EventKind.BEGIN, id, tx.beginTime));
+					stream.addEvent(new TxEvent(loader, EventKind.END, id, tx.endTime));
+				}
 				stream.setConcurrency(stream.getConcurrency()-1);
 				if(nextLine!=null && nextLine.charAt(0)=='a') {
 					int idx=0;
 					while(nextLine!=null && nextLine.charAt(0)=='a') {
 						String[] attrTokens=nextLine.split("\\s+");
-						TxAttribute attr = new TxAttribute(gen.getEndAttrs().get(idx), attrTokens[1]);
-						transaction.getAttributes().add(attr);
+						TxAttribute attr = new TxAttribute(gen.endAttrs.get(idx), attrTokens[1]);
+						tx.attributes.add(attr);
 						idx++;
 						nextLine=reader.readLine();
 					}
 				}
+				transactionsById.remove(tx.id);
 			} else if("tx_relation".equals(tokens[0])){//matcher = line =~ /^tx_relation\s+\"(\S+)\"\s+(\d+)\s+(\d+)$/
-				Tx tr2= transactionsById.get(Long.parseLong(tokens[2]));
-				Tx tr1= transactionsById.get(Long.parseLong(tokens[3]));
+				Long tr2= Long.parseLong(tokens[2]);
+				Long tr1= Long.parseLong(tokens[3]);
 				String relType=tokens[1].substring(1, tokens[1].length()-2);
 				if(!loader.relationTypes.containsKey(relType))
 					loader.relationTypes.put(relType, RelationType.create(relType));
-				TxRelation rel = new TxRelation(loader.relationTypes.get(relType), tr1, tr2);
-				tr1.getOutgoingRelations().add(rel);
-				tr2.getIncomingRelations().add(rel);
+				ScvRelation rel = new ScvRelation(loader.relationTypes.get(relType), tr1, tr2);
+				relations.put(new Long[]{tr1, tr2}, rel);
 			} else if("scv_tr_stream".equals(tokens[0])){
 				Matcher matcher = scv_tr_stream.matcher(curLine);
 				if (matcher.matches()) {
@@ -242,18 +292,19 @@ public class TextDbLoader implements IWaveformDbLoader{
 					Long id = Long.parseLong(matcher.group(1));
 					TxStream stream=streamsById.get(Long.parseLong(matcher.group(3)));
 					generator=new TxGenerator(id, stream, matcher.group(2));
-					stream.getGenerators().add(generator);
 					generatorsById.put(id,  generator);
 				}
 			} else if("begin_attribute".equals(tokens[0])){
 				Matcher matcher = begin_attribute.matcher(curLine);
 				if ((matcher.matches())) {
-					generator.getBeginAttrs().add(TxAttributeType.getAttrType(matcher.group(2), DataType.valueOf(matcher.group(3)), AssociationType.BEGIN));
+					TxAttributeType attrType = getAttrType(matcher.group(2), DataType.valueOf(matcher.group(3)), AssociationType.BEGIN);
+					generator.beginAttrs.add(attrType);
 				}
 			} else if("end_attribute".equals(tokens[0])){
 				Matcher matcher = end_attribute.matcher(curLine);
 				if ((matcher.matches())) {
-					generator.getEndAttrs().add(TxAttributeType.getAttrType(matcher.group(2), DataType.valueOf(matcher.group(3)), AssociationType.END));
+					TxAttributeType attrType = getAttrType(matcher.group(2), DataType.valueOf(matcher.group(3)), AssociationType.END);
+					generator.endAttrs.add(attrType);
 				}
 			} else if(")".equals(tokens[0])){
 				generator=null;
@@ -274,6 +325,14 @@ public class TextDbLoader implements IWaveformDbLoader{
 			if("s".equals(cmp) ) return 1000000000000000L;
 			return 1L;
 		}
+	}
+
+	public ITx getTransaction(Long txId) {
+		if(txCache.containsKey(txId))
+			return txCache.get(txId);
+		Tx tx = new Tx(this, txId);
+		txCache.put(txId, tx);
+		return tx;
 	}
 }
 

@@ -10,40 +10,32 @@
  *******************************************************************************/
 package com.minres.scviewer.database.text;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-
-import org.mapdb.BTreeMap;
-import org.mapdb.Serializer;
+import java.util.TreeMap;
 
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
-import com.minres.scviewer.database.tx.ITx;
-import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.tx.ITxGenerator;
 
-class TxStream extends HierNode implements IWaveform, Serializable {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6721893017334753858L;
+class TxStream extends HierNode implements IWaveform {
 
 	private Long id;
 			
-	private ArrayList<ITxGenerator> generators = new ArrayList<ITxGenerator>();
+	private TextDbLoader loader;
 	
 	private int maxConcurrency = 0;
 	
 	private int concurrency = 0;
-
+ 
+	boolean concurrencyCalculated = false;
+ 
 	void setConcurrency(int concurrency) {
 		this.concurrency = concurrency;
 		if(concurrency>maxConcurrency)
@@ -54,19 +46,16 @@ class TxStream extends HierNode implements IWaveform, Serializable {
 		return this.concurrency;
 	}
 
-	private BTreeMap<Long, IEvent[]> events;
+	TreeMap<Long, IEvent[]> events = new TreeMap<>();
 	
-	@SuppressWarnings("unchecked")
 	TxStream(TextDbLoader loader, Long id, String name, String kind){
 		super(name);
 		this.id=id;
-		this.maxConcurrency=0;
-		//events = new TreeMap<Long, List<ITxEvent>>()
-		events = (BTreeMap<Long, IEvent[]>) loader.mapDb.treeMap(name).keySerializer(Serializer.LONG).createOrOpen();
+		this.loader=loader;
 	}
 
 	List<ITxGenerator> getGenerators(){
-		return generators;
+		return new ArrayList<>(loader.txGenerators.values());
 	}
 
 	@Override
@@ -74,13 +63,26 @@ class TxStream extends HierNode implements IWaveform, Serializable {
 		return maxConcurrency;
 	}
 
+	public void addEvent(TxEvent evt) {
+		if(!events.containsKey(evt.time))
+			events.put(evt.time, new IEvent[] {evt});
+		else {
+			IEvent[] evts = events.get(evt.time);
+			IEvent[] newEvts = Arrays.copyOf(evts, evts.length+1);
+			newEvts[evts.length]=evt;
+			events.put(evt.time, newEvts);
+		}
+	}
+	
 	@Override
 	public NavigableMap<Long, IEvent[]> getEvents() {
+		if(!concurrencyCalculated) calculateConcurrency();
 		return (NavigableMap<Long, IEvent[]>)events;
 	}
 
 	@Override
 	public IEvent[] getEventsAtTime(Long time) {
+		if(!concurrencyCalculated) calculateConcurrency();
 		return events.get(time);
 	}
 	
@@ -91,6 +93,7 @@ class TxStream extends HierNode implements IWaveform, Serializable {
 
 	@Override
 	public IEvent[] getEventsBeforeTime(Long time) {
+		if(!concurrencyCalculated) calculateConcurrency();
     	Entry<Long, IEvent[]> e = events.floorEntry(time);
     	if(e==null)
     		return null;
@@ -106,6 +109,24 @@ class TxStream extends HierNode implements IWaveform, Serializable {
 	@Override
 	public Long getId() {
 		return id;
+	}
+
+	private void calculateConcurrency() {
+		ArrayList<Long> rowendtime = new ArrayList<>();
+		events.entrySet().stream().forEach( entry -> {
+			IEvent[] values = entry.getValue();
+			Arrays.asList(values).stream().filter(e->e.getKind()==EventKind.BEGIN).forEach(evt -> {
+				Tx tx = (Tx) ((TxEvent)evt).getTransaction();
+				int rowIdx = 0;
+				for(; rowIdx<rowendtime.size() && rowendtime.get(rowIdx)>tx.getBeginTime(); rowIdx++);
+				if(rowendtime.size()<=rowIdx)
+					rowendtime.add(tx.getEndTime());
+				else
+					rowendtime.set(rowIdx, tx.getEndTime());
+				tx.setConcurrencyIndex(rowIdx);
+			});
+		});
+		concurrencyCalculated=true;
 	}
 
 }

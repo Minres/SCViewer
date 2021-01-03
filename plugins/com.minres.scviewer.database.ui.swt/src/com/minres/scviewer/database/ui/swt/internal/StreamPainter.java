@@ -84,17 +84,20 @@ public class StreamPainter extends TrackPainter{
 			NavigableMap<Long, IEvent[]> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
 			boolean highlighed=false;
 			proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
-
+			long selectedId=waveCanvas.currentSelection!=null? waveCanvas.currentSelection.getId():-1;
 			for(Entry<Long, IEvent[]> entry: entries.entrySet())
 				for(IEvent evt:entry.getValue()){
-					ITxEvent txEvent = (ITxEvent) evt;
-					if(txEvent.getKind()==EventKind.BEGIN)
-						seenTx.add(txEvent.getTransaction());
-					if(txEvent.getKind()==EventKind.END){
-						ITx tx = txEvent.getTransaction();
-						highlighed|=waveCanvas.currentSelection!=null && waveCanvas.currentSelection.equals(tx);
-						drawTx(proj, area, tx, false);
+					ITx tx = ((ITxEvent) evt).getTransaction();
+					highlighed|=selectedId==tx.getId();
+					switch(evt.getKind()) {
+					case BEGIN:
+						seenTx.add(tx);
+						break;
+					case END:
 						seenTx.remove(tx);
+					case SINGLE:
+						drawTx(proj, area, tx, false);
+						break;
 					}
 				}
 			for(ITx tx:seenTx){

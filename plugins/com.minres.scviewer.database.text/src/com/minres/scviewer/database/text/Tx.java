@@ -10,67 +10,49 @@
  *******************************************************************************/
 package com.minres.scviewer.database.text;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.NavigableMap;
+import java.util.stream.Collectors;
 
-import com.minres.scviewer.database.*;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.database.tx.ITxGenerator;
 import com.minres.scviewer.database.tx.ITxRelation;
 
-class Tx implements ITx, Serializable{
+class Tx implements ITx {
 	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -855200240003328221L;
-
-	private final Long id;
+	private final TextDbLoader loader;
 	
-	private final TxGenerator generator;
-
-	private final IWaveform stream;
+	private ScvTx scvTx = null;
 	
 	private int concurrencyIndex;
-	
-	private final Long beginTime;
-	
-	private Long endTime;
-	
-	private final List<ITxAttribute> attributes = new ArrayList<>();
-	
-	private final List<ITxRelation> incomingRelations = new ArrayList<>();
-	
-	private final List<ITxRelation> outgoingRelations = new ArrayList<>();
-	
-	Tx(Long id, IWaveform stream, TxGenerator generator, Long begin){
-		this.id=id;
-		this.stream=stream;
-		this.generator=generator;
-		this.beginTime=begin;
-        this.endTime=begin;
+			
+	Tx(TextDbLoader loader, Long id){
+		this.loader=loader;
+		this.scvTx = loader.transactions.get(id);
 	}
 	
 	@Override
 	public Collection<ITxRelation> getIncomingRelations() {
-		return incomingRelations;
+		NavigableMap<Long[], ScvRelation> rels = loader.relations.prefixSubMap(new Long[]{scvTx.getId(), null});
+		return rels.values().stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
 	}
 
 	@Override
 	public Collection<ITxRelation> getOutgoingRelations() {
-		return outgoingRelations;
+		NavigableMap<Long[], ScvRelation> rels = loader.relations.prefixSubMap(new Long[]{null, scvTx.getId()});
+		return rels.values().stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
 	}
 
 	@Override
 	public int compareTo(ITx o) {
-		int res =beginTime.compareTo(o.getBeginTime());
+		int res =getBeginTime().compareTo(o.getBeginTime());
 		if(res!=0) 
 			return res;
 		else
-			return id.compareTo(o.getId());
+			return getId().compareTo(o.getId());
 	}
 	
 	@Override
@@ -80,31 +62,27 @@ class Tx implements ITx, Serializable{
 
 	@Override
 	public Long getId() {
-		return id;
+		return scvTx.id;
 	}
 
 	@Override
 	public IWaveform getStream() {
-		return stream;
+		return loader.txStreams.get(scvTx.streamId);
 	}
 
 	@Override
 	public ITxGenerator getGenerator() {
-		return generator;
+		return loader.txGenerators.get(scvTx.generatorId);
 	}
 
 	@Override
 	public Long getBeginTime() {
-		return beginTime;
+		return scvTx.beginTime;
 	}
 
 	@Override
 	public Long getEndTime() {
-		return endTime;
-	}
-
-	public void setEndTime(long l) {
-		endTime=l;
+		return scvTx.endTime;
 	}
 
 	@Override
@@ -118,7 +96,7 @@ class Tx implements ITx, Serializable{
 
 	@Override
 	public List<ITxAttribute> getAttributes() {
-		return attributes;
+		return scvTx.attributes;
 	}
 
 }

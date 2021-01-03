@@ -35,9 +35,9 @@ class TxGenerator implements ITxGenerator, Serializable{
 	
 	ArrayList<ITx> transactions=new ArrayList<ITx>();
 	
-	ArrayList<ITxAttributeType> beginAttrs = new ArrayList<ITxAttributeType>();
+	ArrayList<TxAttributeType> beginAttrs = new ArrayList<>();
 	
-	ArrayList<ITxAttributeType> endAttrs= new ArrayList<ITxAttributeType>();
+	ArrayList<TxAttributeType> endAttrs= new ArrayList<>();
 
 	TxGenerator(Long id, TxStream stream, String name){
 		this.id=id;
@@ -45,32 +45,34 @@ class TxGenerator implements ITxGenerator, Serializable{
 		this.name=name;
 	}
 	
-	public IWaveform getStream(){
-		return stream;
-	}
-	
-	public List<ITx> getTransactions(){
-		return transactions;
-	}
-	
-	Boolean isActive() {return active;}
-
 	@Override
 	public Long getId() {
 		return id;
 	}
 
 	@Override
+	public IWaveform getStream(){
+		return stream;
+	}
+	
+	@Override
 	public String getName() {
 		return name;
 	}
 
-	public ArrayList<ITxAttributeType> getBeginAttrs() {
+	@Override
+	public List<ITx> getTransactions(){
+		return transactions;
+	}
+	
+	public List<TxAttributeType> getBeginAttrs() {
 		return beginAttrs;
 	}
 
-	public ArrayList<ITxAttributeType> getEndAttrs() {
+	public List<TxAttributeType> getEndAttrs() {
 		return endAttrs;
 	}
 	
+	Boolean isActive() {return active;}
+
 }

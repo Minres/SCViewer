@@ -15,7 +15,6 @@ import java.io.Serializable;
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.tx.ITxAttribute;
-import com.minres.scviewer.database.tx.ITxAttributeType;
 
 public class TxAttribute  implements ITxAttribute, Serializable {
 	
@@ -24,28 +23,24 @@ public class TxAttribute  implements ITxAttribute, Serializable {
 	 */
 	private static final long serialVersionUID = 4767726016651807152L;
 
-	ITxAttributeType attributeType;
+	private TxAttributeType attributeType;
 
-	String value;
+	private String value=null;
 	
-	TxAttribute(String name, DataType dataType, AssociationType type, String value){
-		attributeType = TxAttributeTypeFactory.INSTANCE.getAttrType(name, dataType, type);
-		switch(dataType){
-			case STRING:
-			case ENUMERATION:
-				this.value=value.substring(1, value.length()-2);
-				break;
-			default:
-				this.value=value;
-		}
+	TxAttribute(TxAttributeType attributeType){
+		this.attributeType=attributeType;
 	}
-
-	TxAttribute(ITxAttributeType type){
+	
+	TxAttribute(TxAttributeType type, String value){
 		attributeType=type;
-	}
-	
-	TxAttribute(ITxAttributeType type, String value){
-		this(type.getName(), type.getDataType(), type.getType(), value);
+		switch(type.getDataType()){
+		case STRING:
+		case ENUMERATION:
+			this.value=value.substring(1, value.length()-2);
+			break;
+		default:
+			this.value=value;
+		}
 	}
 
 	@Override
