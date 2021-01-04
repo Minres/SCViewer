@@ -10,8 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database.tx;
 
-import java.io.Serializable;
-
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
 

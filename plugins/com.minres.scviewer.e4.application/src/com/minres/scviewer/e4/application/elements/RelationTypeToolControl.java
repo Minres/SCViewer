@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.RelationTypeFactory;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.parts.PartListener;
@@ -50,7 +51,7 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 	WaveformViewer waveformViewerPart;
 	
 	/** The dummy. */
-	RelationType dummy = RelationType.create(Messages.RelationTypeToolControl_0);
+	RelationType dummy = RelationTypeFactory.create(Messages.RelationTypeToolControl_0);
 	
 	/**
 	 * Instantiates a new relation type tool control.

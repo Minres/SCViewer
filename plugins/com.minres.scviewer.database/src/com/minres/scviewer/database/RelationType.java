@@ -11,31 +11,16 @@
 package com.minres.scviewer.database;
 
 import java.io.Serializable;
-import java.util.HashMap;
 
 public class RelationType implements Serializable {
-	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 6394859077558971735L;
 
-	private static HashMap<String, RelationType> registry = new HashMap<>();
-	
 	private String name;
 
-	public static RelationType create(String name){
-		if(registry.containsKey(name)){
-			return registry.get(name);
-		}else{
-			RelationType relType = new RelationType(name);
-			registry.put(name, relType);
-			return relType;
-		}
-		
-	}
-	
-	private RelationType(String name) {
+	RelationType(String name) {
 		super();
 		this.name = name;
 	}
@@ -59,6 +44,9 @@ public class RelationType implements Serializable {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return name.equals(obj);
+		if(obj instanceof RelationType)
+			return name.equals(((RelationType)obj).name);
+		else
+			return false;
 	}
 }

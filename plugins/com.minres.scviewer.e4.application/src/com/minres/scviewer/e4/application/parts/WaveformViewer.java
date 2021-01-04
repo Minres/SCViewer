@@ -87,6 +87,7 @@ import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.RelationTypeFactory;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.database.tx.ITxEvent;
@@ -1237,7 +1238,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param relationName the new navigation relation type
 	 */
 	public void setNavigationRelationType(String relationName) {
-		setNavigationRelationType(RelationType.create(relationName));
+		setNavigationRelationType(RelationTypeFactory.create(relationName));
 	}
 
 	/**

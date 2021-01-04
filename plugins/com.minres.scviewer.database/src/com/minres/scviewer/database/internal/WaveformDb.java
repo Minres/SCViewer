@@ -11,7 +11,6 @@
 package com.minres.scviewer.database.internal;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
