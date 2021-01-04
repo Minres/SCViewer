@@ -575,7 +575,7 @@ public class WaveformView implements IWaveformView  {
 						for(IEvent evt:firstTx.getValue()){
 							if(evt instanceof ITxEvent) {
 								ITx tx=((ITxEvent)evt).getTransaction();
-								if(evt.getKind()==EventKind.BEGIN && tx.getBeginTime()<=time && tx.getEndTime()>=time){
+								if((evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE) && tx.getBeginTime()<=time && tx.getEndTime()>=time){
 									if(resultsList[tx.getConcurrencyIndex()]==null)
 										resultsList[tx.getConcurrencyIndex()]= ((ITxEvent)evt).getTransaction();
 								}
@@ -703,7 +703,7 @@ public class WaveformView implements IWaveformView  {
 			} else {
 				if(!add) currentWaveformSelection.clear();
 				for(Object sel:((IStructuredSelection) selection).toArray()){
-					if (sel instanceof ITx && currentTxSelection != sel){
+					if (sel instanceof ITx){
 						ITx txSel = (ITx) sel;
 						TrackEntry trackEntry = getEntryForStream(txSel.getStream());
 						if(trackEntry==null && addIfNeeded){
@@ -711,6 +711,8 @@ public class WaveformView implements IWaveformView  {
 							streams.add(trackEntry);
 						}
 						currentTxSelection = txSel;
+						currentWaveformSelection.clear();
+						currentWaveformSelection.add(trackEntry);
 						selectionChanged = true;
 					} else if (sel instanceof TrackEntry && !currentWaveformSelection.contains(sel)) {
 						currentWaveformSelection.add((TrackEntry)sel);
@@ -769,32 +771,29 @@ public class WaveformView implements IWaveformView  {
 	 */
 	@Override
 	public void moveSelection(GotoDirection direction, RelationType relationType) {
-		TrackEntry selectedWaveform=null;
-		if(currentTxSelection!=null)
-			selectedWaveform = getEntryForStream(currentTxSelection.getStream());
-		else if(currentWaveformSelection.size()!=1) return;
-		if(selectedWaveform==null)
-			selectedWaveform = currentWaveformSelection.get(1);
-		if (selectedWaveform!=null && selectedWaveform.waveform.getType()==WaveformType.TRANSACTION && currentTxSelection!=null) {
+		if(currentWaveformSelection.size() !=1 && currentTxSelection==null) return;
+		TrackEntry selectedWaveform=currentWaveformSelection.size() == 1?
+				currentWaveformSelection.get(0) : getEntryForStream(currentTxSelection.getStream());
+		if(selectedWaveform.waveform.getType()==WaveformType.TRANSACTION && currentTxSelection!=null) {
 			if(relationType.equals(IWaveformView.NEXT_PREV_IN_STREAM)){
 				ITx transaction = null;
 				if (direction == GotoDirection.NEXT) {
-					ITxEvent[] thisEntryList = (ITxEvent[]) selectedWaveform.waveform.getEvents().get(currentTxSelection.getBeginTime());
+					IEvent[] eventsList = selectedWaveform.waveform.getEvents().get(currentTxSelection.getBeginTime());
 					boolean meFound=false;
-					for (ITxEvent evt : thisEntryList) {
-						if (evt.getKind() == EventKind.BEGIN) {
+					for (IEvent evt : eventsList) {
+						if (evt instanceof ITxEvent && evt.getKind() == EventKind.BEGIN || evt.getKind()==EventKind.SINGLE) {
 							if(meFound){
-								transaction = evt.getTransaction();
+								transaction = ((ITxEvent)evt).getTransaction();
 								break;
 							}
-							meFound|= evt.getTransaction().equals(currentTxSelection);
+							meFound|= ((ITxEvent)evt).getTransaction().equals(currentTxSelection);
 						}
 					}
 					if (transaction == null){
 						Entry<Long, IEvent[]> entry = selectedWaveform.waveform.getEvents().higherEntry(currentTxSelection.getBeginTime());
 						if (entry != null) do {
 							for (IEvent evt : entry.getValue()) {
-								if (evt instanceof ITxEvent && evt.getKind() == EventKind.BEGIN) {
+								if (evt instanceof ITxEvent && (evt.getKind() == EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)) {
 									transaction = ((ITxEvent)evt).getTransaction();
 									break;
 								}
@@ -804,10 +803,10 @@ public class WaveformView implements IWaveformView  {
 						} while (entry != null && transaction == null);
 					}
 				} else if (direction == GotoDirection.PREV) {
-					IEvent[] thisEntryList = selectedWaveform.waveform.getEvents().get(currentTxSelection.getBeginTime());
+					IEvent[] eventsList = selectedWaveform.waveform.getEvents().get(currentTxSelection.getBeginTime());
 					boolean meFound=false;
-					for (IEvent evt :  Lists.reverse(Arrays.asList(thisEntryList))) {
-						if (evt instanceof ITxEvent && evt.getKind() == EventKind.BEGIN) {
+					for (IEvent evt :  Lists.reverse(Arrays.asList(eventsList))) {
+						if (evt instanceof ITxEvent && (evt.getKind() == EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)) {
 							if(meFound){
 								transaction = ((ITxEvent)evt).getTransaction();
 								break;
@@ -817,31 +816,33 @@ public class WaveformView implements IWaveformView  {
 					}
 					if (transaction == null){
 						Entry<Long, IEvent[]> entry = selectedWaveform.waveform.getEvents().lowerEntry(currentTxSelection.getBeginTime());
-						if (entry != null)
-							do {
-								for (IEvent evt : Lists.reverse(Arrays.asList(thisEntryList))) {
-									if (evt instanceof ITxEvent && evt.getKind() == EventKind.BEGIN) {
-										transaction = ((ITxEvent)evt).getTransaction();
-										break;
-									}
+						if (entry != null) do {
+							for (IEvent evt : Lists.reverse(Arrays.asList(entry.getValue()))) {
+								if (evt instanceof ITxEvent && (evt.getKind() == EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)) {
+									transaction = ((ITxEvent)evt).getTransaction();
+									break;
 								}
-								if (transaction == null)
-									entry = selectedWaveform.waveform.getEvents().lowerEntry(entry.getKey());
-							} while (entry != null && transaction == null);
+							}
+							if (transaction == null)
+								entry = selectedWaveform.waveform.getEvents().lowerEntry(entry.getKey());
+						} while (entry != null && transaction == null);
 					}
 				}
 				if (transaction != null) {
 					setSelection(new StructuredSelection(transaction));
 				}
 			} else {
+				ITxRelation tx = null;
 				if (direction == GotoDirection.NEXT) {
 					Collection<ITxRelation>  outRel=currentTxSelection.getOutgoingRelations();
-					ITxRelation tx = selectTxToNavigateTo(outRel, relationType, true);
-					if(tx!=null) setSelection(new StructuredSelection(tx.getTarget()), true);
+					tx = selectTxToNavigateTo(outRel, relationType, true);
+					if(tx!=null)
+						setSelection(new StructuredSelection(tx.getTarget()), true);
 				} else if (direction == GotoDirection.PREV) {
 					Collection<ITxRelation>  inRel=currentTxSelection.getIncomingRelations();
-					ITxRelation tx = selectTxToNavigateTo(inRel, relationType, false);
-					if(tx!=null) setSelection(new StructuredSelection(tx.getSource()), true);
+					tx = selectTxToNavigateTo(inRel, relationType, false);
+					if(tx!=null)
+						setSelection(new StructuredSelection(tx.getSource()), true);
 				}
 			}
 		}

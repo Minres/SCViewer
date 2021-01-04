@@ -36,7 +36,7 @@ public class TxAttribute  implements ITxAttribute, Serializable {
 		switch(type.getDataType()){
 		case STRING:
 		case ENUMERATION:
-			this.value=value.substring(1, value.length()-2);
+			this.value=value.substring(1, value.length()-1);
 			break;
 		default:
 			this.value=value;

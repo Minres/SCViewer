@@ -167,7 +167,8 @@ public class StreamPainter extends TrackPainter{
 		for(IEvent evt:firstTx.getValue()){
 			if(evt instanceof ITxEvent) {
 				ITx tx=((ITxEvent)evt).getTransaction();
-				if(evt.getKind()==EventKind.BEGIN && tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePoint && tx.getEndTime()>=timePoint){
+				if((evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)&&
+						tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePoint && tx.getEndTime()>=timePoint){
 					return ((ITxEvent)evt).getTransaction();
 				}
 			}
@@ -178,7 +179,8 @@ public class StreamPainter extends TrackPainter{
 		for(IEvent evt:firstTx.getValue()){
 			if(evt instanceof ITxEvent) {
 				ITx tx=((ITxEvent)evt).getTransaction();
-				if(evt.getKind()==EventKind.BEGIN && tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePointHigh && tx.getEndTime()>=timePoint){
+				if((evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE) &&
+						tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePointHigh && tx.getEndTime()>=timePoint){
 					return ((ITxEvent)evt).getTransaction();
 				}
 			}

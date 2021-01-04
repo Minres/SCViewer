@@ -17,7 +17,6 @@ import java.util.TreeMap;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.WaveformType;
 
 public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {

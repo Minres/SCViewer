@@ -2,3 +2,11 @@
 /.my_db.txlog*
 /EyeQ6_mem_platform.txlog
 /EyeQ6_mem_platform.vcd
+/hw_cfg7.txlog
+/hw_cfg7.vcd
+/hw_cfg_2_gen.txlog
+/hw_cfg_2_gen.vcd
+/hw_cfg_2_nc.txlog
+/hw_cfg_2_nc.vcd
+/test_05.txlog
+/test_05.vcd

@@ -250,7 +250,7 @@ public class TransactionList extends Composite {
 		if(trackEntry==null || trackEntry.waveform.getType()!=WaveformType.TRANSACTION) {
 			attrNames.clear();
 			tableViewer.setInput(emptyList);
-		} else { 
+		} else if(stream != trackEntry.waveform) { 
 			stream=trackEntry.waveform;
 			tableViewer.setInput(emptyList);
 			new Thread() {
@@ -267,7 +267,7 @@ public class TransactionList extends Composite {
 					Collection<IEvent[]> values = stream.getEvents().values();
 					eventList = values.parallelStream().map(Arrays::asList)
 							.flatMap(List::stream)
-							.filter(evt -> evt.getKind()==EventKind.BEGIN)
+							.filter(evt -> evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)
 							.map(evt-> {
 								ITx tx = ((ITxEvent)evt).getTransaction();
 								for(ITxAttribute attr: tx.getAttributes()) {
@@ -287,7 +287,8 @@ public class TransactionList extends Composite {
 								txFilter.setSearchProp(attrNames.get(0).getName(), attrNames.get(0).getType());
 							if (searchPropComboViewer!=null) {
 								searchPropComboViewer.setInput(attrNames);
-								searchPropComboViewer.setSelection(new StructuredSelection(searchPropComboViewer.getElementAt(0)));
+								Object sel = searchPropComboViewer.getElementAt(0);
+								if(sel!=null) searchPropComboViewer.setSelection(new StructuredSelection(sel));
 							}
 							tableViewer.refresh(true);
 						}

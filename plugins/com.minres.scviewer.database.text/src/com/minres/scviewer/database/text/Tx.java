@@ -36,13 +36,13 @@ class Tx implements ITx {
 	
 	@Override
 	public Collection<ITxRelation> getIncomingRelations() {
-		NavigableMap<Long[], ScvRelation> rels = loader.relations.prefixSubMap(new Long[]{scvTx.getId(), null});
+		NavigableMap<Long[], ScvRelation> rels = loader.relationsIn.prefixSubMap(new Long[]{scvTx.getId()});
 		return rels.values().stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
 	}
 
 	@Override
 	public Collection<ITxRelation> getOutgoingRelations() {
-		NavigableMap<Long[], ScvRelation> rels = loader.relations.prefixSubMap(new Long[]{null, scvTx.getId()});
+		NavigableMap<Long[], ScvRelation> rels = loader.relationsOut.prefixSubMap(new Long[]{scvTx.getId()});
 		return rels.values().stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
 	}
 
