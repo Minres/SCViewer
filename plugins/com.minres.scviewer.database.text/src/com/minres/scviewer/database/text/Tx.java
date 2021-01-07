@@ -13,6 +13,7 @@ package com.minres.scviewer.database.text;
 import java.util.Collection;
 import java.util.List;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.minres.scviewer.database.IWaveform;
@@ -28,22 +29,22 @@ class Tx implements ITx {
 	private ScvTx scvTx = null;
 	
 	private int concurrencyIndex;
-			
-	Tx(TextDbLoader loader, Long id){
+				
+	public Tx(TextDbLoader loader, ScvTx scvTx) {
 		this.loader=loader;
-		this.scvTx = loader.transactions.get(id);
+		this.scvTx = scvTx;
 	}
-	
+
 	@Override
 	public Collection<ITxRelation> getIncomingRelations() {
-		NavigableMap<Long[], ScvRelation> rels = loader.relationsIn.prefixSubMap(new Long[]{scvTx.getId()});
-		return rels.values().stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
+		Set<ScvRelation> rels = loader.relationsIn.get(scvTx.getId());
+		return rels.stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
 	}
 
 	@Override
 	public Collection<ITxRelation> getOutgoingRelations() {
-		NavigableMap<Long[], ScvRelation> rels = loader.relationsOut.prefixSubMap(new Long[]{scvTx.getId()});
-		return rels.values().stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
+		Set<ScvRelation> rels = loader.relationsOut.get(scvTx.getId());
+		return rels.stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
 	}
 
 	@Override
@@ -55,6 +56,18 @@ class Tx implements ITx {
 			return getId().compareTo(o.getId());
 	}
 	
+	@Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        return this.scvTx.equals(((Tx) obj).scvTx);
+    }
+
+	@Override
+    public int hashCode() {
+		return scvTx.hashCode();
+	}
+
 	@Override
 	public String toString() {
 		return "tx#"+getId()+"["+getBeginTime()/1000000+"ns - "+getEndTime()/1000000+"ns]";
@@ -83,6 +96,10 @@ class Tx implements ITx {
 	@Override
 	public Long getEndTime() {
 		return scvTx.endTime;
+	}
+
+	void setEndTime(Long time) {
+		 scvTx.endTime=time;
 	}
 
 	@Override
