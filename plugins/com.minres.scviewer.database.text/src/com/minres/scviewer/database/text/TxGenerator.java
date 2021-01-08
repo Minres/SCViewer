@@ -13,30 +13,26 @@ package com.minres.scviewer.database.text;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxGenerator;
 
-class TxGenerator implements ITxGenerator {
+class TxGenerator extends HierNode implements ITxGenerator {
 
 	Long id;
 
 	IWaveform stream;
-	
-	String name;
-	
+		
 	Boolean active = false;
-	
-	List<ITx> transactions=new ArrayList<>();
 	
 	List<TxAttributeType> beginAttrs = new ArrayList<>();
 	
 	List<TxAttributeType> endAttrs= new ArrayList<>();
 
 	TxGenerator(Long id, TxStream stream, String name){
+		super(name, stream);
 		this.id=id;
 		this.stream=stream;
-		this.name=name;
 	}
 	
 	@Override
@@ -54,11 +50,6 @@ class TxGenerator implements ITxGenerator {
 		return name;
 	}
 
-	@Override
-	public List<ITx> getTransactions(){
-		return transactions;
-	}
-	
 	public List<TxAttributeType> getBeginAttrs() {
 		return beginAttrs;
 	}

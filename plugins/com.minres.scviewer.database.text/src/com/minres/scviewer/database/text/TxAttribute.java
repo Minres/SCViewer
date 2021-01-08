@@ -23,24 +23,13 @@ public class TxAttribute  implements ITxAttribute, Serializable {
 	 */
 	private static final long serialVersionUID = 4767726016651807152L;
 
-	private TxAttributeType attributeType;
+	private final TxAttributeType attributeType;
 
-	private String value=null;
-	
-	TxAttribute(TxAttributeType attributeType){
-		this.attributeType=attributeType;
-	}
+	private final String value;
 	
 	TxAttribute(TxAttributeType type, String value){
-		attributeType=type;
-		switch(type.getDataType()){
-		case STRING:
-		case ENUMERATION:
-			this.value=value.substring(1, value.length()-1);
-			break;
-		default:
-			this.value=value;
-		}
+		this.attributeType=type;
+		this.value=value;
 	}
 
 	@Override

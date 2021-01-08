@@ -10,13 +10,10 @@
  *******************************************************************************/
 package com.minres.scviewer.database.tx;
 
-import java.util.List;
-
 import com.minres.scviewer.database.IWaveform;
 
 public interface ITxGenerator {
 	public Long getId();
 	public IWaveform getStream();
 	public String getName();
-	public List<ITx> getTransactions();
 }

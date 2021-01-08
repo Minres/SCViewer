@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.mapdb.DB;
 import org.mapdb.DB.TreeMapSink;
 import org.mapdb.DBMaker;
@@ -48,16 +49,18 @@ public class TextDbLoader implements IWaveformDbLoader{
 	private Long maxTime=0L;
 
 	DB mapDb=null;
+	
+    final List<String> attrValues = new ArrayList<>();
 
-	final Map<String, RelationType> relationTypes=new HashMap<>();
+	final Map<String, RelationType> relationTypes = UnifiedMap.newMap();
     
-    final Map<Long, TxStream> txStreams = new HashMap<>();
+    final Map<Long, TxStream> txStreams = UnifiedMap.newMap();
     
-    final Map<Long, TxGenerator> txGenerators = new HashMap<>();
+    final Map<Long, TxGenerator> txGenerators = UnifiedMap.newMap();
     
     Map<Long, ScvTx> transactions = null;
 
-    final Map<String, TxAttributeType> attributeTypes = new HashMap<>(); 
+    final Map<String, TxAttributeType> attributeTypes = UnifiedMap.newMap();
 
 	final HashMultimap<Long, ScvRelation> relationsIn = HashMultimap.create();
 
@@ -144,6 +147,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 	}
 
 	public void dispose() {
+		attrValues.clear();
 		relationTypes.clear();
 	    txStreams.clear();
 	    txGenerators.clear();
@@ -202,6 +206,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 		
 		TxGenerator generator=null;
 		
+		Map<String, Integer> attrValueLut = new HashMap<>();
+		
 		public TextDbParser(TextDbLoader loader) {
 			super();
 			this.loader = loader;
@@ -238,13 +244,12 @@ public class TextDbLoader implements IWaveformDbLoader{
 				DataType type = DataType.valueOf(tokens[3]);
 				String remaining = tokens.length>5?String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length)):"";
 				TxAttributeType attrType = getAttrType(name, type, AssociationType.RECORD);
-				transactionById.get(id).attributes.add(new TxAttribute(attrType, remaining));
+				transactionById.get(id).attributes.add(new TxAttribute(attrType, getAttrString(attrType, remaining)));
 			} else if("tx_begin".equals(tokens[0])){
 				Long id = Long.parseLong(tokens[1]);
 				Long genId = Long.parseLong(tokens[2]);
 				TxGenerator gen=loader.txGenerators.get(genId);
 				ScvTx scvTx = new ScvTx(id, gen.stream.getId(), genId, Long.parseLong(tokens[3])*stringToScale(tokens[4]));
-				Tx tx = new Tx(loader, scvTx);
 				loader.maxTime = loader.maxTime>scvTx.beginTime?loader.maxTime:scvTx.beginTime;
 				TxStream stream = loader.txStreams.get(gen.stream.getId());
 				stream.setConcurrency(stream.getConcurrency()+1);
@@ -252,7 +257,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 					int idx=0;
 					while(nextLine!=null && nextLine.charAt(0)=='a') {
 						String[] attrTokens=nextLine.split("\\s+");
-						TxAttribute attr = new TxAttribute(gen.beginAttrs.get(idx), attrTokens[1]);
+						TxAttributeType attrType = gen.beginAttrs.get(idx);
+						TxAttribute attr = new TxAttribute(attrType, getAttrString(attrType, attrTokens[1]));
 						scvTx.attributes.add(attr);
 						idx++;
 						nextLine=reader.readLine();
@@ -260,10 +266,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 				}
 				txSink.put(id, scvTx);
 				transactionById.put(id, scvTx);
-				gen.getTransactions().add(tx);
 			} else if("tx_end".equals(tokens[0])){
 				Long id = Long.parseLong(tokens[1]);
-				//ScvTx tx = loader.transactions.get(id);
 				ScvTx scvTx = transactionById.get(id);
 				assert Long.parseLong(tokens[2])==scvTx.generatorId;
 				scvTx.endTime=Long.parseLong(tokens[3])*stringToScale(tokens[4]);
@@ -281,7 +285,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 					int idx=0;
 					while(nextLine!=null && nextLine.charAt(0)=='a') {
 						String[] attrTokens=nextLine.split("\\s+");
-						TxAttribute attr = new TxAttribute(gen.endAttrs.get(idx), attrTokens[1]);
+						TxAttributeType attrType = gen.endAttrs.get(idx);
+						TxAttribute attr = new TxAttribute(attrType, getAttrString(attrType, attrTokens[1]));
 						scvTx.attributes.add(attr);
 						idx++;
 						nextLine=reader.readLine();
@@ -332,6 +337,25 @@ public class TextDbLoader implements IWaveformDbLoader{
 			return nextLine;
 		}
 		
+		private String getAttrString(TxAttributeType attrType, String string) {
+			String value;
+			switch(attrType.getDataType()){
+			case STRING:
+			case ENUMERATION:
+				value=string.substring(1, string.length()-1);
+				break;
+			default:
+				value=string;
+			}
+			if(attrValueLut.containsKey(value)){
+				return loader.attrValues.get(attrValueLut.get(value));
+			} else {
+				attrValueLut.put(value, loader.attrValues.size());
+				loader.attrValues.add(value);
+				return value;
+			}
+		}
+
 		private long stringToScale(String scale){
 			String cmp = scale.trim();
 			if("fs".equals(cmp)) return 1L;

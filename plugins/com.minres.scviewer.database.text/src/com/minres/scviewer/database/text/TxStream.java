@@ -22,6 +22,7 @@ import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
+import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.tx.ITxGenerator;
 
 class TxStream extends HierNode implements IWaveform {
@@ -63,14 +64,14 @@ class TxStream extends HierNode implements IWaveform {
 		return maxConcurrency;
 	}
 
-	public void addEvent(TxEvent evt) {
-		if(!events.containsKey(evt.time))
-			events.put(evt.time, new IEvent[] {evt});
+	public void addEvent(ITxEvent evt) {
+		if(!events.containsKey(evt.getTime()))
+			events.put(evt.getTime(), new IEvent[] {evt});
 		else {
-			IEvent[] evts = events.get(evt.time);
+			IEvent[] evts = events.get(evt.getTime());
 			IEvent[] newEvts = Arrays.copyOf(evts, evts.length+1);
 			newEvts[evts.length]=evt;
-			events.put(evt.time, newEvts);
+			events.put(evt.getTime(), newEvts);
 		}
 	}
 	
