@@ -31,6 +31,8 @@ class TxStream extends HierNode implements IWaveform {
 			
 	private TextDbLoader loader;
 	
+	final String kind;
+	
 	private int maxConcurrency = 0;
 	
 	private int concurrency = 0;
@@ -53,6 +55,7 @@ class TxStream extends HierNode implements IWaveform {
 		super(name);
 		this.id=id;
 		this.loader=loader;
+		this.kind=kind;
 	}
 
 	List<ITxGenerator> getGenerators(){
@@ -78,7 +81,7 @@ class TxStream extends HierNode implements IWaveform {
 	@Override
 	public NavigableMap<Long, IEvent[]> getEvents() {
 		if(!concurrencyCalculated) calculateConcurrency();
-		return (NavigableMap<Long, IEvent[]>)events;
+		return events;
 	}
 
 	@Override
@@ -89,15 +92,16 @@ class TxStream extends HierNode implements IWaveform {
 	
 	@Override
 	public boolean isSame(IWaveform other) {
-		return(other instanceof TxStream && this.getId()==other.getId());
+		return(other instanceof TxStream && this.getId().equals(other.getId()));
 	}
 
 	@Override
 	public IEvent[] getEventsBeforeTime(Long time) {
-		if(!concurrencyCalculated) calculateConcurrency();
+		if(!concurrencyCalculated)
+			calculateConcurrency();
     	Entry<Long, IEvent[]> e = events.floorEntry(time);
     	if(e==null)
-    		return null;
+    		return new IEvent[] {};
     	else
     		return  events.floorEntry(time).getValue();
 	}

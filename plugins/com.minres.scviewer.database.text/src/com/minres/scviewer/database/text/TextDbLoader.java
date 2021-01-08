@@ -16,6 +16,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -99,25 +102,25 @@ public class TextDbLoader implements IWaveformDbLoader{
 		if(file.length() < 75000000*(gzipped?1:10) || "memory".equals(System.getProperty("ScvBackingDB", "file")))
 			mapDb = DBMaker
 			.memoryDirectDB()
-			.allocateStartSize(512*1024*1024)
-			.allocateIncrement(128*1024*1024)
+			.allocateStartSize(512l*1024l*1024l)
+			.allocateIncrement(128l*1024l*1024l)
 			.cleanerHackEnable()
 			.make();
 		else {
 			File mapDbFile;
 			try {
 				mapDbFile = File.createTempFile("."+file.getName(), ".mapdb", null /*file.parentFile*/);
+				Files.delete(Paths.get(mapDbFile.getPath()));
 			} catch (IOException e1) {
 				return false;
 			}
-			mapDbFile.delete(); // we just need a file name
 			mapDb = DBMaker
 			.fileDB(mapDbFile)
 			.fileMmapEnable()            // Always enable mmap
 			.fileMmapEnableIfSupported()
 			.fileMmapPreclearDisable()
-			.allocateStartSize(512*1024*1024)
-			.allocateIncrement(128*1024*1024)
+			.allocateStartSize(512l*1024l*1024l)
+			.allocateIncrement(128l*1024l*1024l)
 			.cleanerHackEnable()
 			.make();
 			mapDbFile.deleteOnExit();
@@ -134,6 +137,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 		}
 		for(TxStream stream:txStreams.values()) {
 			Thread t = new Thread() {
+				@Override
 				public void run() {
 					try {
 					stream.calculateConcurrency();
@@ -145,7 +149,8 @@ public class TextDbLoader implements IWaveformDbLoader{
 		}
 		return true;
 	}
-
+	
+	@Override
 	public void dispose() {
 		attrValues.clear();
 		relationTypes.clear();
@@ -214,7 +219,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 		}
 
 		void parseInput(InputStream inputStream) throws IOException{
-			reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+			reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
 			String curLine = reader.readLine();
 			String nextLine = null;
 			while((nextLine=reader.readLine())!=null && curLine!=null) {

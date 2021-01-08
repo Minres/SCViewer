@@ -13,16 +13,12 @@ import org.eclipse.jface.databinding.viewers.ObservableListContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -83,16 +79,16 @@ public class TransactionList extends Composite {
 	private TableViewer tableViewer = null; 
 
 	private TableColumn valueColumn = null;
-	
+
 	private AttributeLabelProvider valueLabelProvider = null;
 
 	private IWaveform stream;
 
-	private ObservableList<AttributeNameBean> attrNames = new WritableList<AttributeNameBean>();
+	private ObservableList<AttributeNameBean> attrNames = new WritableList<>();
 
-	private List<ITx> eventList = new ArrayList<ITx>();
+	private List<ITx> eventList = new ArrayList<>();
 
-	private List<ITx> emptyList = new ArrayList<ITx>();
+	private List<ITx> emptyList = new ArrayList<>();
 
 	TxFilter txFilter;
 
@@ -115,6 +111,7 @@ public class TransactionList extends Composite {
 
 		searchPropComboViewer = new ComboViewer(this, SWT.NONE);
 		searchPropComboViewer.setLabelProvider(new LabelProvider() {
+			@Override
 			public String getText(Object element) {
 				AttributeNameBean entry = (AttributeNameBean) element;
 				return entry.getName()+" ["+entry.getType().toString()+"]";
@@ -123,20 +120,19 @@ public class TransactionList extends Composite {
 		searchPropComboViewer.setContentProvider(new ObservableListContentProvider<AttributeNameBean>());
 		searchPropComboViewer.setInput(attrNames);
 		Combo searchPropCombo = searchPropComboViewer.getCombo();
-		GridData gd_searchProp = new GridData(SWT.LEFT, SWT.FILL, false, false, 1, 1);
-		gd_searchProp.widthHint=100;
-		searchPropCombo.setLayoutData(gd_searchProp);
+		GridData gdSearchProp = new GridData(SWT.LEFT, SWT.FILL, false, false, 1, 1);
+		gdSearchProp.widthHint=100;
+		searchPropCombo.setLayoutData(gdSearchProp);
 		searchPropCombo.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				int idx = searchPropCombo.getSelectionIndex();
-				if(idx<0) return;
-				AttributeNameBean sel = attrNames.get(idx);
-				txFilter.setSearchProp(sel.getName(), sel.getType());
-				tableViewer.refresh();
+				extracted(searchPropCombo);
 			}
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) { 
+				extracted(searchPropCombo);
+			}
+			private void extracted(Combo searchPropCombo) {
 				int idx = searchPropCombo.getSelectionIndex();
 				if(idx<0) return;
 				AttributeNameBean sel = attrNames.get(idx);
@@ -146,15 +142,12 @@ public class TransactionList extends Composite {
 		});
 
 		searchPropValue = new Text(this, SWT.BORDER);
-		GridData gd_searchPropValue = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
-		gd_searchPropValue.minimumWidth = 50;
-		searchPropValue.setLayoutData(gd_searchPropValue);
-		searchPropValue.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				txFilter.setSearchValue(((Text) e.widget).getText());
-				tableViewer.refresh();
-			}
+		GridData gdSearchPropValue = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		gdSearchPropValue.minimumWidth = 50;
+		searchPropValue.setLayoutData(gdSearchPropValue);
+		searchPropValue.addModifyListener(e -> {
+			txFilter.setSearchValue(((Text) e.widget).getText());
+			tableViewer.refresh();
 		});
 
 		Label lbl2 = new Label(this, SWT.NONE);
@@ -164,6 +157,7 @@ public class TransactionList extends Composite {
 
 		viewPropComboViewer = new ComboViewer(this, SWT.NONE);
 		viewPropComboViewer.setLabelProvider(new LabelProvider() {
+			@Override
 			public String getText(Object element) {
 				AttributeNameBean entry = (AttributeNameBean) element;
 				return entry.getName()+" ["+entry.getType().toString()+"]";
@@ -172,9 +166,9 @@ public class TransactionList extends Composite {
 		viewPropComboViewer.setContentProvider(new ObservableListContentProvider<AttributeNameBean>());
 		viewPropComboViewer.setInput(attrNames);
 		Combo viewPropCombo = viewPropComboViewer.getCombo();
-		GridData gd_viewProp = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
-		gd_viewProp.widthHint=100;
-		viewPropCombo.setLayoutData(gd_viewProp);
+		GridData gdviewProp = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gdviewProp.widthHint=100;
+		viewPropCombo.setLayoutData(gdviewProp);
 		viewPropCombo.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -184,7 +178,7 @@ public class TransactionList extends Composite {
 				tableViewer.refresh(true);
 			}
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) { }
+			public void widgetDefaultSelected(SelectionEvent e) { /* do nothing */ }
 		});
 
 		tableViewer = new TableViewer(this);
@@ -200,21 +194,18 @@ public class TransactionList extends Composite {
 			}
 		});
 		tableViewer.addFilter(txFilter);
-		tableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				ISelection treeSelection = event.getSelection();
-				if(treeSelection instanceof IStructuredSelection) {
-					Object selected = ((IStructuredSelection)treeSelection).getFirstElement();
-					if(selected instanceof ITx){
-						waveformViewer.setSelection(new StructuredSelection(selected));
-					} else if(selected instanceof TransactionTreeNode && ((TransactionTreeNode)selected).type == TransactionTreeNodeType.TX) {
-						waveformViewer.setSelection(new StructuredSelection(((TransactionTreeNode)selected).element));
-					}
+		tableViewer.addSelectionChangedListener(event -> {
+			ISelection treeSelection = event.getSelection();
+			if(treeSelection instanceof IStructuredSelection) {
+				Object selected = ((IStructuredSelection)treeSelection).getFirstElement();
+				if(selected instanceof ITx){
+					waveformViewer.setSelection(new StructuredSelection(selected));
+				} else if(selected instanceof TransactionTreeNode && ((TransactionTreeNode)selected).type == TransactionTreeNodeType.TX) {
+					waveformViewer.setSelection(new StructuredSelection(((TransactionTreeNode)selected).element));
 				}
 			}
 		});
-		
+
 		Table table = tableViewer.getTable();
 		table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 5, 1));
 
@@ -254,7 +245,7 @@ public class TransactionList extends Composite {
 			stream=trackEntry.waveform;
 			tableViewer.setInput(emptyList);
 			new Thread() {
-				private ConcurrentHashMap<String, DataType> propNames=new ConcurrentHashMap<String, DataType>();
+				private ConcurrentHashMap<String, DataType> propNames=new ConcurrentHashMap<>();
 
 				private List<AttributeNameBean> getEntries() {
 					return propNames.entrySet().stream()
@@ -263,6 +254,7 @@ public class TransactionList extends Composite {
 							.collect(Collectors.toList());
 				}
 
+				@Override
 				public void run() {
 					Collection<IEvent[]> values = stream.getEvents().values();
 					eventList = values.parallelStream().map(Arrays::asList)
@@ -283,7 +275,7 @@ public class TransactionList extends Composite {
 							tableViewer.setInput(eventList);
 							attrNames.clear();
 							attrNames.addAll(getEntries());
-							if(attrNames.size()>0)
+							if(!attrNames.isEmpty())
 								txFilter.setSearchProp(attrNames.get(0).getName(), attrNames.get(0).getType());
 							if (searchPropComboViewer!=null) {
 								searchPropComboViewer.setInput(attrNames);
@@ -297,7 +289,7 @@ public class TransactionList extends Composite {
 			}.start();
 		}
 	}
-	
+
 	public void setSearchProps(String propName, DataType type, String propValue) {
 		for(int i=0; i<attrNames.size(); ++i) {
 			AttributeNameBean e = attrNames.get(i);
