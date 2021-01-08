@@ -68,6 +68,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean load(IWaveformDb db, File file) throws InputFormatException {
+		dispose();
 		if(file.isDirectory() || !file.exists()) return false;
 		this.maxTime=0;
 		boolean res = false;
@@ -108,6 +109,11 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 			}
 		}
 		return true;
+	}
+
+	public void dispose() {
+		moduleStack=null;
+		signals=null;
 	}
 
 	/* (non-Javadoc)

@@ -12,7 +12,6 @@ package com.minres.scviewer.database.text;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.NavigableMap;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,24 +25,33 @@ class Tx implements ITx {
 	
 	private final TextDbLoader loader;
 	
-	private ScvTx scvTx = null;
+	private long id;
+		
+	long beginTime=-1;
+	
+	long endTime=-1;
 	
 	private int concurrencyIndex;
 				
 	public Tx(TextDbLoader loader, ScvTx scvTx) {
 		this.loader=loader;
-		this.scvTx = scvTx;
+		id=scvTx.id;
+	}
+
+	public Tx(TextDbLoader loader, long txId) {
+		this.loader=loader;
+		id=txId;
 	}
 
 	@Override
 	public Collection<ITxRelation> getIncomingRelations() {
-		Set<ScvRelation> rels = loader.relationsIn.get(scvTx.getId());
+		Set<ScvRelation> rels = loader.relationsIn.get(id);
 		return rels.stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
 	}
 
 	@Override
 	public Collection<ITxRelation> getOutgoingRelations() {
-		Set<ScvRelation> rels = loader.relationsOut.get(scvTx.getId());
+		Set<ScvRelation> rels = loader.relationsOut.get(id);
 		return rels.stream().map(rel -> new TxRelation(loader, rel)).collect(Collectors.toList());
 	}
 
@@ -60,12 +68,12 @@ class Tx implements ITx {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        return this.scvTx.equals(((Tx) obj).scvTx);
+        return this.getScvTx().equals(((Tx) obj).getScvTx());
     }
 
 	@Override
     public int hashCode() {
-		return scvTx.hashCode();
+		return getScvTx().hashCode();
 	}
 
 	@Override
@@ -75,31 +83,33 @@ class Tx implements ITx {
 
 	@Override
 	public Long getId() {
-		return scvTx.id;
+		return getScvTx().id;
 	}
 
 	@Override
 	public IWaveform getStream() {
-		return loader.txStreams.get(scvTx.streamId);
+		return loader.txStreams.get(getScvTx().streamId);
 	}
 
 	@Override
 	public ITxGenerator getGenerator() {
-		return loader.txGenerators.get(scvTx.generatorId);
+		return loader.txGenerators.get(getScvTx().generatorId);
 	}
 
 	@Override
 	public Long getBeginTime() {
-		return scvTx.beginTime;
+		if(beginTime<0)	beginTime=getScvTx().beginTime;
+		return beginTime;
 	}
 
 	@Override
 	public Long getEndTime() {
-		return scvTx.endTime;
+		if(endTime<0) endTime=getScvTx().endTime;
+		return endTime;
 	}
 
 	void setEndTime(Long time) {
-		 scvTx.endTime=time;
+		 getScvTx().endTime=time;
 	}
 
 	@Override
@@ -107,13 +117,16 @@ class Tx implements ITx {
 		return concurrencyIndex;
 	}
 
-	public void setConcurrencyIndex(int idx) {
+	void setConcurrencyIndex(int idx) {
 		concurrencyIndex=idx;
 	}
 
 	@Override
 	public List<ITxAttribute> getAttributes() {
-		return scvTx.attributes;
+		return getScvTx().attributes;
 	}
 
+	private ScvTx getScvTx() {
+		return loader.transactions.get(id);
+	}
 }

@@ -111,7 +111,8 @@ class TxStream extends HierNode implements IWaveform {
 		return id;
 	}
 
-	private void calculateConcurrency() {
+	synchronized void calculateConcurrency() {
+		if(concurrencyCalculated) return;
 		ArrayList<Long> rowendtime = new ArrayList<>();
 		events.entrySet().stream().forEach( entry -> {
 			IEvent[] values = entry.getValue();

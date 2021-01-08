@@ -75,6 +75,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 
 	@Override
 	public boolean load(IWaveformDb db, File file) throws InputFormatException {
+		dispose();
 		if(file.isDirectory() || !file.exists()) return false;
 		try(FileInputStream fis = new FileInputStream(file)) {
 			byte[] buffer = new byte[x.length];
@@ -100,7 +101,12 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 		}
 		return false;
 	}
-	
+
+	public void dispose() {
+		database=null;
+		usedRelationsList=null;
+	}
+
 	@Override
 	public Collection<RelationType> getAllRelationTypes(){
 		return usedRelationsList;

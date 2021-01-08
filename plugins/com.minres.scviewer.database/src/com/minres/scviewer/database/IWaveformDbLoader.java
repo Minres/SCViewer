@@ -14,7 +14,7 @@ import java.io.File;
 import java.util.Collection;
 
 public interface IWaveformDbLoader {
-	
+
 	public boolean load(IWaveformDb db, File inp) throws InputFormatException;
 	
 	public Long getMaxTime();
@@ -23,4 +23,5 @@ public interface IWaveformDbLoader {
 	
 	public Collection<RelationType> getAllRelationTypes() ;
 	
+	public void dispose();
 }

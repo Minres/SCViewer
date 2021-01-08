@@ -294,7 +294,7 @@ public class TransactionList extends Composite {
 						}
 					});
 				}
-			}.run();
+			}.start();
 		}
 	}
 	

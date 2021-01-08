@@ -20,10 +20,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+
+import org.mapdb.DB;
+import org.mapdb.DB.TreeMapSink;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 
 import com.google.common.collect.HashMultimap;
 import com.minres.scviewer.database.AssociationType;
@@ -41,20 +47,26 @@ public class TextDbLoader implements IWaveformDbLoader{
 
 	private Long maxTime=0L;
 
-	Map<String, RelationType> relationTypes = null;
+	DB mapDb=null;
+
+	final Map<String, RelationType> relationTypes=new HashMap<>();
     
-    Map<Long, TxStream> txStreams = null;
+    final Map<Long, TxStream> txStreams = new HashMap<>();
     
-    Map<Long, TxGenerator> txGenerators = null;
+    final Map<Long, TxGenerator> txGenerators = new HashMap<>();
     
     Map<Long, ScvTx> transactions = null;
 
-    Map<String, TxAttributeType> attributeTypes = null; 
+    final Map<String, TxAttributeType> attributeTypes = new HashMap<>(); 
 
-	HashMultimap<Long, ScvRelation> relationsIn = null;
+	final HashMultimap<Long, ScvRelation> relationsIn = HashMultimap.create();
 
-	HashMultimap<Long, ScvRelation> relationsOut = null;
+	final HashMultimap<Long, ScvRelation> relationsOut = HashMultimap.create();
 
+    HashMap<Long, Tx> txCache = new HashMap<>();
+
+    List<Thread> threads = new ArrayList<>();
+    
     @Override
 	public Long getMaxTime() {
 		return maxTime;
@@ -70,6 +82,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 	@SuppressWarnings("unchecked")
 	@Override
 	public	boolean load(IWaveformDb db, File file) throws InputFormatException {
+		dispose();
 		if(file.isDirectory() || !file.exists()) return false;
 		TextDbParser parser = new TextDbParser(this);
 		boolean gzipped = isGzipped(file);
@@ -79,24 +92,71 @@ public class TextDbLoader implements IWaveformDbLoader{
 		} catch(Exception e) {
 			throw new InputFormatException();
 		}
-		relationTypes=new HashMap<String, RelationType>();
-	    txStreams = new HashMap<>();
-	    txGenerators = new HashMap<>();
-	    transactions = new HashMap<>();
-	    attributeTypes = new HashMap<>(); 
-		relationsIn = HashMultimap.create();
-		relationsOut = HashMultimap.create();
+		
+		if(file.length() < 75000000*(gzipped?1:10) || "memory".equals(System.getProperty("ScvBackingDB", "file")))
+			mapDb = DBMaker
+			.memoryDirectDB()
+			.allocateStartSize(512*1024*1024)
+			.allocateIncrement(128*1024*1024)
+			.cleanerHackEnable()
+			.make();
+		else {
+			File mapDbFile;
+			try {
+				mapDbFile = File.createTempFile("."+file.getName(), ".mapdb", null /*file.parentFile*/);
+			} catch (IOException e1) {
+				return false;
+			}
+			mapDbFile.delete(); // we just need a file name
+			mapDb = DBMaker
+			.fileDB(mapDbFile)
+			.fileMmapEnable()            // Always enable mmap
+			.fileMmapEnableIfSupported()
+			.fileMmapPreclearDisable()
+			.allocateStartSize(512*1024*1024)
+			.allocateIncrement(128*1024*1024)
+			.cleanerHackEnable()
+			.make();
+			mapDbFile.deleteOnExit();
+		}
 		try {
-		      parser.parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file));
+			parser.txSink = mapDb.treeMap("transactions", Serializer.LONG,Serializer.JAVA).createFromSink();
+			parser.parseInput(gzipped?new GZIPInputStream(new FileInputStream(file)):new FileInputStream(file));
+			transactions = parser.txSink.create();
 		} catch(IllegalArgumentException|ArrayIndexOutOfBoundsException e) {
 		} catch(Exception e) {
 			System.out.println("---->>> Exception "+e.toString()+" caught while loading database");
 			e.printStackTrace();
 			return false;
 		}
+		for(TxStream stream:txStreams.values()) {
+			Thread t = new Thread() {
+				public void run() {
+					try {
+					stream.calculateConcurrency();
+					} catch (Exception e) {/* don't let exceptions bubble up */ }
+				}
+			};
+			threads.add(t);
+			t.start();
+		}
 		return true;
 	}
 
+	public void dispose() {
+		relationTypes.clear();
+	    txStreams.clear();
+	    txGenerators.clear();
+	    transactions = null;
+	    attributeTypes.clear(); 
+		relationsIn.clear();
+		relationsOut.clear();
+		if(mapDb!=null) {
+			mapDb.close();
+			mapDb=null;
+		}
+	}
+	
 	private static boolean isTxfile(InputStream istream) {
 		byte[] buffer = new byte[x.length];
 		try {
@@ -133,6 +193,10 @@ public class TextDbLoader implements IWaveformDbLoader{
 		static final Pattern end_attribute = Pattern.compile("^end_attribute \\(ID (\\d+), name \"([^\"]+)\", type \"([^\"]+)\"\\)$");
 				
 		final TextDbLoader loader;
+		
+		HashMap<Long, ScvTx> transactionById = new HashMap<>();
+		
+		TreeMapSink<Long, ScvTx> txSink;
 		
 		BufferedReader reader = null;
 		
@@ -174,7 +238,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				DataType type = DataType.valueOf(tokens[3]);
 				String remaining = tokens.length>5?String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length)):"";
 				TxAttributeType attrType = getAttrType(name, type, AssociationType.RECORD);
-				loader.transactions.get(id).attributes.add(new TxAttribute(attrType, remaining));
+				transactionById.get(id).attributes.add(new TxAttribute(attrType, remaining));
 			} else if("tx_begin".equals(tokens[0])){
 				Long id = Long.parseLong(tokens[1]);
 				Long genId = Long.parseLong(tokens[2]);
@@ -189,26 +253,28 @@ public class TextDbLoader implements IWaveformDbLoader{
 					while(nextLine!=null && nextLine.charAt(0)=='a') {
 						String[] attrTokens=nextLine.split("\\s+");
 						TxAttribute attr = new TxAttribute(gen.beginAttrs.get(idx), attrTokens[1]);
-						tx.getAttributes().add(attr);
+						scvTx.attributes.add(attr);
 						idx++;
 						nextLine=reader.readLine();
 					}
 				}
-				loader.transactions.put(id, scvTx);
+				txSink.put(id, scvTx);
+				transactionById.put(id, scvTx);
 				gen.getTransactions().add(tx);
 			} else if("tx_end".equals(tokens[0])){
 				Long id = Long.parseLong(tokens[1]);
-				ScvTx tx = loader.transactions.get(id);
-				assert Long.parseLong(tokens[2])==tx.generatorId;
-				tx.endTime=Long.parseLong(tokens[3])*stringToScale(tokens[4]);
-				loader.maxTime = loader.maxTime>tx.endTime?loader.maxTime:tx.endTime;
-				TxGenerator gen = loader.txGenerators.get(tx.generatorId);
+				//ScvTx tx = loader.transactions.get(id);
+				ScvTx scvTx = transactionById.get(id);
+				assert Long.parseLong(tokens[2])==scvTx.generatorId;
+				scvTx.endTime=Long.parseLong(tokens[3])*stringToScale(tokens[4]);
+				loader.maxTime = loader.maxTime>scvTx.endTime?loader.maxTime:scvTx.endTime;
+				TxGenerator gen = loader.txGenerators.get(scvTx.generatorId);
 				TxStream stream = loader.txStreams.get(gen.stream.getId());
-				if(tx.beginTime==tx.endTime)
-					stream.addEvent(new TxEvent(loader, EventKind.SINGLE, id, tx.beginTime));
+				if(scvTx.beginTime==scvTx.endTime)
+					stream.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
 				else {
-					stream.addEvent(new TxEvent(loader, EventKind.BEGIN, id, tx.beginTime));
-					stream.addEvent(new TxEvent(loader, EventKind.END, id, tx.endTime));
+					stream.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
+					stream.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
 				}
 				stream.setConcurrency(stream.getConcurrency()-1);
 				if(nextLine!=null && nextLine.charAt(0)=='a') {
@@ -216,7 +282,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 					while(nextLine!=null && nextLine.charAt(0)=='a') {
 						String[] attrTokens=nextLine.split("\\s+");
 						TxAttribute attr = new TxAttribute(gen.endAttrs.get(idx), attrTokens[1]);
-						tx.attributes.add(attr);
+						scvTx.attributes.add(attr);
 						idx++;
 						nextLine=reader.readLine();
 					}
@@ -278,8 +344,12 @@ public class TextDbLoader implements IWaveformDbLoader{
 		}
 	}
 
-	public ITx getTransaction(long source) {
-		return new Tx(this, transactions.get(source));
+	public ITx getTransaction(long txId) {
+		if(txCache.containsKey(txId))
+			return txCache.get(txId);
+		Tx tx = new Tx(this, txId);
+		txCache.put(txId, tx);
+		return tx;
 	}
 
 }
