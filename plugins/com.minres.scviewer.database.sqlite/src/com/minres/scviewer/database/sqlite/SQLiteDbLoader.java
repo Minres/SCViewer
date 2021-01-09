@@ -111,7 +111,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 			pcs.firePropertyChange(IWaveformDbLoader.LOADING_FINISHED, null, null);
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
 				| InvocationTargetException | SQLException | IntrospectionException e) {
-			throw new InputFormatException();
+			throw new InputFormatException(e.toString());
 		}
 	}
 

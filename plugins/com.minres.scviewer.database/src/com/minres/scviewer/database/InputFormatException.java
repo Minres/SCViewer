@@ -15,6 +15,18 @@ package com.minres.scviewer.database;
  */
 public class InputFormatException extends Exception {
 
+	/** The message. */
+	public final String message;
+	
+	/**
+	 * Instantiates a new input format exception.
+	 *
+	 * @param string the string
+	 */
+	public InputFormatException(String string) {
+		message=string;
+	}
+
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 8676129878197783368L;
 

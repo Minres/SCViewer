@@ -165,8 +165,8 @@ public class TextDbLoader implements IWaveformDbLoader {
 			try {
 				mapDbFile = File.createTempFile("." + file.getName(), ".mapdb", null /* file.parentFile */);
 				Files.delete(Paths.get(mapDbFile.getPath()));
-			} catch (IOException e1) {
-				throw new InputFormatException();
+			} catch (IOException e) {
+				throw new InputFormatException(e.toString());
 			}
 			mapDb = DBMaker.fileDB(mapDbFile).fileMmapEnable() // Always enable mmap
 					.fileMmapEnableIfSupported().fileMmapPreclearDisable().allocateStartSize(512l * 1024l * 1024l)
@@ -180,9 +180,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 			transactions = parser.txSink.create();
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 		} catch (Exception e) {
-			System.out.println("---->>> Exception " + e.toString() + " caught while loading database");
-			e.printStackTrace();
-			throw new InputFormatException();
+			throw new InputFormatException(e.toString());
 		}
 		for (TxStream stream : txStreams.values()) {
 			Thread t = new Thread() {
@@ -297,8 +295,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 		 *
 		 * @param inputStream the input stream
 		 * @throws IOException Signals that an I/O exception has occurred.
+		 * @throws InputFormatException Signals that the input format is wrong
 		 */
-		void parseInput(InputStream inputStream) throws IOException {
+		void parseInput(InputStream inputStream) throws IOException, InputFormatException {
 			reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
 			String curLine = reader.readLine();
 			String nextLine = null;
@@ -336,8 +335,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 		 * @param nextLine the next line
 		 * @return the string
 		 * @throws IOException Signals that an I/O exception has occurred.
+		 * @throws InputFormatException Signals that the input format is wrong
 		 */
-		private String parseLine(String curLine, String nextLine) throws IOException {
+		private String parseLine(String curLine, String nextLine) throws IOException, InputFormatException {
 			String[] tokens = curLine.split("\\s+");
 			if ("tx_record_attribute".equals(tokens[0])) {
 				Long id = Long.parseLong(tokens[1]);
@@ -441,10 +441,8 @@ public class TextDbLoader implements IWaveformDbLoader {
 				}
 			} else if (")".equals(tokens[0])) {
 				generator = null;
-			} else if ("a".equals(tokens[0])) {// matcher = line =~ /^a\s+(.+)$/
-				System.out.println("Don't know what to do with: '" + curLine + "'");
 			} else
-				System.out.println("Don't know what to do with: '" + curLine + "'");
+				throw new InputFormatException("Don't know what to do with: '" + curLine + "'");
 			return nextLine;
 		}
 

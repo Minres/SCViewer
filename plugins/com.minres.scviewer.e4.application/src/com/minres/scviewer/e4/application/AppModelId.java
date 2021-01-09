@@ -8,7 +8,7 @@ public class AppModelId {
 	public static final String ADDON_ORG_ECLIPSE_E4_UI_WORKBENCH_COMMANDS_MODEL = "org.eclipse.e4.ui.workbench.commands.model";
 	public static final String ADDON_ORG_ECLIPSE_E4_UI_WORKBENCH_CONTEXTS_MODEL = "org.eclipse.e4.ui.workbench.contexts.model";
 	public static final String ADDON_ORG_ECLIPSE_E4_UI_WORKBENCH_HANDLER_MODEL = "org.eclipse.e4.ui.workbench.handler.model";
-	public static final String ADDON_ORG_ECLIPSE_E4_UI_WORKBENC__H_ADDONS_DNDADDON_DNDADDON = "org.eclipse.e4.ui.workbenc‌​h.addons.dndaddon.DnDAddon";
+	public static final String ADDON_ORG_ECLIPSE_E4_UI_WORKBENCH_ADDONS_DNDADDON_DNDADDON = "org.eclipse.e4.ui.workbench.addons.dndaddon.DnDAddon";
 	public static final String APPLICATION_ORG_ECLIPSE_E4_IDE_APPLICATION = "org.eclipse.e4.ide.application";
 	public static final String BINDINGCONTEXT_ORG_ECLIPSE_UI_CONTEXTS_DIALOG = "org.eclipse.ui.contexts.dialog";
 	public static final String BINDINGCONTEXT_ORG_ECLIPSE_UI_CONTEXTS_DIALOGANDWINDOW = "org.eclipse.ui.contexts.dialogAndWindow";
@@ -152,4 +152,6 @@ public class AppModelId {
 	public static final String TRIMBAR_ORG_ECLIPSE_UI_MAIN_TOOLBAR = "org.eclipse.ui.main.toolbar";
 	public static final String TRIMBAR_ORG_ECLIPSE_UI_TRIM_STATUS = "org.eclipse.ui.trim.status";
 	public static final String WINDOW_COM_MINRES_SCVIEWER_E4_APPLICATION_DIALOG_ABOUTSCVIEWER = "com.minres.scviewer.e4.application.dialog.aboutscviewer";
+	
+	private AppModelId(){}
 }

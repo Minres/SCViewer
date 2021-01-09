@@ -46,6 +46,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.wb.swt.ResourceManager;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 import com.minres.scviewer.e4.application.Constants;
 
@@ -249,7 +250,7 @@ public class FileBrowserDialog extends TrayDialog {
 		
 		fileNameEntry = new Text(bottomBar, SWT.BORDER);
 		fileNameEntry.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
-		fileNameEntry.setEditable(false); //TODO: temporary disabled
+		fileNameEntry.setEditable(false);
 		fileNameEntry.setEnabled(false);
 		
 		filterCombo = new Combo(bottomBar, SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
@@ -457,7 +458,7 @@ public class FileBrowserDialog extends TrayDialog {
 
 		@Override
 		public Color getForeground(Object element) {
-			return globber.matches(element) || ((File)element).isDirectory()? null: ResourceManager.getColor(SWT.COLOR_GRAY);
+			return globber.matches(element) || ((File)element).isDirectory()? null: SWTResourceManager.getColor(SWT.COLOR_GRAY);
 		}
 
 	}

@@ -138,35 +138,33 @@ public class ResourceManager extends SWTResourceManager {
 			decoratedImageMap[corner] = cornerDecoratedImageMap;
 		}
 		Map<Image, Image> decoratedMap = cornerDecoratedImageMap.computeIfAbsent(baseImage, k -> new HashMap<Image, Image>());
-		Image result = decoratedMap.get(decorator);
-		if (result == null) {
-			final Rectangle bib = baseImage.getBounds();
-			final Rectangle dib = decorator.getBounds();
-			final Point baseImageSize = new Point(bib.width, bib.height);
-			CompositeImageDescriptor compositImageDesc = new CompositeImageDescriptor() {
-				@Override
-				protected void drawCompositeImage(int width, int height) {
-					drawImage(createCachedImageDataProvider(baseImage), 0, 0);
-					if (corner == TOP_LEFT) {
-						drawImage(getUnzoomedImageDataProvider(decorator.getImageData()) , 0, 0);
-					} else if (corner == TOP_RIGHT) {
-						drawImage(getUnzoomedImageDataProvider(decorator.getImageData()), bib.width - dib.width, 0);
-					} else if (corner == BOTTOM_LEFT) {
-						drawImage(getUnzoomedImageDataProvider(decorator.getImageData()), 0, bib.height - dib.height);
-					} else if (corner == BOTTOM_RIGHT) {
-						drawImage(getUnzoomedImageDataProvider(decorator.getImageData()), bib.width - dib.width, bib.height - dib.height);
-					}
+		return decoratedMap.computeIfAbsent(decorator, k -> createImage(baseImage, decorator, corner));
+	}
+
+	private static Image createImage(final Image baseImage, final Image decorator, final int corner) {
+		final Rectangle bib = baseImage.getBounds();
+		final Rectangle dib = decorator.getBounds();
+		final Point baseImageSize = new Point(bib.width, bib.height);
+		CompositeImageDescriptor compositImageDesc = new CompositeImageDescriptor() {
+			@Override
+			protected void drawCompositeImage(int width, int height) {
+				drawImage(createCachedImageDataProvider(baseImage), 0, 0);
+				if (corner == TOP_LEFT) {
+					drawImage(getUnzoomedImageDataProvider(decorator.getImageData()) , 0, 0);
+				} else if (corner == TOP_RIGHT) {
+					drawImage(getUnzoomedImageDataProvider(decorator.getImageData()), bib.width - dib.width, 0);
+				} else if (corner == BOTTOM_LEFT) {
+					drawImage(getUnzoomedImageDataProvider(decorator.getImageData()), 0, bib.height - dib.height);
+				} else if (corner == BOTTOM_RIGHT) {
+					drawImage(getUnzoomedImageDataProvider(decorator.getImageData()), bib.width - dib.width, bib.height - dib.height);
 				}
-				@Override
-				protected Point getSize() {
-					return baseImageSize;
-				}
-			};
-			//
-			result = compositImageDesc.createImage();
-			decoratedMap.put(decorator, result);
-		}
-		return result;
+			}
+			@Override
+			protected Point getSize() {
+				return baseImageSize;
+			}
+		};
+		return compositImageDesc.createImage();
 	}
 
 	private static ImageDataProvider getUnzoomedImageDataProvider(ImageData imageData) {

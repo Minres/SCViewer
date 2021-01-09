@@ -113,9 +113,9 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 			moduleStack=null;
 		} catch(IOException e) { 
 			moduleStack=null;
-			throw new InputFormatException();
+			throw new InputFormatException(e.toString());
 		}
-		if(!res) throw new InputFormatException();
+		if(!res) throw new InputFormatException("Could not parse VCD file");
 		// calculate max time of this database
 		for(IWaveform waveform:signals) {
 			NavigableMap<Long, IEvent[]> events =waveform.getEvents();

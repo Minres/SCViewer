@@ -771,8 +771,6 @@ public class WaveformView implements IWaveformView {
 					if (currentTxSelection != null)
 						currentTxSelection = null;
 					selectionChanged = true;
-				} else {
-					System.err.println("Invalid selection");
 				}
 			}
 		} else {

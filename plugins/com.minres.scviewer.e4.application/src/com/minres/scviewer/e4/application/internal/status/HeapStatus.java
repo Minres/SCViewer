@@ -53,8 +53,34 @@ public class HeapStatus extends Composite {
 	private Image disabledGcImage;
 
 	/** The arm col. */
-	private Color bgCol, usedMemCol, lowMemCol, freeMemCol, topLeftCol, bottomRightCol, sepCol, textCol, markCol,
-			armCol;
+	private Color bgCol;
+
+	/** The used mem col. */
+	private Color usedMemCol;
+
+	/** The low mem col. */
+	private Color lowMemCol;
+
+	/** The free mem col. */
+	private Color freeMemCol;
+
+	/** The top left col. */
+	private Color topLeftCol;
+
+	/** The bottom right col. */
+	private Color bottomRightCol;
+
+	/** The sep col. */
+	private Color sepCol;
+
+	/** The text col. */
+	private Color textCol;
+
+	/** The mark col. */
+	private Color markCol;
+
+	/** The arm col. */
+	private Color armCol;
 
 	/** The button. */
 	private Canvas button;
@@ -241,6 +267,11 @@ public class HeapStatus extends Composite {
 		});
 	}
 
+	/**
+	 * Sets the background.
+	 *
+	 * @param color the new background
+	 */
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -254,6 +285,11 @@ public class HeapStatus extends Composite {
 		button.update();
 	}
 
+	/**
+	 * Sets the foreground.
+	 *
+	 * @param color the new foreground
+	 */
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -272,6 +308,11 @@ public class HeapStatus extends Composite {
 		button.update();
 	}
 
+	/**
+	 * Gets the foreground.
+	 *
+	 * @return the foreground
+	 */
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -329,6 +370,14 @@ public class HeapStatus extends Composite {
 		}
 	}
 
+	/**
+	 * Compute size.
+	 *
+	 * @param wHint the w hint
+	 * @param hHint the h hint
+	 * @param changed the changed
+	 * @return the point
+	 */
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -681,6 +730,9 @@ public class HeapStatus extends Composite {
 			super("&Set Mark");
 		}
 
+		/**
+		 * Run.
+		 */
 		/*
 		 * (non-Javadoc)
 		 * 
@@ -704,6 +756,9 @@ public class HeapStatus extends Composite {
 			super("&Clear Mark");
 		}
 
+		/**
+		 * Run.
+		 */
 		/*
 		 * (non-Javadoc)
 		 * 
@@ -729,6 +784,9 @@ public class HeapStatus extends Composite {
 			setChecked(showMax);
 		}
 
+		/**
+		 * Run.
+		 */
 		/*
 		 * (non-Javadoc)
 		 * 

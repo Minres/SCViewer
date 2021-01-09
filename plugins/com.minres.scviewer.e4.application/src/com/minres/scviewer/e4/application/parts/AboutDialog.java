@@ -109,10 +109,7 @@ public class AboutDialog extends Dialog {
 		styleRange.fontStyle = SWT.BOLD;
 		styledText.setStyleRange(styleRange);
 		///^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
-	    Pattern pattern = Pattern.compile("https?:\\/\\/([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w\\.-]*)*\\/?"); //$NON-NLS-1$
-	    // in case you would like to ignore case sensitivity,
-	    // you could use this statement:
-	    // Pattern pattern = Pattern.compile("\\s+", Pattern.CASE_INSENSITIVE);
+	    Pattern pattern = Pattern.compile("https?:\\/\\/([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w\\.-]*)*\\/?"/*, Pattern.CASE_INSENSITIVE*/); //$NON-NLS-1$
 	    Matcher matcher = pattern.matcher(productTitle+copyrightText);
 	    // check all occurance
 	    while (matcher.find()) {
