@@ -10,7 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.e4.application.parts;
 
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -21,7 +20,6 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
@@ -31,21 +29,14 @@ import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.UIEventTopic;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.services.EMenuService;
-import org.eclipse.e4.ui.services.IServiceConstants;
-import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
-import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IContentProvider;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreePathContentProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreePath;
@@ -56,11 +47,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -79,7 +65,6 @@ import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
-import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.handlers.AddWaveformHandler;
 import com.minres.scviewer.e4.application.provider.TxDbContentProvider;
@@ -96,7 +81,7 @@ public class DesignBrowser {
 
 	/** The event broker. */
 	@Inject IEventBroker eventBroker;
-	
+
 	/** The selection service. */
 	@Inject	ESelectionService selectionService;
 
@@ -105,16 +90,13 @@ public class DesignBrowser {
 
 	/** The eclipse ctx. */
 	@Inject IEclipseContext eclipseCtx;
-	
+
 	/** The sash form. */
 	private SashForm sashForm;
-	
+
 	/** The top. */
 	Composite top;
 
-	/** The bottom. */
-	private Composite bottom;
-	
 	/** The tree viewer. */
 	private TreeViewer treeViewer;
 
@@ -140,25 +122,22 @@ public class DesignBrowser {
 	int thisSelectionCount=0, otherSelectionCount=0;
 
 	/** The tree viewer pcl. */
-	private PropertyChangeListener treeViewerPCL = new PropertyChangeListener() {
-		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-			if("CHILDS".equals(evt.getPropertyName())){ //$NON-NLS-1$
-				treeViewer.getTree().getDisplay().asyncExec(new Runnable() {					
-					@Override
-					public void run() {
-						treeViewer.refresh();
-					}
-				});
-			} else if("WAVEFORMS".equals(evt.getPropertyName())) {
-				treeViewer.getTree().getDisplay().asyncExec(new Runnable() {					
-					@Override
-					public void run() {
-						IWaveformDb database = waveformViewerPart.getDatabase();
-						treeViewer.setInput(Arrays.asList(database.isLoaded()?new IWaveformDb[]{database}:new IWaveformDb[]{new LoadingWaveformDb()}));
-					}
-				});
-			}
+	private PropertyChangeListener treeViewerPCL = evt -> {
+		if("CHILDS".equals(evt.getPropertyName())){ //$NON-NLS-1$
+			treeViewer.getTree().getDisplay().asyncExec(new Runnable() {					
+				@Override
+				public void run() {
+					treeViewer.refresh();
+				}
+			});
+		} else if("WAVEFORMS".equals(evt.getPropertyName())) {
+			treeViewer.getTree().getDisplay().asyncExec(new Runnable() {					
+				@Override
+				public void run() {
+					IWaveformDb database = waveformViewerPart.getDatabase();
+					treeViewer.setInput(Arrays.asList(database.isLoaded()?new IWaveformDb[]{database}:new IWaveformDb[]{new LoadingWaveformDb()}));
+				}
+			});
 		}
 	};
 
@@ -166,20 +145,17 @@ public class DesignBrowser {
 	private WaveformViewer waveformViewerPart;
 
 	/** The sash paint listener. */
-	protected PaintListener sashPaintListener=new PaintListener() {					
-		@Override
-		public void paintControl(PaintEvent e) {
-			int size=Math.min(e.width, e.height)-1;
-			e.gc.setForeground(SWTResourceManager.getColor(SWT.COLOR_DARK_GRAY));
-			e.gc.setFillRule(SWT.FILL_EVEN_ODD);
-			if(e.width>e.height)
-				e.gc.drawArc(e.x+(e.width-size)/2, e.y, size, size, 0, 360);
-			else
-				e.gc.drawArc(e.x, e.y+(e.height-size)/2, size, size, 0, 360);
-		}
+	protected PaintListener sashPaintListener= e -> {
+		int size=Math.min(e.width, e.height)-1;
+		e.gc.setForeground(SWTResourceManager.getColor(SWT.COLOR_DARK_GRAY));
+		e.gc.setFillRule(SWT.FILL_EVEN_ODD);
+		if(e.width>e.height)
+			e.gc.drawArc(e.x+(e.width-size)/2, e.y, size, size, 0, 360);
+		else
+			e.gc.drawArc(e.x, e.y+(e.height-size)/2, size, size, 0, 360);
 	};
 
-	
+
 	/**
 	 * Creates the composite.
 	 *
@@ -192,12 +168,13 @@ public class DesignBrowser {
 
 		top = new Composite(sashForm, SWT.NONE);
 		createTreeViewerComposite(top);
-		bottom = new Composite(sashForm, SWT.NONE);
+		Composite bottom = new Composite(sashForm, SWT.NONE);
 		createTableComposite(bottom);
-		
+
 		sashForm.setWeights(new int[] {100, 100});
 		sashForm.SASH_WIDTH=5;
 		top.addControlListener(new ControlAdapter() {
+			@Override
 			public void controlResized(ControlEvent e) {
 				sashForm.getChildren()[2].addPaintListener(sashPaintListener);
 				top.removeControlListener(this);
@@ -206,7 +183,7 @@ public class DesignBrowser {
 		if(waveformViewerPart!=null)
 			setWaveformViewer(waveformViewerPart);
 	}
-	
+
 	/**
 	 * Creates the tree viewer composite.
 	 *
@@ -217,12 +194,9 @@ public class DesignBrowser {
 
 		treeNameFilter = new Text(parent, SWT.BORDER);
 		treeNameFilter.setMessage(Messages.DesignBrowser_3);
-		treeNameFilter.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				treeAttributeFilter.setSearchText(((Text) e.widget).getText());
-				treeViewer.refresh();
-			}
+		treeNameFilter.addModifyListener( e -> {
+			treeAttributeFilter.setSearchText(((Text) e.widget).getText());
+			treeViewer.refresh();
 		});
 		treeNameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
@@ -235,21 +209,17 @@ public class DesignBrowser {
 		treeViewer.addFilter(treeAttributeFilter);
 		treeViewer.setUseHashlookup(true);
 		treeViewer.setAutoExpandLevel(2);
-		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				ISelection selection=event.getSelection();
-				if( selection instanceof IStructuredSelection) { 
-					Object object= ((IStructuredSelection)selection).getFirstElement();			
-					if(object instanceof IHierNode && ((IHierNode)object).getChildNodes().size()!=0){
-						txTableViewer.setInput(object);
-						updateButtons();
-					}
-					else { //if selection is changed but empty
-						txTableViewer.setInput(null);
-						updateButtons();
-					}
+		treeViewer.addSelectionChangedListener(event -> {
+			ISelection selection=event.getSelection();
+			if( selection instanceof IStructuredSelection) { 
+				Object object= ((IStructuredSelection)selection).getFirstElement();			
+				if(object instanceof IHierNode && !((IHierNode)object).getChildNodes().isEmpty()){
+					txTableViewer.setInput(object);
+					updateButtons();
+				}
+				else { //if selection is changed but empty
+					txTableViewer.setInput(null);
+					updateButtons();
 				}
 			}
 		});
@@ -265,13 +235,10 @@ public class DesignBrowser {
 
 		tableNameFilter = new Text(parent, SWT.BORDER);
 		tableNameFilter.setMessage(Messages.DesignBrowser_2);
-		tableNameFilter.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				tableAttributeFilter.setSearchText(((Text) e.widget).getText());
-				updateButtons();
-				txTableViewer.refresh();
-			}
+		tableNameFilter.addModifyListener(e -> {
+			tableAttributeFilter.setSearchText(((Text) e.widget).getText());
+			updateButtons();
+			txTableViewer.refresh();
 		});
 		tableNameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
@@ -282,22 +249,15 @@ public class DesignBrowser {
 		txTableViewer.setLabelProvider(new TxDbLabelProvider());
 		txTableViewer.getTable().setLayoutData(new GridData(GridData.FILL_BOTH));
 		txTableViewer.addFilter(tableAttributeFilter);
-		txTableViewer.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event) {
-				AddWaveformHandler myHandler = new AddWaveformHandler();
-				Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
-				if(result!=null && (Boolean)result)
-					ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
-			}
+		txTableViewer.addDoubleClickListener(event -> {
+			AddWaveformHandler myHandler = new AddWaveformHandler();
+			Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
+			if(result!=null && (Boolean)result)
+				ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
 		});
-		txTableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				selectionService.setSelection(event.getSelection());
-				updateButtons();
-			}
+		txTableViewer.addSelectionChangedListener(event -> {
+			selectionService.setSelection(event.getSelection());
+			updateButtons();
 		});
 		menuService.registerContextMenu(txTableViewer.getControl(), POPUP_ID);
 
@@ -351,7 +311,7 @@ public class DesignBrowser {
 		}
 		updateButtons();
 	}
-	
+
 	/** 
 	 * reset tree viewer and tableviewer after every closed tab
 	 */
@@ -371,7 +331,7 @@ public class DesignBrowser {
 		StructuredSelection sel = new StructuredSelection(list);
 		txTableViewer.setSelection(sel);
 	}
-	
+
 	/**
 	 * Gets the status event.
 	 *
@@ -383,17 +343,14 @@ public class DesignBrowser {
 		if( this.waveformViewerPart == null || this.waveformViewerPart != waveformViewerPart ) {
 			if(this.waveformViewerPart!=null)
 				this.waveformViewerPart.storeDesignBrowerState(new DBState());
-			waveformViewerPart.addDisposeListener( new DisposeListener() {
-				@Override
-				public void widgetDisposed(DisposeEvent e) {
-					Control control = treeViewer.getControl();
-					// check if widget is already disposed (f.ex. because of workbench closing)
-					if (control == null || control.isDisposed()) { //if so: do nothing
-					}else {  //reset tree- and tableviewer
-						resetTreeViewer();
-					}
+			waveformViewerPart.addDisposeListener( e -> {
+				Control control = treeViewer.getControl();
+				// check if widget is already disposed (f.ex. because of workbench closing)
+				if (control == null || control.isDisposed()) { //if so: do nothing
+				}else {  //reset tree- and tableviewer
+					resetTreeViewer();
 				}
-			} );
+			});
 			setWaveformViewer(waveformViewerPart);
 		}
 	}
@@ -403,40 +360,20 @@ public class DesignBrowser {
 		this.waveformViewerPart=waveformViewerPart;
 		IWaveformDb database = waveformViewerPart.getDatabase();
 		Object input = treeViewer.getInput();
-		if(input!=null && input instanceof List<?>){
+		if(input instanceof List<?>){
 			IWaveformDb db = ((List<IWaveformDb>)input).get(0);
 			if(db==database) return; // do nothing if old and new database is the same
 			((List<IWaveformDb>)input).get(0).removePropertyChangeListener(treeViewerPCL);
 		}
 		treeViewer.setInput(Arrays.asList(database.isLoaded()?new IWaveformDb[]{database}:new IWaveformDb[]{new LoadingWaveformDb()}));
 		Object state=this.waveformViewerPart.retrieveDesignBrowerState();
-		if(state!=null && state instanceof DBState) 
+		if(state instanceof DBState) 
 			((DBState)state).apply();
 		else 
 			txTableViewer.setInput(null);
 		// Set up the tree viewer
 		database.addPropertyChangeListener(treeViewerPCL);
 	} 
-
-	/**
-	 * Sets the selection.
-	 *
-	 * @param selection the selection
-	 * @param partService the part service
-	 */
-	@Inject
-	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection, EPartService partService){
-		MPart part = partService.getActivePart();
-		if(part!=null && part.getObject() != this && selection!=null){
-			if( selection instanceof IStructuredSelection) {
-				Object object= ((IStructuredSelection)selection).getFirstElement();			
-				if(object instanceof IHierNode&& ((IHierNode)object).getChildNodes().size()!=0)
-					txTableViewer.setInput(object);
-				otherSelectionCount = (object instanceof IWaveform || object instanceof ITx)?1:0;
-			}
-		}
-		updateButtons();
-	}
 
 	/**
 	 * Update buttons.
@@ -467,8 +404,8 @@ public class DesignBrowser {
 		 */
 		public void setSearchText(String s) {
 			try {
-		        pattern = Pattern.compile(".*" + s + ".*"); //$NON-NLS-1$ //$NON-NLS-2$
-		        this.searchString = ".*" + s + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
+				pattern = Pattern.compile(".*" + s + ".*"); //$NON-NLS-1$ //$NON-NLS-2$
+				this.searchString = ".*" + s + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
 			} catch (PatternSyntaxException e) {}
 		}
 
@@ -477,14 +414,9 @@ public class DesignBrowser {
 		 */
 		@Override
 		public boolean select(Viewer viewer, Object parentElement, Object element) {
-			if (searchString == null || searchString.length() == 0) {
-				return true;
-			}
-			if(element instanceof IWaveform) {
-				if (pattern.matcher(((IWaveform) element).getName()).matches())
-					return true;
-			}
-			return false;
+			return searchString == null ||
+					searchString.length() == 0 ||
+					(element instanceof IWaveform && pattern.matcher(((IWaveform) element).getName()).matches());
 		}
 	}
 
@@ -501,8 +433,8 @@ public class DesignBrowser {
 		 */
 		public void setSearchText(String s) {
 			try {
-		        pattern = Pattern.compile(".*" + s + ".*");
-		        this.searchString = ".*" + s + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
+				pattern = Pattern.compile(".*" + s + ".*");
+				this.searchString = ".*" + s + ".*"; //$NON-NLS-1$ //$NON-NLS-2$
 			} catch (PatternSyntaxException e) {}
 
 		}
@@ -514,7 +446,7 @@ public class DesignBrowser {
 		public boolean select(Viewer viewer, Object parentElement, Object element) {
 			return selectTreePath(viewer, new TreePath(new Object[] { parentElement }), element);
 		}
-		
+
 		private boolean selectTreePath(Viewer viewer, TreePath parentPath, Object element) {
 			// Cut off children of elements that are shown repeatedly.
 			for (int i = 0; i < parentPath.getSegmentCount() - 1; i++) {
@@ -529,12 +461,11 @@ public class DesignBrowser {
 			if (searchString == null || searchString.length() == 0) {
 				return true;
 			}
-			TreeViewer treeViewer = (TreeViewer) viewer;
 			Boolean matchingResult = isMatchingOrNull(element);
 			if (matchingResult != null) {
 				return matchingResult;
 			}
-			return hasUnfilteredChild(treeViewer, parentPath, element);
+			return hasUnfilteredChild((TreeViewer)viewer, parentPath, element);
 		}
 
 		Boolean isMatchingOrNull(Object element) {
@@ -563,18 +494,18 @@ public class DesignBrowser {
 			IContentProvider contentProvider = viewer.getContentProvider();
 			Object[] children = contentProvider instanceof ITreePathContentProvider
 					? ((ITreePathContentProvider) contentProvider).getChildren(elementPath)
-					: ((ITreeContentProvider) contentProvider).getChildren(element);
+							: ((ITreeContentProvider) contentProvider).getChildren(element);
 
-			/* avoid NPE + guard close */
-			if (children == null || children.length == 0) {
-				return false;
-			}
-			for (int i = 0; i < children.length; i++) {
-				if (selectTreePath(viewer, elementPath, children[i])) {
-					return true;
-				}
-			}
-			return false;
+					/* avoid NPE + guard close */
+					if (children == null || children.length == 0) {
+						return false;
+					}
+					for (int i = 0; i < children.length; i++) {
+						if (selectTreePath(viewer, elementPath, children[i])) {
+							return true;
+						}
+					}
+					return false;
 		}
 	}
 	/**
@@ -587,14 +518,12 @@ public class DesignBrowser {
 		Object parent = viewer.getInput();
 		if(parent==null) return new Object[0];
 		Object[] result = null;
-		if (parent != null) {
-			IStructuredContentProvider cp = (IStructuredContentProvider) viewer.getContentProvider();
-			if (cp != null) {
-				result = cp.getElements(parent);
-				if(result==null) return new Object[0];
-				for (int i = 0, n = result.length; i < n; ++i) {
-					if(result[i]==null) return new Object[0];
-				}
+		IStructuredContentProvider cp = (IStructuredContentProvider) viewer.getContentProvider();
+		if (cp != null) {
+			result = cp.getElements(parent);
+			if(result==null) return new Object[0];
+			for (int i = 0, n = result.length; i < n; ++i) {
+				if(result[i]==null) return new Object[0];
 			}
 		}
 		ViewerFilter[] filters = viewer.getFilters();
@@ -622,8 +551,7 @@ public class DesignBrowser {
 		eclipseCtx.set(AddWaveformHandler.PARAM_ALL_ID, all.toString());
 		eclipseCtx.set(DesignBrowser.class, this);
 		eclipseCtx.set(WaveformViewer.class, waveformViewerPart);
-		Object result = ContextInjectionFactory.invoke(handler, annotation, eclipseCtx);
-		return result;
+		return ContextInjectionFactory.invoke(handler, annotation, eclipseCtx);
 	}
 
 	/**
@@ -643,12 +571,12 @@ public class DesignBrowser {
 	public WaveformViewer getActiveWaveformViewerPart() {
 		return waveformViewerPart;
 	}
-	
+
 	/**
 	 * The Class DBState.
 	 */
 	class DBState {
-		
+
 		/**
 		 * Instantiates a new DB state.
 		 */
@@ -657,7 +585,7 @@ public class DesignBrowser {
 			this.treeSelection=treeViewer.getSelection();
 			this.tableSelection=txTableViewer.getSelection();
 		}
-		
+
 		/**
 		 * Apply.
 		 */
@@ -665,16 +593,16 @@ public class DesignBrowser {
 			treeViewer.setExpandedElements(expandedElements);
 			treeViewer.setSelection(treeSelection, true);
 			txTableViewer.setSelection(tableSelection, true);
-			
+
 		}
 
 		/** The expanded elements. */
 		private Object[] expandedElements;
-		
+
 		/** The tree selection. */
 		private ISelection treeSelection;
-		
+
 		/** The table selection. */
 		private ISelection tableSelection;
 	}
-};
+}
