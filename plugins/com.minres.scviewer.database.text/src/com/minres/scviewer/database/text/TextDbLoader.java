@@ -318,7 +318,7 @@ public class TextDbLoader implements IWaveformDbLoader{
 				if ((matcher.matches())) {
 					Long id = Long.parseLong(matcher.group(1));
 					TxStream stream=loader.txStreams.get(Long.parseLong(matcher.group(3)));
-					generator=new TxGenerator(id, stream, matcher.group(2));
+					generator=new TxGenerator(loader, id, matcher.group(2), stream);
 					loader.txGenerators.put(id,  generator);
 				}
 			} else if("begin_attribute".equals(tokens[0])){

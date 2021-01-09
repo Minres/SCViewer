@@ -26,6 +26,8 @@ public interface IWaveform extends IHierNode {
 	
 	public WaveformType getType();
 	
+	public String getKind();
+	
 	public int getWidth();
 
 }

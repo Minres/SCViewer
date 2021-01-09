@@ -13,43 +13,32 @@ package com.minres.scviewer.database.text;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITxGenerator;
 
-class TxGenerator extends HierNode implements ITxGenerator {
+class TxGenerator extends AbstractTxStream implements ITxGenerator {
 
-	Long id;
-
-	IWaveform stream;
+	TxStream stream;
 		
-	Boolean active = false;
-	
 	List<TxAttributeType> beginAttrs = new ArrayList<>();
 	
 	List<TxAttributeType> endAttrs= new ArrayList<>();
 
-	TxGenerator(Long id, TxStream stream, String name){
-		super(name, stream);
-		this.id=id;
+	TxGenerator(TextDbLoader loader, Long id, String name, TxStream stream){
+		super(loader, id, name);
 		this.stream=stream;
 	}
 	
-	@Override
-	public Long getId() {
-		return id;
-	}
-
 	@Override
 	public IWaveform getStream(){
 		return stream;
 	}
 	
 	@Override
-	public String getName() {
-		return name;
+	public boolean isSame(IWaveform other) {
+		return(other instanceof TxGenerator && this.getId().equals(other.getId()));
 	}
-
+	
 	public List<TxAttributeType> getBeginAttrs() {
 		return beginAttrs;
 	}
@@ -57,7 +46,9 @@ class TxGenerator extends HierNode implements ITxGenerator {
 	public List<TxAttributeType> getEndAttrs() {
 		return endAttrs;
 	}
-	
-	Boolean isActive() {return active;}
 
+	@Override
+	public String getKind() {
+		return stream.getKind();
+	}
 }

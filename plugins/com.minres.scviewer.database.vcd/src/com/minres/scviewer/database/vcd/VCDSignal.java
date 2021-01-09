@@ -113,4 +113,9 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 		return width;
 	}
 
+	@Override
+	public String getKind() {
+		return "signal";
+	}
+
 }

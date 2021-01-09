@@ -12,8 +12,8 @@ package com.minres.scviewer.database.tx;
 
 import com.minres.scviewer.database.IWaveform;
 
-public interface ITxGenerator {
-	public Long getId();
+public interface ITxGenerator extends IWaveform {
+
 	public IWaveform getStream();
-	public String getName();
+
 }

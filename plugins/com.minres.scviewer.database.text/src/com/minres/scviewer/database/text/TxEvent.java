@@ -11,9 +11,9 @@ class TxEvent implements ITxEvent {
 	
 	final EventKind kind;
 	
-	final Long transaction;
+	final long transaction;
 	
-	final Long time;
+	final long time;
 	
 	TxEvent(TextDbLoader loader, EventKind kind, Long transaction, Long time) {
 		this.loader=loader;
