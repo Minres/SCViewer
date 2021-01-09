@@ -10,13 +10,15 @@
  *******************************************************************************/
 package com.minres.scviewer.e4.application.preferences;
 
+import com.minres.scviewer.e4.application.Constants;
+
 /**
  * The Class PreferenceConstants for the preferences dialog & setting.
  */
 public class PreferenceConstants {
 
 	/** The Constant PREFERENCES_SCOPE. */
-	public static final String PREFERENCES_SCOPE="com.minres.scviewer.e4.application"; //$NON-NLS-1$
+	public static final String PREFERENCES_SCOPE=Constants.PLUGIN_ID; //$NON-NLS-1$
 	
 	/** The Constant DATABASE_RELOAD. */
 	public static final String DATABASE_RELOAD="databaseReload"; //$NON-NLS-1$
@@ -81,5 +83,5 @@ public class PreferenceConstants {
 	/** The Constant MARKER_TEXT_COLOR. */
 	public static final String MARKER_TEXT_COLOR="MARKER_TEXT_COLOR"; //$NON-NLS-1$
 
-
+	private PreferenceConstants() {}
 }

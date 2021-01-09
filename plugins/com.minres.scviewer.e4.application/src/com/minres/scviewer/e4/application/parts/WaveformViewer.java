@@ -75,6 +75,7 @@ import org.eclipse.swt.widgets.Widget;
 
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
@@ -251,7 +252,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		showHover=hover;
 		database = dbFactory.getDatabase();
 		database.addPropertyChangeListener(evt -> {
-			if ("WAVEFORMS".equals(evt.getPropertyName())) { //$NON-NLS-1$
+			if (IHierNode.WAVEFORMS.equals(evt.getPropertyName())) { //$NON-NLS-1$
 				myParent.getDisplay().syncExec(() -> waveformPane.setMaxTime(database.getMaxTime()));
 			}
 		});
@@ -536,6 +537,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	protected void loadDatabase(final Map<String, String> state, long delay) {
 		fileMonitor.removeFileChangeListener(this);
+		database.setName(filesToLoad.stream().map(File::getName).reduce(null, (prefix, element) -> prefix==null? element : prefix + ","+ element));
 		Job job = new Job(Messages.WaveformViewer_15) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
@@ -683,9 +685,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		//clear old streams before loading tab settings
 		if(!waveformPane.getStreamList().isEmpty()) {
 			waveformPane.getStreamList().clear();
-			for (TrackEntry trackEntry : waveformPane.getStreamList()) {
-				trackEntry.selected = false;
-			}
+			waveformPane.getStreamList().stream().forEach(e -> e.selected=false);
 		}
 		try (FileInputStream in = new FileInputStream(fileName)) {
 			Properties props = new Properties();
@@ -914,15 +914,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			ext = f.substring(i + 1);
 		}
 		return ext;
-	}
-
-	/**
-	 * Gets the model.
-	 *
-	 * @return the model
-	 */
-	public IWaveformDb getModel() {
-		return database;
 	}
 
 	/**

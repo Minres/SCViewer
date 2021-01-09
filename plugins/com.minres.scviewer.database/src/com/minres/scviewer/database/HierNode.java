@@ -13,6 +13,7 @@ package com.minres.scviewer.database;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,18 +28,10 @@ public class HierNode implements IHierNode {
 	protected IHierNode parent = null;
 
 	/** The childs. */
-	protected ArrayList<IHierNode> childs;
+	protected List<IHierNode> childNodes = Collections.synchronizedList(new ArrayList<>());
 
 	/** The pcs. */
-	protected PropertyChangeSupport pcs;
-
-	/**
-	 * Instantiates a new hier node.
-	 */
-	public HierNode() {
-		childs = new ArrayList<>();
-		pcs = new PropertyChangeSupport(this);
-	}
+	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
 	/**
 	 * Instantiates a new hier node.
@@ -46,7 +39,6 @@ public class HierNode implements IHierNode {
 	 * @param name the name
 	 */
 	public HierNode(String name) {
-		this();
 		this.name = name;
 	}
 
@@ -57,9 +49,14 @@ public class HierNode implements IHierNode {
 	 * @param parent the parent
 	 */
 	public HierNode(String name, IHierNode parent) {
-		this();
 		this.name = name;
 		this.parent = parent;
+	}
+
+	/**
+	 * Instantiates a new hier node.
+	 */
+	public HierNode() {
 	}
 
 	/**
@@ -116,6 +113,16 @@ public class HierNode implements IHierNode {
 	}
 
 	/**
+	 * Gets the parent.
+	 *
+	 * @return the parent
+	 */
+	@Override
+	public IHierNode getParent() {
+		return parent;
+	}
+
+	/**
 	 * Sets the parent.
 	 *
 	 * @param parent the new parent
@@ -132,7 +139,7 @@ public class HierNode implements IHierNode {
 	 */
 	@Override
 	public List<IHierNode> getChildNodes() {
-		return childs;
+		return Collections.unmodifiableList(childNodes);
 	}
 
 	/**
@@ -140,9 +147,10 @@ public class HierNode implements IHierNode {
 	 *
 	 * @param child the child
 	 */
+	@Override
 	public void addChild(IHierNode child) {
-		if (!childs.contains(child)) {
-			childs.add(child);
+		if (!childNodes.contains(child)) {
+			childNodes.add(child);
 			child.setParent(this);
 		}
 	}

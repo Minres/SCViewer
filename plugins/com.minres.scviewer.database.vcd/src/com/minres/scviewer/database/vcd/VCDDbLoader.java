@@ -10,6 +10,8 @@
  *******************************************************************************/
 package com.minres.scviewer.database.vcd;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,6 +25,7 @@ import java.util.TreeMap;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
+import com.google.common.collect.Iterables;
 import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
 import com.minres.scviewer.database.IEvent;
@@ -50,6 +53,9 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	/** The max time. */
 	private long maxTime;
 
+	/** The pcs. */
+	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+
 	private static boolean isGzipped(File f) {
 		try (InputStream is = new FileInputStream(f)) {
 			byte [] signature = new byte[2];
@@ -62,23 +68,44 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	}
 
 
-	/* (non-Javadoc)
-	 * @see com.minres.scviewer.database.ITrDb#load(java.io.File)
+	/**
+	 * Can load.
+	 *
+	 * @param inputFile the input file
+	 * @return true, if successful
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
-	public boolean load(IWaveformDb db, File file) throws InputFormatException {
-		dispose();
-		if(file.isDirectory() || !file.exists()) return false;
-		this.maxTime=0;
-		boolean res = false;
-		try {
-			String name = file.getCanonicalFile().getName();
+	public boolean canLoad(File inputFile) {
+		if(!inputFile.isDirectory() || inputFile.exists()) {
+			String name = inputFile.getName();
 			if(!(name.endsWith(".vcd") ||
 					name.endsWith(".vcdz") ||
 					name.endsWith(".vcdgz")  ||
 					name.endsWith(".vcd.gz")) )
 				return false;
+			boolean gzipped = isGzipped(inputFile);
+			try(InputStream stream = gzipped ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile)){
+				byte[] buffer = new byte[8];
+				if (stream.read(buffer, 0, buffer.length) == buffer.length) {
+					return buffer[0]=='$';
+				}
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see com.minres.scviewer.database.ITrDb#load(java.io.File)
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public void load(IWaveformDb db, File file) throws InputFormatException {
+		dispose();
+		this.maxTime=0;
+		boolean res = false;
+		try {
 			signals = new Vector<>();
 			moduleStack= new ArrayDeque<>();
 			FileInputStream fis = new FileInputStream(file);
@@ -89,13 +116,13 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 			throw new InputFormatException();
 		}
 		if(!res) throw new InputFormatException();
-		// calculate max time of database
+		// calculate max time of this database
 		for(IWaveform waveform:signals) {
 			NavigableMap<Long, IEvent[]> events =waveform.getEvents();
-			if(events.size()>0)
+			if(!events.isEmpty())
 				maxTime= Math.max(maxTime, events.lastKey());
 		}
-		// extend signals to hav a last value set at max time
+		// extend signals to have a last value set at max time
 		for(IWaveform s:signals){
 			if(s instanceof VCDSignal<?>) {
 				TreeMap<Long,?> events = (TreeMap<Long, ?>) ((VCDSignal<?>)s).getEvents();
@@ -108,7 +135,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 				}
 			}
 		}
-		return true;
+		pcs.firePropertyChange(IWaveformDbLoader.LOADING_FINISHED, null, null);
 	}
 
 	public void dispose() {
@@ -167,6 +194,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 			signals.add( i<0 ? new VCDSignal<BitVector>(id, netName, width) :
 				new VCDSignal<BitVector>((VCDSignal<BitVector>)signals.get(i), id, netName));
 		}
+		pcs.firePropertyChange(IWaveformDbLoader.SIGNAL_ADDED, null, Iterables.getLast(signals));
 		return id;
 	}
 
@@ -208,5 +236,26 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	public Collection<RelationType> getAllRelationTypes(){
 		return Collections.emptyList();
 	}
+
+	/**
+	 * Adds the property change listener.
+	 *
+	 * @param l the l
+	 */
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener l) {
+		pcs.addPropertyChangeListener(l);
+	}
+
+	/**
+	 * Removes the property change listener.
+	 *
+	 * @param l the l
+	 */
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener l) {
+		pcs.removePropertyChangeListener(l);
+	}
+
 
 }

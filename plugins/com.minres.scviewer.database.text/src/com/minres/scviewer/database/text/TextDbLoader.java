@@ -11,6 +11,8 @@
  *******************************************************************************/
 package com.minres.scviewer.database.text;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -89,6 +91,12 @@ public class TextDbLoader implements IWaveformDbLoader {
 	/** The threads. */
 	List<Thread> threads = new ArrayList<>();
 
+	/** The pcs. */
+	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+
+	/** The Constant x. */
+	static final byte[] x = "scv_tr_stream".getBytes();
+
 	/**
 	 * Gets the max time.
 	 *
@@ -109,8 +117,31 @@ public class TextDbLoader implements IWaveformDbLoader {
 		return new ArrayList<>(txStreams.values());
 	}
 
-	/** The Constant x. */
-	static final byte[] x = "scv_tr_stream".getBytes();
+	/**
+	 * Can load.
+	 *
+	 * @param inputFile the input file
+	 * @return true, if successful
+	 */
+	@Override
+	public boolean canLoad(File inputFile) {
+		if (!inputFile.isDirectory() && inputFile.exists()) {
+			boolean gzipped = isGzipped(inputFile);
+			try(InputStream stream = gzipped ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile)){
+				byte[] buffer = new byte[x.length];
+				int readCnt = stream.read(buffer, 0, x.length);
+				if (readCnt == x.length) {
+					for (int i = 0; i < x.length; i++)
+						if (buffer[i] != x[i])
+							return false;
+				}
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Load.
@@ -122,19 +153,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean load(IWaveformDb db, File file) throws InputFormatException {
+	public void load(IWaveformDb db, File file) throws InputFormatException {
 		dispose();
-		if (file.isDirectory() || !file.exists())
-			return false;
-		TextDbParser parser = new TextDbParser(this);
 		boolean gzipped = isGzipped(file);
-		try {
-			if (!isTxfile(gzipped ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file)))
-				return false;
-		} catch (Exception e) {
-			throw new InputFormatException();
-		}
-
 		if (file.length() < 75000000 * (gzipped ? 1 : 10)
 				|| "memory".equals(System.getProperty("ScvBackingDB", "file")))
 			mapDb = DBMaker.memoryDirectDB().allocateStartSize(512l * 1024l * 1024l)
@@ -145,13 +166,14 @@ public class TextDbLoader implements IWaveformDbLoader {
 				mapDbFile = File.createTempFile("." + file.getName(), ".mapdb", null /* file.parentFile */);
 				Files.delete(Paths.get(mapDbFile.getPath()));
 			} catch (IOException e1) {
-				return false;
+				throw new InputFormatException();
 			}
 			mapDb = DBMaker.fileDB(mapDbFile).fileMmapEnable() // Always enable mmap
 					.fileMmapEnableIfSupported().fileMmapPreclearDisable().allocateStartSize(512l * 1024l * 1024l)
 					.allocateIncrement(128l * 1024l * 1024l).cleanerHackEnable().make();
 			mapDbFile.deleteOnExit();
 		}
+		TextDbParser parser = new TextDbParser(this);
 		try {
 			parser.txSink = mapDb.treeMap("transactions", Serializer.LONG, Serializer.JAVA).createFromSink();
 			parser.parseInput(gzipped ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file));
@@ -160,7 +182,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 		} catch (Exception e) {
 			System.out.println("---->>> Exception " + e.toString() + " caught while loading database");
 			e.printStackTrace();
-			return false;
+			throw new InputFormatException();
 		}
 		for (TxStream stream : txStreams.values()) {
 			Thread t = new Thread() {
@@ -175,7 +197,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 			threads.add(t);
 			t.start();
 		}
-		return true;
 	}
 
 	/**
@@ -194,28 +215,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 		if (mapDb != null) {
 			mapDb.close();
 			mapDb = null;
-		}
-	}
-
-	/**
-	 * Checks if is txfile.
-	 *
-	 * @param istream the istream
-	 * @return true, if is txfile
-	 */
-	private static boolean isTxfile(InputStream istream) {
-		byte[] buffer = new byte[x.length];
-		try {
-			int readCnt = istream.read(buffer, 0, x.length);
-			istream.close();
-			if (readCnt == x.length) {
-				for (int i = 0; i < x.length; i++)
-					if (buffer[i] != x[i])
-						return false;
-			}
-			return true;
-		} catch (IOException e) {
-			return false;
 		}
 	}
 
@@ -416,7 +415,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 				if (matcher.matches()) {
 					Long id = Long.parseLong(matcher.group(1));
 					TxStream stream = new TxStream(loader, id, matcher.group(2), matcher.group(3));
-					loader.txStreams.put(id, stream);
+					add(id, stream);
 				}
 			} else if ("scv_tr_generator".equals(tokens[0])) {
 				Matcher matcher = scv_tr_generator.matcher(curLine);
@@ -424,7 +423,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 					Long id = Long.parseLong(matcher.group(1));
 					TxStream stream = loader.txStreams.get(Long.parseLong(matcher.group(3)));
 					generator = new TxGenerator(loader, id, matcher.group(2), stream);
-					loader.txGenerators.put(id, generator);
+					add(id, generator);
 				}
 			} else if ("begin_attribute".equals(tokens[0])) {
 				Matcher matcher = begin_attribute.matcher(curLine);
@@ -497,6 +496,16 @@ public class TextDbLoader implements IWaveformDbLoader {
 				return 1000000000000000L;
 			return 1L;
 		}
+		private void add(Long id, TxStream stream) {
+			loader.txStreams.put(id, stream);
+			loader.pcs.firePropertyChange(IWaveformDbLoader.STREAM_ADDED, null, stream);
+		}
+
+		private void add(Long id, TxGenerator generator) {
+			loader.txGenerators.put(id, generator);
+			loader.pcs.firePropertyChange(IWaveformDbLoader.GENERATOR_ADDED, null, generator);
+		}
+
 	}
 
 	/**
@@ -511,6 +520,26 @@ public class TextDbLoader implements IWaveformDbLoader {
 		Tx tx = new Tx(this, txId);
 		txCache.put(txId, tx);
 		return tx;
+	}
+
+	/**
+	 * Adds the property change listener.
+	 *
+	 * @param l the l
+	 */
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener l) {
+		pcs.addPropertyChangeListener(l);
+	}
+
+	/**
+	 * Removes the property change listener.
+	 *
+	 * @param l the l
+	 */
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener l) {
+		pcs.removePropertyChangeListener(l);
 	}
 
 }

@@ -18,6 +18,15 @@ import java.util.List;
  */
 public interface IHierNode extends Comparable<IHierNode> {
 
+	/** The Constant WAVEFORMS. */
+	static final String WAVEFORMS = "Waveforms";
+	
+	/** The Constant CHILDS. */
+	static final String CHILDS = "Childs";
+	
+	/** The Constant LOADING_FINISHED. */
+	static final String LOADING_FINISHED = "LoadingFinished";
+
 	/**
 	 * Attach a non-null PropertyChangeListener to this object.
 	 * 
@@ -62,12 +71,25 @@ public interface IHierNode extends Comparable<IHierNode> {
 	public void setParent(IHierNode parent);
 
 	/**
+	 * Gets the parent.
+	 *
+	 * @return the parent
+	 */
+	public IHierNode getParent();
+
+	/**
 	 * Gets the child nodes.
 	 *
 	 * @return the child nodes
 	 */
 	public List<IHierNode> getChildNodes();
 
+	/**
+	 * Adds the child.
+	 *
+	 * @param child the child
+	 */
+	public void addChild(IHierNode child);
 	/**
 	 * Derive waveform.
 	 *

@@ -13,7 +13,6 @@ package com.minres.scviewer.e4.application.parts;
 import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -65,6 +64,7 @@ import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
+import com.minres.scviewer.e4.application.Constants;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.handlers.AddWaveformHandler;
 import com.minres.scviewer.e4.application.provider.TxDbContentProvider;
@@ -125,12 +125,17 @@ public class DesignBrowser {
 
 	/** The tree viewer pcl. */
 	private PropertyChangeListener treeViewerPCL = evt -> {
-		if("CHILDS".equals(evt.getPropertyName())){ //$NON-NLS-1$
+		if(IHierNode.CHILDS.equals(evt.getPropertyName())){ //$NON-NLS-1$
 			treeViewer.getTree().getDisplay().asyncExec(() -> treeViewer.refresh());
-		} else if("WAVEFORMS".equals(evt.getPropertyName())) {
+		} else if(IHierNode.WAVEFORMS.equals(evt.getPropertyName())) {
 			treeViewer.getTree().getDisplay().asyncExec(() -> {
-				IWaveformDb database = waveformViewerPart.getDatabase();
-				treeViewer.setInput(Arrays.asList(database.isLoaded()?new IWaveformDb[]{database}:new IWaveformDb[]{new LoadingWaveformDb()}));
+				treeViewer.setInput(new IWaveformDb[]{waveformViewerPart.getDatabase()});
+				treeViewer.refresh();
+			});
+		} else if(IHierNode.LOADING_FINISHED.equals(evt.getPropertyName())) {
+			treeViewer.getTree().getDisplay().asyncExec(() -> {
+				treeViewer.update(waveformViewerPart.getDatabase(), null);
+				DesignBrowser.this.updateButtons();
 			});
 		}
 	};
@@ -195,7 +200,12 @@ public class DesignBrowser {
 
 		treeViewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		treeViewer.getTree().setLayoutData(new GridData(GridData.FILL_BOTH));
-		treeViewer.setContentProvider(new TxDbContentProvider());
+		treeViewer.setContentProvider(new TxDbContentProvider() {
+			@Override
+			public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+				updateButtons();
+			}
+		});
 		treeViewer.setLabelProvider(new TxDbLabelProvider());
 		treeViewer.addFilter(treeAttributeFilter);
 		treeViewer.setUseHashlookup(true);
@@ -236,7 +246,12 @@ public class DesignBrowser {
 		tableAttributeFilter = new StreamTableFilter();
 
 		txTableViewer = new TableViewer(parent);
-		txTableViewer.setContentProvider(new TxDbContentProvider(true));
+		txTableViewer.setContentProvider(new TxDbContentProvider(true) {
+			@Override
+			public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+				updateButtons();
+			}
+		});
 		txTableViewer.setLabelProvider(new TxDbLabelProvider());
 		txTableViewer.getTable().setLayoutData(new GridData(GridData.FILL_BOTH));
 		txTableViewer.addFilter(tableAttributeFilter);
@@ -258,7 +273,7 @@ public class DesignBrowser {
 
 		appendItem = new ToolItem(toolBar, SWT.NONE);
 		appendItem.setToolTipText(Messages.DesignBrowser_4);
-		appendItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/append_wave.png")); //$NON-NLS-1$ //$NON-NLS-2$
+		appendItem.setImage(ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/append_wave.png")); //$NON-NLS-1$
 		appendItem.setEnabled(false);
 		appendItem.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -273,7 +288,7 @@ public class DesignBrowser {
 
 		insertItem = new ToolItem(toolBar, SWT.NONE);
 		insertItem.setToolTipText(Messages.DesignBrowser_8);
-		insertItem.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/insert_wave.png")); //$NON-NLS-1$ //$NON-NLS-2$
+		insertItem.setImage(ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/insert_wave.png")); //$NON-NLS-1$
 		insertItem.setEnabled(false);
 		insertItem.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -356,7 +371,7 @@ public class DesignBrowser {
 			if(db==database) return; // do nothing if old and new database is the same
 			((List<IWaveformDb>)input).get(0).removePropertyChangeListener(treeViewerPCL);
 		}
-		treeViewer.setInput(Arrays.asList(database.isLoaded()?new IWaveformDb[]{database}:new IWaveformDb[]{new LoadingWaveformDb()}));
+		treeViewer.setInput(new IWaveformDb[]{database});
 		Object state=this.waveformViewerPart.retrieveDesignBrowerState();
 		if(state instanceof DBState) 
 			((DBState)state).apply();

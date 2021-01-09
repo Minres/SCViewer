@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -71,10 +71,10 @@ public class DatabaseServicesTest {
 		assertEquals(2,  waveformDb.getChildNodes().size());
 		IWaveform bus_data_wave = waves.get(0);
 		Entry<Long, IEvent[]> bus_data_entry = bus_data_wave.getEvents().floorEntry(1400000000L);
-		assertTrue("01111000".equals(bus_data_entry.getValue()[0].toString()));
+		assertEquals("01111000", bus_data_entry.getValue()[0].toString());
 		IWaveform rw_wave = waves.get(2);
 		Entry<Long, IEvent[]> rw_entry = rw_wave.getEvents().floorEntry(2360000000L);
-		assertTrue("1".equals(rw_entry.getValue()[0].toString()));
+		assertEquals("1", rw_entry.getValue()[0].toString());
 	}
 
 	@Test
@@ -105,6 +105,16 @@ public class DatabaseServicesTest {
 				assertEquals(1, w.getWidth());
 			}
 		}
+	}
+
+	@Test
+	public void testTxTextLargeFile() throws Exception {
+		File f = new File("inputs/hw_cfg7.txlog").getAbsoluteFile();
+		assertTrue(f.exists());
+		waveformDb.load(f);
+		assertNotNull(waveformDb);
+		// hw_cfg_2_gen.txlog: 7.5s (2G)
+		// hw_cfg7.txlog: 48s(2G)
 	}
 
 	@Test

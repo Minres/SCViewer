@@ -21,7 +21,7 @@ import org.eclipse.wb.swt.ResourceManager;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
-import com.minres.scviewer.e4.application.parts.LoadingWaveformDb;
+import com.minres.scviewer.e4.application.Constants;
 
 /**
  * The Class TxDbLabelProvider providing the labels for the respective viewers.
@@ -29,25 +29,44 @@ import com.minres.scviewer.e4.application.parts.LoadingWaveformDb;
 public class TxDbLabelProvider implements ILabelProvider {
 
 	/** The listeners. */
-	private List<ILabelProviderListener> listeners = new ArrayList<ILabelProviderListener>();
+	private List<ILabelProviderListener> listeners = new ArrayList<>();
 
 	/** The wave. */
-	private Image loadinDatabase, database, stream, signal, folder, wave;
+	private Image loadinDatabase;
 	
+	/** The database. */
+	private Image database;
+	
+	/** The stream. */
+	private Image stream;
+	
+	/** The signal. */
+	private Image signal;
+	
+	/** The folder. */
+	private Image folder;
+	
+	/** The wave. */
+	private Image wave;
 	
 	/**
 	 * Instantiates a new tx db label provider.
 	 */
 	public TxDbLabelProvider() {
 		super();
-		loadinDatabase=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database_go.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		database=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		stream=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/stream.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		folder=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/folder.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		signal=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/signal.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		wave=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/wave.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		loadinDatabase=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/database_go.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		database=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/database.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		stream=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/stream.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		folder=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/folder.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		signal=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/signal.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		wave=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/wave.png"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
+	/**
+	 * Adds the listener.
+	 *
+	 * @param listener the listener
+	 */
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
 	 */
@@ -56,13 +75,24 @@ public class TxDbLabelProvider implements ILabelProvider {
 		  listeners.add(listener);
 	}
 
+	/**
+	 * Dispose.
+	 */
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
 	 */
 	@Override
 	public void dispose() {
+		// no resources to dispose
 	}
 
+	/**
+	 * Checks if is label property.
+	 *
+	 * @param element the element
+	 * @param property the property
+	 * @return true, if is label property
+	 */
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
 	 */
@@ -71,6 +101,11 @@ public class TxDbLabelProvider implements ILabelProvider {
 		  return false;
 	}
 
+	/**
+	 * Removes the listener.
+	 *
+	 * @param listener the listener
+	 */
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
 	 */
@@ -79,16 +114,19 @@ public class TxDbLabelProvider implements ILabelProvider {
 		  listeners.remove(listener);
 	}
 
+	/**
+	 * Gets the image.
+	 *
+	 * @param element the element
+	 * @return the image
+	 */
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ILabelProvider#getImage(java.lang.Object)
 	 */
 	@Override
 	public Image getImage(Object element) {
 		if(element instanceof IWaveformDb){
-			if(element instanceof LoadingWaveformDb)
-				return loadinDatabase;
-			else
-				return database;
+			return ((IWaveformDb)element).isLoaded()?database:loadinDatabase;
 		}else if(element instanceof IWaveform){
 			switch(((IWaveform) element).getType()) {
 			case TRANSACTION:
@@ -110,6 +148,12 @@ public class TxDbLabelProvider implements ILabelProvider {
 			return null;
 	}
 
+	/**
+	 * Gets the text.
+	 *
+	 * @param element the element
+	 * @return the text
+	 */
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ILabelProvider#getText(java.lang.Object)
 	 */

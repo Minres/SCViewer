@@ -36,6 +36,8 @@ import org.eclipse.wb.swt.ResourceManager;
 import org.eclipse.wb.swt.SWTResourceManager;
 import org.osgi.service.prefs.Preferences;
 
+import com.minres.scviewer.e4.application.Constants;
+
 /**
  * The Heap Status control, which shows the heap usage statistics in the window trim.
  * Part of the code is taken from the eclipse internal implementation
@@ -162,7 +164,7 @@ public class HeapStatus extends Composite {
         button = new Canvas(this, SWT.NONE);
         button.setToolTipText("Run Garbage Collection");
 
-		ImageDescriptor imageDesc = ResourceManager.getPluginImageDescriptor("com.minres.scviewer.e4.application", "icons/trash.png"); //$NON-NLS-1$
+		ImageDescriptor imageDesc = ResourceManager.getPluginImageDescriptor(Constants.PLUGIN_ID, "icons/trash.png"); //$NON-NLS-1$
 		Display display = getDisplay();
 		gcImage = imageDesc.createImage();
 		if (gcImage != null) {
@@ -228,6 +230,8 @@ public class HeapStatus extends Composite {
 						arm(false);
 					}
                     break;
+                default:
+                	break;
                 }
             }
 
@@ -301,8 +305,8 @@ public class HeapStatus extends Composite {
 		long max = Long.MAX_VALUE;
 		try {
 			// Must use reflect to allow compilation against JCL/Foundation
-			Method maxMemMethod = Runtime.class.getMethod("maxMemory", new Class[0]); //$NON-NLS-1$
-			Object o = maxMemMethod.invoke(Runtime.getRuntime(), new Object[0]);
+			Method maxMemMethod = Runtime.class.getMethod("maxMemory"); //$NON-NLS-1$
+			Object o = maxMemMethod.invoke(Runtime.getRuntime());
 			if (o instanceof Long) {
 				max = ((Long) o).longValue();
 			}
@@ -441,14 +445,7 @@ public class HeapStatus extends Composite {
 			@Override
 			public void run() {
 				busyGC();
-				getDisplay().asyncExec(new Runnable() {
-					@Override
-					public void run() {
-						if (!isDisposed()) {
-							gcRunning(false);
-						}
-					}
-				});
+				getDisplay().asyncExec(() -> { if (!isDisposed()) gcRunning(false);	});
 			}
 		};
 		t.start();
@@ -669,7 +666,7 @@ public class HeapStatus extends Composite {
      * @return the string
      */
     private String convertToMegString(long numBytes) {
-        return new Long(convertToMeg(numBytes)).toString()+"M";
+        return Long.toString(convertToMeg(numBytes))+"M";
     }
 
     /**
