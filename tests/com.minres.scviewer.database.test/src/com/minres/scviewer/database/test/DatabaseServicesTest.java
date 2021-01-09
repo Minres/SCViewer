@@ -101,16 +101,6 @@ public class DatabaseServicesTest {
 	}
 
 	@Test
-	public void testTxTextLargeFile() throws Exception {
-		File f = new File("inputs/hw_cfg7.txlog").getAbsoluteFile();
-		assertTrue(f.exists());
-		waveformDb.load(f);
-		assertNotNull(waveformDb);
-		// hw_cfg_2_gen.txlog: 7.5s (2G)
-		// hw_cfg7.txlog: 48s(2G)
-	}
-
-	@Test
 	public void testTxTextTruncated() throws Exception {
 		File f = new File("inputs/my_db_truncated.txlog").getAbsoluteFile();
 		assertTrue(f.exists());
