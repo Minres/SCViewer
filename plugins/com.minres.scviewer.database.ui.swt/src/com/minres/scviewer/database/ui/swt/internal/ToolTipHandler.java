@@ -14,8 +14,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Widget;
 
 import com.minres.scviewer.database.ui.swt.Constants;
-import com.minres.scviewer.database.ui.swt.ToolTipContentProvider;
-import com.minres.scviewer.database.ui.swt.ToolTipHelpTextProvider;
+import com.minres.scviewer.database.ui.swt.IToolTipContentProvider;
+import com.minres.scviewer.database.ui.swt.IToolTipHelpTextProvider;
 
 class ToolTipHandler {
 
@@ -71,8 +71,8 @@ class ToolTipHandler {
 			}
 			private void createHoverWindow(final Control control, Event event) {
 				Object o = control.getData(Constants.CONTENT_PROVIDER_TAG);
-				if(o instanceof ToolTipContentProvider) {
-					ToolTipContentProvider provider = ((ToolTipContentProvider)o);
+				if(o instanceof IToolTipContentProvider) {
+					IToolTipContentProvider provider = ((IToolTipContentProvider)o);
 					Point pt = new Point (event.x, event.y);
 					tipPosition = control.toDisplay(pt);
 					if (shell != null  && !shell.isDisposed ()) shell.dispose ();
@@ -104,7 +104,7 @@ class ToolTipHandler {
 		 */
 		control.addHelpListener(event -> {
 			if (tipWidget == null) return;
-			ToolTipHelpTextProvider handler = (ToolTipHelpTextProvider)tipWidget.getData(Constants.HELP_PROVIDER_TAG);
+			IToolTipHelpTextProvider handler = (IToolTipHelpTextProvider)tipWidget.getData(Constants.HELP_PROVIDER_TAG);
 			if (handler == null) return;
 			String text = handler.getHelpText(tipWidget);
 			if (text == null) return;

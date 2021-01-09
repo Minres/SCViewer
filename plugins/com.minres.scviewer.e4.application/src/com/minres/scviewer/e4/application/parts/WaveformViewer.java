@@ -93,8 +93,8 @@ import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
 import com.minres.scviewer.database.ui.swt.Constants;
-import com.minres.scviewer.database.ui.swt.ToolTipContentProvider;
-import com.minres.scviewer.database.ui.swt.ToolTipHelpTextProvider;
+import com.minres.scviewer.database.ui.swt.IToolTipContentProvider;
+import com.minres.scviewer.database.ui.swt.IToolTipHelpTextProvider;
 import com.minres.scviewer.database.ui.swt.WaveformViewFactory;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl;
@@ -393,13 +393,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		});
 		waveformPane.addDisposeListener(this);
 
-		waveformPane.getWaveformControl().setData(Constants.HELP_PROVIDER_TAG, new ToolTipHelpTextProvider() {
+		waveformPane.getWaveformControl().setData(Constants.HELP_PROVIDER_TAG, new IToolTipHelpTextProvider() {
 			@Override
 			public String getHelpText(Widget widget) {
 				return "Waveform pane: press F2 to set the focus to the tooltip";
 			}
 		});
-		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new ToolTipContentProvider() {
+		waveformPane.getWaveformControl().setData(Constants.CONTENT_PROVIDER_TAG, new IToolTipContentProvider() {
 			@Override
 			public boolean createContent(Composite parent, Point pt) {
 				if(!showHover) return false;

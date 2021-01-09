@@ -2,7 +2,7 @@ package com.minres.scviewer.database.ui.swt;
 
 import org.eclipse.swt.widgets.Widget;
 
-public interface ToolTipHelpTextProvider {
+public interface IToolTipHelpTextProvider {
 	/**
 	 * Get help text
 	 * @param widget the widget that is under help
