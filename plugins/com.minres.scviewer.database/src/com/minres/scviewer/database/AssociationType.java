@@ -10,7 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Enum AssociationType.
  */

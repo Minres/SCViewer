@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -696,30 +697,36 @@ public class WaveformView implements IWaveformView  {
 		boolean selectionChanged = false;
 		currentWaveformSelection.forEach(e->e.selected=false);
 		if (selection instanceof IStructuredSelection) {
-			if(((IStructuredSelection) selection).size()==0){
+			IStructuredSelection sel = (IStructuredSelection) selection;
+			if(sel.size()==0){
 				selectionChanged = currentTxSelection!=null||currentWaveformSelection!=null;  
 				currentTxSelection = null;
 				currentWaveformSelection .clear();
 			} else {
 				if(!add) currentWaveformSelection.clear();
-				for(Object sel:((IStructuredSelection) selection).toArray()){
-					if (sel instanceof ITx){
-						ITx txSel = (ITx) sel;
-						TrackEntry trackEntry = getEntryForStream(txSel.getStream());
+				List<?> selList = sel.toList();
+				if(selList.get(0) instanceof ITx) {
+					ITx txSel = (ITx) selList.get(0);
+					TrackEntry trackEntry =  selList.size()==2 && selList.get(1) instanceof TrackEntry?
+							(TrackEntry) selList.get(1):null;
+					if(trackEntry==null) {
+						trackEntry = getEntryFor(txSel);
 						if(trackEntry==null && addIfNeeded){
 							trackEntry=new TrackEntry(txSel.getStream(), styleProvider);
 							streams.add(trackEntry);
 						}
-						currentTxSelection = txSel;
-						currentWaveformSelection.clear();
-						currentWaveformSelection.add(trackEntry);
-						selectionChanged = true;
-					} else if (sel instanceof TrackEntry && !currentWaveformSelection.contains(sel)) {
-						currentWaveformSelection.add((TrackEntry)sel);
-						if(currentTxSelection!=null && !selectionChanged)
-							currentTxSelection=null;						
-						selectionChanged = true;
-					}            		
+					}
+					currentTxSelection = txSel;
+					currentWaveformSelection.clear();
+					currentWaveformSelection.add(trackEntry);
+					selectionChanged = true;					
+				} else if(selList.size()==1 && selList.get(0) instanceof TrackEntry) {
+					currentWaveformSelection.add((TrackEntry)selList.get(0));
+					if(currentTxSelection!=null)
+						currentTxSelection=null;						
+					selectionChanged = true;
+				} else {
+					System.err.println("Invalid selection");
 				}
 			}
 		} else {
@@ -773,7 +780,7 @@ public class WaveformView implements IWaveformView  {
 	public void moveSelection(GotoDirection direction, RelationType relationType) {
 		if(currentWaveformSelection.size() !=1 && currentTxSelection==null) return;
 		TrackEntry selectedWaveform=currentWaveformSelection.size() == 1?
-				currentWaveformSelection.get(0) : getEntryForStream(currentTxSelection.getStream());
+				currentWaveformSelection.get(0) : getEntryFor(currentTxSelection);
 		if(selectedWaveform.waveform.getType()==WaveformType.TRANSACTION && currentTxSelection!=null) {
 			if(relationType.equals(IWaveformView.NEXT_PREV_IN_STREAM)){
 				ITx transaction = null;
@@ -1167,9 +1174,13 @@ public class WaveformView implements IWaveformView  {
 		});
 	}
 
-	public TrackEntry getEntryForStream(IWaveform source) {
-		for(TrackEntry trackEntry:streams)
-			if(trackEntry.waveform.isSame(source)) return trackEntry;
+	public TrackEntry getEntryFor(ITx source) {
+		Optional<TrackEntry> optGen = streams.stream().filter(e->source.getGenerator().equals(e.waveform)).findFirst();
+		if(optGen.isPresent())
+			return optGen.get();
+		Optional<TrackEntry> optStr = streams.stream().filter(e->source.getStream().equals(e.waveform)).findFirst();
+		if(optStr.isPresent())
+			return optStr.get();
 		return null;
 	}
 

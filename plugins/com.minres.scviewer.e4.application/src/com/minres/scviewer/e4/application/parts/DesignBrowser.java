@@ -100,14 +100,8 @@ public class DesignBrowser {
 	/** The tree viewer. */
 	private TreeViewer treeViewer;
 
-	/** The name filter of the design browser tree. */
-	private Text treeNameFilter;
-
 	/** The attribute filter. */
 	StreamTTreeFilter treeAttributeFilter;
-
-	/** The name filter. */
-	private Text tableNameFilter;
 
 	/** The attribute filter. */
 	StreamTableFilter tableAttributeFilter;
@@ -116,33 +110,29 @@ public class DesignBrowser {
 	private TableViewer txTableViewer;
 
 	/** The append all item. */
-	ToolItem appendItem, insertItem;
+	ToolItem appendItem;
+	
+	ToolItem insertItem;
 
 	/** The other selection count. */
-	int thisSelectionCount=0, otherSelectionCount=0;
+	int thisSelectionCount=0;
+	
+	int otherSelectionCount=0;
+
+	/** The waveform viewer part. */
+	private WaveformViewer waveformViewerPart;
 
 	/** The tree viewer pcl. */
 	private PropertyChangeListener treeViewerPCL = evt -> {
 		if("CHILDS".equals(evt.getPropertyName())){ //$NON-NLS-1$
-			treeViewer.getTree().getDisplay().asyncExec(new Runnable() {					
-				@Override
-				public void run() {
-					treeViewer.refresh();
-				}
-			});
+			treeViewer.getTree().getDisplay().asyncExec(() -> treeViewer.refresh());
 		} else if("WAVEFORMS".equals(evt.getPropertyName())) {
-			treeViewer.getTree().getDisplay().asyncExec(new Runnable() {					
-				@Override
-				public void run() {
-					IWaveformDb database = waveformViewerPart.getDatabase();
-					treeViewer.setInput(Arrays.asList(database.isLoaded()?new IWaveformDb[]{database}:new IWaveformDb[]{new LoadingWaveformDb()}));
-				}
+			treeViewer.getTree().getDisplay().asyncExec(() -> {
+				IWaveformDb database = waveformViewerPart.getDatabase();
+				treeViewer.setInput(Arrays.asList(database.isLoaded()?new IWaveformDb[]{database}:new IWaveformDb[]{new LoadingWaveformDb()}));
 			});
 		}
 	};
-
-	/** The waveform viewer part. */
-	private WaveformViewer waveformViewerPart;
 
 	/** The sash paint listener. */
 	protected PaintListener sashPaintListener= e -> {
@@ -192,7 +182,7 @@ public class DesignBrowser {
 	public void createTreeViewerComposite(Composite parent) {
 		parent.setLayout(new GridLayout(1, false));
 
-		treeNameFilter = new Text(parent, SWT.BORDER);
+		Text treeNameFilter = new Text(parent, SWT.BORDER);
 		treeNameFilter.setMessage(Messages.DesignBrowser_3);
 		treeNameFilter.addModifyListener( e -> {
 			treeAttributeFilter.setSearchText(((Text) e.widget).getText());
@@ -233,7 +223,7 @@ public class DesignBrowser {
 	public void createTableComposite(Composite parent) {
 		parent.setLayout(new GridLayout(1, false));
 
-		tableNameFilter = new Text(parent, SWT.BORDER);
+		Text tableNameFilter = new Text(parent, SWT.BORDER);
 		tableNameFilter.setMessage(Messages.DesignBrowser_2);
 		tableNameFilter.addModifyListener(e -> {
 			tableAttributeFilter.setSearchText(((Text) e.widget).getText());

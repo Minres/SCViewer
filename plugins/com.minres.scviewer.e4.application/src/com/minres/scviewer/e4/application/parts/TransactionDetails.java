@@ -181,23 +181,23 @@ public class TransactionDetails {
 				treeViewer.refresh();
 			}
 		});
-		// Add the type column
-		col2 = new TreeViewerColumn(treeViewer, SWT.NONE);
-		col2.getColumn().setText(Messages.TransactionDetails_2);
-		col2.getColumn().setResizable(true);
-		col2.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewerPart, AttributeLabelProvider.TYPE)));
-		col2.getColumn().addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent event) {
-				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_SECOND);
-				treeViewer.refresh();
-			}
-		});
 		// Add the value column
 		col3 = new TreeViewerColumn(treeViewer, SWT.NONE);
 		col3.getColumn().setText(Messages.TransactionDetails_3);
 		col3.getColumn().setResizable(true);
 		col3.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewerPart, AttributeLabelProvider.VALUE)));
 		col3.getColumn().addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {
+				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_SECOND);
+				treeViewer.refresh();
+			}
+		});
+		// Add the type column
+		col2 = new TreeViewerColumn(treeViewer, SWT.NONE);
+		col2.getColumn().setText(Messages.TransactionDetails_2);
+		col2.getColumn().setResizable(true);
+		col2.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewerPart, AttributeLabelProvider.TYPE)));
+		col2.getColumn().addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {
 				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_SECOND);
 				treeViewer.refresh();

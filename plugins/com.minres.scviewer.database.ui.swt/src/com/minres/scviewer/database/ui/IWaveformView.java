@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Control;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.RelationTypeFactory;
+import com.minres.scviewer.database.tx.ITx;
 
 public interface IWaveformView extends PropertyChangeListener, ISelectionProvider{
 
@@ -64,7 +65,7 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 
 	public List<TrackEntry> getStreamList();
 
-	public TrackEntry getEntryForStream(IWaveform source);
+	public TrackEntry getEntryFor(ITx source);
 	
 	public List<Object> getElementsAt(Point pt);
 	
