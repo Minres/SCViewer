@@ -24,8 +24,8 @@ import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.RelationTypeFactory;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
@@ -41,8 +41,6 @@ public class TxStream extends HierNode implements IWaveform {
 
 	private String fullName;
 
-	private IWaveformDb db;
-
 	private ScvStream scvStream;
 
 	private TreeMap<Integer, TxGenerator> generators;
@@ -55,17 +53,11 @@ public class TxStream extends HierNode implements IWaveform {
 
 	private List<RelationType> usedRelationsList;
 
-	public TxStream(IDatabase database, IWaveformDb waveformDb, ScvStream scvStream) {
+	public TxStream(IDatabase database, ScvStream scvStream) {
 		super(scvStream.getName());
 		this.database=database;
 		fullName=scvStream.getName();
 		this.scvStream=scvStream;
-		db=waveformDb;
-	}
-
-	@Override
-	public IWaveformDb getDb() {
-		return db;
 	}
 
 	@Override
@@ -173,7 +165,7 @@ public class TxStream extends HierNode implements IWaveform {
 	}
 
 	public RelationType getRelationType(String name) {
-		RelationType relType=RelationType.create(name);
+		RelationType relType=RelationTypeFactory.create(name);
 		if(!usedRelationsList.contains(relType)) usedRelationsList.add(relType);
 		return relType;
 	}

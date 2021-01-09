@@ -5,31 +5,29 @@ import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxRelation;
 
 class TxRelation implements ITxRelation {
-	final Tx source;
+
+	final TextDbLoader loader;
 	
-	final Tx target;
+	final ScvRelation scvRelation;
 	
-	final RelationType relationType;
-	
-	public TxRelation(RelationType relationType, Tx source, Tx target) {
-		this.source = source;
-		this.target = target;
-		this.relationType = relationType;
+	public TxRelation(TextDbLoader loader, ScvRelation scvRelation) {
+		this.loader = loader;
+		this.scvRelation = scvRelation;
 	}
 
 	@Override
 	public RelationType getRelationType() {
-		return relationType;
+		return scvRelation.relationType;
 	}
 
 	@Override
 	public ITx getSource() {
-		return source;
+		return loader.getTransaction(scvRelation.source);
 	}
 
 	@Override
 	public ITx getTarget() {
-		return target;
+		return loader.getTransaction(scvRelation.target);
 	}
 
 }

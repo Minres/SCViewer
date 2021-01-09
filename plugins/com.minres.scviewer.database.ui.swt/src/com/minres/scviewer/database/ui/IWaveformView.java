@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Control;
 
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.RelationTypeFactory;
 
 public interface IWaveformView extends PropertyChangeListener, ISelectionProvider{
 
@@ -29,7 +30,7 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	
 	String MARKER_PROPERTY = "marker_time";
 	
-	public static final RelationType NEXT_PREV_IN_STREAM = RelationType.create("Prev/Next in stream"); 
+	public static final RelationType NEXT_PREV_IN_STREAM = RelationTypeFactory.create("Prev/Next in stream"); 
 
 	public void addSelectionChangedListener(ISelectionChangedListener listener);
 

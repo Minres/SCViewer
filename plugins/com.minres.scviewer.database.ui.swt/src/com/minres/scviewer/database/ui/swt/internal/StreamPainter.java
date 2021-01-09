@@ -84,17 +84,20 @@ public class StreamPainter extends TrackPainter{
 			NavigableMap<Long, IEvent[]> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
 			boolean highlighed=false;
 			proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
-
+			long selectedId=waveCanvas.currentSelection!=null? waveCanvas.currentSelection.getId():-1;
 			for(Entry<Long, IEvent[]> entry: entries.entrySet())
 				for(IEvent evt:entry.getValue()){
-					ITxEvent txEvent = (ITxEvent) evt;
-					if(txEvent.getKind()==EventKind.BEGIN)
-						seenTx.add(txEvent.getTransaction());
-					if(txEvent.getKind()==EventKind.END){
-						ITx tx = txEvent.getTransaction();
-						highlighed|=waveCanvas.currentSelection!=null && waveCanvas.currentSelection.equals(tx);
-						drawTx(proj, area, tx, false);
+					ITx tx = ((ITxEvent) evt).getTransaction();
+					highlighed|=selectedId==tx.getId();
+					switch(evt.getKind()) {
+					case BEGIN:
+						seenTx.add(tx);
+						break;
+					case END:
 						seenTx.remove(tx);
+					case SINGLE:
+						drawTx(proj, area, tx, false);
+						break;
 					}
 				}
 			for(ITx tx:seenTx){
@@ -164,7 +167,8 @@ public class StreamPainter extends TrackPainter{
 		for(IEvent evt:firstTx.getValue()){
 			if(evt instanceof ITxEvent) {
 				ITx tx=((ITxEvent)evt).getTransaction();
-				if(evt.getKind()==EventKind.BEGIN && tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePoint && tx.getEndTime()>=timePoint){
+				if((evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)&&
+						tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePoint && tx.getEndTime()>=timePoint){
 					return ((ITxEvent)evt).getTransaction();
 				}
 			}
@@ -175,7 +179,8 @@ public class StreamPainter extends TrackPainter{
 		for(IEvent evt:firstTx.getValue()){
 			if(evt instanceof ITxEvent) {
 				ITx tx=((ITxEvent)evt).getTransaction();
-				if(evt.getKind()==EventKind.BEGIN && tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePointHigh && tx.getEndTime()>=timePoint){
+				if((evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE) &&
+						tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePointHigh && tx.getEndTime()>=timePoint){
 					return ((ITxEvent)evt).getTransaction();
 				}
 			}

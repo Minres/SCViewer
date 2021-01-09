@@ -93,8 +93,18 @@ public class DatabaseServicesTest {
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
-		assertEquals(3,  waveformDb.getAllWaves().size());
+		List<IWaveform> waveforms =  waveformDb.getAllWaves();
+		assertEquals(3,  waveforms.size());
 		assertEquals(1,  waveformDb.getChildNodes().size());
+		for(IWaveform w:waveforms) {
+			if(w.getId().equals(1l)) {
+				assertEquals(2, w.getWidth());
+			} else if(w.getId().equals(2l)) {
+				assertEquals(1, w.getWidth());
+			} else if(w.getId().equals(3l)) {
+				assertEquals(1, w.getWidth());
+			}
+		}
 	}
 
 	@Test

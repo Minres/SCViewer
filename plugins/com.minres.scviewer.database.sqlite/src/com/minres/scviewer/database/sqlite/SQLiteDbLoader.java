@@ -37,8 +37,6 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	protected IDatabase database;
 	
 	private List<RelationType> usedRelationsList = new ArrayList<>();
-
-	private IWaveformDb db;
 	
 	private ScvSimProps scvSimProps;
 		
@@ -63,7 +61,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 		List<IWaveform> streams=new ArrayList<>();
 		try {
 			for(ScvStream scvStream:handler.selectObjects()){
-				TxStream stream = new TxStream(database, db, scvStream);
+				TxStream stream = new TxStream(database, scvStream);
 				stream.setRelationTypeList(usedRelationsList);
 				streams.add(stream);
 			}
@@ -77,8 +75,8 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 
 	@Override
 	public boolean load(IWaveformDb db, File file) throws InputFormatException {
+		dispose();
 		if(file.isDirectory() || !file.exists()) return false;
-		this.db=db;
 		try(FileInputStream fis = new FileInputStream(file)) {
 			byte[] buffer = new byte[x.length];
 			int read = fis.read(buffer, 0, x.length);
@@ -88,7 +86,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 		} catch(IOException e) {
 			return false;
 		}
-		database=new SQLiteDatabase(file.getAbsolutePath());
+		database=new SQLiteDatabase(file.getAbsolutePath(), db);
 		database.setData("TIMERESOLUTION", 1L);
 		SQLiteDatabaseSelectHandler<ScvSimProps> handler = new SQLiteDatabaseSelectHandler<>(ScvSimProps.class, database);
 		try {
@@ -103,7 +101,12 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 		}
 		return false;
 	}
-	
+
+	public void dispose() {
+		database=null;
+		usedRelationsList=null;
+	}
+
 	@Override
 	public Collection<RelationType> getAllRelationTypes(){
 		return usedRelationsList;

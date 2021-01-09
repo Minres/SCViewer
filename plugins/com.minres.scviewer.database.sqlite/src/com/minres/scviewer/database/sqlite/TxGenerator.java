@@ -10,12 +10,8 @@
  *******************************************************************************/
 package com.minres.scviewer.database.sqlite;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
-import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxGenerator;
 
 public class TxGenerator implements ITxGenerator {
@@ -42,11 +38,6 @@ public class TxGenerator implements ITxGenerator {
 	@Override
 	public String getName() {
 		return scvGenerator.getName();
-	}
-
-	@Override
-	public List<ITx> getTransactions() {
-		return new ArrayList<>();
 	}
 
 }

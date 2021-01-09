@@ -164,7 +164,7 @@ public class Tx implements ITx {
 			List<ScvStream> streams = new SQLiteDatabaseSelectHandler<ScvStream>(ScvStream.class, database,
 						"id="+res.get(0).getStream()).selectObjects();
 			if(streams.size()!=1) return null;
-			TxStream tgtStream = (TxStream) trStream.getDb().getStreamByName(streams.get(0).getName());
+			TxStream tgtStream = (TxStream) database.getWaveformDb().getStreamByName(streams.get(0).getName());
 			Tx that = (Tx) tgtStream.getTransactions().get(otherId);
 			if(outgoing)
 				return new TxRelation(trStream.getRelationType(rel.getName()), this, that);

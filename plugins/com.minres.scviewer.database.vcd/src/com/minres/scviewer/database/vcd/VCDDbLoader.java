@@ -41,9 +41,6 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	/** The Constant TIME_RES. */
 	private static final Long TIME_RES = 1000L; // ps
 
-	/** The db. */
-	private IWaveformDb db;
-
 	/** The module stack. */
 	private ArrayDeque<String> moduleStack;
 
@@ -71,8 +68,8 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean load(IWaveformDb db, File file) throws InputFormatException {
+		dispose();
 		if(file.isDirectory() || !file.exists()) return false;
-		this.db=db;
 		this.maxTime=0;
 		boolean res = false;
 		try {
@@ -112,6 +109,11 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 			}
 		}
 		return true;
+	}
+
+	public void dispose() {
+		moduleStack=null;
+		signals=null;
 	}
 
 	/* (non-Javadoc)
@@ -159,10 +161,10 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 		String netName = moduleStack.isEmpty()? name: moduleStack.peek()+"."+name;
 		int id = signals.size();
 		if(width==0) {
-			signals.add( i<0 ? new VCDSignal<DoubleVal>(db, id, netName, width) :
+			signals.add( i<0 ? new VCDSignal<DoubleVal>(id, netName, width) :
 				new VCDSignal<DoubleVal>((VCDSignal<DoubleVal>)signals.get(i), id, netName));			
 		} else if(width>0){
-			signals.add( i<0 ? new VCDSignal<BitVector>(db, id, netName, width) :
+			signals.add( i<0 ? new VCDSignal<BitVector>(id, netName, width) :
 				new VCDSignal<BitVector>((VCDSignal<BitVector>)signals.get(i), id, netName));
 		}
 		return id;
