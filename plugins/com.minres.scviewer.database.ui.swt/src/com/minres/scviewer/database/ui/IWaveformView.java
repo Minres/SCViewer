@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Control;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.RelationTypeFactory;
+import com.minres.scviewer.database.tx.ITx;
 
 public interface IWaveformView extends PropertyChangeListener, ISelectionProvider{
 
@@ -64,7 +65,9 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 
 	public List<TrackEntry> getStreamList();
 
-	public TrackEntry getEntryForStream(IWaveform source);
+	public TrackEntry getEntryFor(ITx source);
+	
+	public TrackEntry getEntryFor(IWaveform source);
 	
 	public List<Object> getElementsAt(Point pt);
 	

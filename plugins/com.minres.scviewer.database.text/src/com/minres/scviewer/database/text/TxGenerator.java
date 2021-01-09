@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2012 IT Just working.
+ * Copyright (c) 2020 MINRES Technologies GmbH
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,51 +14,93 @@ package com.minres.scviewer.database.text;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITxGenerator;
 
-class TxGenerator extends HierNode implements ITxGenerator {
+/**
+ * The Class TxGenerator.
+ */
+class TxGenerator extends AbstractTxStream implements ITxGenerator {
 
-	Long id;
+	/** The stream. */
+	TxStream stream;
 
-	IWaveform stream;
-		
-	Boolean active = false;
-	
+	/** The begin attrs. */
 	List<TxAttributeType> beginAttrs = new ArrayList<>();
-	
-	List<TxAttributeType> endAttrs= new ArrayList<>();
 
-	TxGenerator(Long id, TxStream stream, String name){
-		super(name, stream);
-		this.id=id;
-		this.stream=stream;
-	}
-	
-	@Override
-	public Long getId() {
-		return id;
+	/** The end attrs. */
+	List<TxAttributeType> endAttrs = new ArrayList<>();
+
+	/**
+	 * Instantiates a new tx generator.
+	 *
+	 * @param loader the loader
+	 * @param id     the id
+	 * @param name   the name
+	 * @param stream the stream
+	 */
+	TxGenerator(TextDbLoader loader, Long id, String name, TxStream stream) {
+		super(loader, id, name);
+		this.stream = stream;
+		stream.addChild(this);
 	}
 
+	/**
+	 * Gets the stream.
+	 *
+	 * @return the stream
+	 */
 	@Override
-	public IWaveform getStream(){
+	public IWaveform getStream() {
 		return stream;
 	}
-	
+
+	/**
+	 * Checks if is same.
+	 *
+	 * @param other the other
+	 * @return true, if is same
+	 */
 	@Override
-	public String getName() {
-		return name;
+	public boolean isSame(IWaveform other) {
+		return (other instanceof TxGenerator && this.getId().equals(other.getId()));
 	}
 
+	/**
+	 * Gets the begin attrs.
+	 *
+	 * @return the begin attrs
+	 */
 	public List<TxAttributeType> getBeginAttrs() {
 		return beginAttrs;
 	}
 
+	/**
+	 * Gets the end attrs.
+	 *
+	 * @return the end attrs
+	 */
 	public List<TxAttributeType> getEndAttrs() {
 		return endAttrs;
 	}
-	
-	Boolean isActive() {return active;}
 
+	/**
+	 * Gets the kind.
+	 *
+	 * @return the kind
+	 */
+	@Override
+	public String getKind() {
+		return stream.getKind();
+	}
+
+	/**
+	 * Gets the width.
+	 *
+	 * @return the width
+	 */
+	@Override
+	public int getWidth() {
+		return stream.getWidth();
+	}
 }

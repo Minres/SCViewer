@@ -1,5 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2012 IT Just working.
+ * Copyright (c) 2020 MINRES Technologies GmbH
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,129 +11,84 @@
  *******************************************************************************/
 package com.minres.scviewer.database.text;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
-
-import com.minres.scviewer.database.EventKind;
-import com.minres.scviewer.database.HierNode;
-import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.WaveformType;
-import com.minres.scviewer.database.tx.ITxEvent;
-import com.minres.scviewer.database.tx.ITxGenerator;
 
-class TxStream extends HierNode implements IWaveform {
+/**
+ * The Class TxStream.
+ */
+class TxStream extends AbstractTxStream {
 
-	private Long id;
-			
-	private TextDbLoader loader;
-	
+	/** The kind. */
 	final String kind;
-	
+
+	/**
+	 * Instantiates a new tx stream.
+	 *
+	 * @param loader the loader
+	 * @param id     the id
+	 * @param name   the name
+	 * @param kind   the kind
+	 */
+	TxStream(TextDbLoader loader, Long id, String name, String kind) {
+		super(loader, id, name);
+		this.kind = kind;
+	}
+
+	/**
+	 * Checks if is same.
+	 *
+	 * @param other the other
+	 * @return true, if is same
+	 */
+	@Override
+	public boolean isSame(IWaveform other) {
+		return (other instanceof TxStream && this.getId().equals(other.getId()));
+	}
+
+	/**
+	 * Gets the kind.
+	 *
+	 * @return the kind
+	 */
+	@Override
+	public String getKind() {
+		return kind;
+	}
+
+	/** The max concurrency. */
 	private int maxConcurrency = 0;
-	
+
+	/** The concurrency. */
 	private int concurrency = 0;
- 
-	boolean concurrencyCalculated = false;
- 
+
+	/**
+	 * Sets the concurrency.
+	 *
+	 * @param concurrency the new concurrency
+	 */
 	void setConcurrency(int concurrency) {
 		this.concurrency = concurrency;
-		if(concurrency>maxConcurrency)
+		if (concurrency > maxConcurrency)
 			maxConcurrency = concurrency;
 	}
 
+	/**
+	 * Gets the concurrency.
+	 *
+	 * @return the concurrency
+	 */
 	int getConcurrency() {
 		return this.concurrency;
 	}
 
-	TreeMap<Long, IEvent[]> events = new TreeMap<>();
-	
-	TxStream(TextDbLoader loader, Long id, String name, String kind){
-		super(name);
-		this.id=id;
-		this.loader=loader;
-		this.kind=kind;
-	}
-
-	List<ITxGenerator> getGenerators(){
-		return new ArrayList<>(loader.txGenerators.values());
-	}
-
+	/**
+	 * Gets the width.
+	 *
+	 * @return the width
+	 */
 	@Override
 	public int getWidth() {
 		return maxConcurrency;
-	}
-
-	public void addEvent(ITxEvent evt) {
-		if(!events.containsKey(evt.getTime()))
-			events.put(evt.getTime(), new IEvent[] {evt});
-		else {
-			IEvent[] evts = events.get(evt.getTime());
-			IEvent[] newEvts = Arrays.copyOf(evts, evts.length+1);
-			newEvts[evts.length]=evt;
-			events.put(evt.getTime(), newEvts);
-		}
-	}
-	
-	@Override
-	public NavigableMap<Long, IEvent[]> getEvents() {
-		if(!concurrencyCalculated) calculateConcurrency();
-		return events;
-	}
-
-	@Override
-	public IEvent[] getEventsAtTime(Long time) {
-		if(!concurrencyCalculated) calculateConcurrency();
-		return events.get(time);
-	}
-	
-	@Override
-	public boolean isSame(IWaveform other) {
-		return(other instanceof TxStream && this.getId().equals(other.getId()));
-	}
-
-	@Override
-	public IEvent[] getEventsBeforeTime(Long time) {
-		if(!concurrencyCalculated)
-			calculateConcurrency();
-    	Entry<Long, IEvent[]> e = events.floorEntry(time);
-    	if(e==null)
-    		return new IEvent[] {};
-    	else
-    		return  events.floorEntry(time).getValue();
-	}
-
-	@Override
-	public WaveformType getType() {
-		return WaveformType.TRANSACTION;
-	}
-
-	@Override
-	public Long getId() {
-		return id;
-	}
-
-	synchronized void calculateConcurrency() {
-		if(concurrencyCalculated) return;
-		ArrayList<Long> rowendtime = new ArrayList<>();
-		events.entrySet().stream().forEach( entry -> {
-			IEvent[] values = entry.getValue();
-			Arrays.asList(values).stream().filter(e->e.getKind()==EventKind.BEGIN).forEach(evt -> {
-				Tx tx = (Tx) ((TxEvent)evt).getTransaction();
-				int rowIdx = 0;
-				for(; rowIdx<rowendtime.size() && rowendtime.get(rowIdx)>tx.getBeginTime(); rowIdx++);
-				if(rowendtime.size()<=rowIdx)
-					rowendtime.add(tx.getEndTime());
-				else
-					rowendtime.set(rowIdx, tx.getEndTime());
-				tx.setConcurrencyIndex(rowIdx);
-			});
-		});
-		concurrencyCalculated=true;
 	}
 
 }
