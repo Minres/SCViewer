@@ -587,10 +587,9 @@ public class WaveformView implements IWaveformView {
 							if (evt instanceof ITxEvent) {
 								ITx tx = ((ITxEvent) evt).getTransaction();
 								if ((evt.getKind() == EventKind.BEGIN || evt.getKind() == EventKind.SINGLE)
-										&& tx.getBeginTime() <= time && tx.getEndTime() >= time) {
-									if (resultsList[tx.getConcurrencyIndex()] == null)
-										resultsList[tx.getConcurrencyIndex()] = ((ITxEvent) evt).getTransaction();
-								}
+										&& tx.getBeginTime() <= time && tx.getEndTime() >= time
+										&& resultsList[tx.getConcurrencyIndex()] == null)
+									resultsList[tx.getConcurrencyIndex()] = ((ITxEvent) evt).getTransaction();
 							}
 						}
 						firstTx = entry.waveform.getEvents().lowerEntry(firstTx.getKey());

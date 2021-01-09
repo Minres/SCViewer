@@ -124,7 +124,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	@Override
 	public boolean load(File inp) {
 		for (IWaveformDbLoader loader : loaders) {
-			if(loader.canLoad(inp)) {
+			if (loader.canLoad(inp)) {
 				try {
 					loader.addPropertyChangeListener(this);
 					loader.load(this, inp);
@@ -186,14 +186,14 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		if(IWaveformDbLoader.SIGNAL_ADDED.equals(evt.getPropertyName()) || 
-				IWaveformDbLoader.STREAM_ADDED.equals(evt.getPropertyName())) {
+		if (IWaveformDbLoader.SIGNAL_ADDED.equals(evt.getPropertyName())
+				|| IWaveformDbLoader.STREAM_ADDED.equals(evt.getPropertyName())) {
 			IWaveform waveform = (IWaveform) evt.getNewValue();
 			putInHierarchy(waveform);
 			pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
 			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
-		} else if(IWaveformDbLoader.GENERATOR_ADDED.equals(evt.getPropertyName())) {
-			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);			
+		} else if (IWaveformDbLoader.GENERATOR_ADDED.equals(evt.getPropertyName())) {
+			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
 		}
 	}
 
@@ -201,14 +201,14 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 * Builds the hierarchy nodes.
 	 */
 	private void buildHierarchyNodes() {
-		boolean needsSorting=false;
+		boolean needsSorting = false;
 		for (IWaveform stream : getAllWaves()) {
-			if(stream.getParent()==null) {
+			if (stream.getParent() == null) {
 				putInHierarchy(stream);
-				needsSorting=true;
+				needsSorting = true;
 			}
 		}
-		if(needsSorting) {
+		if (needsSorting) {
 			pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
 			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
 		}
