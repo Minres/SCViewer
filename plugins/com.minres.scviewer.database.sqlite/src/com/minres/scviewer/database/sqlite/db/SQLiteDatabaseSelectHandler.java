@@ -77,7 +77,6 @@ public class SQLiteDatabaseSelectHandler<T> extends AbstractDatabaseHandler<T> {
 	 * @throws InvocationTargetException
 	 */
 	public synchronized List<T> selectObjects() throws SQLException,
-			SecurityException, IllegalArgumentException,
 			InstantiationException, IllegalAccessException,
 			IntrospectionException, InvocationTargetException {
 
@@ -116,12 +115,11 @@ public class SQLiteDatabaseSelectHandler<T> extends AbstractDatabaseHandler<T> {
 	 * @throws InvocationTargetException
 	 */
 	private List<T> createObjects(ResultSet resultSet)
-			throws SecurityException, IllegalArgumentException,
-			SQLException, InstantiationException,
+			throws SQLException, InstantiationException,
 			IllegalAccessException, IntrospectionException,
 			InvocationTargetException {
 
-		List<T> list = new ArrayList<T>();
+		List<T> list = new ArrayList<>();
 
 		while (resultSet.next()) {
 

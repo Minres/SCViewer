@@ -16,17 +16,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import com.minres.scviewer.database.EventKind;
-import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.RelationType;
-import com.minres.scviewer.database.RelationTypeFactory;
-import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;

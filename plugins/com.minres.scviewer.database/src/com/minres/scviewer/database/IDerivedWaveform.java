@@ -15,5 +15,10 @@ package com.minres.scviewer.database;
  */
 public interface IDerivedWaveform extends IWaveform {
 
+	/**
+	 * Adds the source waveform.
+	 *
+	 * @param waveform the waveform
+	 */
 	void addSourceWaveform(IWaveform waveform);
 }

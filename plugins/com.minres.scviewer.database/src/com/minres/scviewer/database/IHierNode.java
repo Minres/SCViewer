@@ -16,25 +16,22 @@ import java.util.List;
 /**
  * The Interface IHierNode.
  */
-public interface IHierNode extends Comparable<IHierNode>{
-	
+public interface IHierNode extends Comparable<IHierNode> {
+
 	/**
 	 * Attach a non-null PropertyChangeListener to this object.
 	 * 
-	 * @param l
-	 *            a non-null PropertyChangeListener instance
-	 * @throws IllegalArgumentException
-	 *             if the parameter is null
+	 * @param l a non-null PropertyChangeListener instance
+	 * @throws IllegalArgumentException if the parameter is null
 	 */
 	public void addPropertyChangeListener(PropertyChangeListener l);
 
 	/**
 	 * Remove a PropertyChangeListener from this component.
 	 * 
-	 * @param l
-	 *            a PropertyChangeListener instance
+	 * @param l a PropertyChangeListener instance
 	 */
-	public void removePropertyChangeListener(PropertyChangeListener l) ;
+	public void removePropertyChangeListener(PropertyChangeListener l);
 
 	/**
 	 * Gets the full name.
@@ -42,21 +39,21 @@ public interface IHierNode extends Comparable<IHierNode>{
 	 * @return the full name
 	 */
 	public String getFullName();
-	
+
 	/**
 	 * Gets the name.
 	 *
 	 * @return the name
 	 */
 	public String getName();
-	
+
 	/**
 	 * Sets the name.
 	 *
 	 * @param name the new name
 	 */
 	public void setName(String name);
-	
+
 	/**
 	 * Sets the parent.
 	 *
@@ -70,7 +67,7 @@ public interface IHierNode extends Comparable<IHierNode>{
 	 * @return the child nodes
 	 */
 	public List<IHierNode> getChildNodes();
-	
+
 	/**
 	 * Derive waveform.
 	 *

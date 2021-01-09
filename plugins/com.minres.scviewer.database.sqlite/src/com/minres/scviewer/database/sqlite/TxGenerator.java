@@ -36,6 +36,7 @@ public class TxGenerator extends AbstractTxStream implements ITxGenerator {
 		super(database, scvGenerator.getName(), stream.getId());
 		this.stream=stream;
 		this.scvGenerator=scvGenerator;
+		stream.addChild(this);
 	}
 
 	@Override
