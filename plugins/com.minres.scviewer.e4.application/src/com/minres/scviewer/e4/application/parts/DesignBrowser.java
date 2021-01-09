@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -79,6 +79,7 @@ public class DesignBrowser {
 	/** The Constant POPUP_ID. */
 	private static final String POPUP_ID="com.minres.scviewer.e4.application.parts.DesignBrowser.popupmenu"; //$NON-NLS-1$
 
+	private static final String AFTER="after"; //$NON-NLS-1$
 	/** The event broker. */
 	@Inject IEventBroker eventBroker;
 
@@ -241,7 +242,7 @@ public class DesignBrowser {
 		txTableViewer.addFilter(tableAttributeFilter);
 		txTableViewer.addDoubleClickListener(event -> {
 			AddWaveformHandler myHandler = new AddWaveformHandler();
-			Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
+			Object result = runCommand(myHandler, CanExecute.class, AFTER, false); //$NON-NLS-1$
 			if(result!=null && (Boolean)result)
 				ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
 		});
@@ -263,7 +264,7 @@ public class DesignBrowser {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				AddWaveformHandler myHandler = new AddWaveformHandler();
-				Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
+				Object result = runCommand(myHandler, CanExecute.class, AFTER, false); //$NON-NLS-1$
 				if(result!=null && (Boolean)result)
 					ContextInjectionFactory.invoke(myHandler, Execute.class, eclipseCtx);
 			}
@@ -371,7 +372,7 @@ public class DesignBrowser {
 	private void updateButtons() {
 		if(txTableViewer!=null && !insertItem.isDisposed() && !appendItem.isDisposed()){
 			AddWaveformHandler myHandler = new AddWaveformHandler();
-			Object result = runCommand(myHandler, CanExecute.class, "after", false); //$NON-NLS-1$
+			Object result = runCommand(myHandler, CanExecute.class, AFTER, false); //$NON-NLS-1$
 			appendItem.setEnabled(result instanceof Boolean && (Boolean)result);
 			result = runCommand(myHandler, CanExecute.class, "before", false); //$NON-NLS-1$
 			insertItem.setEnabled(result instanceof Boolean && (Boolean)result);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1181,6 +1181,14 @@ public class WaveformView implements IWaveformView  {
 		Optional<TrackEntry> optStr = streams.stream().filter(e->source.getStream().equals(e.waveform)).findFirst();
 		if(optStr.isPresent())
 			return optStr.get();
+		return null;
+	}
+
+	@Override
+	public TrackEntry getEntryFor(IWaveform source) {
+		Optional<TrackEntry> optGen = streams.stream().filter(e->source.equals(e.waveform)).findFirst();
+		if(optGen.isPresent())
+			return optGen.get();
 		return null;
 	}
 
