@@ -10,6 +10,8 @@
  *******************************************************************************/
 package com.minres.scviewer.database.internal;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +30,7 @@ import com.minres.scviewer.database.RelationType;
 /**
  * The Class WaveformDb.
  */
-public class WaveformDb extends HierNode implements IWaveformDb {
+public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeListener {
 
 	/** The loaders. */
 	private static List<IWaveformDbLoader> loaders = new LinkedList<>();
@@ -122,8 +124,11 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 	@Override
 	public boolean load(File inp) {
 		for (IWaveformDbLoader loader : loaders) {
-			try {
-				if (loader.load(this, inp)) {
+			if (loader.canLoad(inp)) {
+				try {
+					loader.addPropertyChangeListener(this);
+					loader.load(this, inp);
+					loader.removePropertyChangeListener(this);
 					for (IWaveform w : loader.getAllWaves()) {
 						waveforms.put(w.getFullName(), w);
 					}
@@ -134,13 +139,12 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 						name = getFileBasename(inp.getName());
 					buildHierarchyNodes();
 					relationTypes.addAll(loader.getAllRelationTypes());
-					pcs.firePropertyChange("WAVEFORMS", null, waveforms);
-					pcs.firePropertyChange("CHILDS", null, childs);
+					pcs.firePropertyChange(IHierNode.LOADING_FINISHED, null, null);
 					loaded = true;
 					return true;
+				} catch (Exception e) {
+					return false;
 				}
-			} catch (Exception e) {
-				return false;
 			}
 		}
 		return false;
@@ -167,7 +171,7 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 	@Override
 	public void clear() {
 		waveforms.clear();
-		childs.clear();
+		childNodes.clear();
 		loaded = false;
 	}
 
@@ -180,49 +184,60 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 		return loaded;
 	}
 
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		if (IWaveformDbLoader.SIGNAL_ADDED.equals(evt.getPropertyName())
+				|| IWaveformDbLoader.STREAM_ADDED.equals(evt.getPropertyName())) {
+			IWaveform waveform = (IWaveform) evt.getNewValue();
+			putInHierarchy(waveform);
+			pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
+			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
+		} else if (IWaveformDbLoader.GENERATOR_ADDED.equals(evt.getPropertyName())) {
+			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
+		}
+	}
+
 	/**
 	 * Builds the hierarchy nodes.
 	 */
 	private void buildHierarchyNodes() {
+		boolean needsSorting = false;
 		for (IWaveform stream : getAllWaves()) {
-			String[] hier = stream.getName().split("\\.");
-			IHierNode node = this;
-			for (int i = 0; i < hier.length - 1; ++i) {
-				String name = hier[i];
-				IHierNode childNode = null;
-				for (IHierNode n : node.getChildNodes()) {
-					if (n.getName().equals(name)) {
-						childNode = n;
-						break;
-					}
-				}
-				if (childNode != null) {
-					node = childNode;
-					break;
-				}
-				HierNode newNode = new HierNode(name, node);
-				node.getChildNodes().add(newNode);
-				node = newNode;
-
+			if (stream.getParent() == null) {
+				putInHierarchy(stream);
+				needsSorting = true;
 			}
-			node.getChildNodes().add(stream);
-			stream.setParent(node);
-			stream.setName(hier[hier.length - 1]);
 		}
-		sortRecursive(this);
+		if (needsSorting) {
+			pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
+			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
+		}
 	}
 
-	/**
-	 * Sort recursive.
-	 *
-	 * @param node the node
-	 */
-	private void sortRecursive(IHierNode node) {
-		Collections.sort(node.getChildNodes(), (IHierNode o1, IHierNode o2) -> o1.getName().compareTo(o2.getName()));
-		for (IHierNode n : node.getChildNodes()) {
-			if (!n.getChildNodes().isEmpty())
-				sortRecursive(n);
+	private synchronized void putInHierarchy(IWaveform waveform) {
+		String[] hier = waveform.getName().split("\\.");
+		IHierNode node = this;
+		for (int i = 0; i < hier.length - 1; ++i) {
+			String name = hier[i];
+			IHierNode childNode = null;
+			for (IHierNode n : node.getChildNodes()) {
+				if (n.getName().equals(name)) {
+					childNode = n;
+					break;
+				}
+			}
+			if (childNode != null) {
+				node = childNode;
+				break;
+			}
+			HierNode newNode = new HierNode(name, node);
+			node.addChild(newNode);
+			node = newNode;
+
 		}
+		node.addChild(waveform);
+		waveform.setParent(node);
+		waveform.setName(hier[hier.length - 1]);
 	}
 
 	/**
@@ -234,4 +249,5 @@ public class WaveformDb extends HierNode implements IWaveformDb {
 	public List<RelationType> getAllRelationTypes() {
 		return relationTypes;
 	}
+
 }

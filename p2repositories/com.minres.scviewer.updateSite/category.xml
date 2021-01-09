@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature id="com.minres.scviewer.e4.feature">
-      <category name="com.minres.scviewer.e4"/>
-   </feature>
    <feature id="com.minres.scviewer.feature">
       <category name="com.minres.scviewer"/>
    </feature>
@@ -11,5 +8,4 @@
          Viewer for SystemC Verification (SCV) library&apos;s transaction recording
       </description>
    </category-def>
-   <category-def name="com.minres.scviewer.e4" label="SCViewer E4 application"/>
 </site>

@@ -5,7 +5,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +47,8 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.wb.swt.ResourceManager;
 
+import com.minres.scviewer.e4.application.Constants;
+
 public class FileBrowserDialog extends TrayDialog {
 
 	private Image folderImage;
@@ -80,9 +81,9 @@ public class FileBrowserDialog extends TrayDialog {
         
 	public FileBrowserDialog(Shell parentShell) {
 		super(parentShell);
-		folderImage=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/folder.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		dbImage=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/database.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		fileImage=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/page_white.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		folderImage=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/folder.png"); //$NON-NLS-1$
+		dbImage=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/database.png"); //$NON-NLS-1$
+		fileImage=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/page_white.png"); //$NON-NLS-1$
 		currentDirFile = new File(".");
 	}
 
@@ -148,7 +149,7 @@ public class FileBrowserDialog extends TrayDialog {
 		toolBar.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL));
 	    final ToolItem toolbarItemUp = new ToolItem(toolBar, SWT.PUSH);
 	    toolbarItemUp.setToolTipText("up one level");
-	    toolbarItemUp.setImage(ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/arrow_up.png")); //$NON-NLS-1$ //$NON-NLS-2$);
+	    toolbarItemUp.setImage(ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/arrow_up.png")); //$NON-NLS-1$
 	    toolbarItemUp.addSelectionListener(new SelectionAdapter() {	
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -158,7 +159,7 @@ public class FileBrowserDialog extends TrayDialog {
 				}
 			}
 		});
-		tableViewer = new TableViewer(tableViewerParent, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.MULTI);
+		tableViewer = new TableViewer(tableViewerParent, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
 		tableViewer.getTable().setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL | GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL));
 		tableViewer.addSelectionChangedListener(event -> {
 			IStructuredSelection sel = event.getStructuredSelection();
@@ -187,8 +188,8 @@ public class FileBrowserDialog extends TrayDialog {
 			public void mouseDown(MouseEvent e) { mouseUp(e); }
 			@Override
 			public void mouseUp(MouseEvent e) {
-				TableItem element = (TableItem)tableViewer.getTable().getItem(new Point(e.x, e.y));
 				final Table table = tableViewer.getTable();
+				TableItem element = table.getItem(new Point(e.x, e.y));
 				if (element == null )//&& (e.stateMask&SWT.MODIFIER_MASK)!=0)
 					table.deselectAll();
 				else {
@@ -231,7 +232,6 @@ public class FileBrowserDialog extends TrayDialog {
 		colEmpty.setLabelProvider(new FileTableLabelProvider() {
 			@Override public String getText(Object element) {	return ""; }
 		});
-		//colEmpty.getColumn().setWidth(200);
 		colEmpty.getColumn().setText("");
 		
 		fileTableComparator = new FileTableComparator();
@@ -268,7 +268,7 @@ public class FileBrowserDialog extends TrayDialog {
 	}
 
     private SelectionAdapter getSelectionAdapter(final TableColumn column, final int index) {
-        SelectionAdapter selectionAdapter = new SelectionAdapter() {
+        return new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
             	fileTableComparator.setColumn(index);
@@ -278,7 +278,6 @@ public class FileBrowserDialog extends TrayDialog {
                 tableViewer.refresh();
             }
         };
-        return selectionAdapter;
     }
 
     private void setDirSelection(File f) {
@@ -334,10 +333,11 @@ public class FileBrowserDialog extends TrayDialog {
 		}
 		
 		public boolean matches(Object f) {
-			assert(f instanceof File);
-			if(matchers.size()==0) return true;
-			for (PathMatcher m : matchers) {
-				if(m.matches(((File)f).toPath())) return true;
+			if(f instanceof File) {
+				if(matchers.isEmpty()) return true;
+				for (PathMatcher m : matchers) {
+					if(m.matches(((File)f).toPath())) return true;
+				}
 			}
 			return false;
 		}
@@ -349,10 +349,8 @@ public class FileBrowserDialog extends TrayDialog {
 			if(entries != null) {
 				List<File> res = Arrays.stream(entries)
 						.filter(file -> !(file.isFile()||file.getName().startsWith(".") ||globber.matches(file)))
-						.sorted(new Comparator<File>(){
-							public int compare(File f1, File f2){return f1.getName().compareTo(f2.getName());} 
-							})
-						.collect(Collectors.toList());   ;
+						.sorted( (f1, f2) -> f1.getName().compareTo(f2.getName()))
+						.collect(Collectors.toList());
 						return res.toArray();
 			} else
 				return new Object[0];
@@ -364,25 +362,20 @@ public class FileBrowserDialog extends TrayDialog {
 
 		public boolean hasChildren(Object arg0) {
 			Object[] obj = getChildren(arg0);
-			return obj == null ? false : obj.length > 0;
+			return obj != null && obj.length > 0;
 		}
 
 		public Object[] getElements(Object arg0) {
 			return File.listRoots();
 		}
 
-		public void dispose() {
-		}
-
-		public void inputChanged(Viewer arg0, Object arg1, Object arg2) {
-		}
 	}
 
 	class FileTreeLabelProvider implements ILabelProvider {
 		private List<ILabelProviderListener> listeners;
 
 		public FileTreeLabelProvider() {
-			listeners = new ArrayList<ILabelProviderListener>();
+			listeners = new ArrayList<>();
 		}
 
 		public Image getImage(Object arg0) {
@@ -400,6 +393,7 @@ public class FileBrowserDialog extends TrayDialog {
 
 		@Override
 		public void dispose() {
+			// nothing to ispose
 		}
 
 		public boolean isLabelProperty(Object arg0, String arg1) {
@@ -425,15 +419,12 @@ public class FileBrowserDialog extends TrayDialog {
 	    private int propertyIndex = 0;
 	    private boolean descending = false;
 
-	    public FileTableComparator() {
-	    }
-
 	    public int getDirection() {
 	        return descending ? SWT.DOWN : SWT.UP;
 	    }
 
 	    public void setColumn(int column) {
-	    	descending = column == this.propertyIndex?!descending : false;
+	    	descending = column == this.propertyIndex && !descending;
 	    	this.propertyIndex = column;
 	    }
 

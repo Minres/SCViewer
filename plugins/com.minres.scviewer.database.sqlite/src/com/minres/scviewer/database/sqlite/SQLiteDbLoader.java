@@ -11,9 +11,11 @@
 package com.minres.scviewer.database.sqlite;
 
 import java.beans.IntrospectionException;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -40,6 +42,11 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	
 	private ScvSimProps scvSimProps;
 		
+	private static final byte[] x = "SQLite format 3".getBytes();
+
+	/** The pcs. */
+	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+
 	@Override
 	public Long getMaxTime() {
 		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
@@ -71,21 +78,28 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 		return streams;
 	}
 
-	private byte[] x = "SQLite format 3".getBytes();
+	@Override
+	public boolean canLoad(File inputFile) {
+		if (!inputFile.isDirectory() && inputFile.exists()) {
+			try(InputStream stream = new FileInputStream(inputFile)){
+				byte[] buffer = new byte[x.length];
+				int readCnt = stream.read(buffer, 0, x.length);
+				if (readCnt == x.length) {
+					for (int i = 0; i < x.length; i++)
+						if (buffer[i] != x[i])
+							return false;
+				}
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		return false;
+	}
 
 	@Override
-	public boolean load(IWaveformDb db, File file) throws InputFormatException {
+	public void load(IWaveformDb db, File file) throws InputFormatException {
 		dispose();
-		if(file.isDirectory() || !file.exists()) return false;
-		try(FileInputStream fis = new FileInputStream(file)) {
-			byte[] buffer = new byte[x.length];
-			int read = fis.read(buffer, 0, x.length);
-			if (read == x.length)
-				for (int i = 0; i < x.length; i++)
-					if (buffer[i] != x[i])	return false;
-		} catch(IOException e) {
-			return false;
-		}
 		database=new SQLiteDatabase(file.getAbsolutePath(), db);
 		database.setData("TIMERESOLUTION", 1L);
 		SQLiteDatabaseSelectHandler<ScvSimProps> handler = new SQLiteDatabaseSelectHandler<>(ScvSimProps.class, database);
@@ -94,12 +108,11 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 				scvSimProps=simProps;
 				database.setData("TIMERESOLUTION", scvSimProps.getTime_resolution());
 			}
-			return true;
+			pcs.firePropertyChange(IWaveformDbLoader.LOADING_FINISHED, null, null);
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
 				| InvocationTargetException | SQLException | IntrospectionException e) {
-			e.printStackTrace();
+			throw new InputFormatException();
 		}
-		return false;
 	}
 
 	public void dispose() {
@@ -110,6 +123,26 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	@Override
 	public Collection<RelationType> getAllRelationTypes(){
 		return usedRelationsList;
+	}
+
+	/**
+	 * Adds the property change listener.
+	 *
+	 * @param l the l
+	 */
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener l) {
+		pcs.addPropertyChangeListener(l);
+	}
+
+	/**
+	 * Removes the property change listener.
+	 *
+	 * @param l the l
+	 */
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener l) {
+		pcs.removePropertyChangeListener(l);
 	}
 
 }

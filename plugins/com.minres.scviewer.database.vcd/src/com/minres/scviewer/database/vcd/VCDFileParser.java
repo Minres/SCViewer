@@ -161,12 +161,9 @@ class VCDFileParser {
 		else if (tokenizer.sval.equals("$enddefinitions")) {
 			match("$end");
 			return false;
-		} else {
-			// Ignore this defintion
-			do {
-				if (!nextToken()) return false;
-			} while (!tokenizer.sval.equals("$end"));
-		}
+		} else do {
+			if (!nextToken()) return false;
+		} while (!tokenizer.sval.equals("$end"));
 
 		return true;
 	}

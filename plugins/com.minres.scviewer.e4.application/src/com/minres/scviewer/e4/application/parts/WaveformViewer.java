@@ -16,11 +16,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,6 +77,7 @@ import org.eclipse.swt.widgets.Widget;
 
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
@@ -251,7 +254,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		showHover=hover;
 		database = dbFactory.getDatabase();
 		database.addPropertyChangeListener(evt -> {
-			if ("WAVEFORMS".equals(evt.getPropertyName())) { //$NON-NLS-1$
+			if (IHierNode.WAVEFORMS.equals(evt.getPropertyName())) { //$NON-NLS-1$
 				myParent.getDisplay().syncExec(() -> waveformPane.setMaxTime(database.getMaxTime()));
 			}
 		});
@@ -354,8 +357,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					case SWT.ARROW_DOWN:
 						waveformPane.moveSelection(GotoDirection.DOWN);
 						return;
-					case SWT.HOME:			return; //TODO: should be handled
-					case SWT.END:			return; //TODO: should be handled
+					case SWT.HOME:
+						return;
+					case SWT.END:
+						return;
 					default:
 						break;
 					}
@@ -536,6 +541,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	protected void loadDatabase(final Map<String, String> state, long delay) {
 		fileMonitor.removeFileChangeListener(this);
+		database.setName(filesToLoad.stream().map(File::getName).reduce(null, (prefix, element) -> prefix==null? element : prefix + ","+ element));
 		Job job = new Job(Messages.WaveformViewer_15) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
@@ -683,9 +689,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		//clear old streams before loading tab settings
 		if(!waveformPane.getStreamList().isEmpty()) {
 			waveformPane.getStreamList().clear();
-			for (TrackEntry trackEntry : waveformPane.getStreamList()) {
-				trackEntry.selected = false;
-			}
+			waveformPane.getStreamList().stream().forEach(e -> e.selected=false);
 		}
 		try (FileInputStream in = new FileInputStream(fileName)) {
 			Properties props = new Properties();
@@ -763,25 +767,25 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	protected void restoreWaveformViewerState(Map<String, String> state) {
 		Integer waves = state.containsKey(SHOWN_WAVEFORM+"S") ? Integer.parseInt(state.get(SHOWN_WAVEFORM + "S")):0; //$NON-NLS-1$ //$NON-NLS-2$
-		List<TrackEntry> res = new LinkedList<>();
+		List<TrackEntry> trackEntries = new LinkedList<>();
 		for (int i = 0; i < waves; i++) {
 			IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
 			if (waveform != null) {
-				TrackEntry t = waveformPane.addWaveform(waveform, -1);
+				TrackEntry trackEntry = waveformPane.addWaveform(waveform, -1);
 				//check if t is selected
 				boolean isSelected = Boolean.parseBoolean(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED));
 				if(isSelected) {
-					t.selected = true;
+					trackEntry.selected = true;
 				} else {
-					t.selected = false;
+					trackEntry.selected = false;
 				}
-				res.add(t);
+				trackEntries.add(trackEntry);
 				String v = state.get(SHOWN_WAVEFORM + i + VALUE_DISPLAY);
 				if(v!=null)
-					t.valueDisplay=ValueDisplay.valueOf(v);
+					trackEntry.valueDisplay=ValueDisplay.valueOf(v);
 				String s = state.get(SHOWN_WAVEFORM + i + WAVE_DISPLAY);
 				if(s!=null)
-					t.waveDisplay=WaveDisplay.valueOf(s);
+					trackEntry.waveDisplay=WaveDisplay.valueOf(s);
 			}
 		}
 		Integer cursorLength = state.containsKey(SHOWN_CURSOR+"S")?Integer.parseInt(state.get(SHOWN_CURSOR + "S")):0; //$NON-NLS-1$ //$NON-NLS-2$
@@ -810,32 +814,11 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			try {
 				Long txId = Long.parseLong(state.get(SELECTED_TX_ID));
 				String trackentryName = state.get(SELECTED_TRACKENTRY_NAME);
-				
 				//get TrackEntry Object based on name and TX Object by id and put into selectionList
-				for(TrackEntry te : res) {
-					if(te.waveform.getFullName().compareTo(trackentryName)==0) {
-						boolean found = false;
-						// TODO: find transaction by time? To avoid 3x for-loop
-						for( IEvent[] lev : te.waveform.getEvents().values() ) {
-							if(lev != null)
-								for(IEvent itxe : lev) {
-									if(itxe instanceof ITxEvent) {
-										ITx itx = ((ITxEvent)itxe).getTransaction();
-										if(itx.getId().equals(txId)) {
-											found = true;
-											ArrayList<Object> selectionList = new ArrayList<>();
-											selectionList.add(te);
-											selectionList.add(itx);
-											waveformPane.setSelection(new StructuredSelection (selectionList));
-											break;
-										}
-									}
-								}
-							if(found) break;
-						}
-						break;
-					}
-				}
+				trackEntries.stream().filter(e->trackentryName.equals(e.waveform.getFullName())).forEach(trackEntry ->
+				trackEntry.waveform.getEvents().values().stream().filter(Objects::nonNull).forEach(entries-> 
+				Arrays.stream(entries).filter(e->e instanceof ITxEvent && txId.equals(((ITxEvent)e).getTransaction().getId())).forEach(event ->
+				waveformPane.setSelection(new StructuredSelection(new Object[] {((ITxEvent)event).getTransaction(), trackEntry})))));
 			} catch (NumberFormatException e) {
 			}
 		}
@@ -914,15 +897,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			ext = f.substring(i + 1);
 		}
 		return ext;
-	}
-
-	/**
-	 * Gets the model.
-	 *
-	 * @return the model
-	 */
-	public IWaveformDb getModel() {
-		return database;
 	}
 
 	/**

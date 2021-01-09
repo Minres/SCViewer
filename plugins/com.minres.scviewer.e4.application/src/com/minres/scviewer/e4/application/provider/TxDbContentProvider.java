@@ -10,7 +10,8 @@
  *******************************************************************************/
 package com.minres.scviewer.e4.application.provider;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public class TxDbContentProvider implements ITreeContentProvider {
 		super();
 		this.tableEntries = false;
 	}
-
+	
 	/**
 	 * Instantiates a new tx db content provider.
 	 *
@@ -54,12 +55,15 @@ public class TxDbContentProvider implements ITreeContentProvider {
 		if(tableEntries && inputElement instanceof IWaveformDb){
 			return new Object[]{};
 		}else if(inputElement instanceof IHierNode){
-			Collection<IHierNode> res = ((IHierNode)inputElement).getChildNodes().stream().filter(n ->
+			// make a copy as the laoder might continue to add waveforms
+			ArrayList<IHierNode> nodes = new ArrayList<>(((IHierNode)inputElement).getChildNodes());
+			return  nodes.stream().filter(n ->
 				tableEntries? n instanceof IWaveform : !n.getChildNodes().isEmpty()
-			).collect(Collectors.toList());
-			return res.toArray();
+			).sorted(Comparator.comparing(IHierNode::getName)).collect(Collectors.toList()).toArray();
 		}else if(inputElement instanceof List<?>){
 			return ((List<?>)inputElement).toArray();
+		}else if(inputElement instanceof Object[]){
+			return (Object[]) inputElement;
 		} else
 			return new Object[]{};
 	}

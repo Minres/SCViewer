@@ -85,9 +85,6 @@ public class TransactionDetails {
 	/** The selection service. */
 	@Inject	ESelectionService selectionService;
 
-	/** The name filter. */
-	private Text nameFilter;
-
 	/** The tree viewer. */
 	private TreeViewer treeViewer;
 
@@ -122,7 +119,7 @@ public class TransactionDetails {
 		top = new Composite(parent, SWT.NONE);
 		top.setLayout(new GridLayout(1, false));
 
-		nameFilter = new Text(top, SWT.BORDER);
+		Text nameFilter = new Text(top, SWT.BORDER);
 		nameFilter.setMessage(Messages.TransactionDetails_0);
 		nameFilter.addModifyListener(e -> {
 				attributeFilter.setSearchText(((Text) e.widget).getText());
@@ -204,11 +201,6 @@ public class TransactionDetails {
 				treeViewer.refresh();
 			}
 		});
-		// Pack the columns
-		//		for (int i = 0, n = table.getColumnCount(); i < n; i++) {
-		//			table.getColumn(i).pack();
-		//		}
-
 		// Turn on the header and the lines
 		tree.setHeaderVisible(true);
 		tree.setLinesVisible(true);
