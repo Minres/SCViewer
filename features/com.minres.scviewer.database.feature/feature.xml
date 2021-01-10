@@ -6,9 +6,7 @@
       provider-name="%providerName">
 
    <description>
-      A viewer for SystemC Verification Library transactions and VCD 
-signals. It supports a SQLite based recording as well as the built-in
-text base recording.
+      The database loaders for SystemC Verification Library transactions and VCD signals. They support SQLite based recording as well as the built-in text base recording.
    </description>
 
    <copyright>

@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="com.minres.scviewer.ui.feature"
-      label="SCViewer UI"
+      label="%featureName"
       version="1.1.0.qualifier"
-      provider-name="MINRES Technologies GmbH">
+      provider-name="%providerName">
 
-   <description url="http://www.example.com/description">
-      [Enter Feature Description here.]
+   <description>
+      The UI for the SCViewer databases
    </description>
 
-   <copyright url="http://www.example.com/copyright">
-      [Enter Copyright Description here.]
+   <copyright>
+      Copyright (c) 2015-2021 MINRES Technologies GmbH.
+All rights reserved. This program and the accompanying materials
+are made available under the terms of the Eclipse Public License
+v1.0 which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v10.html
    </copyright>
 
-   <license url="http://www.example.com/license">
-      [Enter License Description here.]
+   <license url="%licenseURL">
+      %license
    </license>
+
+   <url>
+      <discovery label="MINRES Website" url="http://www.minres.com"/>
+   </url>
 
    <includes
          id="com.minres.scviewer.database.feature"

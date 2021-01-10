@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>com.minres.scviewer.updateSite</artifactId>
@@ -9,12 +10,63 @@
 		<version>2.0.0-SNAPSHOT</version>
 		<relativePath>../..</relativePath>
 	</parent>
-<!--	<build>
- 		<finalName>resources</finalName>
-		<resources>
-			<resource>
-				<directory>resources</directory>
-			</resource>
-		</resources>
-	</build> -->
-	</project>
+    <build>
+        <plugins>
+            <!-- make sure that zipped p2 repositories have the fully qualified version -->
+            <plugin>
+                <groupId>org.eclipse.tycho</groupId>
+                <artifactId>tycho-p2-repository-plugin</artifactId>
+                <version>${tycho-version}</version>
+                <configuration>
+                    <finalName>${project.artifactId}-${qualifiedVersion}</finalName>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+	<profiles>
+		<profile>
+			<!-- Activate this profile to perform the release to Bintray -->
+			<id>release-composite</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.carrotgarden.maven</groupId>
+						<artifactId>bintray-maven-plugin</artifactId>
+    					<version>1.5.20191113165555</version>
+   						<configuration>
+							<skip>false</skip>
+							<!-- Bintray organization name. -->
+							<subject>minres</subject>
+							<!-- Bintray target repository. -->
+							<repository>eclipse</repository>
+							<!-- Bintray package name. -->
+							<bintrayPackage>SCViewer</bintrayPackage>
+							<bintrayVersion>2.10</bintrayVersion>
+							<packageVcsUrl>https://github.com/Minres/SCViewer.git</packageVcsUrl>
+							<!-- Local folder content to sync to the remote repo. -->
+							<sourceFolder>${project.build.directory}/repository</sourceFolder>
+							<!-- Remote folder for local content upload, relative path. -->
+							<targetFolder>repository</targetFolder>
+
+							<!-- Bintray credentials in settings.xml. -->
+							<serverId>bintray-minres-deploy</serverId>
+						</configuration>
+						<executions>
+							<!-- Activate "bintray:upload" during "package" -->
+							<execution>
+								<phase>package</phase>
+								<goals>
+                                    <goal>upload</goal>
+                                </goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+</project>

@@ -3,9 +3,16 @@
    <feature id="com.minres.scviewer.feature">
       <category name="com.minres.scviewer"/>
    </feature>
+   <feature id="com.minres.scviewer.database.feature">
+      <category name="com.minres.scviewer.database"/>
+   </feature>
+   <feature id="com.minres.scviewer.ui.feature">
+      <category name="com.minres.scviewer.database"/>
+   </feature>
    <category-def name="com.minres.scviewer" label="SCViewer">
       <description>
          Viewer for SystemC Verification (SCV) library&apos;s transaction recording
       </description>
    </category-def>
+   <category-def name="com.minres.scviewer.database" label="SCViewer Databases"/>
 </site>
