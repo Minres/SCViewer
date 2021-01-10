@@ -25,18 +25,13 @@ http://www.eclipse.org/legal/epl-v10.html
       <discovery label="MINRES Website" url="http://www.minres.com"/>
    </url>
 
-   <includes
-         id="com.minres.scviewer.database.feature"
-         version="0.0.0"/>
-
    <requires>
       <import plugin="org.eclipse.swt" version="3.103.1" match="greaterOrEqual"/>
-      <import plugin="com.minres.scviewer.database" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="com.google.guava" version="15.0.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jface"/>
       <import plugin="org.eclipse.equinox.registry"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.osgi"/>
+      <import feature="com.minres.scviewer.database.feature" version="3.0.0.qualifier"/>
    </requires>
 
    <plugin

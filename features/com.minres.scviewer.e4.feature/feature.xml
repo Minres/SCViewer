@@ -21,14 +21,6 @@
       <update label="SC Viewer Updates" url="http://www.minres.com/scviewer/update"/>
    </url>
 
-   <includes
-         id="com.minres.scviewer.database.feature"
-         version="0.0.0"/>
-
-   <includes
-         id="com.minres.scviewer.ui.feature"
-         version="0.0.0"/>
-
    <requires>
       <import plugin="javax.inject" version="1.0.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.runtime" version="3.11.1" match="greaterOrEqual"/>
@@ -40,13 +32,10 @@
       <import plugin="org.eclipse.e4.core.di" version="1.5.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.e4.ui.di" version="1.1.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.e4.core.contexts" version="1.4.0" match="greaterOrEqual"/>
-      <import plugin="com.minres.scviewer.database.ui.swt" version="1.0.0" match="greaterOrEqual"/>
-      <import plugin="com.minres.scviewer.database" version="1.0.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.osgi.services" version="3.5.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.e4.core.services" version="2.0.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.jobs"/>
       <import plugin="org.eclipse.osgi"/>
-      <import plugin="com.google.guava"/>
       <import plugin="org.eclipse.equinox.preferences"/>
       <import plugin="org.eclipse.core.expressions"/>
       <import plugin="org.eclipse.e4.core.commands" version="0.11.0" match="greaterOrEqual"/>
@@ -59,6 +48,8 @@
       <import feature="org.eclipse.sdk" version="4.15.0.v20200305-0155"/>
       <import feature="org.eclipse.rcptt.core" version="2.5.1.M3"/>
       <import plugin="org.eclipse.core.commands"/>
+      <import feature="com.minres.scviewer.database.feature" version="3.0.0.qualifier"/>
+      <import feature="com.minres.scviewer.ui.feature" version="1.1.0.qualifier"/>
    </requires>
 
    <plugin
