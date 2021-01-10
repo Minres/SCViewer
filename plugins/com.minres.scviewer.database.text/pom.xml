@@ -11,35 +11,4 @@
 	</parent>
 	<packaging>eclipse-plugin</packaging>
 	
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
-				<configuration>
-					<compilerId>groovy-eclipse-compiler</compilerId>
-			        <compilerArguments>
-			            <indy/><!-- optional; supported by batch 2.4.12-04+ -->
-			        </compilerArguments>
-					<!-- set verbose to be true if you want lots of uninteresting messages -->
-					<!-- <verbose>true</verbose> -->
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-				<dependencies>
-					<dependency>
-						<groupId>org.codehaus.groovy</groupId>
-						<artifactId>groovy-eclipse-compiler</artifactId>
-						<version>${groovy-eclipse-compiler-version}</version>
-					</dependency>
-					<dependency>
-						<groupId>org.codehaus.groovy</groupId>
-						<artifactId>groovy-eclipse-batch</artifactId>
-						<version>${groovy-eclipse-batch-version}</version>
-					</dependency>
-				</dependencies>
-			</plugin>
-		</plugins>
-	</build>
 </project>

@@ -56,15 +56,19 @@
 							<subject>minres</subject>
 							<!-- Bintray target repository. -->
 							<repository>eclipse</repository>
-							<!-- Bintray package name. -->
+							<!-- Bintray package name -->
 							<bintrayPackage>SCViewer</bintrayPackage>
+							<!-- Bintray package version number -->
 							<bintrayVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</bintrayVersion>
+							<!-- remove any preexisting files -->
+							<performDestroy>true</performDestroy>
+							<!-- information used when creating the package  -->							
 							<packageVcsUrl>https://git.minres.com/VP-Tools/SCViewer.git</packageVcsUrl>
+							<packageLicenses>EPL-1.0</packageLicenses>
 							<!-- Local folder content to sync to the remote repo. -->
 							<sourceFolder>${project.build.directory}/repository</sourceFolder>
 							<!-- Remote folder for local content upload, relative path. -->
 							<targetFolder>scviewer-${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</targetFolder>
-
 							<!-- Bintray credentials in settings.xml. -->
 							<serverId>bintray-minres-deploy</serverId>
 						</configuration>
