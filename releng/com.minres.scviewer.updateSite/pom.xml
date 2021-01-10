@@ -68,7 +68,7 @@
 							<!-- Local folder content to sync to the remote repo. -->
 							<sourceFolder>${project.build.directory}/repository</sourceFolder>
 							<!-- Remote folder for local content upload, relative path. -->
-							<targetFolder>scviewer-${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</targetFolder>
+							<targetFolder>SCViewer/${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</targetFolder>
 							<!-- Bintray credentials in settings.xml. -->
 							<serverId>bintray-minres-deploy</serverId>
 						</configuration>
