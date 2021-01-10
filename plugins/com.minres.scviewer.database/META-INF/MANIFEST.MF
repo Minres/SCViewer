@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Waveform database
 Bundle-SymbolicName: com.minres.scviewer.database
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 3.0.0.qualifier
 Bundle-Vendor: MINRES Technologies GmbH
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: com.minres.scviewer.database,
- com.minres.scviewer.database.internal;x-internal:=true
+ com.minres.scviewer.database.tx
 Bundle-ActivationPolicy: lazy
 Service-Component: OSGI-INF/component.xml,OSGI-INF/component2.xml
 Automatic-Module-Name: com.minres.scviewer.database

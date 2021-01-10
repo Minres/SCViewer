@@ -2,17 +2,15 @@
 <feature
       id="com.minres.scviewer.database.feature"
       label="%featureName"
-      version="1.0.0.qualifier"
+      version="3.0.0.qualifier"
       provider-name="%providerName">
 
    <description>
-      A viewer for SystemC Verification Library transactions and VCD 
-signals. It supports a SQLite based recording as well as the built-in
-text base recording.
+      The database loaders for SystemC Verification Library transactions and VCD signals. They support SQLite based recording as well as the built-in text base recording.
    </description>
 
    <copyright>
-      Copyright (c) 2015 MINRES Technologies GmbH.
+      Copyright (c) 2015-2021 MINRES Technologies GmbH.
 All rights reserved. This program and the accompanying materials
 are made available under the terms of the Eclipse Public License
 v1.0 which accompanies this distribution, and is available at 
@@ -57,12 +55,6 @@ http://www.eclipse.org/legal/epl-v10.html
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
 
    <plugin
          id="com.minres.scviewer.database.vcd"

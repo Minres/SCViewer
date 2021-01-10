@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,8 +26,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -36,13 +34,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.wb.swt.ResourceManager;
 import org.eclipse.wb.swt.SWTResourceManager;
 import org.osgi.framework.Version;
 
+import com.minres.scviewer.e4.application.Constants;
 import com.minres.scviewer.e4.application.Messages;
 
 /**
@@ -73,34 +70,32 @@ public class AboutDialog extends Dialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
-		GridData gd_composite = new GridData(SWT.LEFT, SWT.FILL, true, true);
-		gd_composite.widthHint = 600;
-		gd_composite.heightHint =300;
-		composite.setLayoutData(gd_composite);
+		GridData gdComposite = new GridData(SWT.LEFT, SWT.FILL, true, true);
+		gdComposite.widthHint = 600;
+		gdComposite.heightHint =300;
+		composite.setLayoutData(gdComposite);
 		composite.setLayout(new GridLayout(2, false));
 		
 		final Color white=SWTResourceManager.getColor(SWT.COLOR_WHITE);
-		final Image scviewerLogo=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/SCViewer_logo.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		final Image minresLogo=ResourceManager.getPluginImage("com.minres.scviewer.e4.application", "icons/Minres_logo.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		final Image scviewerLogo=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/SCViewer_logo.png"); //$NON-NLS-1$
+		final Image minresLogo=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/Minres_logo.png"); //$NON-NLS-1$
 
 		Canvas canvas = new Canvas(composite,SWT.NO_REDRAW_RESIZE);
-		GridData gd_canvas = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
-		gd_canvas.widthHint = 200;
-		gd_canvas.heightHint =300;
-		canvas.setLayoutData(gd_canvas);
-		canvas.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
+		GridData gdCanvas = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gdCanvas.widthHint = 200;
+		gdCanvas.heightHint =300;
+		canvas.setLayoutData(gdCanvas);
+		canvas.addPaintListener(e -> {
 				e.gc.setBackground(white);
 				e.gc.fillRectangle(e.x, e.y, e.width, e.height);
 				e.gc.drawImage(scviewerLogo,4,0);
 				e.gc.drawImage(minresLogo,0,200);
-			}
 		});
 
 		StyledText styledText = new StyledText(composite, SWT.V_SCROLL | SWT.BORDER);
 		styledText.setEditable(false);
-		GridData gd_styledText = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
-		styledText.setLayoutData(gd_styledText);
+		GridData gdStyledText = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
+		styledText.setLayoutData(gdStyledText);
 		Version version = Platform.getProduct().getDefiningBundle().getVersion();
 		String versionString = String.format("%d.%d.%d", version.getMajor(), version.getMinor(), version.getMicro());
 		String productTitle = NLS.bind(Messages.AboutDialog_0, versionString);
@@ -114,10 +109,7 @@ public class AboutDialog extends Dialog {
 		styleRange.fontStyle = SWT.BOLD;
 		styledText.setStyleRange(styleRange);
 		///^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
-	    Pattern pattern = Pattern.compile("https?:\\/\\/([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w\\.-]*)*\\/?"); //$NON-NLS-1$
-	    // in case you would like to ignore case sensitivity,
-	    // you could use this statement:
-	    // Pattern pattern = Pattern.compile("\\s+", Pattern.CASE_INSENSITIVE);
+	    Pattern pattern = Pattern.compile("https?:\\/\\/([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w\\.-]*)*\\/?"/*, Pattern.CASE_INSENSITIVE*/); //$NON-NLS-1$
 	    Matcher matcher = pattern.matcher(productTitle+copyrightText);
 	    // check all occurance
 	    while (matcher.find()) {
@@ -129,22 +121,17 @@ public class AboutDialog extends Dialog {
 			styleRange.length = matcher.end()-matcher.start();
 			styledText.setStyleRange(styleRange);
 	    }
-		styledText.addListener(SWT.MouseDown, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				// It is up to the application to determine when and how a link should be activated.
-				// links are activated on mouse down when the control key is held down 
-//				if ((event.stateMask & SWT.MOD1) != 0) {
-					try {
-						@SuppressWarnings("deprecation")
-						int offset = ((StyledText)event.widget).getOffsetAtLocation(new Point (event.x, event.y));
-						StyleRange style = ((StyledText)event.widget).getStyleRangeAtOffset(offset);
-						if (style != null && style.underline && style.underlineStyle == SWT.UNDERLINE_LINK) {
-							Desktop.getDesktop().browse(new java.net.URI(style.data.toString()));
-						}
-					} catch (IOException | URISyntaxException | IllegalArgumentException e) {}
-//				}
-			}
+		styledText.addListener(SWT.MouseDown, event -> {
+			// It is up to the application to determine when and how a link should be activated.
+			// links are activated on mouse down when the control key is held down 
+			try {
+				@SuppressWarnings("deprecation")
+				int offset = ((StyledText)event.widget).getOffsetAtLocation(new Point (event.x, event.y));
+				StyleRange style = ((StyledText)event.widget).getStyleRangeAtOffset(offset);
+				if (style != null && style.underline && style.underlineStyle == SWT.UNDERLINE_LINK) {
+					Desktop.getDesktop().browse(new java.net.URI(style.data.toString()));
+				}
+			} catch (IOException | URISyntaxException | IllegalArgumentException e) {}
 		});
 		
 		styleRange.start = 0;
@@ -154,6 +141,7 @@ public class AboutDialog extends Dialog {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
 	 */
+	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		// create OK button
 		createButton(parent, IDialogConstants.OK_ID, IDialogConstants.CLOSE_LABEL,	true);

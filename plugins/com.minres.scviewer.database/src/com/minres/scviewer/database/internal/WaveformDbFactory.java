@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,12 +17,20 @@ import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 
 /**
- * @author eyck
+ * A factory for creating WaveformDb objects.
  *
+ * @author eyck
  */
 public class WaveformDbFactory implements IWaveformDbFactory {
 
-	/* (non-Javadoc)
+	/**
+	 * Gets the database.
+	 *
+	 * @return the database
+	 */
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.minres.scviewer.database.IWaveformDbFactory#getDatabase()
 	 */
 	@Override

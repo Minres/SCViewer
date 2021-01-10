@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.minres.scviewer</groupId>
 	<artifactId>com.minres.scviewer.parent</artifactId>
-	<version>2.0.0-SNAPSHOT</version>
+	<version>2.11.0</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>com.minres.scviewer.target</module>
@@ -27,6 +27,7 @@
 	</modules>
 
 	<properties>
+		<project-version>2.11.0-SNAPSHOT</project-version>
 		<tycho-version>1.5.0</tycho-version>
 		<groovy-eclipse-compiler-version>3.6.0-03</groovy-eclipse-compiler-version>
 		<groovy-eclipse-batch-version>3.0.3-01</groovy-eclipse-batch-version>
@@ -40,7 +41,43 @@
 				<version>${tycho-version}</version>
 				<extensions>true</extensions>
 			</plugin>
-<!--
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-versions-plugin</artifactId>
+				<version>${tycho-version}</version>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>target-platform-configuration</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<target>
+						<artifact>
+							<groupId>com.minres.scviewer</groupId>
+							<artifactId>com.minres.scviewer.target</artifactId>
+							<version>2.11.0</version>
+						</artifact>
+					</target>
+					<environments>
+						<environment>
+							<os>linux</os>
+							<ws>gtk</ws>
+							<arch>x86_64</arch>
+						</environment>
+						<environment>
+							<os>win32</os>
+							<ws>win32</ws>
+							<arch>x86_64</arch>
+						</environment>
+						<environment>
+							<os>macosx</os>
+							<ws>cocoa</ws>
+							<arch>x86_64</arch>
+						</environment>
+					</environments>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-source-plugin</artifactId>
@@ -56,7 +93,7 @@
 				</executions>
 			</plugin>
 
- 			<plugin>
+			<plugin>
 				<groupId>org.eclipse.tycho.extras</groupId>
 				<artifactId>tycho-source-feature-plugin</artifactId>
 				<version>${tycho-version}</version>
@@ -73,12 +110,17 @@
 
 				<configuration>
 					<excludes>
-						provide plug-ins not containing any source code
-						<plugin id="org.codehaus.groovy" />
+						<plugin id="com.google.guava" />
+						<plugin id="org.hamcrest.core" />
+						<plugin id="org.junit" />						
+						<plugin id="com.minres.scviewer.e4.product" />
+						<plugin id="com.minres.scviewer.e4.product_slim" />
+						<plugin id="org.eclipse.core.filesystem.linux.x86_64" />
+						<plugin id="org.eclipse.core.filesystem.win32.x86_64" />
+						<plugin id="com.opcoach.e4.preferences" />
 					</excludes>
 				</configuration>
 			</plugin>
- -->
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-p2-plugin</artifactId>
@@ -92,54 +134,6 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-versions-plugin</artifactId>
-				<version>${tycho-version}</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>target-platform-configuration</artifactId>
-				<version>${tycho-version}</version>
-				<configuration>
-					<target>
-						<artifact>
-							<groupId>com.minres.scviewer</groupId>
-							<artifactId>com.minres.scviewer.target</artifactId>
-							<version>2.0.0-SNAPSHOT</version>
-						</artifact>
-					</target>
-					<environments>
-<!-- 						<environment> -->
-<!-- 							<os>linux</os> -->
-<!-- 							<ws>gtk</ws> -->
-<!-- 							<arch>x86</arch> -->
-<!-- 						</environment> -->
-						<environment>
-							<os>linux</os>
-							<ws>gtk</ws>
-							<arch>x86_64</arch>
-						</environment>
-<!-- 						<environment> -->
-<!-- 							<os>win32</os> -->
-<!-- 							<ws>win32</ws> -->
-<!-- 							<arch>x86</arch> -->
-<!-- 						</environment> -->
-						<environment>
-							<os>win32</os>
-							<ws>win32</ws>
-							<arch>x86_64</arch>
-						</environment>
-						<environment>
-							<os>macosx</os>
-							<ws>cocoa</ws>
-							<arch>x86_64</arch>
-						</environment>
-					</environments>
-				</configuration>
 			</plugin>
 
 		</plugins>

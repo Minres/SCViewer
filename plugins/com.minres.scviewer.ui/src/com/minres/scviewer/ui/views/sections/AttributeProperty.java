@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -45,8 +45,8 @@ import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
 
 import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
-import com.minres.scviewer.database.ITxAttribute;
-import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
 
 public class AttributeProperty extends AbstractPropertySection implements ISelectionProvider {
 

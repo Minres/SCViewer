@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,8 +20,8 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
-import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 

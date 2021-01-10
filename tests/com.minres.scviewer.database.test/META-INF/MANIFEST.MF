@@ -3,13 +3,14 @@ Bundle-ManifestVersion: 2
 Bundle-Name: SCViewer database tests
 Bundle-SymbolicName: com.minres.scviewer.database.test
 Bundle-Version: 1.0.1.qualifier
-Bundle-Vendor: MINRES Technologies GnbH
+Bundle-Vendor: MINRES Technologies GmbH
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Require-Bundle: org.junit,
- com.minres.scviewer.database,
+Require-Bundle: com.minres.scviewer.database,
  com.minres.scviewer.database.sqlite;bundle-version="1.0.0",
  com.minres.scviewer.database.text;bundle-version="1.0.0",
- com.minres.scviewer.database.vcd;bundle-version="1.0.0"
+ com.minres.scviewer.database.vcd;bundle-version="1.0.0",
+ org.junit,
+ org.junit.jupiter.api
 Bundle-ActivationPolicy: lazy
 Service-Component: OSGI-INF/component.xml
 Automatic-Module-Name: com.minres.scviewer.database.test

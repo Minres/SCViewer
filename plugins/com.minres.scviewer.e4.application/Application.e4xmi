@@ -287,5 +287,5 @@
   <addons xmi:id="_95PftnNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.workbench.handler.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.HandlerProcessingAddon"/>
   <addons xmi:id="_95Pft3NmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.workbench.contexts.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.ContextProcessingAddon"/>
   <addons xmi:id="_95PfuHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.workbench.bindings.model" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.swt/org.eclipse.e4.ui.workbench.swt.util.BindingProcessingAddon"/>
-  <addons xmi:id="_zSk-cIkcEeWxJ_wPkM6yGQ" elementId="org.eclipse.e4.ui.workbenc‌​h.addons.dndaddon.DnDAddon" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.addons.swt/org.eclipse.e4.ui.workbench.addons.dndaddon.DnDAddon"/>
+  <addons xmi:id="_zSk-cIkcEeWxJ_wPkM6yGQ" elementId="org.eclipse.e4.ui.workbench.addons.dndaddon.DnDAddon" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.addons.swt/org.eclipse.e4.ui.workbench.addons.dndaddon.DnDAddon"/>
 </application:Application>

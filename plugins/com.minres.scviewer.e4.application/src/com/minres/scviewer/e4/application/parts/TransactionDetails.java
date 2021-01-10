@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,8 +29,6 @@ import org.eclipse.e4.ui.services.IServiceConstants;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeViewerListener;
@@ -42,8 +40,6 @@ import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
@@ -57,10 +53,11 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
-import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.e4.application.Messages;
-import com.minres.scviewer.e4.application.parts.txTableTree.AttributeLabelProvider;
 import com.minres.scviewer.e4.application.parts.txTableTree.AbstractTransactionTreeContentProvider;
+import com.minres.scviewer.e4.application.parts.txTableTree.AttributeLabelProvider;
 import com.minres.scviewer.e4.application.parts.txTableTree.TransactionTreeNode;
 import com.minres.scviewer.e4.application.parts.txTableTree.TransactionTreeNodeType;
 import com.minres.scviewer.e4.application.parts.txTableTree.TxAttributeFilter;
@@ -88,15 +85,16 @@ public class TransactionDetails {
 	/** The selection service. */
 	@Inject	ESelectionService selectionService;
 
-	/** The name filter. */
-	private Text nameFilter;
-
 	/** The tree viewer. */
 	private TreeViewer treeViewer;
 
 	/** The col3. */
-	private TreeViewerColumn col1, col2, col3;
+	private TreeViewerColumn col1;
 
+	private TreeViewerColumn col2;
+
+	private TreeViewerColumn col3;
+	
 	/** The attribute filter. */
 	TxAttributeFilter attributeFilter;
 
@@ -121,15 +119,12 @@ public class TransactionDetails {
 		top = new Composite(parent, SWT.NONE);
 		top.setLayout(new GridLayout(1, false));
 
-		nameFilter = new Text(top, SWT.BORDER);
+		Text nameFilter = new Text(top, SWT.BORDER);
 		nameFilter.setMessage(Messages.TransactionDetails_0);
-		nameFilter.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
+		nameFilter.addModifyListener(e -> {
 				attributeFilter.setSearchText(((Text) e.widget).getText());
 				treeViewer.refresh();
 				treeViewer.expandAll(true);
-			}
 		});
 
 		nameFilter.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -176,19 +171,9 @@ public class TransactionDetails {
 		col1.getColumn().setResizable(true);
 		col1.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewerPart, AttributeLabelProvider.NAME)));
 		col1.getColumn().addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_FIRST);
-				treeViewer.refresh();
-			}
-		});
-		// Add the type column
-		col2 = new TreeViewerColumn(treeViewer, SWT.NONE);
-		col2.getColumn().setText(Messages.TransactionDetails_2);
-		col2.getColumn().setResizable(true);
-		col2.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewerPart, AttributeLabelProvider.TYPE)));
-		col2.getColumn().addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent event) {
-				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_SECOND);
 				treeViewer.refresh();
 			}
 		});
@@ -198,24 +183,29 @@ public class TransactionDetails {
 		col3.getColumn().setResizable(true);
 		col3.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewerPart, AttributeLabelProvider.VALUE)));
 		col3.getColumn().addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_SECOND);
 				treeViewer.refresh();
 			}
 		});
-		// Pack the columns
-		//		for (int i = 0, n = table.getColumnCount(); i < n; i++) {
-		//			table.getColumn(i).pack();
-		//		}
-
+		// Add the type column
+		col2 = new TreeViewerColumn(treeViewer, SWT.NONE);
+		col2.getColumn().setText(Messages.TransactionDetails_2);
+		col2.getColumn().setResizable(true);
+		col2.setLabelProvider(new DelegatingStyledCellLabelProvider(new AttributeLabelProvider(waveformViewerPart, AttributeLabelProvider.TYPE)));
+		col2.getColumn().addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				((TxAttributeViewerSorter) treeViewer.getComparator()).doSort(COLUMN_SECOND);
+				treeViewer.refresh();
+			}
+		});
 		// Turn on the header and the lines
 		tree.setHeaderVisible(true);
 		tree.setLinesVisible(true);
 
-		treeViewer.addDoubleClickListener(new IDoubleClickListener(){
-
-			@Override
-			public void doubleClick(DoubleClickEvent event) {
+		treeViewer.addDoubleClickListener(event -> {
 				ISelection selection = treeViewer.getSelection();
 				if(selection instanceof IStructuredSelection){
 					IStructuredSelection structuredSelection = (IStructuredSelection) selection;
@@ -228,10 +218,9 @@ public class TransactionDetails {
 						}
 					}
 				}
-			}
-
 		});
 		top.addControlListener(new ControlAdapter() {
+			@Override
 			public void controlResized(ControlEvent e) {
 				Tree table = treeViewer.getTree();
 				Rectangle area = top.getClientArea();
@@ -294,8 +283,8 @@ public class TransactionDetails {
 			this.names = names;
 			this.paths = paths;
 		}
-		public List<String> names;
-		public TreePath[] paths;
+		public final List<String> names;
+		public final TreePath[] paths;
 	}
 	HashMap<Integer, ViewSettings> settings = new HashMap<>();
 	
@@ -325,8 +314,8 @@ public class TransactionDetails {
 	int getAttrNameHash(Object o) {
 		if(o instanceof ITx) {
 			ITx tx = (ITx) o;
-			List<String> attr_names = tx.getAttributes().stream().map(a -> a.getName()).collect(Collectors.toList());
-			return Objects.hash(attr_names);
+			List<String> attrNames = tx.getAttributes().stream().map(ITxAttribute::getName).collect(Collectors.toList());
+			return Objects.hash(attrNames);
 		} else
 			return o.hashCode();
 
@@ -371,7 +360,7 @@ public class TransactionDetails {
 
 	List<String> getTopItemHier(TreeItem node){
 		if(node == null) {
-			return new ArrayList<String>();
+			return new ArrayList<>();
 		} else {
 			List<String> elems = getTopItemHier(node.getParentItem());
 			elems.add(node.getText(0));
@@ -380,7 +369,7 @@ public class TransactionDetails {
 	}
 	
 	private void setTopItemFromHier(List<String> names, TreeItem [] items) {
-		if(names.size()==0) return;
+		if(names.isEmpty()) return;
 		for (TreeItem item : items) { // find item from category
 			if(item.getText(0).equals(names.get(0))) {
 				if(names.size()==1 || item.getItemCount()==0) {
@@ -404,10 +393,9 @@ public class TransactionDetails {
 		MPart part = partService.getActivePart();
 		if( part == null || ! (part.getObject() instanceof WaveformViewer )  || part.getObject() != waveformViewerPart)
 			return;
-		if(treeViewer!=null && selection!=null && !treeViewer.getTree().isDisposed()){
-			if( selection instanceof IStructuredSelection && !selection.isEmpty()) {
-				setInput(((IStructuredSelection)selection).getFirstElement());		
-			}
+		if(treeViewer!=null && selection!=null && !treeViewer.getTree().isDisposed() &&
+				selection instanceof IStructuredSelection && !selection.isEmpty()) {
+			setInput(selection.getFirstElement());		
 		}
 	}
 }

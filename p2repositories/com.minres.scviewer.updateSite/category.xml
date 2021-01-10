@@ -1,15 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/com.minres.scviewer.feature_1.0.0.qualifier.jar" id="com.minres.scviewer.feature" version="1.0.0.qualifier">
-      <category name="com.minres.scviewer"/>
+   <feature id="com.minres.scviewer.feature" version="0.0.0">
+      <category name="ide_components"/>
    </feature>
-   <feature id="com.minres.scviewer.e4.feature">
-      <category name="com.minres.scviewer.e4"/>
+   <feature id="com.minres.scviewer.feature.source" version="0.0.0">
+      <category name="ide_components"/>
    </feature>
-   <category-def name="com.minres.scviewer" label="SCViewer">
+   <feature id="com.minres.scviewer.ui.feature" version="0.0.0">
+      <category name="devel_components"/>
+   </feature>
+   <feature id="com.minres.scviewer.ui.feature.source" version="0.0.0">
+      <category name="devel_components.source"/>
+   </feature>
+   <feature id="com.minres.scviewer.database.feature" version="0.0.0">
+      <category name="devel_components"/>
+   </feature>
+   <feature id="com.minres.scviewer.database.feature.source" version="0.0.0">
+      <category name="devel_components.source"/>
+   </feature>
+   <category-def name="ide_components" label="SCViewer">
       <description>
-         Viewer for SystemC Verification (SCV) library&apos;s transaction recording
+         Viewer for transaction recording outputs of the SystemC Verification (SCV) library
       </description>
    </category-def>
-   <category-def name="com.minres.scviewer.e4" label="SCViewer E4 application"/>
+   <category-def name="devel_components" label="Developer Resources">
+      <description>
+         Components to deal with the transaction recording outputs of the SystemC Verification (SCV) library
+      </description>
+   </category-def>
+   <category-def name="devel_components.source" label="Developer Resources (Source)"/>
 </site>

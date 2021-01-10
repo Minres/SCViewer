@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ public class ObservableList<E> implements List<E> {
 	public static final String CONTENT_PROPERTY = "content";
 
 	public ObservableList() {
-		this(new ArrayList<E>());
+		this(new ArrayList<>());
 	}
 
 	public ObservableList(List<E> delegate) {
@@ -100,7 +100,7 @@ public class ObservableList<E> implements List<E> {
 
 		boolean success = this.delegate.addAll(c);
 		if ((success) && (c != null)) {
-			List<E> values = new ArrayList<E>();
+			List<E> values = new ArrayList<>();
 			for (Iterator<? extends E> i = c.iterator(); i.hasNext();) {
 				values.add(i.next());
 			}
@@ -118,7 +118,7 @@ public class ObservableList<E> implements List<E> {
 		boolean success = this.delegate.addAll(index, c);
 
 		if ((success) && (c != null)) {
-			List<E> values = new ArrayList<E>();
+			List<E> values = new ArrayList<>();
 			for (Iterator<? extends E> i = c.iterator(); i.hasNext();) {
 				values.add(i.next());
 			}
@@ -133,7 +133,7 @@ public class ObservableList<E> implements List<E> {
 
 	public void clear() {
 		int oldSize = size();
-		List<E> values = new ArrayList<E>();
+		List<E> values = new ArrayList<>();
 		values.addAll(this.delegate);
 		this.delegate.clear();
 		if (!(values.isEmpty())) {
@@ -215,14 +215,12 @@ public class ObservableList<E> implements List<E> {
 			return false;
 		}
 
-		List<E> values = new ArrayList<E>();
-		if (c != null) {
-			for (Iterator<?> i = c.iterator(); i.hasNext();) {
-				@SuppressWarnings("unchecked")
-				E element = (E) i.next();
-				if (this.delegate.contains(element)) {
-					values.add(element);
-				}
+		List<E> values = new ArrayList<>();
+		for (Iterator<?> i = c.iterator(); i.hasNext();) {
+			@SuppressWarnings("unchecked")
+			E element = (E) i.next();
+			if (this.delegate.contains(element)) {
+				values.add(element);
 			}
 		}
 
@@ -241,14 +239,12 @@ public class ObservableList<E> implements List<E> {
 			return false;
 		}
 
-		List<E> values = new ArrayList<E>();
+		List<E> values = new ArrayList<>();
 		Iterator<? extends E> i;
-		if (c != null) {
-			for (i = this.delegate.iterator(); i.hasNext();) {
-				E element = i.next();
-				if (!(c.contains(element))) {
-					values.add(element);
-				}
+		for (i = this.delegate.iterator(); i.hasNext();) {
+			E element = i.next();
+			if (!(c.contains(element))) {
+				values.add(element);
 			}
 		}
 
@@ -327,7 +323,7 @@ public class ObservableList<E> implements List<E> {
          */
         private static final long serialVersionUID = 7819626246672640599L;
         
-        private List<Object> values = new ArrayList<Object>();
+        private List<Object> values = new ArrayList<>();
 
         public MultiElementUpdatedEvent(Object source, List<?> values) {
             super(source, ObservableList.ChangeType.oldValue, ObservableList.ChangeType.newValue, 0,
@@ -336,7 +332,7 @@ public class ObservableList<E> implements List<E> {
                 this.values.addAll(values);
         }
 
-        public List<?> getValues() {
+        public List<Object> getValues() {
             return Collections.unmodifiableList(this.values);
         }
     }
@@ -347,7 +343,7 @@ public class ObservableList<E> implements List<E> {
 		 */
 		private static final long serialVersionUID = 7819626246672640599L;
 		
-		private List<Object> values = new ArrayList<Object>();
+		private List<Object> values = new ArrayList<>();
 
 		public MultiElementRemovedEvent(Object source, List<?> values) {
 			super(source, ObservableList.ChangeType.oldValue, ObservableList.ChangeType.newValue, 0,
@@ -356,7 +352,7 @@ public class ObservableList<E> implements List<E> {
 				this.values.addAll(values);
 		}
 
-		public List<?> getValues() {
+		public List<Object> getValues() {
 			return Collections.unmodifiableList(this.values);
 		}
 	}
@@ -366,7 +362,7 @@ public class ObservableList<E> implements List<E> {
 		 * 
 		 */
 		private static final long serialVersionUID = -116376519087713082L;
-		private List<Object> values = new ArrayList<Object>();
+		private List<Object> values = new ArrayList<>();
 
 		public MultiElementAddedEvent(Object source, int index, List<?> values) {
 			super(source, ObservableList.ChangeType.oldValue, ObservableList.ChangeType.newValue, index,
@@ -375,7 +371,7 @@ public class ObservableList<E> implements List<E> {
 				this.values.addAll(values);
 		}
 
-		public List<?> getValues() {
+		public List<Object> getValues() {
 			return Collections.unmodifiableList(this.values);
 		}
 	}
@@ -385,7 +381,7 @@ public class ObservableList<E> implements List<E> {
 		 * 
 		 */
 		private static final long serialVersionUID = -8654027608903811577L;
-		private List<Object> values = new ArrayList<Object>();
+		private List<Object> values = new ArrayList<>();
 
 		public ElementClearedEvent(Object source, List<?> values) {
 			super(source, ObservableList.ChangeType.oldValue, ObservableList.ChangeType.newValue, 0,
@@ -394,7 +390,7 @@ public class ObservableList<E> implements List<E> {
 				this.values.addAll(values);
 		}
 
-		public List<?> getValues() {
+		public List<Object> getValues() {
 			return Collections.unmodifiableList(this.values);
 		}
 	}
@@ -432,7 +428,7 @@ public class ObservableList<E> implements List<E> {
 		}
 	}
 
-	public static abstract class ElementEvent extends PropertyChangeEvent {
+	public abstract static class ElementEvent extends PropertyChangeEvent {
 		/**
 		 * 
 		 */
@@ -441,7 +437,7 @@ public class ObservableList<E> implements List<E> {
 		private final int index;
 
 		public ElementEvent(Object source, Object oldValue, Object newValue, int index, ObservableList.ChangeType type) {
-			super(source, "content", oldValue, newValue);
+			super(source, CONTENT_PROPERTY, oldValue, newValue);
 			this.type = type;
 			this.index = index;
 		}
@@ -463,7 +459,7 @@ public class ObservableList<E> implements List<E> {
 		}
 	}
 
-	public static enum ChangeType {
+	public enum ChangeType {
 		ADDED, UPDATED, REMOVED, CLEARED, MULTI_ADD, MULTI_UPDATED, MULTI_REMOVE, NONE;
 
 		public static final Object oldValue;
@@ -483,9 +479,9 @@ public class ObservableList<E> implements List<E> {
 				return MULTI_REMOVE;
 			case 6:
 				return NONE;
-			case 1:
+			default:
+				return UPDATED;
 			}
-			return UPDATED;
 		}
 
 		static {
@@ -554,6 +550,7 @@ public class ObservableList<E> implements List<E> {
 			return this.iterDelegate.next();
 		}
 
+		@Override
 		public void remove() {
 			int oldSize = ObservableList.this.size();
 			Object element = ObservableList.this.get(this.cursor);

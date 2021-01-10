@@ -22,7 +22,8 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
 import com.minres.scviewer.database.BitVector;
-import com.minres.scviewer.database.ISignal;
+import com.minres.scviewer.database.DoubleVal;
+import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
@@ -31,16 +32,16 @@ public class WaveformPopupMenuContribution {
 	
 	@Inject MPart activePart;
 		
-	final TrackEntry nullEntry = new TrackEntry(null);
+	final TrackEntry nullEntry = new TrackEntry(null, null);
 	
 	private boolean selHasBitVector(ISelection sel, boolean checkForDouble) {
 		if(!sel.isEmpty() && sel instanceof IStructuredSelection) {
 			for(Object elem:(IStructuredSelection)sel) {
 				if(elem instanceof TrackEntry) {
 					TrackEntry e = (TrackEntry) elem;
-					if(e.waveform instanceof ISignal<?>) {
-						Object o = ((ISignal<?>) e.waveform).getEvents().firstEntry().getValue();
-						if(checkForDouble && o instanceof Double) 
+					if(e.waveform.getType() == WaveformType.SIGNAL) {
+						Object o = e.waveform.getEvents().firstEntry().getValue()[0];
+						if(checkForDouble && o instanceof DoubleVal) 
 							return true;
 						else if(o instanceof BitVector && ((BitVector)o).getWidth()>1)
 							return true;

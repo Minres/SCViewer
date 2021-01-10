@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
 package com.minres.scviewer.database.vcd;
 
 import java.io.*;
+import java.text.ParseException;
 import java.util.*;
 
 import com.minres.scviewer.database.BitValue;
@@ -19,7 +20,7 @@ import com.minres.scviewer.database.BitVector;
 class VCDFileParser {
 	private StreamTokenizer tokenizer;
 	private IVCDDatabaseBuilder traceBuilder;
-	private HashMap<String, Integer> nameToNetMap = new HashMap<String, Integer>();
+	private HashMap<String, Integer> nameToNetMap = new HashMap<>();
 	private long picoSecondsPerIncrement;
 	private boolean stripNetWidth;
 	private boolean replaceColon;
@@ -50,19 +51,19 @@ class VCDFileParser {
 		}
 	}
 
-	private void parseScope() throws Exception {
+	private void parseScope() throws IOException, ParseException {
 		nextToken(); // Scope type (ignore)
 		nextToken();
 		traceBuilder.enterModule(tokenizer.sval);
 		match("$end");
 	}
 
-	private void parseUpscope() throws Exception {
+	private void parseUpscope() throws IOException, ParseException {
 		match("$end");
 		traceBuilder.exitModule();
 	}
 
-	private void parseVar() throws Exception {
+	private void parseVar() throws IOException {
 		nextToken(); // type
 		String type = tokenizer.sval;
 		nextToken(); // size
@@ -72,11 +73,12 @@ class VCDFileParser {
 		nextToken();
 		String id = tokenizer.sval;
 		nextToken();
-		String netName = tokenizer.sval;
+		StringBuilder sb = new StringBuilder();
+		sb.append(tokenizer.sval);
 		while (nextToken() && !tokenizer.sval.equals("$end")) {
-			netName+=tokenizer.sval;
+			sb.append(tokenizer.sval);
 		}
-
+		String netName = sb.toString();
 		Integer net = nameToNetMap.get(id);
 		if (net == null) { // We've never seen this net before
 			int openBracket = netName.indexOf('[');
@@ -86,9 +88,9 @@ class VCDFileParser {
 			}
 			if(replaceColon) {
 				if (openBracket != -1) {
-					netName = netName.substring(0, openBracket).replaceAll(":", ".")+netName.substring(openBracket);
+					netName = netName.substring(0, openBracket).replace(":", ".")+netName.substring(openBracket);
 				} else
-					netName=netName.replaceAll(":", ".");
+					netName=netName.replace(":", ".");
 			}
 			nameToNetMap.put(id, traceBuilder.newNet(netName, -1, width));
 		} else {
@@ -97,25 +99,28 @@ class VCDFileParser {
 		}
 	}
 
-	private void parseComment() throws Exception {
+	private void parseComment() throws IOException {
 		nextToken();
-		String s = tokenizer.sval;
+		StringBuilder s = new StringBuilder();
+		s.append(tokenizer.sval);
 		nextToken();
 		while(!tokenizer.sval.equals("$end")){
-			s+=" "+tokenizer.sval;
+			s.append(" ").append(tokenizer.sval);
 			nextToken();
 		}
-		replaceColon|=s.contains("ARTERIS Architecture");
+		replaceColon|=s.toString().contains("ARTERIS Architecture");
 	}
 
-	private void parseTimescale() throws Exception {
+	private void parseTimescale() throws IOException {
 		nextToken();
-		String s = tokenizer.sval;
+		StringBuilder sb = new StringBuilder();
+		sb.append(tokenizer.sval);
 		nextToken();
 		while(!tokenizer.sval.equals("$end")){
-			s+=" "+tokenizer.sval;
+			sb.append(" ").append(tokenizer.sval);
 			nextToken();
 		}
+		String s = sb.toString();
 		switch (s.charAt(s.length() - 2)){
 		case 'p': // Nano-seconds
 			picoSecondsPerIncrement = 1;
@@ -141,7 +146,7 @@ class VCDFileParser {
 		picoSecondsPerIncrement *= Long.parseLong(s);
 	}
 
-	private boolean parseDefinition() throws Exception {
+	private boolean parseDefinition() throws IOException, ParseException {
 		nextToken();
 		if (tokenizer.sval.equals("$scope"))
 			parseScope();
@@ -156,17 +161,14 @@ class VCDFileParser {
 		else if (tokenizer.sval.equals("$enddefinitions")) {
 			match("$end");
 			return false;
-		} else {
-			// Ignore this defintion
-			do {
-				if (!nextToken()) return false;
-			} while (!tokenizer.sval.equals("$end"));
-		}
+		} else do {
+			if (!nextToken()) return false;
+		} while (!tokenizer.sval.equals("$end"));
 
 		return true;
 	}
 
-	private boolean parseTransition() throws Exception {
+	private boolean parseTransition() throws IOException {
 		if (!nextToken()) return false;
 		if (tokenizer.sval.charAt(0) == '#') {	// If the line begins with a #, this is a timestamp.
 			currentTime = Long.parseLong(tokenizer.sval.substring(1)) * picoSecondsPerIncrement;
@@ -179,19 +181,13 @@ class VCDFileParser {
 			}
 			if (tokenizer.sval.equals("$dumpvars") || tokenizer.sval.equals("$end"))
 				return true;
-			String value, id;
-			if (tokenizer.sval.charAt(0) == 'b') {
-				// Multiple value net. Value appears first, followed by space,
-				// then identifier
+			String value;
+			String id;
+			if (tokenizer.sval.charAt(0) == 'b' || tokenizer.sval.charAt(0) == 'r') {
+				// Multiple value net. Value appears first, followed by space, then identifier
 				value = tokenizer.sval.substring(1);
 				nextToken();
 				id = tokenizer.sval;
-			}else if (tokenizer.sval.charAt(0) == 'r') {
-					// Multiple value net. Value appears first, followed by space,
-					// then identifier
-					value = tokenizer.sval.substring(1);
-					nextToken();
-					id = tokenizer.sval;
 			} else {
 				// Single value net. identifier first, then value, no space.
 				value = tokenizer.sval.substring(0, 1);
@@ -199,10 +195,8 @@ class VCDFileParser {
 			}
 
 			Integer net = nameToNetMap.get(id);
-			if (net == null) {
-				System.out.println("unknown net " + id + " value " + value);
+			if (net == null) 
 				return true;
-			}
 
 			int netWidth = traceBuilder.getNetWidth(net);
 			if(netWidth==0) {
@@ -253,14 +247,14 @@ class VCDFileParser {
 		return true;
 	}
 
-	private void match(String value) throws Exception {
+	private void match(String value) throws ParseException, IOException {
 		nextToken();
 		if (!tokenizer.sval.equals(value)) 
-			throw new Exception("Line "+tokenizer.lineno()+": parse error, expected "+value+" got "+tokenizer.sval);
+			throw new ParseException("Line "+tokenizer.lineno()+": parse error, expected "+value+" got "+tokenizer.sval, tokenizer.lineno());
 	}
 
 	private boolean nextToken() throws IOException {
 		return tokenizer.nextToken() != StreamTokenizer.TT_EOF;
 	}
 
-};
+}

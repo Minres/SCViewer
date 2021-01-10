@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015, 2020 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,34 +13,88 @@ package com.minres.scviewer.database;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
-public interface IHierNode extends Comparable<IHierNode>{
+/**
+ * The Interface IHierNode.
+ */
+public interface IHierNode extends Comparable<IHierNode> {
+
+	/** The Constant WAVEFORMS. */
+	static final String WAVEFORMS = "Waveforms";
 	
+	/** The Constant CHILDS. */
+	static final String CHILDS = "Childs";
+	
+	/** The Constant LOADING_FINISHED. */
+	static final String LOADING_FINISHED = "LoadingFinished";
+
 	/**
 	 * Attach a non-null PropertyChangeListener to this object.
 	 * 
-	 * @param l
-	 *            a non-null PropertyChangeListener instance
-	 * @throws IllegalArgumentException
-	 *             if the parameter is null
+	 * @param l a non-null PropertyChangeListener instance
+	 * @throws IllegalArgumentException if the parameter is null
 	 */
 	public void addPropertyChangeListener(PropertyChangeListener l);
 
 	/**
 	 * Remove a PropertyChangeListener from this component.
 	 * 
-	 * @param l
-	 *            a PropertyChangeListener instance
+	 * @param l a PropertyChangeListener instance
 	 */
-	public void removePropertyChangeListener(PropertyChangeListener l) ;
+	public void removePropertyChangeListener(PropertyChangeListener l);
 
+	/**
+	 * Gets the full name.
+	 *
+	 * @return the full name
+	 */
 	public String getFullName();
-	
-	public String getName();
-	
-	public void setName(String name);
-	
-	public void setParentName(String name);
 
+	/**
+	 * Gets the name.
+	 *
+	 * @return the name
+	 */
+	public String getName();
+
+	/**
+	 * Sets the name.
+	 *
+	 * @param name the new name
+	 */
+	public void setName(String name);
+
+	/**
+	 * Sets the parent.
+	 *
+	 * @param parent the new parent
+	 */
+	public void setParent(IHierNode parent);
+
+	/**
+	 * Gets the parent.
+	 *
+	 * @return the parent
+	 */
+	public IHierNode getParent();
+
+	/**
+	 * Gets the child nodes.
+	 *
+	 * @return the child nodes
+	 */
 	public List<IHierNode> getChildNodes();
+
+	/**
+	 * Adds the child.
+	 *
+	 * @param child the child
+	 */
+	public void addChild(IHierNode child);
+	/**
+	 * Derive waveform.
+	 *
+	 * @return the i derived waveform or null if none could be created
+	 */
+	public IDerivedWaveform deriveWaveform();
 
 }

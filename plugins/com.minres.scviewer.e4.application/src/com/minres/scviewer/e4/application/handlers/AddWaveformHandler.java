@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,8 +29,8 @@ import com.minres.scviewer.e4.application.parts.DesignBrowser;
 
 public class AddWaveformHandler {
 
-	public final static String PARAM_WHERE_ID="com.minres.scviewer.e4.application.command.addwaveform.where"; //$NON-NLS-1$
-	public final static String PARAM_ALL_ID="com.minres.scviewer.e4.application.command.addwaveform.all"; //$NON-NLS-1$
+	public static final String PARAM_WHERE_ID="com.minres.scviewer.e4.application.command.addwaveform.where"; //$NON-NLS-1$
+	public static final String PARAM_ALL_ID="com.minres.scviewer.e4.application.command.addwaveform.all"; //$NON-NLS-1$
 	
 	@Inject @Optional DesignBrowser designBrowser;
 	
@@ -42,8 +42,11 @@ public class AddWaveformHandler {
 		if(designBrowser==null || designBrowser.getActiveWaveformViewerPart()==null) return false;
 		boolean before = "before".equalsIgnoreCase(where); //$NON-NLS-1$
 		IStructuredSelection waveformSelection = null;
-		if(designBrowser.getActiveWaveformViewerPart()!=null)
+		if(designBrowser.getActiveWaveformViewerPart()!=null) {
+			if(!designBrowser.getActiveWaveformViewerPart().getDatabase().isLoaded())
+				return false;
 			waveformSelection = (IStructuredSelection)designBrowser.getActiveWaveformViewerPart().getSelection();
+		}
 		if("true".equalsIgnoreCase(all))  //$NON-NLS-1$
 			return designBrowser.getFilteredChildren().length>0 && 
 					(!before || (waveformSelection!=null && waveformSelection.size()>0));

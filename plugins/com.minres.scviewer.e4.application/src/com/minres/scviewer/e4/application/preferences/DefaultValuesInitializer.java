@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -68,6 +68,7 @@ public class DefaultValuesInitializer extends AbstractPreferenceInitializer {
 		
 		store.putBoolean(PreferenceConstants.DATABASE_RELOAD, true);
 		store.putBoolean(PreferenceConstants.SHOW_HOVER, true);
+		store.putInt(PreferenceConstants.TRACK_HEIGHT, 30);
         for (WaveformColors c : WaveformColors.values()) {
         	 store.put(c.name()+"_COLOR", StringConverter.asString(colors[c.ordinal()].getRGB())); //$NON-NLS-1$
         }

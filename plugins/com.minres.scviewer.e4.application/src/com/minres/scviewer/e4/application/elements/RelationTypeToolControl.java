@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,8 +29,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 
-import com.minres.scviewer.database.ITx;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.RelationTypeFactory;
+import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.parts.PartListener;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
@@ -50,7 +51,7 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 	WaveformViewer waveformViewerPart;
 	
 	/** The dummy. */
-	RelationType dummy = RelationType.create(Messages.RelationTypeToolControl_0);
+	RelationType dummy = RelationTypeFactory.create(Messages.RelationTypeToolControl_0);
 	
 	/**
 	 * Instantiates a new relation type tool control.

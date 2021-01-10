@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,6 @@
 package com.minres.scviewer.database.ui;
 
 import java.beans.PropertyChangeListener;
-import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.jface.viewers.ISelection;
@@ -19,11 +18,12 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Control;
 
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.RelationTypeFactory;
+import com.minres.scviewer.database.tx.ITx;
 
 public interface IWaveformView extends PropertyChangeListener, ISelectionProvider{
 
@@ -31,11 +31,13 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	
 	String MARKER_PROPERTY = "marker_time";
 	
-	public static final RelationType NEXT_PREV_IN_STREAM = RelationType.create("Prev/Next in stream"); 
+	public static final RelationType NEXT_PREV_IN_STREAM = RelationTypeFactory.create("Prev/Next in stream"); 
 
 	public void addSelectionChangedListener(ISelectionChangedListener listener);
 
 	public void removeSelectionChangedListener(ISelectionChangedListener listener);
+	
+	public void setStyleProvider(IWaveformStyleProvider styleProvider);
 	
 	public void update();
 
@@ -63,7 +65,9 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 
 	public List<TrackEntry> getStreamList();
 
-	public TrackEntry getEntryForStream(IWaveform source);
+	public TrackEntry getEntryFor(ITx source);
+	
+	public TrackEntry getEntryFor(IWaveform source);
 	
 	public List<Object> getElementsAt(Point pt);
 	
@@ -103,8 +107,6 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 
 	public List<ICursor> getCursorList();
 
-	public void setColors(HashMap<WaveformColors, RGB> colourMap);
-
 	public long getBaselineTime();
 
 	public void setBaselineTime(Long scale);
@@ -114,4 +116,6 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	public void addDisposeListener( DisposeListener listener );
 
 	public void deleteSelectedTracks();
+
+	public TrackEntry addWaveform(IWaveform waveform, int pos);
 }

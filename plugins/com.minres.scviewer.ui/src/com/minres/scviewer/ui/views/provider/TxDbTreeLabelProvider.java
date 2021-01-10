@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,10 +17,9 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 
-import com.minres.scviewer.database.ISignal;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IHierNode;
-import com.minres.scviewer.database.ITxStream;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.ui.TxEditorPlugin;
 
 public class TxDbTreeLabelProvider implements ILabelProvider {
@@ -31,7 +30,8 @@ public class TxDbTreeLabelProvider implements ILabelProvider {
 	private Image stream;
 	private Image signal;
 	private Image folder;
-	
+	private Image wave;
+
 	
 	public TxDbTreeLabelProvider() {
 		super();
@@ -39,6 +39,8 @@ public class TxDbTreeLabelProvider implements ILabelProvider {
 		stream=TxEditorPlugin.createImage("stream");
 		folder=TxEditorPlugin.createImage("folder");
 		signal=TxEditorPlugin.createImage("signal");
+		wave=TxEditorPlugin.createImage("wave");
+
 	}
 
 	@Override
@@ -68,10 +70,21 @@ public class TxDbTreeLabelProvider implements ILabelProvider {
 	public Image getImage(Object element) {
 		if(element instanceof IWaveformDb){
 			return database;
-		}else if(element instanceof ITxStream){
-			return stream;
-		}else if(element instanceof ISignal<?>){
-			return signal;
+		}else if(element instanceof IWaveform){
+			switch(((IWaveform) element).getType()) {
+			case TRANSACTION:
+				return stream;
+			case FILTER:
+				break;
+			case SIGNAL:
+				if(((IWaveform) element).getWidth()==1)
+					return signal;
+				else 
+					return wave;
+			default:
+				break;
+			}
+			return wave;
 		}else if(element instanceof IHierNode){
 			return folder;
 		} else

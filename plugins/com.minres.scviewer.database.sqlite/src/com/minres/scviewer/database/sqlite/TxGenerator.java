@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,23 +10,33 @@
  *******************************************************************************/
 package com.minres.scviewer.database.sqlite;
 
-import java.util.List;
+import java.beans.IntrospectionException;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.TreeMap;
 
-import com.minres.scviewer.database.ITx;
-import com.minres.scviewer.database.ITxEvent;
-import com.minres.scviewer.database.ITxGenerator;
-import com.minres.scviewer.database.ITxStream;
+import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.sqlite.db.IDatabase;
+import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
+import com.minres.scviewer.database.sqlite.tables.ScvTx;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxGenerator;
 
-public class TxGenerator implements ITxGenerator {
+public class TxGenerator extends AbstractTxStream implements ITxGenerator {
 
-	private ITxStream<ITxEvent>  stream;
+	private TxStream  stream;
 	
 	private ScvGenerator scvGenerator;
 
-	public TxGenerator(ITxStream<ITxEvent>  stream, ScvGenerator scvGenerator) {
+	private TreeMap<Integer, ITx> transactions;
+
+	public TxGenerator(IDatabase database, TxStream stream, ScvGenerator scvGenerator) {
+		super(database, scvGenerator.getName(), stream.getId());
 		this.stream=stream;
 		this.scvGenerator=scvGenerator;
+		stream.addChild(this);
 	}
 
 	@Override
@@ -35,7 +45,7 @@ public class TxGenerator implements ITxGenerator {
 	}
 
 	@Override
-	public ITxStream<ITxEvent> getStream() {
+	public IWaveform getStream() {
 		return stream;
 	}
 
@@ -45,8 +55,31 @@ public class TxGenerator implements ITxGenerator {
 	}
 
 	@Override
-	public List<ITx> getTransactions() {
-		return null;
+	public boolean isSame(IWaveform other) {
+		return(other instanceof TxGenerator && this.getId().equals(other.getId()));
+	}
+
+	@Override
+	public String getKind() {
+		return stream.getKind();
+	}
+
+	@Override
+	protected Map<Integer, ITx> getTransactions() {
+		if(transactions==null){
+			transactions = new TreeMap<>();
+			SQLiteDatabaseSelectHandler<ScvTx> handler = new SQLiteDatabaseSelectHandler<>(ScvTx.class, database,
+					"stream="+stream.getId()+" and generator="+scvGenerator.getId());
+			try {
+				for(ScvTx scvTx:handler.selectObjects()){
+					transactions.put(scvTx.getId(), new Tx(database, (TxStream) stream, this, scvTx));
+				}
+			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
+					| InvocationTargetException | SQLException | IntrospectionException e) {
+				e.printStackTrace();
+			}
+		}
+		return transactions;
 	}
 
 }

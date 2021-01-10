@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import com.minres.scviewer.database.IWaveformDb;
 
 /**
  *
@@ -58,4 +60,6 @@ public interface IDatabase {
 	public void setData(String name, Object value);
 	
 	public Object getData(String name); 
+	
+	public IWaveformDb getWaveformDb();
 } 

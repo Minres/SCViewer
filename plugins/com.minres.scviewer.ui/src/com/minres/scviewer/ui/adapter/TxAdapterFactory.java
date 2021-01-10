@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@ package com.minres.scviewer.ui.adapter;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.ui.views.properties.IPropertySource;
 
-import com.minres.scviewer.database.ITx;
+import com.minres.scviewer.database.tx.ITx;
 
 public class TxAdapterFactory implements IAdapterFactory {
 
