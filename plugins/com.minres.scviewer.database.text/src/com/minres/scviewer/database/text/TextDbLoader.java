@@ -55,6 +55,13 @@ import com.minres.scviewer.database.tx.ITx;
  */
 public class TextDbLoader implements IWaveformDbLoader {
 
+	/** the file size limit of a zipped txlog where the loader starts to use a file mapped database */
+	private static final long MEMMAP_LIMIT=256l*1024l*1024l;
+	
+	private static final long MAPDB_INITIAL_ALLOC = 512l*1024l*1024l;
+	
+	private static final long MAPDB_INCREMENTAL_ALLOC = 128l*1024l*1024l;
+	
 	/** The max time. */
 	private Long maxTime = 0L;
 
@@ -162,10 +169,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 	public void load(IWaveformDb db, File file) throws InputFormatException {
 		dispose();
 		boolean gzipped = isGzipped(file);
-		if (file.length() < 75000000 * (gzipped ? 1 : 10)
+		if (file.length() < MEMMAP_LIMIT * (gzipped ? 1 : 10)
 				|| "memory".equals(System.getProperty("ScvBackingDB", "file")))
-			mapDb = DBMaker.memoryDirectDB().allocateStartSize(512l * 1024l * 1024l)
-					.allocateIncrement(128l * 1024l * 1024l).cleanerHackEnable().make();
+			mapDb = DBMaker.memoryDirectDB().make();
 		else {
 			File mapDbFile;
 			try {
@@ -175,8 +181,8 @@ public class TextDbLoader implements IWaveformDbLoader {
 				throw new InputFormatException(e.toString());
 			}
 			mapDb = DBMaker.fileDB(mapDbFile).fileMmapEnable() // Always enable mmap
-					.fileMmapEnableIfSupported().fileMmapPreclearDisable().allocateStartSize(512l * 1024l * 1024l)
-					.allocateIncrement(128l * 1024l * 1024l).cleanerHackEnable().make();
+					.fileMmapPreclearDisable().allocateStartSize(MAPDB_INITIAL_ALLOC)
+					.allocateIncrement(MAPDB_INCREMENTAL_ALLOC).cleanerHackEnable().make();
 			mapDbFile.deleteOnExit();
 		}
 		TextDbParser parser = new TextDbParser(this);
@@ -348,10 +354,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 			String[] tokens = curLine.split("\\s+");
 			if ("tx_record_attribute".equals(tokens[0])) {
 				Long id = Long.parseLong(tokens[1]);
-				String name = tokens[2].substring(1, tokens[2].length());
+				String name = tokens[2].substring(1, tokens[2].length()-1);
 				DataType type = DataType.valueOf(tokens[3]);
-				String remaining = tokens.length > 5 ? String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length))
-						: "";
+				String remaining = tokens.length > 5 ? String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length)) : "";
 				TxAttributeType attrType = getAttrType(name, type, AssociationType.RECORD);
 				transactionById.get(id).attributes.add(new TxAttribute(attrType, getAttrString(attrType, remaining)));
 			} else if ("tx_begin".equals(tokens[0])) {
