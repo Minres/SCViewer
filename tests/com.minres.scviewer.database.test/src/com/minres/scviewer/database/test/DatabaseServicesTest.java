@@ -120,5 +120,15 @@ public class DatabaseServicesTest {
 		assertEquals(1,  waveformDb.getChildNodes().size());
 	}
 
+	@Test
+	public void testLargeTxText() throws Exception {
+		File f = new File("inputs/hw_config_10_10.txlog").getAbsoluteFile();
+		assertTrue(f.exists());
+		waveformDb.load(f);
+		assertNotNull(waveformDb);
+		List<IWaveform> waveforms =  waveformDb.getAllWaves();
+		assertEquals(100,  waveforms.size());
+		assertEquals(1,  waveformDb.getChildNodes().size());
+	}
 
 }
