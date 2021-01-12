@@ -113,7 +113,7 @@ class Tx implements ITx {
 			return true;
 		if (obj == null || getClass() != obj.getClass())
 			return false;
-		return this.getScvTx().equals(((Tx) obj).getScvTx());
+		return this.loader.getScvTx(id).equals(((Tx) obj).loader.getScvTx(id));
 	}
 
 	/**
@@ -123,7 +123,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public int hashCode() {
-		return getScvTx().hashCode();
+		return loader.getScvTx(id).hashCode();
 	}
 
 	/**
@@ -143,7 +143,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public Long getId() {
-		return getScvTx().id;
+		return loader.getScvTx(id).id;
 	}
 
 	/**
@@ -153,7 +153,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public IWaveform getStream() {
-		return loader.txStreams.get(getScvTx().streamId);
+		return loader.txStreams.get(loader.getScvTx(id).streamId);
 	}
 
 	/**
@@ -163,7 +163,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public ITxGenerator getGenerator() {
-		return loader.txGenerators.get(getScvTx().generatorId);
+		return loader.txGenerators.get(loader.getScvTx(id).generatorId);
 	}
 
 	/**
@@ -174,7 +174,7 @@ class Tx implements ITx {
 	@Override
 	public Long getBeginTime() {
 		if (beginTime < 0)
-			beginTime = getScvTx().beginTime;
+			beginTime = loader.getScvTx(id).beginTime;
 		return beginTime;
 	}
 
@@ -186,7 +186,7 @@ class Tx implements ITx {
 	@Override
 	public Long getEndTime() {
 		if (endTime < 0)
-			endTime = getScvTx().endTime;
+			endTime = loader.getScvTx(id).endTime;
 		return endTime;
 	}
 
@@ -196,7 +196,7 @@ class Tx implements ITx {
 	 * @param time the new end time
 	 */
 	void setEndTime(Long time) {
-		getScvTx().endTime = time;
+		loader.getScvTx(id).endTime = time;
 	}
 
 	/**
@@ -225,15 +225,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public List<ITxAttribute> getAttributes() {
-		return getScvTx().attributes;
+		return loader.getScvTx(id).attributes;
 	}
 
-	/**
-	 * Gets the scv tx.
-	 *
-	 * @return the scv tx
-	 */
-	private ScvTx getScvTx() {
-		return loader.transactions.get(id);
-	}
 }
