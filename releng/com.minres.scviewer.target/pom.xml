@@ -12,8 +12,8 @@
   <parent>
   	<groupId>com.minres.scviewer</groupId>
   	<artifactId>com.minres.scviewer.parent</artifactId>
-  	<version>2.11.0</version>
-  	<relativePath>..</relativePath>
+  	<version>2.11.1-SNAPSHOT</version>
+  	<relativePath>../..</relativePath>
   </parent>
 
   </project>

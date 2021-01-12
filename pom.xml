@@ -4,10 +4,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.minres.scviewer</groupId>
 	<artifactId>com.minres.scviewer.parent</artifactId>
-	<version>2.11.0</version>
+	<version>2.11.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<modules>
-		<module>com.minres.scviewer.target</module>
+		<module>releng/com.minres.scviewer.target</module>
 		<module>plugins/com.minres.scviewer.database</module>
 		<module>plugins/com.minres.scviewer.database.sqlite</module>
 		<module>plugins/com.minres.scviewer.database.text</module>
@@ -21,9 +21,8 @@
 		<module>features/com.minres.scviewer.feature</module>
 		<module>features/com.minres.scviewer.e4.platform.feature</module>
 		<module>features/com.minres.scviewer.e4.feature</module>
-		<module>p2repositories//com.minres.scviewer.updateSite</module>
+		<module>releng/com.minres.scviewer.updateSite</module>
 		<module>products/com.minres.scviewer.e4.product</module>
-		<module>products/com.minres.scviewer.e4.product_slim</module>
 	</modules>
 
 	<properties>
@@ -56,7 +55,7 @@
 						<artifact>
 							<groupId>com.minres.scviewer</groupId>
 							<artifactId>com.minres.scviewer.target</artifactId>
-							<version>2.11.0</version>
+							<version>2.11.1-SNAPSHOT</version>
 						</artifact>
 					</target>
 					<environments>

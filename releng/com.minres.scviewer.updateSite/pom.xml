@@ -3,12 +3,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>com.minres.scviewer.updateSite</artifactId>
-	<version>2.11.0-SNAPSHOT</version>
+	<version>2.11.1-SNAPSHOT</version>
 	<packaging>eclipse-repository</packaging>
 	<parent>
 		<groupId>com.minres.scviewer</groupId>
 		<artifactId>com.minres.scviewer.parent</artifactId>
-		<version>2.11.0</version>
+		<version>2.11.1-SNAPSHOT</version>
 		<relativePath>../..</relativePath>
 	</parent>
     <build>
@@ -56,15 +56,19 @@
 							<subject>minres</subject>
 							<!-- Bintray target repository. -->
 							<repository>eclipse</repository>
-							<!-- Bintray package name. -->
+							<!-- Bintray package name -->
 							<bintrayPackage>SCViewer</bintrayPackage>
-							<bintrayVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</bintrayVersion>
+							<!-- Bintray package version number -->
+							<bintrayVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}</bintrayVersion>
+							<!-- remove any preexisting files -->
+							<performDestroy>true</performDestroy>
+							<!-- information used when creating the package  -->							
 							<packageVcsUrl>https://git.minres.com/VP-Tools/SCViewer.git</packageVcsUrl>
+							<packageLicenses>EPL-1.0</packageLicenses>
 							<!-- Local folder content to sync to the remote repo. -->
 							<sourceFolder>${project.build.directory}/repository</sourceFolder>
 							<!-- Remote folder for local content upload, relative path. -->
-							<targetFolder>scviewer-${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</targetFolder>
-
+							<targetFolder>SCViewer/${parsedVersion.majorVersion}.${parsedVersion.minorVersion}</targetFolder>
 							<!-- Bintray credentials in settings.xml. -->
 							<serverId>bintray-minres-deploy</serverId>
 						</configuration>
