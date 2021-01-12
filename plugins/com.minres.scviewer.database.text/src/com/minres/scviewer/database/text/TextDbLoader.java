@@ -34,8 +34,10 @@ import java.util.zip.GZIPInputStream;
 
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.mapdb.DB;
+import org.mapdb.DB.HashMapMaker;
 import org.mapdb.DB.TreeMapSink;
 import org.mapdb.DBMaker;
+import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
 import com.google.common.collect.HashMultimap;
@@ -83,8 +85,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 	/** The transactions. */
 	Map<Long, ScvTx> transactions = null;
 
-	Map<Long, Long> id2index = new HashMap<>();
-	
 	/** The attribute types. */
 	final Map<String, TxAttributeType> attributeTypes = UnifiedMap.newMap();
 
@@ -117,7 +117,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 	}
 
 	public ScvTx getScvTx(long id) {
-		return transactions.get(id2index.get(id));
+		return transactions.get(id);
 	}
 
 	/**
@@ -187,9 +187,12 @@ public class TextDbLoader implements IWaveformDbLoader {
 		}
 		TextDbParser parser = new TextDbParser(this);
 		try {
-			parser.txSink = mapDb.treeMap("transactions", Serializer.LONG, Serializer.JAVA).createFromSink();
+			
+//			parser.txSink = mapDb.treeMap("transactions", Serializer.LONG, Serializer.JAVA).createFromSink();
+			parser.txSink = mapDb.hashMap("transactions", Serializer.LONG, Serializer.JAVA).create();
 			parser.parseInput(gzipped ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file));
-			transactions = parser.txSink.create();
+//			transactions = parser.txSink.create();
+			transactions = parser.txSink;
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 		} catch (Exception e) {
 			throw new InputFormatException(e.toString());
@@ -281,7 +284,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 		HashMap<Long, ScvTx> transactionById = new HashMap<>();
 
 		/** The tx sink. */
-		TreeMapSink<Long, ScvTx> txSink;
+		HTreeMap<Long, ScvTx> txSink;
 
 		/** The reader. */
 		BufferedReader reader = null;
@@ -292,7 +295,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 		/** The attr value lut. */
 		Map<String, Integer> attrValueLut = new HashMap<>();
 
-		long indexCount = 0;
 		/**
 		 * Instantiates a new text db parser.
 		 *
@@ -412,8 +414,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 						nextLine = reader.readLine();
 					}
 				}
-				txSink.put(indexCount, scvTx);
-				loader.id2index.put(scvTx.getId(), indexCount++);
+				txSink.put(scvTx.getId(), scvTx);
 				transactionById.remove(id);
 			} else if ("tx_relation".equals(tokens[0])) {
 				Long tr2 = Long.parseLong(tokens[2]);
