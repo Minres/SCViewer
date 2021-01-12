@@ -3,7 +3,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>com.minres.scviewer.e4.application</artifactId>
-	<version>2.11.2-SNAPSHOT</version>
 	<parent>
 		<groupId>com.minres.scviewer</groupId>
 		<artifactId>com.minres.scviewer.parent</artifactId>
