@@ -76,6 +76,8 @@ public class TextDbLoader implements IWaveformDbLoader {
 	/** The transactions. */
 	Map<Long, ScvTx> transactions = null;
 
+	Map<Long, Long> id2index = new HashMap<>();
+	
 	/** The attribute types. */
 	final Map<String, TxAttributeType> attributeTypes = UnifiedMap.newMap();
 
@@ -105,6 +107,10 @@ public class TextDbLoader implements IWaveformDbLoader {
 	@Override
 	public Long getMaxTime() {
 		return maxTime;
+	}
+
+	public ScvTx getScvTx(long id) {
+		return transactions.get(id2index.get(id));
 	}
 
 	/**
@@ -280,6 +286,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 		/** The attr value lut. */
 		Map<String, Integer> attrValueLut = new HashMap<>();
 
+		long indexCount = 0;
 		/**
 		 * Instantiates a new text db parser.
 		 *
@@ -367,7 +374,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 						nextLine = reader.readLine();
 					}
 				}
-				txSink.put(id, scvTx);
 				transactionById.put(id, scvTx);
 			} else if ("tx_end".equals(tokens[0])) {
 				Long id = Long.parseLong(tokens[1]);
@@ -401,6 +407,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 						nextLine = reader.readLine();
 					}
 				}
+				txSink.put(indexCount, scvTx);
+				loader.id2index.put(scvTx.getId(), indexCount++);
+				transactionById.remove(id);
 			} else if ("tx_relation".equals(tokens[0])) {
 				Long tr2 = Long.parseLong(tokens[2]);
 				Long tr1 = Long.parseLong(tokens[3]);
