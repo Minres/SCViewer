@@ -34,8 +34,10 @@ import java.util.zip.GZIPInputStream;
 
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.mapdb.DB;
+import org.mapdb.DB.HashMapMaker;
 import org.mapdb.DB.TreeMapSink;
 import org.mapdb.DBMaker;
+import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
 import com.google.common.collect.HashMultimap;
@@ -55,6 +57,13 @@ import com.minres.scviewer.database.tx.ITx;
  */
 public class TextDbLoader implements IWaveformDbLoader {
 
+	/** the file size limit of a zipped txlog where the loader starts to use a file mapped database */
+	private static final long MEMMAP_LIMIT=256l*1024l*1024l;
+	
+	private static final long MAPDB_INITIAL_ALLOC = 512l*1024l*1024l;
+	
+	private static final long MAPDB_INCREMENTAL_ALLOC = 128l*1024l*1024l;
+	
 	/** The max time. */
 	private Long maxTime = 0L;
 
@@ -76,8 +85,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 	/** The transactions. */
 	Map<Long, ScvTx> transactions = null;
 
-	Map<Long, Long> id2index = new HashMap<>();
-	
 	/** The attribute types. */
 	final Map<String, TxAttributeType> attributeTypes = UnifiedMap.newMap();
 
@@ -110,7 +117,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 	}
 
 	public ScvTx getScvTx(long id) {
-		return transactions.get(id2index.get(id));
+		return transactions.get(id);
 	}
 
 	/**
@@ -162,10 +169,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 	public void load(IWaveformDb db, File file) throws InputFormatException {
 		dispose();
 		boolean gzipped = isGzipped(file);
-		if (file.length() < 75000000 * (gzipped ? 1 : 10)
+		if (file.length() < MEMMAP_LIMIT * (gzipped ? 1 : 10)
 				|| "memory".equals(System.getProperty("ScvBackingDB", "file")))
-			mapDb = DBMaker.memoryDirectDB().allocateStartSize(512l * 1024l * 1024l)
-					.allocateIncrement(128l * 1024l * 1024l).cleanerHackEnable().make();
+			mapDb = DBMaker.memoryDirectDB().make();
 		else {
 			File mapDbFile;
 			try {
@@ -175,15 +181,18 @@ public class TextDbLoader implements IWaveformDbLoader {
 				throw new InputFormatException(e.toString());
 			}
 			mapDb = DBMaker.fileDB(mapDbFile).fileMmapEnable() // Always enable mmap
-					.fileMmapEnableIfSupported().fileMmapPreclearDisable().allocateStartSize(512l * 1024l * 1024l)
-					.allocateIncrement(128l * 1024l * 1024l).cleanerHackEnable().make();
+					.fileMmapPreclearDisable().allocateStartSize(MAPDB_INITIAL_ALLOC)
+					.allocateIncrement(MAPDB_INCREMENTAL_ALLOC).cleanerHackEnable().make();
 			mapDbFile.deleteOnExit();
 		}
 		TextDbParser parser = new TextDbParser(this);
 		try {
-			parser.txSink = mapDb.treeMap("transactions", Serializer.LONG, Serializer.JAVA).createFromSink();
+			
+//			parser.txSink = mapDb.treeMap("transactions", Serializer.LONG, Serializer.JAVA).createFromSink();
+			parser.txSink = mapDb.hashMap("transactions", Serializer.LONG, Serializer.JAVA).create();
 			parser.parseInput(gzipped ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file));
-			transactions = parser.txSink.create();
+//			transactions = parser.txSink.create();
+			transactions = parser.txSink;
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 		} catch (Exception e) {
 			throw new InputFormatException(e.toString());
@@ -275,7 +284,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 		HashMap<Long, ScvTx> transactionById = new HashMap<>();
 
 		/** The tx sink. */
-		TreeMapSink<Long, ScvTx> txSink;
+		HTreeMap<Long, ScvTx> txSink;
 
 		/** The reader. */
 		BufferedReader reader = null;
@@ -286,7 +295,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 		/** The attr value lut. */
 		Map<String, Integer> attrValueLut = new HashMap<>();
 
-		long indexCount = 0;
 		/**
 		 * Instantiates a new text db parser.
 		 *
@@ -348,10 +356,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 			String[] tokens = curLine.split("\\s+");
 			if ("tx_record_attribute".equals(tokens[0])) {
 				Long id = Long.parseLong(tokens[1]);
-				String name = tokens[2].substring(1, tokens[2].length());
+				String name = tokens[2].substring(1, tokens[2].length()-1);
 				DataType type = DataType.valueOf(tokens[3]);
-				String remaining = tokens.length > 5 ? String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length))
-						: "";
+				String remaining = tokens.length > 5 ? String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length)) : "";
 				TxAttributeType attrType = getAttrType(name, type, AssociationType.RECORD);
 				transactionById.get(id).attributes.add(new TxAttribute(attrType, getAttrString(attrType, remaining)));
 			} else if ("tx_begin".equals(tokens[0])) {
@@ -407,8 +414,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 						nextLine = reader.readLine();
 					}
 				}
-				txSink.put(indexCount, scvTx);
-				loader.id2index.put(scvTx.getId(), indexCount++);
+				txSink.put(scvTx.getId(), scvTx);
 				transactionById.remove(id);
 			} else if ("tx_relation".equals(tokens[0])) {
 				Long tr2 = Long.parseLong(tokens[2]);
