@@ -9,7 +9,7 @@
    <launcherArgs>
       <programArgs>-clearPersistedState
       </programArgs>
-      <vmArgs>-Xmx2G -Dosgi.instance.area=@user.home/.scviewer -Dosgi.instance.area.default=@user.home/.scviewer
+      <vmArgs>-Xmx1G -Dosgi.instance.area=@user.home/.scviewer -Dosgi.instance.area.default=@user.home/.scviewer
       </vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
