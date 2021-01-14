@@ -29,9 +29,15 @@ class Tx implements ITx {
 
 	/** The loader. */
 	private final TextDbLoader loader;
+	
+	private ScvTx scvTx =null;
 
 	/** The id. */
 	private final long id;
+
+	private final long generatorId;
+
+	private final long streamId;
 
 	/** The begin time. */
 	long beginTime = -1;
@@ -48,6 +54,8 @@ class Tx implements ITx {
 	public Tx(TextDbLoader loader, ScvTx scvTx) {
 		this.loader = loader;
 		id = scvTx.id;
+		generatorId=scvTx.generatorId;
+		streamId=scvTx.streamId;
 		beginTime=scvTx.beginTime;
 		endTime=scvTx.endTime;
 	}
@@ -58,9 +66,11 @@ class Tx implements ITx {
 	 * @param loader the loader
 	 * @param txId   the tx id
 	 */
-	public Tx(TextDbLoader loader, long txId) {
+	public Tx(TextDbLoader loader, long id, long generatorId,  long streamId) {
 		this.loader = loader;
-		id = txId;
+		this.id = id;
+		this.generatorId=generatorId;
+		this.streamId = streamId;
 	}
 
 	/**
@@ -152,7 +162,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public IWaveform getStream() {
-		return loader.txStreams.get(getScvTx().streamId);
+		return loader.txStreams.get(streamId);
 	}
 
 	/**
@@ -162,7 +172,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public ITxGenerator getGenerator() {
-		return loader.txGenerators.get(getScvTx().generatorId);
+		return loader.txGenerators.get(generatorId);
 	}
 
 	/**
@@ -172,8 +182,11 @@ class Tx implements ITx {
 	 */
 	@Override
 	public Long getBeginTime() {
-		if (beginTime < 0)
-			beginTime = getScvTx().beginTime;
+		if (beginTime < 0) {
+			ScvTx tx = scvTx==null?loader.getScvTx(id):getScvTx();
+			beginTime = tx.beginTime;
+			endTime = tx.endTime;
+		}
 		return beginTime;
 	}
 
@@ -184,8 +197,11 @@ class Tx implements ITx {
 	 */
 	@Override
 	public Long getEndTime() {
-		if (endTime < 0)
-			endTime = getScvTx().endTime;
+		if (endTime < 0) {
+			ScvTx tx = scvTx==null?loader.getScvTx(id):getScvTx();
+			beginTime = tx.beginTime;
+			endTime = tx.endTime;
+		}
 		return endTime;
 	}
 
@@ -209,7 +225,8 @@ class Tx implements ITx {
 	}
 
 	private ScvTx getScvTx() {
-		ScvTx	scvTx=loader.getScvTx(id);
+		if(scvTx==null)
+			scvTx=loader.getScvTx(id);
 		return scvTx;
 	}
 }
