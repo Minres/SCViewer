@@ -11,8 +11,6 @@
 package com.minres.scviewer.database.sqlite;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -41,7 +39,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 
 	private List<RelationType> usedRelationsList;
 
-	public AbstractTxStream(IDatabase database, String name, long streamId) {
+	protected AbstractTxStream(IDatabase database, String name, long streamId) {
 		super(name);
 		this.database=database;
 		this.streamId=streamId;

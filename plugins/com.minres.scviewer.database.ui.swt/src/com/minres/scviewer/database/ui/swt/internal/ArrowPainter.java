@@ -23,7 +23,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
-import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
@@ -143,14 +142,16 @@ public class ArrowPainter implements IPainter {
 					}
 				}
 			}
-			int height = waveCanvas.styleProvider.getTrackHeight();
-			return new Rectangle(
-					(int) (otherTx.getBeginTime() / scaleFactor),
-					waveCanvas.rulerHeight + painter.getVerticalOffset() + height * getConcurrencyIndex(otherTx),
-					(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
-					height);
-		} else
-			return null;
+			if(painter!=null) {
+				int height = waveCanvas.styleProvider.getTrackHeight();
+				return new Rectangle(
+						(int) (otherTx.getBeginTime() / scaleFactor),
+						waveCanvas.rulerHeight + painter.getVerticalOffset() + height * getConcurrencyIndex(otherTx),
+						(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
+						height);
+			}
+		}
+		return null;
 	}
 
 	@Override

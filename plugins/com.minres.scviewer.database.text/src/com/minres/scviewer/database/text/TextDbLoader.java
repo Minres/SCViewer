@@ -29,8 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -147,11 +145,10 @@ public class TextDbLoader implements IWaveformDbLoader {
 		if (txCache.containsKey(txId))
 			return txCache.get(txId);
 		if(transactions.containsKey(txId)) {
-			Tx tx = new Tx(this, txId);
+			Tx tx = new Tx(this, transactions.get(txId));
 			txCache.put(txId, tx);
 			return tx;
 		} else {
-			Set<Long> keys = new TreeSet<>(transactions.keySet());
 			throw new IllegalArgumentException();
 		}
 	}
@@ -256,10 +253,8 @@ public class TextDbLoader implements IWaveformDbLoader {
 		TextDbParser parser = new TextDbParser(this);
 		try {
 			
-//			parser.txSink = mapDb.treeMap("transactions", Serializer.LONG, Serializer.JAVA).createFromSink();
 			parser.txSink = mapDb.hashMap("transactions", Serializer.LONG, Serializer.JAVA).create();
 			parser.parseInput(gzipped ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file));
-//			transactions = parser.txSink.create();
 			transactions = parser.txSink;
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 		} catch (Exception e) {
