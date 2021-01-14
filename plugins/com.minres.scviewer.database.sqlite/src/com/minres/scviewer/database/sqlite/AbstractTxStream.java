@@ -11,6 +11,8 @@
 package com.minres.scviewer.database.sqlite;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,7 +48,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public int getWidth() {
+	public int getRowCount() {
 		if(maxConcurrency==null){
 			StringBuilder sb = new StringBuilder();
 			sb.append("SELECT MAX(concurrencyLevel) as concurrencyLevel FROM ScvTx where stream=");
@@ -125,5 +127,12 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	public WaveformType getType() {
 		return WaveformType.TRANSACTION;
 	}
+
+	/**
+	 * Calculate concurrency.
+	 */
+	public void calculateConcurrency() {
+	}
+
 
 }

@@ -76,6 +76,7 @@ public interface IWaveform extends IHierNode {
 	 *
 	 * @return the width
 	 */
-	public int getWidth();
-
+	public int getRowCount();
+	
+	public void calculateConcurrency();
 }

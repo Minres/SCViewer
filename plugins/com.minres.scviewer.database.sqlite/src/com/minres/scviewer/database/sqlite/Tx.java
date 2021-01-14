@@ -65,8 +65,7 @@ public class Tx implements ITx {
 		return trGenerator;
 	}
 
-	@Override
-	public int getConcurrencyIndex() {
+	int getConcurrencyIndex() {
 		return scvTx.getConcurrencyLevel();
 	}
 

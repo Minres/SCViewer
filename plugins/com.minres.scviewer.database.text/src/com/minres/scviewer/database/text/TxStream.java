@@ -55,40 +55,4 @@ class TxStream extends AbstractTxStream {
 		return kind;
 	}
 
-	/** The max concurrency. */
-	private int maxConcurrency = 0;
-
-	/** The concurrency. */
-	private int concurrency = 0;
-
-	/**
-	 * Sets the concurrency.
-	 *
-	 * @param concurrency the new concurrency
-	 */
-	void setConcurrency(int concurrency) {
-		this.concurrency = concurrency;
-		if (concurrency > maxConcurrency)
-			maxConcurrency = concurrency;
-	}
-
-	/**
-	 * Gets the concurrency.
-	 *
-	 * @return the concurrency
-	 */
-	int getConcurrency() {
-		return this.concurrency;
-	}
-
-	/**
-	 * Gets the width.
-	 *
-	 * @return the width
-	 */
-	@Override
-	public int getWidth() {
-		return maxConcurrency;
-	}
-
 }

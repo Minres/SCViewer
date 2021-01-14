@@ -109,13 +109,17 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public int getWidth() {
+	public int getRowCount() {
 		return width;
 	}
 
 	@Override
 	public String getKind() {
 		return "signal";
+	}
+
+	@Override
+	public void calculateConcurrency() {
 	}
 
 }

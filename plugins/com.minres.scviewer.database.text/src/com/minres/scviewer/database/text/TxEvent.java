@@ -32,6 +32,7 @@ class TxEvent implements ITxEvent {
 	/** The time. */
 	final long time;
 
+	private int concurrencyIdx=-1;
 	/**
 	 * Instantiates a new tx event.
 	 *
@@ -106,5 +107,14 @@ class TxEvent implements ITxEvent {
 	@Override
 	public ITx getTransaction() {
 		return loader.getTransaction(transaction);
+	}
+
+	@Override
+	public int getRowIndex() {
+		return concurrencyIdx;
+	}
+
+	public void setConcurrencyIndex(int idx) {
+		concurrencyIdx=idx;
 	}
 }

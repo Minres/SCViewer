@@ -204,7 +204,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@Override
 	public int getNetWidth(int intValue) {
 		VCDSignal<?> signal = (VCDSignal<?>) signals.get(intValue);
-		return signal.getWidth();
+		return signal.getRowCount();
 	}
 
 	/* (non-Javadoc)

@@ -100,7 +100,7 @@ class TxGenerator extends AbstractTxStream implements ITxGenerator {
 	 * @return the width
 	 */
 	@Override
-	public int getWidth() {
-		return stream.getWidth();
+	public int getRowCount() {
+		return stream.getRowCount();
 	}
 }

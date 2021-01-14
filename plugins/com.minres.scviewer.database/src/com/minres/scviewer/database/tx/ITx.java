@@ -56,13 +56,6 @@ public interface ITx extends Comparable<ITx> {
 	public Long getEndTime();
 
 	/**
-	 * Gets the concurrency index.
-	 *
-	 * @return the concurrency index
-	 */
-	public int getConcurrencyIndex();
-
-	/**
 	 * Gets the attributes.
 	 *
 	 * @return the attributes
