@@ -206,7 +206,7 @@ public class DesignBrowser {
 				updateButtons();
 			}
 		});
-		treeViewer.setLabelProvider(new TxDbLabelProvider());
+		treeViewer.setLabelProvider(new TxDbLabelProvider(true));
 		treeViewer.addFilter(treeAttributeFilter);
 		treeViewer.setUseHashlookup(true);
 		treeViewer.setAutoExpandLevel(2);
@@ -252,7 +252,7 @@ public class DesignBrowser {
 				updateButtons();
 			}
 		});
-		txTableViewer.setLabelProvider(new TxDbLabelProvider());
+		txTableViewer.setLabelProvider(new TxDbLabelProvider(false));
 		txTableViewer.getTable().setLayoutData(new GridData(GridData.FILL_BOTH));
 		txTableViewer.addFilter(tableAttributeFilter);
 		txTableViewer.addDoubleClickListener(event -> {

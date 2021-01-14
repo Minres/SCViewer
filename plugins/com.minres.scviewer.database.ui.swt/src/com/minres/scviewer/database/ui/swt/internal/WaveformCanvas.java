@@ -11,10 +11,12 @@
 package com.minres.scviewer.database.ui.swt.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
@@ -32,9 +34,11 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.ScrollBar;
 
 import com.google.common.collect.Lists;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
@@ -424,13 +428,17 @@ public class WaveformCanvas extends Canvas {
         }
         for (IWaveformPainter painter : wave2painterMap.values()) {
             if (painter instanceof StreamPainter && ((StreamPainter) painter).getStream() == tx.getStream()) {
-                int top = painter.getVerticalOffset() + styleProvider.getTrackHeight() * tx.getConcurrencyIndex();
-                int bottom = top + styleProvider.getTrackHeight();
-                if (top < -origin.y) {
-                    setOrigin(origin.x, -(top-styleProvider.getTrackHeight()));
-                } else if (bottom > (size.y - origin.y)) {
-                    setOrigin(origin.x, size.y - bottom);
-                }
+            	Entry<Long, IEvent[]> entry = tx.getStream().getEvents().floorEntry(tx.getBeginTime());
+            	Optional<IEvent> res = Arrays.stream(entry.getValue()).filter(e -> ((ITxEvent)e).getTransaction().equals(tx)).findFirst();
+            	if(res.isPresent()) {
+                    int top = painter.getVerticalOffset() + styleProvider.getTrackHeight() * ((ITxEvent)res.get()).getRowIndex();
+                    int bottom = top + styleProvider.getTrackHeight();
+                    if (top < -origin.y) {
+                        setOrigin(origin.x, -(top-styleProvider.getTrackHeight()));
+                    } else if (bottom > (size.y - origin.y)) {
+                        setOrigin(origin.x, size.y - bottom);
+                    }
+            	}
             }
         }
     }

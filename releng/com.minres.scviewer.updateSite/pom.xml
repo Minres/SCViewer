@@ -58,7 +58,7 @@
 							<!-- Bintray package name -->
 							<bintrayPackage>SCViewer</bintrayPackage>
 							<!-- Bintray package version number -->
-							<bintrayVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}</bintrayVersion>
+							<bintrayVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</bintrayVersion>
 							<!-- remove any preexisting files -->
 							<performDestroy>true</performDestroy>
 							<!-- information used when creating the package  -->							

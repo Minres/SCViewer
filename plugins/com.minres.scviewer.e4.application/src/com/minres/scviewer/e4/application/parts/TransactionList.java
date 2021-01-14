@@ -37,7 +37,6 @@ import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.tx.ITx;
-import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.txTableTree.AbstractTransactionTreeContentProvider;
@@ -78,6 +77,8 @@ public class TransactionList extends Composite {
 
 	private TableViewer tableViewer = null; 
 
+	Thread updateThread = null;
+
 	private TableColumn valueColumn = null;
 
 	private AttributeLabelProvider valueLabelProvider = null;
@@ -85,8 +86,6 @@ public class TransactionList extends Composite {
 	private IWaveform stream;
 
 	private ObservableList<AttributeNameBean> attrNames = new WritableList<>();
-
-	private List<ITx> eventList = new ArrayList<>();
 
 	private List<ITx> emptyList = new ArrayList<>();
 
@@ -244,56 +243,48 @@ public class TransactionList extends Composite {
 		} else if(stream != trackEntry.waveform) { 
 			stream=trackEntry.waveform;
 			tableViewer.setInput(emptyList);
-			new Thread() {
-				private ConcurrentHashMap<String, DataType> propNames=new ConcurrentHashMap<>();
-
-				private List<AttributeNameBean> getEntries() {
-					return propNames.entrySet().stream()
-							.sorted((e1,e2)->e1.getKey().compareTo(e2.getKey()))
-							.map(e -> new AttributeNameBean(e.getKey(), e.getValue()))
-							.collect(Collectors.toList());
-				}
-
-				@Override
-				public void run() {
-					Collection<IEvent[]> values = stream.getEvents().values();
-					eventList = values.parallelStream().map(Arrays::asList)
-							.flatMap(List::stream)
-							.filter(evt -> evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)
-							.map(evt-> {
-								ITx tx = ((ITxEvent)evt).getTransaction();
-								for(ITxAttribute attr: tx.getAttributes()) {
-									propNames.put(attr.getName(), attr.getDataType());
-								}
-								return tx;
-							})
-							.sorted((t1, t2)-> t1.getBeginTime().compareTo(t2.getBeginTime()))
-							.collect(Collectors.toList());
-					getDisplay().asyncExec(new Runnable() {
-						@Override
-						public void run() {
-							tableViewer.setInput(eventList);
-							attrNames.clear();
-							attrNames.addAll(getEntries());
-							if(!attrNames.isEmpty())
-								txFilter.setSearchProp(attrNames.get(0).getName(), attrNames.get(0).getType());
-							if (searchPropComboViewer!=null) {
-								searchPropComboViewer.setInput(attrNames);
-								Object sel = searchPropComboViewer.getElementAt(0);
-								if(sel!=null) searchPropComboViewer.setSelection(new StructuredSelection(sel));
-							}
-							tableViewer.refresh(true);
-						}
-					});
-				}
-			}.start();
+			try{
+				if(updateThread!=null)
+					updateThread.interrupt();
+			}catch(SecurityException e){}
+			updateThread = new Thread(()-> {
+				final ConcurrentHashMap<String, DataType> propNames=new ConcurrentHashMap<>();
+				Collection<IEvent[]> values = stream.getEvents().values();
+				final List<ITx> txList = values.parallelStream().map(Arrays::asList)
+						.flatMap(List::stream)
+						.filter(evt -> evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)
+						.map(evt-> {
+							ITx tx = ((ITxEvent)evt).getTransaction();
+							tx.getAttributes().forEach(attr -> propNames.put(attr.getName(), attr.getDataType()));
+							return tx;
+						})
+						.sorted((t1, t2)-> t1.getBeginTime().compareTo(t2.getBeginTime()))
+						.collect(Collectors.toList());
+				final List<AttributeNameBean> newAttrNames=propNames.entrySet().stream()
+						.sorted((e1,e2)->e1.getKey().compareTo(e2.getKey()))
+						.map(e -> new AttributeNameBean(e.getKey(), e.getValue()))
+						.collect(Collectors.toList());
+				getDisplay().asyncExec(() -> {
+					tableViewer.setInput(txList);
+					attrNames.clear();
+					attrNames.addAll(newAttrNames);
+					if(!attrNames.isEmpty())
+						txFilter.setSearchProp(attrNames.get(0).getName(), attrNames.get(0).getType());
+					if (searchPropComboViewer!=null)
+						searchPropComboViewer.refresh();
+					if (viewPropComboViewer!=null)
+						viewPropComboViewer.refresh();
+				});
+				updateThread=null;
+			});
+			updateThread.start();
 		}
 	}
 
 	public void setSearchProps(String propName, DataType type, String propValue) {
-		for(int i=0; i<attrNames.size(); ++i) {
-			AttributeNameBean e = attrNames.get(i);
-			if(propName.equals(e.getName()) && type.equals(e.getType())) {
+		for(int i=0; i<searchPropComboViewer.getCombo().getItemCount(); ++i) {
+			String itemName  = searchPropComboViewer.getCombo().getItem(i);
+			if(propName.equals(itemName)) {
 				searchPropComboViewer.getCombo().select(i);
 				break;
 			}

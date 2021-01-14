@@ -10,9 +10,11 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -21,8 +23,14 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
+import com.minres.scviewer.database.EventKind;
+import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IHierNode;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxEvent;
+import com.minres.scviewer.database.tx.ITxGenerator;
 import com.minres.scviewer.database.tx.ITxRelation;
 import com.minres.scviewer.database.ui.WaveformColors;
 
@@ -78,6 +86,12 @@ public class ArrowPainter implements IPainter {
 		}
 	}
 
+	private int getConcurrencyIndex(ITx tx) {
+		IEvent[] eventList = tx.getStream().getEvents().floorEntry(tx.getBeginTime()).getValue();
+		Optional<Integer> res = Arrays.stream(eventList).map(e -> ((ITxEvent)e).getRowIndex()).findFirst();
+		return res.isPresent()? res.get():0;
+	}
+	
 	protected void calculateGeometries() {
 		deferUpdate = false;
 		iRect.clear();
@@ -88,9 +102,9 @@ public class ArrowPainter implements IPainter {
 			deferUpdate = true;
 			return;
 		}
-		int laneHeight = painter.getHeight() / tx.getStream().getWidth();
+		int laneHeight = painter.getHeight() / tx.getStream().getRowCount();
 		txRectangle = new Rectangle((int) (tx.getBeginTime() / scaleFactor),
-				waveCanvas.rulerHeight + painter.getVerticalOffset() + laneHeight * tx.getConcurrencyIndex(),
+				waveCanvas.rulerHeight + painter.getVerticalOffset() + laneHeight * getConcurrencyIndex(tx),
 				(int) ((tx.getEndTime() - tx.getBeginTime()) / scaleFactor), laneHeight);
 		deriveGeom(tx.getIncomingRelations(), iRect, false);
 		deriveGeom(tx.getOutgoingRelations(), oRect, true);
@@ -99,17 +113,44 @@ public class ArrowPainter implements IPainter {
 	protected void deriveGeom(Collection<ITxRelation> relations, List<LinkEntry> res, boolean useTarget) {
 		for (ITxRelation iTxRelation : relations) {
 			ITx otherTx = useTarget ? iTxRelation.getTarget() : iTxRelation.getSource();
-			if (waveCanvas.wave2painterMap.containsKey(otherTx.getStream())) {
-				IWaveformPainter painter = waveCanvas.wave2painterMap.get(otherTx.getStream());
-				int height = waveCanvas.styleProvider.getTrackHeight();
-				Rectangle bb = new Rectangle(
-						(int) (otherTx.getBeginTime() / scaleFactor),
-						waveCanvas.rulerHeight + painter.getVerticalOffset() + height * otherTx.getConcurrencyIndex(),
-						(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
-						height);
+			Rectangle bb = createLinkEntry(otherTx, otherTx.getStream());
+			if(bb!=null){
 				res.add(new LinkEntry(bb, iTxRelation.getRelationType()));
+				return;
+			} else {
+				for(IHierNode gen:otherTx.getStream().getChildNodes()) {
+					if(gen instanceof ITxGenerator) {
+						bb = createLinkEntry(otherTx, (IWaveform) gen);
+						if(bb!=null){
+							res.add(new LinkEntry(bb, iTxRelation.getRelationType()));
+							return;
+						}
+					}
+				}
 			}
 		}
+	}
+
+	private Rectangle createLinkEntry(ITx otherTx, IWaveform iWaveform) {
+		if (waveCanvas.wave2painterMap.containsKey(iWaveform)) {
+			IWaveformPainter painter = waveCanvas.wave2painterMap.get(otherTx.getStream());
+			if(painter==null) {
+				for(IHierNode gen:otherTx.getStream().getChildNodes()) {
+					if(gen instanceof ITxGenerator) {
+						 painter = waveCanvas.wave2painterMap.get(gen);
+						 if(painter!=null)
+							 break;
+					}
+				}
+			}
+			int height = waveCanvas.styleProvider.getTrackHeight();
+			return new Rectangle(
+					(int) (otherTx.getBeginTime() / scaleFactor),
+					waveCanvas.rulerHeight + painter.getVerticalOffset() + height * getConcurrencyIndex(otherTx),
+					(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
+					height);
+		} else
+			return null;
 	}
 
 	@Override

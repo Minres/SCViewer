@@ -166,6 +166,8 @@ public class TxDbLabelProvider implements ILabelProvider {
 	public String getText(Object element) {
 		if(element instanceof IWaveformDb){
 			IWaveformDb db = (IWaveformDb) element;
+			if(db.getName()== null)
+				return "";
 			return db.getName()+(db.isLoaded()?"":" (loading)");
 		} else
 			return ((IHierNode)element).getName();
