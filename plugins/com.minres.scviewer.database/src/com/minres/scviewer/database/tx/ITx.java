@@ -39,7 +39,7 @@ public interface ITx extends Comparable<ITx> {
 	 *
 	 * @return the generator
 	 */
-	public ITxGenerator getGenerator();
+	public IWaveform getGenerator();
 
 	/**
 	 * Gets the begin time.

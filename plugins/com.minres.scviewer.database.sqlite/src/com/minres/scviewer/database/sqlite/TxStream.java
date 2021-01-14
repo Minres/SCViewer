@@ -26,7 +26,6 @@ import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
 import com.minres.scviewer.database.sqlite.tables.ScvStream;
 import com.minres.scviewer.database.sqlite.tables.ScvTx;
 import com.minres.scviewer.database.tx.ITx;
-import com.minres.scviewer.database.tx.ITxGenerator;
 
 public class TxStream extends AbstractTxStream {
 
@@ -54,7 +53,7 @@ public class TxStream extends AbstractTxStream {
 		return (long) scvStream.getId();
 	}
 
-	public List<ITxGenerator> getGenerators() {
+	public List<IWaveform> getGenerators() {
 		if(generators==null){
 			SQLiteDatabaseSelectHandler<ScvGenerator> handler = new SQLiteDatabaseSelectHandler<>(
 					ScvGenerator.class, database, "stream="+scvStream.getId());

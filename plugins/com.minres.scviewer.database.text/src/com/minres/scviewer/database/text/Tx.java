@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
-import com.minres.scviewer.database.tx.ITxGenerator;
 import com.minres.scviewer.database.tx.ITxRelation;
 
 /**
@@ -171,7 +170,7 @@ class Tx implements ITx {
 	 * @return the generator
 	 */
 	@Override
-	public ITxGenerator getGenerator() {
+	public IWaveform getGenerator() {
 		return loader.txGenerators.get(generatorId);
 	}
 

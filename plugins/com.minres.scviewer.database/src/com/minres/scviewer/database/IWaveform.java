@@ -12,6 +12,7 @@ package com.minres.scviewer.database;
 
 import java.util.NavigableMap;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Interface IWaveform.
  *
@@ -78,5 +79,8 @@ public interface IWaveform extends IHierNode {
 	 */
 	public int getRowCount();
 	
+	/**
+	 * Calculate the concurrency (th enumber of parallel ongoing events) of the waveform.
+	 */
 	public void calculateConcurrency();
 }

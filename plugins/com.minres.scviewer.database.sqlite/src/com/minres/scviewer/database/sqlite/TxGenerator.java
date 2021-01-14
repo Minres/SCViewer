@@ -22,9 +22,8 @@ import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
 import com.minres.scviewer.database.sqlite.tables.ScvTx;
 import com.minres.scviewer.database.tx.ITx;
-import com.minres.scviewer.database.tx.ITxGenerator;
 
-public class TxGenerator extends AbstractTxStream implements ITxGenerator {
+public class TxGenerator extends AbstractTxStream {
 
 	private TxStream  stream;
 	
@@ -42,11 +41,6 @@ public class TxGenerator extends AbstractTxStream implements ITxGenerator {
 	@Override
 	public Long getId() {
 		return (long) scvGenerator.getId();
-	}
-
-	@Override
-	public IWaveform getStream() {
-		return stream;
 	}
 
 	@Override

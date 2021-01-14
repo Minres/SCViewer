@@ -28,7 +28,6 @@ import com.minres.scviewer.database.sqlite.tables.ScvTxEvent;
 import com.minres.scviewer.database.sqlite.tables.ScvTxRelation;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
-import com.minres.scviewer.database.tx.ITxGenerator;
 import com.minres.scviewer.database.tx.ITxRelation;
 
 public class Tx implements ITx {
@@ -61,7 +60,7 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public ITxGenerator getGenerator() {
+	public IWaveform getGenerator() {
 		return trGenerator;
 	}
 

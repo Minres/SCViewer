@@ -29,7 +29,6 @@ import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
-import com.minres.scviewer.database.tx.ITxGenerator;
 import com.minres.scviewer.database.tx.ITxRelation;
 import com.minres.scviewer.database.ui.WaveformColors;
 
@@ -118,7 +117,7 @@ public class ArrowPainter implements IPainter {
 				return;
 			} else {
 				for(IHierNode gen:otherTx.getStream().getChildNodes()) {
-					if(gen instanceof ITxGenerator) {
+					if(gen instanceof IWaveform) {
 						bb = createLinkEntry(otherTx, (IWaveform) gen);
 						if(bb!=null){
 							res.add(new LinkEntry(bb, iTxRelation.getRelationType()));
@@ -135,7 +134,7 @@ public class ArrowPainter implements IPainter {
 			IWaveformPainter painter = waveCanvas.wave2painterMap.get(otherTx.getStream());
 			if(painter==null) {
 				for(IHierNode gen:otherTx.getStream().getChildNodes()) {
-					if(gen instanceof ITxGenerator) {
+					if(gen instanceof IWaveform) {
 						 painter = waveCanvas.wave2painterMap.get(gen);
 						 if(painter!=null)
 							 break;
