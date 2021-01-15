@@ -83,13 +83,4 @@ class TxGenerator extends AbstractTxStream {
 		return stream.getKind();
 	}
 
-	/**
-	 * Gets the width.
-	 *
-	 * @return the width
-	 */
-	@Override
-	public int getRowCount() {
-		return stream.getRowCount();
-	}
 }

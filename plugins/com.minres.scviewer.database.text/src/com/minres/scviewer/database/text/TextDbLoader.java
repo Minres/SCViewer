@@ -420,16 +420,13 @@ public class TextDbLoader implements IWaveformDbLoader {
 				TxGenerator gen = loader.txGenerators.get(scvTx.generatorId);
 				TxStream stream = loader.txStreams.get(gen.stream.getId());
 				if (scvTx.beginTime == scvTx.endTime) {
-					TxEvent evt = new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime);
-					stream.addEvent(evt);
-					gen.addEvent(evt);
+					stream.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
+					gen.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
 				} else {
-					TxEvent begEvt = new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime);
-					stream.addEvent(begEvt);
-					gen.addEvent(begEvt);
-					TxEvent endEvt = new TxEvent(loader, EventKind.END, id, scvTx.endTime);
-					stream.addEvent(endEvt);
-					gen.addEvent(endEvt);
+					stream.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
+					gen.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
+					stream.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
+					gen.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
 				}
 				if (nextLine != null && nextLine.charAt(0) == 'a') {
 					int idx = 0;

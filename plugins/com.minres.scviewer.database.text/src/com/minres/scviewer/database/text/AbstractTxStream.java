@@ -40,10 +40,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	TreeMap<Long, IEvent[]> events = new TreeMap<>();
 
 	/** The max concurrency. */
-	private int maxConcurrency = 0;
-
-	/** The concurrency calculated. */
-	boolean concurrencyCalculated = false;
+	private int rowCount = -1;
 
 	/**
 	 * Instantiates a new abstract tx stream.
@@ -137,21 +134,21 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 */
 	@Override
 	public int getRowCount() {
-		if (!concurrencyCalculated)
+		if (rowCount<0)
 			calculateConcurrency();
-		return maxConcurrency;
+		return rowCount;
 	}
 
 	/**
 	 * Calculate concurrency.
 	 */
-	public void calculateConcurrency() {
-		if (concurrencyCalculated)
+	void calculateConcurrency() {
+		if (rowCount>=0)
 			return;
 		ArrayList<Long> rowEndTime = new ArrayList<>();
 		HashMap<Long, Integer> rowByTxId = new HashMap<>();
-		events.entrySet().stream().forEach(entry -> {
-			Arrays.asList(entry.getValue()).stream().forEach(evt -> {
+		for(Entry<Long, IEvent[]> entry: events.entrySet()) {
+			for(IEvent evt:entry.getValue()) {
 				TxEvent txEvt = (TxEvent) evt;
 				ITx tx = txEvt.getTransaction();
 				int rowIdx = 0;
@@ -162,7 +159,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 					rowByTxId.remove(txId);
 					break;
 				case SINGLE:
-					for (; rowIdx < rowEndTime.size() && rowEndTime.get(rowIdx) > tx.getBeginTime(); rowIdx++);
+					for (; rowIdx < rowEndTime.size() && rowEndTime.get(rowIdx)>tx.getBeginTime(); rowIdx++);
 					if (rowEndTime.size() <= rowIdx)
 						rowEndTime.add(tx.getEndTime());
 					else
@@ -170,7 +167,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 					((TxEvent) evt).setConcurrencyIndex(rowIdx);
 					break;
 				case BEGIN:
-					for (; rowIdx < rowEndTime.size() && rowEndTime.get(rowIdx) > tx.getBeginTime(); rowIdx++);
+					for (; rowIdx < rowEndTime.size() && rowEndTime.get(rowIdx)>tx.getBeginTime(); rowIdx++);
 					if (rowEndTime.size() <= rowIdx)
 						rowEndTime.add(tx.getEndTime());
 					else
@@ -179,10 +176,9 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 					rowByTxId.put(tx.getId(), rowIdx);
 					break;
 				}
-			});
-		});
-		maxConcurrency=rowEndTime.size();
-		concurrencyCalculated = true;
+			}
+		}
+		rowCount=rowEndTime.size()>0?rowEndTime.size():1;
 		getChildNodes().parallelStream().forEach(c -> ((TxGenerator)c).calculateConcurrency());
 	}
 

@@ -118,8 +118,4 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 		return "signal";
 	}
 
-	@Override
-	public void calculateConcurrency() {
-	}
-
 }
