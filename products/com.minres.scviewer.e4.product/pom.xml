@@ -46,7 +46,7 @@
 					<products>
 						<product>
 							<id>product</id>
-							<archiveFileName>SCViewer-${project.version}</archiveFileName>
+							<archiveFileName>SCViewer-${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</archiveFileName>
 							<rootFolders>
 								<macosx>SCViewer.app</macosx>
 							</rootFolders>
