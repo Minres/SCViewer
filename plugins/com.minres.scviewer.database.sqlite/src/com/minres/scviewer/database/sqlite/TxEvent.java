@@ -56,4 +56,10 @@ public class TxEvent implements ITxEvent {
 	public WaveformType getType() {
 		return WaveformType.TRANSACTION;
 	}
+
+	@Override
+	public int getRowIndex() {
+		return ((Tx)tx).getConcurrencyIndex();
+	}
+
 }

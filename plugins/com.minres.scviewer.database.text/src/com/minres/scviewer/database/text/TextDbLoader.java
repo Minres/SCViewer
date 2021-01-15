@@ -28,14 +28,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.mapdb.DB;
-import org.mapdb.DB.HashMapMaker;
-import org.mapdb.DB.TreeMapSink;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
@@ -107,6 +106,26 @@ public class TextDbLoader implements IWaveformDbLoader {
 	static final byte[] x = "scv_tr_stream".getBytes();
 
 	/**
+	 * Adds the property change listener.
+	 *
+	 * @param l the l
+	 */
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener l) {
+		pcs.addPropertyChangeListener(l);
+	}
+
+	/**
+	 * Removes the property change listener.
+	 *
+	 * @param l the l
+	 */
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener l) {
+		pcs.removePropertyChangeListener(l);
+	}
+
+	/**
 	 * Gets the max time.
 	 *
 	 * @return the max time
@@ -116,8 +135,29 @@ public class TextDbLoader implements IWaveformDbLoader {
 		return maxTime;
 	}
 
+	/**
+	 * Gets the transaction.
+	 *
+	 * @param txId the tx id
+	 * @return the transaction
+	 */
+	public ITx getTransaction(long txId) {
+		if (txCache.containsKey(txId))
+			return txCache.get(txId);
+		if(transactions.containsKey(txId)) {
+			Tx tx = new Tx(this, transactions.get(txId));
+			txCache.put(txId, tx);
+			return tx;
+		} else {
+			throw new IllegalArgumentException();
+		}
+	}
+
 	public ScvTx getScvTx(long id) {
-		return transactions.get(id);
+		if(transactions.containsKey(id))
+			return transactions.get(id);
+		else
+			throw new IllegalArgumentException();
 	}
 
 	/**
@@ -128,6 +168,15 @@ public class TextDbLoader implements IWaveformDbLoader {
 	@Override
 	public Collection<IWaveform> getAllWaves() {
 		return new ArrayList<>(txStreams.values());
+	}
+
+	/**
+	 * Gets the all relation types.
+	 *
+	 * @return the all relation types
+	 */
+	public Collection<RelationType> getAllRelationTypes() {
+		return relationTypes.values();
 	}
 
 	/**
@@ -154,6 +203,22 @@ public class TextDbLoader implements IWaveformDbLoader {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Checks if is gzipped.
+	 *
+	 * @param f the f
+	 * @return true, if is gzipped
+	 */
+	private static boolean isGzipped(File f) {
+		try (InputStream is = new FileInputStream(f)) {
+			byte[] signature = new byte[2];
+			int nread = is.read(signature); // read the gzip signature
+			return nread == 2 && signature[0] == (byte) 0x1f && signature[1] == (byte) 0x8b;
+		} catch (IOException e) {
+			return false;
+		}
 	}
 
 	/**
@@ -188,28 +253,14 @@ public class TextDbLoader implements IWaveformDbLoader {
 		TextDbParser parser = new TextDbParser(this);
 		try {
 			
-//			parser.txSink = mapDb.treeMap("transactions", Serializer.LONG, Serializer.JAVA).createFromSink();
 			parser.txSink = mapDb.hashMap("transactions", Serializer.LONG, Serializer.JAVA).create();
 			parser.parseInput(gzipped ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file));
-//			transactions = parser.txSink.create();
 			transactions = parser.txSink;
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 		} catch (Exception e) {
 			throw new InputFormatException(e.toString());
 		}
-		for (TxStream stream : txStreams.values()) {
-			Thread t = new Thread() {
-				@Override
-				public void run() {
-					try {
-						stream.calculateConcurrency();
-					} catch (Exception e) {
-						/* don't let exceptions bubble up */ }
-				}
-			};
-			threads.add(t);
-			t.start();
-		}
+		txStreams.values().parallelStream().forEach(TxStream::calculateConcurrency);
 	}
 
 	/**
@@ -229,31 +280,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 			mapDb.close();
 			mapDb = null;
 		}
-	}
-
-	/**
-	 * Checks if is gzipped.
-	 *
-	 * @param f the f
-	 * @return true, if is gzipped
-	 */
-	private static boolean isGzipped(File f) {
-		try (InputStream is = new FileInputStream(f)) {
-			byte[] signature = new byte[2];
-			int nread = is.read(signature); // read the gzip signature
-			return nread == 2 && signature[0] == (byte) 0x1f && signature[1] == (byte) 0x8b;
-		} catch (IOException e) {
-			return false;
-		}
-	}
-
-	/**
-	 * Gets the all relation types.
-	 *
-	 * @return the all relation types
-	 */
-	public Collection<RelationType> getAllRelationTypes() {
-		return relationTypes.values();
 	}
 
 	/**
@@ -321,6 +347,11 @@ public class TextDbLoader implements IWaveformDbLoader {
 			}
 			if (curLine != null)
 				parseLine(curLine, nextLine);
+			for(Entry<Long, ScvTx> e: transactionById.entrySet()) {
+				ScvTx scvTx = e.getValue();
+				scvTx.endTime=loader.maxTime;
+				txSink.put(e.getKey(), scvTx);
+			}
 		}
 
 		/**
@@ -368,8 +399,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 				ScvTx scvTx = new ScvTx(id, gen.stream.getId(), genId,
 						Long.parseLong(tokens[3]) * stringToScale(tokens[4]));
 				loader.maxTime = loader.maxTime > scvTx.beginTime ? loader.maxTime : scvTx.beginTime;
-				TxStream stream = loader.txStreams.get(gen.stream.getId());
-				stream.setConcurrency(stream.getConcurrency() + 1);
 				if (nextLine != null && nextLine.charAt(0) == 'a') {
 					int idx = 0;
 					while (nextLine != null && nextLine.charAt(0) == 'a') {
@@ -391,18 +420,14 @@ public class TextDbLoader implements IWaveformDbLoader {
 				TxGenerator gen = loader.txGenerators.get(scvTx.generatorId);
 				TxStream stream = loader.txStreams.get(gen.stream.getId());
 				if (scvTx.beginTime == scvTx.endTime) {
-					TxEvent evt = new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime);
-					stream.addEvent(evt);
-					gen.addEvent(evt);
+					stream.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
+					gen.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
 				} else {
-					TxEvent begEvt = new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime);
-					stream.addEvent(begEvt);
-					gen.addEvent(begEvt);
-					TxEvent endEvt = new TxEvent(loader, EventKind.END, id, scvTx.endTime);
-					stream.addEvent(endEvt);
-					gen.addEvent(endEvt);
+					stream.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
+					gen.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
+					stream.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
+					gen.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
 				}
-				stream.setConcurrency(stream.getConcurrency() - 1);
 				if (nextLine != null && nextLine.charAt(0) == 'a') {
 					int idx = 0;
 					while (nextLine != null && nextLine.charAt(0) == 'a') {
@@ -519,40 +544,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 			loader.pcs.firePropertyChange(IWaveformDbLoader.GENERATOR_ADDED, null, generator);
 		}
 
-	}
-
-	/**
-	 * Gets the transaction.
-	 *
-	 * @param txId the tx id
-	 * @return the transaction
-	 */
-	public ITx getTransaction(long txId) {
-		if (txCache.containsKey(txId))
-			return txCache.get(txId);
-		Tx tx = new Tx(this, txId);
-		txCache.put(txId, tx);
-		return tx;
-	}
-
-	/**
-	 * Adds the property change listener.
-	 *
-	 * @param l the l
-	 */
-	@Override
-	public void addPropertyChangeListener(PropertyChangeListener l) {
-		pcs.addPropertyChangeListener(l);
-	}
-
-	/**
-	 * Removes the property change listener.
-	 *
-	 * @param l the l
-	 */
-	@Override
-	public void removePropertyChangeListener(PropertyChangeListener l) {
-		pcs.removePropertyChangeListener(l);
 	}
 
 }

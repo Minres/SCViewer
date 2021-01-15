@@ -13,15 +13,16 @@ package com.minres.scviewer.database.text;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
+import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
 
 /**
@@ -38,8 +39,8 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	/** The events. */
 	TreeMap<Long, IEvent[]> events = new TreeMap<>();
 
-	/** The concurrency calculated. */
-	boolean concurrencyCalculated = false;
+	/** The max concurrency. */
+	private int rowCount = -1;
 
 	/**
 	 * Instantiates a new abstract tx stream.
@@ -48,7 +49,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @param id     the id
 	 * @param name   the name
 	 */
-	public AbstractTxStream(TextDbLoader loader, Long id, String name) {
+	protected AbstractTxStream(TextDbLoader loader, Long id, String name) {
 		super(name);
 		this.loader = loader;
 		this.id = id;
@@ -77,8 +78,6 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 */
 	@Override
 	public NavigableMap<Long, IEvent[]> getEvents() {
-		if (!concurrencyCalculated)
-			calculateConcurrency();
 		return events;
 	}
 
@@ -90,8 +89,6 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 */
 	@Override
 	public IEvent[] getEventsAtTime(Long time) {
-		if (!concurrencyCalculated)
-			calculateConcurrency();
 		return events.get(time);
 	}
 
@@ -103,8 +100,6 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 */
 	@Override
 	public IEvent[] getEventsBeforeTime(Long time) {
-		if (!concurrencyCalculated)
-			calculateConcurrency();
 		Entry<Long, IEvent[]> e = events.floorEntry(time);
 		if (e == null)
 			return new IEvent[] {};
@@ -133,27 +128,58 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	}
 
 	/**
+	 * Gets the width.
+	 *
+	 * @return the width
+	 */
+	@Override
+	public int getRowCount() {
+		if (rowCount<0)
+			calculateConcurrency();
+		return rowCount;
+	}
+
+	/**
 	 * Calculate concurrency.
 	 */
-	synchronized void calculateConcurrency() {
-		if (concurrencyCalculated)
+	void calculateConcurrency() {
+		if (rowCount>=0)
 			return;
-		ArrayList<Long> rowendtime = new ArrayList<>();
-		events.entrySet().stream().forEach(entry -> {
-			IEvent[] values = entry.getValue();
-			Arrays.asList(values).stream().filter(e -> e.getKind() == EventKind.BEGIN).forEach(evt -> {
-				Tx tx = (Tx) ((TxEvent) evt).getTransaction();
+		ArrayList<Long> rowEndTime = new ArrayList<>();
+		HashMap<Long, Integer> rowByTxId = new HashMap<>();
+		for(Entry<Long, IEvent[]> entry: events.entrySet()) {
+			for(IEvent evt:entry.getValue()) {
+				TxEvent txEvt = (TxEvent) evt;
+				ITx tx = txEvt.getTransaction();
 				int rowIdx = 0;
-				for (; rowIdx < rowendtime.size() && rowendtime.get(rowIdx) > tx.getBeginTime(); rowIdx++)
-					;
-				if (rowendtime.size() <= rowIdx)
-					rowendtime.add(tx.getEndTime());
-				else
-					rowendtime.set(rowIdx, tx.getEndTime());
-				tx.setConcurrencyIndex(rowIdx);
-			});
-		});
-		concurrencyCalculated = true;
+				switch(evt.getKind()) {
+				case END:
+					Long txId = txEvt.getTransaction().getId();
+					txEvt.setConcurrencyIndex(rowByTxId.get(txId));
+					rowByTxId.remove(txId);
+					break;
+				case SINGLE:
+					for (; rowIdx < rowEndTime.size() && rowEndTime.get(rowIdx)>tx.getBeginTime(); rowIdx++);
+					if (rowEndTime.size() <= rowIdx)
+						rowEndTime.add(tx.getEndTime());
+					else
+						rowEndTime.set(rowIdx, tx.getEndTime());
+					((TxEvent) evt).setConcurrencyIndex(rowIdx);
+					break;
+				case BEGIN:
+					for (; rowIdx < rowEndTime.size() && rowEndTime.get(rowIdx)>tx.getBeginTime(); rowIdx++);
+					if (rowEndTime.size() <= rowIdx)
+						rowEndTime.add(tx.getEndTime());
+					else
+						rowEndTime.set(rowIdx, tx.getEndTime());
+					((TxEvent) evt).setConcurrencyIndex(rowIdx);
+					rowByTxId.put(tx.getId(), rowIdx);
+					break;
+				}
+			}
+		}
+		rowCount=rowEndTime.size()>0?rowEndTime.size():1;
+		getChildNodes().parallelStream().forEach(c -> ((TxGenerator)c).calculateConcurrency());
 	}
 
 }

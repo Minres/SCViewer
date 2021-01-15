@@ -15,12 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.tx.ITxGenerator;
 
 /**
  * The Class TxGenerator.
  */
-class TxGenerator extends AbstractTxStream implements ITxGenerator {
+class TxGenerator extends AbstractTxStream {
 
 	/** The stream. */
 	TxStream stream;
@@ -43,16 +42,6 @@ class TxGenerator extends AbstractTxStream implements ITxGenerator {
 		super(loader, id, name);
 		this.stream = stream;
 		stream.addChild(this);
-	}
-
-	/**
-	 * Gets the stream.
-	 *
-	 * @return the stream
-	 */
-	@Override
-	public IWaveform getStream() {
-		return stream;
 	}
 
 	/**
@@ -94,13 +83,4 @@ class TxGenerator extends AbstractTxStream implements ITxGenerator {
 		return stream.getKind();
 	}
 
-	/**
-	 * Gets the width.
-	 *
-	 * @return the width
-	 */
-	@Override
-	public int getWidth() {
-		return stream.getWidth();
-	}
 }

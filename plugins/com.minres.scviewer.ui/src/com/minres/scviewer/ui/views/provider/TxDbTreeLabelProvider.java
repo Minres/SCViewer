@@ -77,7 +77,7 @@ public class TxDbTreeLabelProvider implements ILabelProvider {
 			case FILTER:
 				break;
 			case SIGNAL:
-				if(((IWaveform) element).getWidth()==1)
+				if(((IWaveform) element).getRowCount()==1)
 					return signal;
 				else 
 					return wave;

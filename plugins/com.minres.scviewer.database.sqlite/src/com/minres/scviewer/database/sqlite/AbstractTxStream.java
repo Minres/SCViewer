@@ -39,14 +39,14 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 
 	private List<RelationType> usedRelationsList;
 
-	public AbstractTxStream(IDatabase database, String name, long streamId) {
+	protected AbstractTxStream(IDatabase database, String name, long streamId) {
 		super(name);
 		this.database=database;
 		this.streamId=streamId;
 	}
 
 	@Override
-	public int getWidth() {
+	public int getRowCount() {
 		if(maxConcurrency==null){
 			StringBuilder sb = new StringBuilder();
 			sb.append("SELECT MAX(concurrencyLevel) as concurrencyLevel FROM ScvTx where stream=");
@@ -125,5 +125,12 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	public WaveformType getType() {
 		return WaveformType.TRANSACTION;
 	}
+
+	/**
+	 * Calculate concurrency.
+	 */
+	public void calculateConcurrency() {
+	}
+
 
 }

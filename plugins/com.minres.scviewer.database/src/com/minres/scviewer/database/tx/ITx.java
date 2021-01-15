@@ -39,7 +39,7 @@ public interface ITx extends Comparable<ITx> {
 	 *
 	 * @return the generator
 	 */
-	public ITxGenerator getGenerator();
+	public IWaveform getGenerator();
 
 	/**
 	 * Gets the begin time.
@@ -54,13 +54,6 @@ public interface ITx extends Comparable<ITx> {
 	 * @return the end time
 	 */
 	public Long getEndTime();
-
-	/**
-	 * Gets the concurrency index.
-	 *
-	 * @return the concurrency index
-	 */
-	public int getConcurrencyIndex();
 
 	/**
 	 * Gets the attributes.

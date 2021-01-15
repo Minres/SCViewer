@@ -30,4 +30,12 @@ public interface ITxEvent extends IEvent {
 	 * @return the transaction
 	 */
 	public ITx getTransaction();
+
+	/**
+	 * Gets the concurrency index.
+	 *
+	 * @return the concurrency index
+	 */
+	public int getRowIndex();
+
 }

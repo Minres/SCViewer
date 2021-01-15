@@ -482,6 +482,7 @@ public class HeapStatus extends Composite {
 				});
 			}
 		};
+		t.setDaemon(true);
 		t.start();
 	}
 

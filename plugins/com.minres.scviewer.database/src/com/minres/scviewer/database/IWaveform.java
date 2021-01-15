@@ -12,6 +12,7 @@ package com.minres.scviewer.database;
 
 import java.util.NavigableMap;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Interface IWaveform.
  *
@@ -76,6 +77,6 @@ public interface IWaveform extends IHierNode {
 	 *
 	 * @return the width
 	 */
-	public int getWidth();
-
+	public int getRowCount();
+	
 }

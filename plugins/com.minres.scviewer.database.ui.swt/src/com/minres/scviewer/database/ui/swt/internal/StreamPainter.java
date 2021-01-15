@@ -10,10 +10,9 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
-import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-import java.util.TreeSet;
+import java.util.TreeMap;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -37,19 +36,18 @@ public class StreamPainter extends TrackPainter{
 	private IWaveform stream;
 	private int txBase;
 	private int txHeight;
-	private TreeSet<ITx> seenTx;
+	private TreeMap<ITx, ITxEvent> seenTx;
 
 	public StreamPainter(WaveformCanvas waveCanvas, boolean even, TrackEntry trackEntry) {
 		super(trackEntry, even);
 		this.waveCanvas = waveCanvas;
 		this.stream=trackEntry.waveform;
-		this.seenTx=new TreeSet<>();
+		this.seenTx=new TreeMap<>();
 	}
 
-	@SuppressWarnings("unchecked")
 	public void paintArea(Projection proj, Rectangle area) {
 		if(stream.getEvents().size()==0) return;
-		int trackHeight=trackEntry.height/stream.getWidth();
+		int trackHeight=trackEntry.height/stream.getRowCount();
 		txBase=trackHeight/5;
 		txHeight=trackHeight*3/5;
 		if(trackEntry.selected) {
@@ -65,8 +63,8 @@ public class StreamPainter extends TrackPainter{
 		long beginTime = beginPos*scaleFactor;
 		long endTime = beginTime + area.width*scaleFactor;
 
-		Entry<Long, ?> firstTx=stream.getEvents().floorEntry(beginTime);
-		Entry<Long, ?> lastTx=stream.getEvents().ceilingEntry(endTime);
+		Entry<Long,  IEvent[]> firstTx=stream.getEvents().floorEntry(beginTime);
+		Entry<Long,  IEvent[]> lastTx=stream.getEvents().ceilingEntry(endTime);
 		if(firstTx==null) firstTx = stream.getEvents().firstEntry();
 		if(lastTx==null) lastTx=stream.getEvents().lastEntry();
 		proj.setFillRule(SWT.FILL_EVEN_ODD);
@@ -77,46 +75,51 @@ public class StreamPainter extends TrackPainter{
 		for( int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
 			proj.drawLine(area.x, y1, area.x+area.width, y1);
 		if(firstTx==lastTx) {
-			for(ITxEvent txEvent:(Collection<?  extends ITxEvent>)firstTx.getValue())
-				drawTx(proj, area, txEvent.getTransaction(), false);
+			for(IEvent txEvent: firstTx.getValue())
+				drawTx(proj, area, ((ITxEvent)txEvent).getTransaction(), ((ITxEvent)txEvent).getRowIndex(), false);
 		}else{
 			seenTx.clear();
 			NavigableMap<Long, IEvent[]> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
-			boolean highlighed=false;
+			ITxEvent highlighed=null;
 			proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 			long selectedId=waveCanvas.currentSelection!=null? waveCanvas.currentSelection.getId():-1;
 			for(Entry<Long, IEvent[]> entry: entries.entrySet())
-				for(IEvent evt:entry.getValue()){
-					ITx tx = ((ITxEvent) evt).getTransaction();
-					highlighed|=selectedId==tx.getId();
+				for(IEvent e:entry.getValue()){
+					ITxEvent evt = (ITxEvent) e;
+					ITx tx = evt.getTransaction();
+					if(selectedId==tx.getId())
+						highlighed=evt;
 					switch(evt.getKind()) {
 					case BEGIN:
-						seenTx.add(tx);
+						seenTx.put(tx, evt);
 						break;
 					case END:
+						drawTx(proj, area, tx, evt.getRowIndex(), false);
 						seenTx.remove(tx);
+						break;
 					case SINGLE:
-						drawTx(proj, area, tx, false);
+						drawTx(proj, area, tx, evt.getRowIndex(), false);
 						break;
 					}
 				}
-			for(ITx tx:seenTx){
-				drawTx(proj, area, tx, false);
-			}
-			if(highlighed){
+			seenTx.entrySet().stream().forEach(e -> {
+				drawTx(proj, area, e.getKey(), e.getValue().getRowIndex(), false);
+			});
+			
+			if(highlighed!=null){
 				proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE_HIGHLITE));
-				drawTx(proj, area, waveCanvas.currentSelection, true);
+				drawTx(proj, area, highlighed.getTransaction(), highlighed.getRowIndex(), true);
 			}
 		}
 	}
 
-	protected void drawTx(Projection proj, Rectangle area, ITx tx, boolean highlighted ) {
+	protected void drawTx(Projection proj, Rectangle area, ITx tx, int concurrencyIndex, boolean highlighted ) {
 		// compute colors
 		Color[] transColor = waveCanvas.styleProvider.computeColor( tx.getGenerator().getName());
 
 		proj.setBackground(transColor[highlighted?1:0]);
 
-		int offset = tx.getConcurrencyIndex()*this.waveCanvas.styleProvider.getTrackHeight();
+		int offset = concurrencyIndex*this.waveCanvas.styleProvider.getTrackHeight();
 		Rectangle bb = new Rectangle(
 				(int)(tx.getBeginTime()/this.waveCanvas.getScaleFactor()), area.y+offset+txBase,
 				(int)((tx.getEndTime()-tx.getBeginTime())/this.waveCanvas.getScaleFactor()), txHeight);
@@ -164,25 +167,19 @@ public class StreamPainter extends TrackPainter{
 
 	protected ITx getTxFromEntry(int lane, int offset, Entry<Long, IEvent[]> firstTx) {
 		long timePoint=offset*waveCanvas.getScaleFactor();
-		for(IEvent evt:firstTx.getValue()){
-			if(evt instanceof ITxEvent) {
-				ITx tx=((ITxEvent)evt).getTransaction();
-				if((evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)&&
-						tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePoint && tx.getEndTime()>=timePoint){
-					return ((ITxEvent)evt).getTransaction();
-				}
-			}
-		}
-		// now with some fuzziness
-		timePoint=(offset-5)*waveCanvas.getScaleFactor();
+		long timePointLow=(offset-5)*waveCanvas.getScaleFactor();
 		long timePointHigh=(offset+5)*waveCanvas.getScaleFactor();
-		for(IEvent evt:firstTx.getValue()){
-			if(evt instanceof ITxEvent) {
-				ITx tx=((ITxEvent)evt).getTransaction();
-				if((evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE) &&
-						tx.getConcurrencyIndex()==lane && tx.getBeginTime()<=timePointHigh && tx.getEndTime()>=timePoint){
-					return ((ITxEvent)evt).getTransaction();
-				}
+		for(IEvent e:firstTx.getValue()){
+			if(e instanceof ITxEvent) {
+				ITxEvent evt = (ITxEvent) e;
+				ITx tx=evt.getTransaction();
+				if(
+						(evt.getKind()==EventKind.SINGLE && evt.getTime()==timePoint) ||
+						(evt.getKind()==EventKind.SINGLE && evt.getTime()>timePointLow && evt.getTime()<timePointHigh) ||
+						(evt.getKind()==EventKind.BEGIN && evt.getRowIndex()==lane && evt.getTime()<=timePoint && tx.getEndTime()>=timePoint)
+						){
+					return tx;
+				} 
 			}
 		}
 		return null;

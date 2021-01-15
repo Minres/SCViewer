@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
-import com.minres.scviewer.database.tx.ITxGenerator;
 import com.minres.scviewer.database.tx.ITxRelation;
 
 /**
@@ -29,18 +28,21 @@ class Tx implements ITx {
 
 	/** The loader. */
 	private final TextDbLoader loader;
+	
+	private ScvTx scvTx =null;
 
 	/** The id. */
-	private long id;
+	private final long id;
+
+	private final long generatorId;
+
+	private final long streamId;
 
 	/** The begin time. */
 	long beginTime = -1;
 
 	/** The end time. */
 	long endTime = -1;
-
-	/** The concurrency index. */
-	private int concurrencyIndex;
 
 	/**
 	 * Instantiates a new tx.
@@ -51,6 +53,10 @@ class Tx implements ITx {
 	public Tx(TextDbLoader loader, ScvTx scvTx) {
 		this.loader = loader;
 		id = scvTx.id;
+		generatorId=scvTx.generatorId;
+		streamId=scvTx.streamId;
+		beginTime=scvTx.beginTime;
+		endTime=scvTx.endTime;
 	}
 
 	/**
@@ -59,9 +65,11 @@ class Tx implements ITx {
 	 * @param loader the loader
 	 * @param txId   the tx id
 	 */
-	public Tx(TextDbLoader loader, long txId) {
+	public Tx(TextDbLoader loader, long id, long generatorId,  long streamId) {
 		this.loader = loader;
-		id = txId;
+		this.id = id;
+		this.generatorId=generatorId;
+		this.streamId = streamId;
 	}
 
 	/**
@@ -113,7 +121,7 @@ class Tx implements ITx {
 			return true;
 		if (obj == null || getClass() != obj.getClass())
 			return false;
-		return this.loader.getScvTx(id).equals(((Tx) obj).loader.getScvTx(id));
+		return this.getScvTx().equals(((Tx) obj).getScvTx());
 	}
 
 	/**
@@ -123,7 +131,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public int hashCode() {
-		return loader.getScvTx(id).hashCode();
+		return getScvTx().hashCode();
 	}
 
 	/**
@@ -143,7 +151,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public Long getId() {
-		return loader.getScvTx(id).id;
+		return getScvTx().id;
 	}
 
 	/**
@@ -153,7 +161,7 @@ class Tx implements ITx {
 	 */
 	@Override
 	public IWaveform getStream() {
-		return loader.txStreams.get(loader.getScvTx(id).streamId);
+		return loader.txStreams.get(streamId);
 	}
 
 	/**
@@ -162,8 +170,8 @@ class Tx implements ITx {
 	 * @return the generator
 	 */
 	@Override
-	public ITxGenerator getGenerator() {
-		return loader.txGenerators.get(loader.getScvTx(id).generatorId);
+	public IWaveform getGenerator() {
+		return loader.txGenerators.get(generatorId);
 	}
 
 	/**
@@ -173,8 +181,11 @@ class Tx implements ITx {
 	 */
 	@Override
 	public Long getBeginTime() {
-		if (beginTime < 0)
-			beginTime = loader.getScvTx(id).beginTime;
+		if (beginTime < 0) {
+			ScvTx tx = scvTx==null?loader.getScvTx(id):getScvTx();
+			beginTime = tx.beginTime;
+			endTime = tx.endTime;
+		}
 		return beginTime;
 	}
 
@@ -185,8 +196,11 @@ class Tx implements ITx {
 	 */
 	@Override
 	public Long getEndTime() {
-		if (endTime < 0)
-			endTime = loader.getScvTx(id).endTime;
+		if (endTime < 0) {
+			ScvTx tx = scvTx==null?loader.getScvTx(id):getScvTx();
+			beginTime = tx.beginTime;
+			endTime = tx.endTime;
+		}
 		return endTime;
 	}
 
@@ -196,26 +210,7 @@ class Tx implements ITx {
 	 * @param time the new end time
 	 */
 	void setEndTime(Long time) {
-		loader.getScvTx(id).endTime = time;
-	}
-
-	/**
-	 * Gets the concurrency index.
-	 *
-	 * @return the concurrency index
-	 */
-	@Override
-	public int getConcurrencyIndex() {
-		return concurrencyIndex;
-	}
-
-	/**
-	 * Sets the concurrency index.
-	 *
-	 * @param idx the new concurrency index
-	 */
-	void setConcurrencyIndex(int idx) {
-		concurrencyIndex = idx;
+		getScvTx().endTime = time;
 	}
 
 	/**
@@ -225,7 +220,12 @@ class Tx implements ITx {
 	 */
 	@Override
 	public List<ITxAttribute> getAttributes() {
-		return loader.getScvTx(id).attributes;
+		return getScvTx().attributes;
 	}
 
+	private ScvTx getScvTx() {
+		if(scvTx==null)
+			scvTx=loader.getScvTx(id);
+		return scvTx;
+	}
 }

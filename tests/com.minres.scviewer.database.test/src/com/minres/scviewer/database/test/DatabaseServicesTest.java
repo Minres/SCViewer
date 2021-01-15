@@ -25,28 +25,15 @@ import org.junit.Test;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
-import com.minres.scviewer.database.IWaveformDbFactory;
 
 public class DatabaseServicesTest {
 
 
-	private static IWaveformDbFactory waveformDbFactory;
-
 	private IWaveformDb waveformDb;
-	
-	public synchronized void setFactory(IWaveformDbFactory service) {
-		waveformDbFactory = service;
-	}
-
-	public synchronized void unsetFactory(IWaveformDbFactory service) {
-		if (waveformDbFactory == service) {
-			waveformDbFactory = null;
-		}
-	}
-	
+		
 	@Before
 	public void setUp() throws Exception {
-		waveformDb=waveformDbFactory.getDatabase();
+		waveformDb=TestWaveformDbFactory.getDatabase();
 	}
 
 	@After
@@ -91,11 +78,11 @@ public class DatabaseServicesTest {
 		assertEquals(1,  waveformDb.getChildNodes().size());
 		for(IWaveform w:waveforms) {
 			if(w.getId().equals(1l)) {
-				assertEquals(2, w.getWidth());
+				assertEquals(2, w.getRowCount());
 			} else if(w.getId().equals(2l)) {
-				assertEquals(1, w.getWidth());
+				assertEquals(1, w.getRowCount());
 			} else if(w.getId().equals(3l)) {
-				assertEquals(1, w.getWidth());
+				assertEquals(1, w.getRowCount());
 			}
 		}
 	}

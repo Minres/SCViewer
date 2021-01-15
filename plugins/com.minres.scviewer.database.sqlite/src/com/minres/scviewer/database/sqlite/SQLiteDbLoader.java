@@ -99,7 +99,6 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 
 	@Override
 	public void load(IWaveformDb db, File file) throws InputFormatException {
-		dispose();
 		database=new SQLiteDatabase(file.getAbsolutePath(), db);
 		database.setData("TIMERESOLUTION", 1L);
 		SQLiteDatabaseSelectHandler<ScvSimProps> handler = new SQLiteDatabaseSelectHandler<>(ScvSimProps.class, database);

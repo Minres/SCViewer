@@ -52,12 +52,17 @@ public class TxDbLabelProvider implements ILabelProvider {
 	/**
 	 * Instantiates a new tx db label provider.
 	 */
-	public TxDbLabelProvider() {
+	public TxDbLabelProvider(boolean isTree) {
 		super();
 		loadinDatabase=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/database_go.png"); //$NON-NLS-1$ //$NON-NLS-2$
 		database=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/database.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		stream=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/stream.png"); //$NON-NLS-1$ //$NON-NLS-2$
 		folder=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/folder.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		if(isTree) {
+			stream=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/stream_hier.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			stream=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/stream.png"); //$NON-NLS-1$ //$NON-NLS-2$
+			
+		}
 		signal=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/signal.png"); //$NON-NLS-1$ //$NON-NLS-2$
 		wave=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/wave.png"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
@@ -134,7 +139,7 @@ public class TxDbLabelProvider implements ILabelProvider {
 			case FILTER:
 				break;
 			case SIGNAL:
-				if(((IWaveform) element).getWidth()==1)
+				if(((IWaveform) element).getRowCount()==1)
 					return signal;
 				else 
 					return wave;
@@ -159,7 +164,13 @@ public class TxDbLabelProvider implements ILabelProvider {
 	 */
 	@Override
 	public String getText(Object element) {
-		return ((IHierNode)element).getName();
+		if(element instanceof IWaveformDb){
+			IWaveformDb db = (IWaveformDb) element;
+			if(db.getName()== null)
+				return "";
+			return db.getName()+(db.isLoaded()?"":" (loading)");
+		} else
+			return ((IHierNode)element).getName();
 	}
 
 }

@@ -123,31 +123,31 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 */
 	@Override
 	public boolean load(File inp) {
+		boolean retval = true;
 		for (IWaveformDbLoader loader : loaders) {
 			if (loader.canLoad(inp)) {
+				loader.addPropertyChangeListener(this);
 				try {
-					loader.addPropertyChangeListener(this);
 					loader.load(this, inp);
-					loader.removePropertyChangeListener(this);
-					for (IWaveform w : loader.getAllWaves()) {
-						waveforms.put(w.getFullName(), w);
-					}
-					if (loader.getMaxTime() > maxTime) {
-						maxTime = loader.getMaxTime();
-					}
-					if (name == null)
-						name = getFileBasename(inp.getName());
-					buildHierarchyNodes();
-					relationTypes.addAll(loader.getAllRelationTypes());
-					pcs.firePropertyChange(IHierNode.LOADING_FINISHED, null, null);
-					loaded = true;
-					return true;
 				} catch (Exception e) {
-					return false;
+					retval=false;
 				}
+				loader.removePropertyChangeListener(this);
+				for (IWaveform w : loader.getAllWaves()) {
+					waveforms.put(w.getFullName(), w);
+				}
+				if (loader.getMaxTime() > maxTime) {
+					maxTime = loader.getMaxTime();
+				}
+				if (name == null)
+					name = getFileBasename(inp.getName());
+				buildHierarchyNodes();
+				relationTypes.addAll(loader.getAllRelationTypes());
 			}
 		}
-		return false;
+		pcs.firePropertyChange(IHierNode.LOADING_FINISHED, null, null);
+		loaded = true;
+		return retval;
 	}
 
 	/**
