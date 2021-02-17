@@ -226,14 +226,13 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 					break;
 				}
 			}
-			if (childNode != null) {
+			if (childNode == null) {
+				HierNode newNode = new HierNode(name, node);
+				node.addChild(newNode);
+				node = newNode;
+			} else {
 				node = childNode;
-				break;
 			}
-			HierNode newNode = new HierNode(name, node);
-			node.addChild(newNode);
-			node = newNode;
-
 		}
 		node.addChild(waveform);
 		waveform.setParent(node);
