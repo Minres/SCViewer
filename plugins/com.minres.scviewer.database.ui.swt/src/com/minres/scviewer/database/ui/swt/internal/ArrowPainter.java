@@ -38,7 +38,7 @@ public class ArrowPainter implements IPainter {
 
 	private int yCtrlOffset = 30;
 
-	private WaveformCanvas waveCanvas;
+	private final WaveformCanvas waveCanvas;
 
 	private ITx tx;
 
@@ -53,8 +53,6 @@ public class ArrowPainter implements IPainter {
 	private long selectionOffset;
 	
 	long scaleFactor;
-
-	boolean deferUpdate;
 
 	public ArrowPainter(WaveformCanvas waveCanvas, RelationType relationType) {
 		this.waveCanvas = waveCanvas;
@@ -90,15 +88,15 @@ public class ArrowPainter implements IPainter {
 		return res.isPresent()? res.get():0;
 	}
 	
-	protected void calculateGeometries() {
-		deferUpdate = false;
+	protected boolean calculateGeometries() {
 		iRect.clear();
 		oRect.clear();
 		IWaveformPainter painter = waveCanvas.wave2painterMap.get(tx.getStream());
+		if(painter == null)
+			painter = waveCanvas.wave2painterMap.get(tx.getGenerator());
 		if (painter == null) { // stream has been added but painter not yet
 								// created
-			deferUpdate = true;
-			return;
+			return true;
 		}
 		int laneHeight = painter.getHeight() / tx.getStream().getRowCount();
 		txRectangle = new Rectangle((int) (tx.getBeginTime() / scaleFactor),
@@ -106,6 +104,7 @@ public class ArrowPainter implements IPainter {
 				(int) ((tx.getEndTime() - tx.getBeginTime()) / scaleFactor), laneHeight);
 		deriveGeom(tx.getIncomingRelations(), iRect, false);
 		deriveGeom(tx.getOutgoingRelations(), oRect, true);
+		return false;
 	}
 
 	protected void deriveGeom(Collection<ITxRelation> relations, List<LinkEntry> res, boolean useTarget) {
@@ -160,11 +159,9 @@ public class ArrowPainter implements IPainter {
 		Color highliteColor = waveCanvas.styleProvider.getColor(WaveformColors.REL_ARROW_HIGHLITE);
 
 		if(tx==null) return;
-		if (!deferUpdate) {
-			scaleFactor = waveCanvas.getScaleFactor();
-			calculateGeometries();
-		}
-		if(deferUpdate) return;
+		scaleFactor = waveCanvas.getScaleFactor();
+		if(calculateGeometries())
+			return;
 		int correctionValue = (int)(selectionOffset);
 		Rectangle correctedTargetRectangle = new Rectangle(txRectangle.x+correctionValue, txRectangle.y, txRectangle.width, txRectangle.height);
 		for (LinkEntry entry : iRect) {

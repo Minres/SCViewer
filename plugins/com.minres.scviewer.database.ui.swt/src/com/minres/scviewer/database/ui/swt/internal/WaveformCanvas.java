@@ -179,10 +179,10 @@ public class WaveformCanvas extends Canvas {
 
     public void setZoomLevel(int level, long centerTime) {
     	//FIXME: keep center if zoom-out and cursor is not in view
-    	long oldScaleFactor=scaleFactor;
     	if(level<0) level = 0;
+		long xc=centerTime/this.scaleFactor; // cursor total x-offset
     	if(level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length){
-    		this.scaleFactor = (long) Math.pow(10, level/2d);
+    		this.scaleFactor = (long) Math.pow(10, level>>1);
     		if(level%2==1) this.scaleFactor*=3;
     		ITx tx = arrowPainter.getTx();
     		arrowPainter.setTx(null);
@@ -192,7 +192,6 @@ public class WaveformCanvas extends Canvas {
     		 * xcn = tc/newScaleFactor
     		 * t0n = (xcn-xoffs)*scaleFactor
     		 */
-			long xc=centerTime/oldScaleFactor; // cursor total x-offset
 			long xoffs=xc+origin.x; // cursor offset relative to left border
 			long xcn=centerTime/scaleFactor; // new total x-offset
 			long originX=xcn-xoffs;
