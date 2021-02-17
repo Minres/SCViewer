@@ -19,7 +19,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 public class RulerPainter implements IPainter {
-    protected WaveformCanvas waveCanvas;
+    protected final WaveformCanvas waveCanvas;
     
     static final int RULER_TICK_MINOR = 10;
     static final int RULER_TICK_MAJOR = 100;

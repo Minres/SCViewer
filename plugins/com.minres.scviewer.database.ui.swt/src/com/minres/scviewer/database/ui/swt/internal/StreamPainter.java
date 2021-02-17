@@ -46,8 +46,16 @@ public class StreamPainter extends TrackPainter{
 	}
 
 	public void paintArea(Projection proj, Rectangle area) {
-		if(stream.getEvents().size()==0) return;
 		int trackHeight=trackEntry.height/stream.getRowCount();
+		if(stream.getEvents().size()==0) {
+			proj.setFillRule(SWT.FILL_EVEN_ODD);
+			proj.setLineStyle(SWT.LINE_SOLID);
+			proj.setLineWidth(1);
+			proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
+			for( int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
+				proj.drawLine(area.x, y1, area.x+area.width, y1);
+			return;
+		}
 		txBase=trackHeight/5;
 		txHeight=trackHeight*3/5;
 		if(trackEntry.selected) {
