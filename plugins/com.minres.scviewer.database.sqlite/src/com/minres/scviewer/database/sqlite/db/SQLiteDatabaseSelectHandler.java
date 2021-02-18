@@ -75,10 +75,11 @@ public class SQLiteDatabaseSelectHandler<T> extends AbstractDatabaseHandler<T> {
 	 * @throws IllegalAccessException
 	 * @throws IntrospectionException
 	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException 
 	 */
 	public synchronized List<T> selectObjects() throws SQLException,
 			InstantiationException, IllegalAccessException,
-			IntrospectionException, InvocationTargetException {
+			IntrospectionException, InvocationTargetException, IllegalArgumentException, NoSuchMethodException, SecurityException {
 
 		Connection connection = null;
 		Statement statement = null;
@@ -113,17 +114,18 @@ public class SQLiteDatabaseSelectHandler<T> extends AbstractDatabaseHandler<T> {
 	 * @throws IllegalAccessException
 	 * @throws IntrospectionException
 	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException 
 	 */
 	private List<T> createObjects(ResultSet resultSet)
 			throws SQLException, InstantiationException,
 			IllegalAccessException, IntrospectionException,
-			InvocationTargetException {
+			InvocationTargetException, IllegalArgumentException, NoSuchMethodException, SecurityException {
 
 		List<T> list = new ArrayList<>();
 
 		while (resultSet.next()) {
 
-			T instance = type.newInstance();
+			T instance = type.getDeclaredConstructor().newInstance();
 
 			for (Field field : type.getDeclaredFields()) {
 

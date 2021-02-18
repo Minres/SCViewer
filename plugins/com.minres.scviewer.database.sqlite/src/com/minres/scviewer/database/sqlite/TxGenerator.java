@@ -69,7 +69,7 @@ public class TxGenerator extends AbstractTxStream {
 					transactions.put(scvTx.getId(), new Tx(database, (TxStream) stream, this, scvTx));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
 		}

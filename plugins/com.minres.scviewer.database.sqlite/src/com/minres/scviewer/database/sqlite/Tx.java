@@ -78,7 +78,7 @@ public class Tx implements ITx {
 				begin= scvEvent.getTime()*(Long)database.getData("TIMERESOLUTION");
 			}
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException e) {
+				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 		}
 		}
 		return begin;
@@ -94,7 +94,7 @@ public class Tx implements ITx {
 				end = scvEvent.getTime()*(Long)database.getData("TIMERESOLUTION");
 			}
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException e) {
+				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 		}
 		}
 		return end;
@@ -112,7 +112,7 @@ public class Tx implements ITx {
 					
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			}
 		}
 		return attributes;
@@ -129,7 +129,7 @@ public class Tx implements ITx {
 					incoming.add(createRelation(scvRelation, false));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			}
 		}
 		return incoming;
@@ -146,7 +146,7 @@ public class Tx implements ITx {
 					outgoing.add(createRelation(scvRelation, true));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			}
 		}
 		return outgoing;
@@ -169,7 +169,7 @@ public class Tx implements ITx {
 			else
 				return new TxRelation(trStream.getRelationType(rel.getName()), that, this);
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException e) {
+				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			e.printStackTrace();
 		}
 
