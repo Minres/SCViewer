@@ -63,7 +63,7 @@ public class TxStream extends AbstractTxStream {
 					generators.put(scvGenerator.getId(), new TxGenerator(database, this, scvGenerator));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
 		}
@@ -81,7 +81,7 @@ public class TxStream extends AbstractTxStream {
 					transactions.put(scvTx.getId(), new Tx(database, this, generators.get(scvTx.getGenerator()), scvTx));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
 		}

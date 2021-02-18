@@ -56,7 +56,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 			if(!event.isEmpty())
 				return event.get(0).getTime()*scvSimProps.getTime_resolution();
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException e) {
+				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			e.printStackTrace();
 		}
 		return 0L;
@@ -73,7 +73,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 				streams.add(stream);
 			}
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException e) {
+				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 		}
 		return streams;
 	}
@@ -109,7 +109,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 			}
 			pcs.firePropertyChange(IWaveformDbLoader.LOADING_FINISHED, null, null);
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException e) {
+				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			throw new InputFormatException(e.toString());
 		}
 	}
