@@ -30,6 +30,8 @@ import com.minres.scviewer.database.tx.ITxEvent;
  */
 abstract class AbstractTxStream extends HierNode implements IWaveform {
 
+	private final String fullName;
+
 	/** The id. */
 	private Long id;
 
@@ -51,10 +53,20 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 */
 	protected AbstractTxStream(TextDbLoader loader, Long id, String name) {
 		super(name);
+		fullName=name;
 		this.loader = loader;
 		this.id = id;
 	}
 
+	/**
+	 * Gets the full hierarchical name.
+	 *
+	 * @return the full name
+	 */
+	@Override
+	public String getFullName() {
+		return  fullName;
+	}
 	/**
 	 * Adds the event.
 	 *
