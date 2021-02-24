@@ -133,10 +133,11 @@ public class DesignBrowser {
 				treeViewer.refresh();
 			});
 		} else if(IHierNode.LOADING_FINISHED.equals(evt.getPropertyName())) {
-			treeViewer.getTree().getDisplay().asyncExec(() -> {
-				treeViewer.update(waveformViewerPart.getDatabase(), null);
-				DesignBrowser.this.updateButtons();
-			});
+			if(!treeViewer.getControl().isDisposed())
+				treeViewer.getTree().getDisplay().asyncExec(() -> {
+					treeViewer.update(waveformViewerPart.getDatabase(), null);
+					DesignBrowser.this.updateButtons();
+				});
 		}
 	};
 
@@ -596,6 +597,7 @@ public class DesignBrowser {
 		 * Apply.
 		 */
 		public void apply() {
+			if(treeViewer.getControl().isDisposed()) return;
 			treeViewer.setExpandedElements(expandedElements);
 			treeViewer.setSelection(treeSelection, true);
 			txTableViewer.setSelection(tableSelection, true);
