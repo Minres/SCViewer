@@ -11,7 +11,6 @@
 package com.minres.scviewer.database.ui.swt.internal;
 
 import java.util.Map.Entry;
-import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import org.eclipse.swt.SWT;
@@ -21,6 +20,7 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
@@ -36,6 +36,7 @@ public class StreamPainter extends TrackPainter{
 	private IWaveform stream;
 	private int txBase;
 	private int txHeight;
+	// TODO: remove TreeMap usage
 	private TreeMap<ITx, ITxEvent> seenTx;
 
 	public StreamPainter(WaveformCanvas waveCanvas, boolean even, TrackEntry trackEntry) {
@@ -87,7 +88,7 @@ public class StreamPainter extends TrackPainter{
 				drawTx(proj, area, ((ITxEvent)txEvent).getTransaction(), ((ITxEvent)txEvent).getRowIndex(), false);
 		}else{
 			seenTx.clear();
-			NavigableMap<Long, IEvent[]> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
+			IEventList<Long, IEvent[]> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
 			ITxEvent highlighed=null;
 			proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 			long selectedId=waveCanvas.currentSelection!=null? waveCanvas.currentSelection.getId():-1;
@@ -157,7 +158,7 @@ public class StreamPainter extends TrackPainter{
 		Entry<Long, IEvent[]> firstTx=stream.getEvents().floorEntry(point.x*waveCanvas.getScaleFactor());
 		if(firstTx!=null){
 			do {
-				ITx tx = getTxFromEntry(lane, point.x, firstTx);
+				ITx tx = getTxFromEntry(lane, point.x, firstTx.getValue());
 				if(tx!=null) return tx;
 				firstTx=stream.getEvents().lowerEntry(firstTx.getKey());
 			}while(firstTx!=null);
@@ -173,11 +174,11 @@ public class StreamPainter extends TrackPainter{
 		this.stream = stream;
 	}
 
-	protected ITx getTxFromEntry(int lane, int offset, Entry<Long, IEvent[]> firstTx) {
+	protected ITx getTxFromEntry(int lane, int offset, IEvent[] firstTx) {
 		long timePoint=offset*waveCanvas.getScaleFactor();
 		long timePointLow=(offset-5)*waveCanvas.getScaleFactor();
 		long timePointHigh=(offset+5)*waveCanvas.getScaleFactor();
-		for(IEvent e:firstTx.getValue()){
+		for(IEvent e:firstTx){
 			if(e instanceof ITxEvent) {
 				ITxEvent evt = (ITxEvent) e;
 				ITx tx=evt.getTransaction();

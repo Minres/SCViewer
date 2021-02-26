@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -79,6 +78,7 @@ import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.WaveformType;
@@ -259,11 +259,11 @@ public class WaveformView implements IWaveformView {
 				Entry<Long, IEvent[]> ceilEntry = null;
 				if (o instanceof TrackEntry) {
 					TrackEntry entry = (TrackEntry) o;
-					NavigableMap<Long, IEvent[]> map = entry.waveform.getEvents();
+					IEventList<Long, IEvent[]> map = entry.waveform.getEvents();
 					floorEntry = map.floorEntry(time);
 					ceilEntry = map.ceilingEntry(time);
 				} else if (o instanceof ITx) {
-					NavigableMap<Long, IEvent[]> map = ((ITx) o).getStream().getEvents();
+					IEventList<Long, IEvent[]> map = ((ITx) o).getStream().getEvents();
 					floorEntry = map.floorEntry(time);
 					ceilEntry = map.ceilingEntry(time);
 				}
@@ -958,7 +958,7 @@ public class WaveformView implements IWaveformView {
 			return;
 		TrackEntry sel = currentWaveformSelection.get(0);
 		long time = getCursorTime();
-		NavigableMap<Long, ?> map = null;
+		IEventList<Long, ?> map = null;
 		if (sel.waveform.getType() == WaveformType.TRANSACTION || sel.waveform.getType() == WaveformType.SIGNAL) {
 			map = sel.waveform.getEvents();
 		}

@@ -13,7 +13,6 @@ package com.minres.scviewer.database.ui.swt.internal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
 
 import javax.swing.JPanel;
 
@@ -27,6 +26,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
@@ -112,7 +112,7 @@ public class SignalPainter extends TrackPainter {
 		proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 		proj.setLineStyle(SWT.LINE_SOLID);
 		proj.setLineWidth(1);
-		NavigableMap<Long, IEvent[]> entries = signal.getEvents().subMap(first.getKey(), false, last.getKey(), true);
+		IEventList<Long, IEvent[]> entries = signal.getEvents().subMap(first.getKey(), false, last.getKey(), true);
 		SignalChange left = new SignalChange(first);
 		SignalChange right = new SignalChange(entries.size() > 0 ? entries.firstEntry() : first);
 		maxPosX = area.x + area.width;
@@ -161,7 +161,7 @@ public class SignalPainter extends TrackPainter {
 		} while (left.time < endTime);
 	}
 
-	private SignalStencil getStencil(GC gc, SignalChange left, NavigableMap<Long, IEvent[]> entries) {
+	private SignalStencil getStencil(GC gc, SignalChange left, IEventList<Long, IEvent[]> entries) {
 		IEvent val = left.value;
 		if(val instanceof BitVector) {
 			BitVector bv = (BitVector) val;
@@ -253,7 +253,7 @@ public class SignalPainter extends TrackPainter {
 		private long maxVal;
 		private long minVal;
 		double yRange = (yOffsetB-yOffsetT);
-		public MultiBitStencilAnalog(NavigableMap<Long, IEvent[]> entries, Object left, boolean continous, boolean signed) {
+		public MultiBitStencilAnalog(IEventList<Long, IEvent[]> entries, Object left, boolean continous, boolean signed) {
 			this.continous=continous;
 			this.signed=signed;
 			Collection<IEvent[]> values = entries.values();
@@ -358,7 +358,7 @@ public class SignalPainter extends TrackPainter {
 		
 		boolean continous=true;
 		
-		public RealStencil(NavigableMap<Long, IEvent[]> entries, Object left, boolean continous) {
+		public RealStencil(IEventList<Long, IEvent[]> entries, Object left, boolean continous) {
 			this.continous=continous;
 			Collection<IEvent[]> values = entries.values();
 			minVal=(Double) left;
