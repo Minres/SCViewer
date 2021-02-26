@@ -14,12 +14,12 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
+import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.RelationTypeFactory;
@@ -35,7 +35,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	
 	private Integer maxConcurrency;
 
-	private TreeMap<Long, IEvent[]> events;
+	private IEventList<Long, IEvent[]> events;
 
 	private List<RelationType> usedRelationsList;
 
@@ -71,9 +71,9 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public  NavigableMap<Long, IEvent[]> getEvents(){
+	public  IEventList<Long, IEvent[]> getEvents(){
 		if(events==null){
-			events=new TreeMap<>();
+			events=new EventList<>();
 			for(Entry<Integer, ITx> entry:getTransactions().entrySet()){
 				putEvent(new TxEvent(EventKind.BEGIN, entry.getValue()));
 				putEvent(new TxEvent(EventKind.END, entry.getValue()));

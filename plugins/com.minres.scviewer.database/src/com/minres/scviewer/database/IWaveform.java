@@ -10,7 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
-import java.util.NavigableMap;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -40,7 +39,7 @@ public interface IWaveform extends IHierNode {
 	 *
 	 * @return the events
 	 */
-	public NavigableMap<Long, IEvent[]> getEvents();
+	public IEventList<Long, IEvent[]> getEvents();
 
 	/**
 	 * Gets the events at time.

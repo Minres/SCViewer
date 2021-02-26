@@ -15,11 +15,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
+import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.tx.ITx;
@@ -39,7 +39,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	protected TextDbLoader loader;
 
 	/** The events. */
-	TreeMap<Long, IEvent[]> events = new TreeMap<>();
+	IEventList<Long, IEvent[]> events = new EventList<Long, IEvent[]>();
 
 	/** The max concurrency. */
 	private int rowCount = -1;
@@ -89,7 +89,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the events
 	 */
 	@Override
-	public NavigableMap<Long, IEvent[]> getEvents() {
+	public IEventList<Long, IEvent[]> getEvents() {
 		return events;
 	}
 
