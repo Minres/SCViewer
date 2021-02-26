@@ -11,11 +11,11 @@
 package com.minres.scviewer.database.vcd;
 
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
+import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
 
@@ -27,7 +27,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	private final int width;
 
-	private NavigableMap<Long, IEvent[]> values;
+	private IEventList<Long, IEvent[]> values;
 	
 	public VCDSignal(String name) {
 		this(0, name, 1);
@@ -42,7 +42,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 		fullName=name;
 		this.id=id;
 		this.width=width;
-		this.values=new TreeMap<>();
+		this.values=new EventList<>();
 	}
 
 	public VCDSignal(VCDSignal<T> o, int id, String name) {
@@ -80,7 +80,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 	
 	@Override
-	public NavigableMap<Long, IEvent[]> getEvents() {
+	public IEventList<Long, IEvent[]> getEvents() {
 		return values;
 	}
 
