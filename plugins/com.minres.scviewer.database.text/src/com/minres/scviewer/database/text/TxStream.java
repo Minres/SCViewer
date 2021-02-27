@@ -42,7 +42,7 @@ class TxStream extends AbstractTxStream {
 	 */
 	@Override
 	public boolean isSame(IWaveform other) {
-		return (other instanceof TxStream && this.getId().equals(other.getId()));
+		return (other instanceof TxStream && this.getId() == other.getId());
 	}
 
 	/**

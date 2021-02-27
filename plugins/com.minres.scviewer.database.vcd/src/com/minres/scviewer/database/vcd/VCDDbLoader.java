@@ -146,7 +146,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	 * @see com.minres.scviewer.database.ITrDb#getMaxTime()
 	 */
 	@Override
-	public Long getMaxTime() {
+	public long getMaxTime() {
 		return maxTime;
 	}
 

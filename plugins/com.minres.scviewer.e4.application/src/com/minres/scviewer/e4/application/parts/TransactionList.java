@@ -260,7 +260,7 @@ public class TransactionList extends Composite {
 							tx.getAttributes().forEach(attr -> propNames.put(attr.getName(), attr.getDataType()));
 							return tx;
 						})
-						.sorted((t1, t2)-> t1.getBeginTime().compareTo(t2.getBeginTime()))
+						.sorted((t1, t2)-> Long.compare(t1.getBeginTime(),t2.getBeginTime()))
 						.collect(Collectors.toList());
 				final List<AttributeNameBean> newAttrNames=propNames.entrySet().stream()
 						.sorted((e1,e2)->e1.getKey().compareTo(e2.getKey()))

@@ -25,7 +25,7 @@ public interface ITx extends Comparable<ITx> {
 	 *
 	 * @return the id
 	 */
-	public Long getId();
+	public long getId();
 
 	/**
 	 * Gets the stream.
@@ -46,14 +46,14 @@ public interface ITx extends Comparable<ITx> {
 	 *
 	 * @return the begin time
 	 */
-	public Long getBeginTime();
+	public long getBeginTime();
 
 	/**
 	 * Gets the end time.
 	 *
 	 * @return the end time
 	 */
-	public Long getEndTime();
+	public long getEndTime();
 
 	/**
 	 * Gets the attributes.
