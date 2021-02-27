@@ -37,8 +37,8 @@ public class Tx implements ITx {
 	private TxGenerator trGenerator;
 	private ScvTx scvTx;
 	private List<ITxAttribute> attributes;
-	private Long begin;
-	private Long end;
+	private long begin=-1;
+	private long end=-1;
 	private List<ITxRelation> incoming;
 	private List<ITxRelation> outgoing;
 	
@@ -50,7 +50,7 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public Long getId() {
+	public long getId() {
 		return (long) scvTx.getId();
 	}
 
@@ -69,8 +69,8 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public Long getBeginTime() {
-		if(begin==null){
+	public long getBeginTime() {
+		if(begin<0){
 		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
 				database, "tx="+scvTx.getId()+" AND type="+ AssociationType.BEGIN.ordinal());
 		try {
@@ -85,8 +85,8 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public Long getEndTime() {
-		if(end==null){
+	public long getEndTime() {
+		if(end<0){
 		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
 				database, "tx="+scvTx.getId()+" AND type="+ AssociationType.END.ordinal());
 		try {
@@ -178,11 +178,11 @@ public class Tx implements ITx {
 
 	@Override
 	public int compareTo(ITx o) {
-		int res = this.getBeginTime().compareTo(o.getBeginTime());
+		int res = Long.compare(this.getBeginTime(), o.getBeginTime());
 		if(res!=0)	
 			return res;
 		else
-			return this.getId().compareTo(o.getId());
+			return Long.compare(this.getId(), o.getId());
 	}
 
 	@Override

@@ -95,7 +95,7 @@ class TxEvent implements ITxEvent {
 	 * @return the time
 	 */
 	@Override
-	public Long getTime() {
+	public long getTime() {
 		return time;
 	}
 

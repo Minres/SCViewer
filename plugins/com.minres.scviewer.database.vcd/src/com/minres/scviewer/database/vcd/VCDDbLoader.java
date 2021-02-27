@@ -20,15 +20,13 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 
 import com.google.common.collect.Iterables;
 import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
-import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
@@ -115,19 +113,20 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 			moduleStack=null;
 			throw new InputFormatException(e.toString());
 		}
-		if(!res) throw new InputFormatException("Could not parse VCD file");
+		if(!res) 
+			throw new InputFormatException("Could not parse VCD file");
 		// calculate max time of this database
 		for(IWaveform waveform:signals) {
-			NavigableMap<Long, IEvent[]> events =waveform.getEvents();
+			IEventList events =waveform.getEvents();
 			if(!events.isEmpty())
 				maxTime= Math.max(maxTime, events.lastKey());
 		}
 		// extend signals to have a last value set at max time
 		for(IWaveform s:signals){
 			if(s instanceof VCDSignal<?>) {
-				TreeMap<Long,?> events = (TreeMap<Long, ?>) ((VCDSignal<?>)s).getEvents();
+				IEventList events = ((VCDSignal<?>)s).getEvents();
 				if(events.size()>0 && events.lastKey()<maxTime){
-					Object val = events.lastEntry().getValue();
+					Object val = events.lastEntry().events[0];
 					if(val instanceof BitVector) {
 						((VCDSignal<BitVector>)s).addSignalChange(maxTime, (BitVector) val);
 					} else if(val instanceof DoubleVal)
@@ -147,7 +146,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	 * @see com.minres.scviewer.database.ITrDb#getMaxTime()
 	 */
 	@Override
-	public Long getMaxTime() {
+	public long getMaxTime() {
 		return maxTime;
 	}
 

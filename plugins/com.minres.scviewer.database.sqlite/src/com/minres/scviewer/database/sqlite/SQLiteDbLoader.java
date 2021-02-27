@@ -48,7 +48,7 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
 	@Override
-	public Long getMaxTime() {
+	public long getMaxTime() {
 		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
 				database, "time = (SELECT MAX(time) FROM ScvTxEvent)");
 		try {

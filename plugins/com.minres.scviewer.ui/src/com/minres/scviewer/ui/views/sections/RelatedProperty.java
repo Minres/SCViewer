@@ -182,9 +182,9 @@ public class RelatedProperty extends AbstractPropertySection implements ISelecti
 				else if (columnIndex == 2 && element instanceof ITxRelation){
 					ITxRelation rel = (ITxRelation) element;
 					if(rel.getTarget()==iTr) 
-						return ((ITxRelation) element).getSource().getId().toString();
+						return String.format("%d", ((ITxRelation) element).getSource().getId());
 					else
-						return ((ITxRelation) element).getTarget().getId().toString();
+						return String.format("%d", ((ITxRelation) element).getTarget().getId());
 				}
 				else
 					return null;

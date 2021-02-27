@@ -52,7 +52,7 @@ class TxGenerator extends AbstractTxStream {
 	 */
 	@Override
 	public boolean isSame(IWaveform other) {
-		return (other instanceof TxGenerator && this.getId().equals(other.getId()));
+		return (other instanceof TxGenerator && this.getId()==other.getId());
 	}
 
 	/**

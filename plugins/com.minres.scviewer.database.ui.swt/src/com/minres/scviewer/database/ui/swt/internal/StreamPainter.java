@@ -10,8 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
-import java.util.Map.Entry;
-import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import org.eclipse.swt.SWT;
@@ -19,8 +17,10 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
@@ -36,6 +36,7 @@ public class StreamPainter extends TrackPainter{
 	private IWaveform stream;
 	private int txBase;
 	private int txHeight;
+	// TODO: remove TreeMap usage
 	private TreeMap<ITx, ITxEvent> seenTx;
 
 	public StreamPainter(WaveformCanvas waveCanvas, boolean even, TrackEntry trackEntry) {
@@ -71,10 +72,11 @@ public class StreamPainter extends TrackPainter{
 		long beginTime = beginPos*scaleFactor;
 		long endTime = beginTime + area.width*scaleFactor;
 
-		Entry<Long,  IEvent[]> firstTx=stream.getEvents().floorEntry(beginTime);
-		Entry<Long,  IEvent[]> lastTx=stream.getEvents().ceilingEntry(endTime);
-		if(firstTx==null) firstTx = stream.getEvents().firstEntry();
-		if(lastTx==null) lastTx=stream.getEvents().lastEntry();
+		IEventList events = stream.getEvents();
+		EventEntry firstTx = events.floorEntry(beginTime);
+		EventEntry lastTx = events.ceilingEntry(endTime);
+		if(firstTx==null) firstTx = events.firstEntry();
+		if(lastTx==null) lastTx = events.lastEntry();
 		proj.setFillRule(SWT.FILL_EVEN_ODD);
 		proj.setLineStyle(SWT.LINE_SOLID);
 		proj.setLineWidth(1);
@@ -83,16 +85,15 @@ public class StreamPainter extends TrackPainter{
 		for( int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
 			proj.drawLine(area.x, y1, area.x+area.width, y1);
 		if(firstTx==lastTx) {
-			for(IEvent txEvent: firstTx.getValue())
+			for(IEvent txEvent: firstTx.events)
 				drawTx(proj, area, ((ITxEvent)txEvent).getTransaction(), ((ITxEvent)txEvent).getRowIndex(), false);
 		}else{
 			seenTx.clear();
-			NavigableMap<Long, IEvent[]> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
 			ITxEvent highlighed=null;
 			proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 			long selectedId=waveCanvas.currentSelection!=null? waveCanvas.currentSelection.getId():-1;
-			for(Entry<Long, IEvent[]> entry: entries.entrySet())
-				for(IEvent e:entry.getValue()){
+			for(EventEntry entry: events.subMap(firstTx.timestamp, true, lastTx.timestamp))
+				for(IEvent e:entry.events){
 					ITxEvent evt = (ITxEvent) e;
 					ITx tx = evt.getTransaction();
 					if(selectedId==tx.getId())
@@ -154,12 +155,12 @@ public class StreamPainter extends TrackPainter{
 
 	public ITx getClicked(Point point) {
 		int lane=point.y/waveCanvas.styleProvider.getTrackHeight();
-		Entry<Long, IEvent[]> firstTx=stream.getEvents().floorEntry(point.x*waveCanvas.getScaleFactor());
+		EventEntry firstTx=stream.getEvents().floorEntry(point.x*waveCanvas.getScaleFactor());
 		if(firstTx!=null){
 			do {
-				ITx tx = getTxFromEntry(lane, point.x, firstTx);
+				ITx tx = getTxFromEntry(lane, point.x, firstTx.events);
 				if(tx!=null) return tx;
-				firstTx=stream.getEvents().lowerEntry(firstTx.getKey());
+				firstTx=stream.getEvents().lowerEntry(firstTx.timestamp);
 			}while(firstTx!=null);
 		}
 		return null;
@@ -173,11 +174,11 @@ public class StreamPainter extends TrackPainter{
 		this.stream = stream;
 	}
 
-	protected ITx getTxFromEntry(int lane, int offset, Entry<Long, IEvent[]> firstTx) {
+	protected ITx getTxFromEntry(int lane, int offset, IEvent[] firstTx) {
 		long timePoint=offset*waveCanvas.getScaleFactor();
 		long timePointLow=(offset-5)*waveCanvas.getScaleFactor();
 		long timePointHigh=(offset+5)*waveCanvas.getScaleFactor();
-		for(IEvent e:firstTx.getValue()){
+		for(IEvent e:firstTx){
 			if(e instanceof ITxEvent) {
 				ITxEvent evt = (ITxEvent) e;
 				ITx tx=evt.getTransaction();

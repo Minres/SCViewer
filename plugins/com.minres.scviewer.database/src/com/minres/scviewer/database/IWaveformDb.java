@@ -23,7 +23,7 @@ public interface IWaveformDb extends IHierNode {
 	 *
 	 * @return the max time
 	 */
-	public Long getMaxTime();
+	public long getMaxTime();
 
 	/**
 	 * Gets the stream by name.

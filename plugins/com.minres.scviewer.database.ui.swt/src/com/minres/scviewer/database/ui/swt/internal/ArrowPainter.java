@@ -83,7 +83,7 @@ public class ArrowPainter implements IPainter {
 	}
 
 	private int getConcurrencyIndex(ITx tx) {
-		IEvent[] eventList = tx.getStream().getEvents().floorEntry(tx.getBeginTime()).getValue();
+		IEvent[] eventList = tx.getStream().getEventsBeforeTime(tx.getBeginTime());
 		Optional<Integer> res = Arrays.stream(eventList).map(e -> ((ITxEvent)e).getRowIndex()).findFirst();
 		return res.isPresent()? res.get():0;
 	}

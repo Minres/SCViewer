@@ -12,8 +12,6 @@ package com.minres.scviewer.database.ui.swt.internal;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
 
 import javax.swing.JPanel;
 
@@ -26,7 +24,9 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
@@ -37,16 +37,16 @@ public class SignalPainter extends TrackPainter {
 		IEvent value;
 		boolean fromMap;
 
-		public SignalChange(Entry<Long, IEvent[]> entry) {
-			time = entry.getKey();
-			value = entry.getValue()[0];
+		public SignalChange(EventEntry entry) {
+			time = entry.timestamp;
+			value = entry.events[0];
 			fromMap = true;
 		}
 
-		public void set(Entry<Long, IEvent[]> entry, Long actTime) {
+		public void set(EventEntry entry, Long actTime) {
 			if (entry != null) {
-				time = entry.getKey();
-				value = entry.getValue()[0];
+				time = entry.timestamp;
+				value = entry.events[0];
 				fromMap = true;
 			} else {
 				time = actTime;
@@ -100,21 +100,16 @@ public class SignalPainter extends TrackPainter {
 		long beginTime = beginPos*scaleFactor;
         long endTime = beginTime + area.width*scaleFactor;
 		
-		Entry<Long, IEvent[]> first = signal.getEvents().floorEntry(beginTime);
-		Entry<Long, IEvent[]> last = signal.getEvents().floorEntry(endTime);
-		if (first == null) {
-			if (last == null)
-				return;
+		EventEntry first = signal.getEvents().floorEntry(beginTime);
+		if (first == null)
 			first = signal.getEvents().firstEntry();
-		} else if (last == null) {
-			last = signal.getEvents().lastEntry();
-		}
+		beginTime = first.timestamp;
 		proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 		proj.setLineStyle(SWT.LINE_SOLID);
 		proj.setLineWidth(1);
-		NavigableMap<Long, IEvent[]> entries = signal.getEvents().subMap(first.getKey(), false, last.getKey(), true);
-		SignalChange left = new SignalChange(first);
-		SignalChange right = new SignalChange(entries.size() > 0 ? entries.firstEntry() : first);
+		IEventList entries = signal.getEvents().subMap(beginTime, true, endTime);
+		SignalChange left = new SignalChange(entries.firstEntry());
+		SignalChange right = new SignalChange(entries.size() > 1 ? entries.higherEntry(left.time) : entries.firstEntry());
 		maxPosX = area.x + area.width;
 		yOffsetT = this.waveCanvas.styleProvider.getTrackHeight() / 5 + area.y;
 		yOffsetM = this.waveCanvas.styleProvider.getTrackHeight() / 2 + area.y;
@@ -153,15 +148,15 @@ public class SignalPainter extends TrackPainter {
 			if (xSigChangeEndPos == xSigChangeBeginPos) {
 				multiple = true;
 				long eTime = (xSigChangeBeginPos + 1) * this.waveCanvas.getScaleFactor();
-				Entry<Long, IEvent[]> entry = entries.floorEntry(eTime);
-				if(entry!=null && entry.getKey()> right.time)
+				EventEntry entry = entries.floorEntry(eTime);
+				if(entry!=null && entry.timestamp> right.time)
 					right.set(entry, endTime);
 				xSigChangeEndPos = getXPosEnd(eTime);
 			}
 		} while (left.time < endTime);
 	}
 
-	private SignalStencil getStencil(GC gc, SignalChange left, NavigableMap<Long, IEvent[]> entries) {
+	private SignalStencil getStencil(GC gc, SignalChange left, IEventList entries) {
 		IEvent val = left.value;
 		if(val instanceof BitVector) {
 			BitVector bv = (BitVector) val;
@@ -253,15 +248,15 @@ public class SignalPainter extends TrackPainter {
 		private long maxVal;
 		private long minVal;
 		double yRange = (yOffsetB-yOffsetT);
-		public MultiBitStencilAnalog(NavigableMap<Long, IEvent[]> entries, Object left, boolean continous, boolean signed) {
+		public MultiBitStencilAnalog(IEventList entries, Object left, boolean continous, boolean signed) {
 			this.continous=continous;
 			this.signed=signed;
-			Collection<IEvent[]> values = entries.values();
+			Collection<EventEntry> ievents = entries.entrySet();
 			minVal=signed?((BitVector)left).toSignedValue():((BitVector)left).toUnsignedValue();
-			if(!values.isEmpty()) {
+			if(!ievents.isEmpty()) {
 				maxVal=minVal;
-				for (IEvent[] tp : entries.values())
-					for(IEvent e: tp) {
+				for (EventEntry tp : ievents)
+					for(IEvent e: tp.events) {
 						long v = signed?((BitVector)e).toSignedValue():((BitVector)e).toUnsignedValue();
 						maxVal=Math.max(maxVal, v);
 						minVal=Math.min(minVal, v);
@@ -358,15 +353,15 @@ public class SignalPainter extends TrackPainter {
 		
 		boolean continous=true;
 		
-		public RealStencil(NavigableMap<Long, IEvent[]> entries, Object left, boolean continous) {
+		public RealStencil(IEventList entries, Object left, boolean continous) {
 			this.continous=continous;
-			Collection<IEvent[]> values = entries.values();
+			Collection<EventEntry> values = entries.entrySet();
 			minVal=(Double) left;
 			range=2.0;
 			if(!values.isEmpty()) {
 				double maxVal=minVal;
-				for (IEvent[] val : entries.values())
-					for(IEvent e:val) {
+				for (EventEntry val : values)
+					for(IEvent e:val.events) {
 						double v = ((DoubleVal)e).value;
 						if(Double.isNaN(maxVal))
 							maxVal=v;

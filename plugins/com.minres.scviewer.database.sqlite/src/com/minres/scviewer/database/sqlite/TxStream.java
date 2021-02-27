@@ -49,7 +49,7 @@ public class TxStream extends AbstractTxStream {
 	}
 
 	@Override
-	public Long getId() {
+	public long getId() {
 		return (long) scvStream.getId();
 	}
 
@@ -89,13 +89,13 @@ public class TxStream extends AbstractTxStream {
 	}
 
 	@Override
-	public IEvent[] getEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(long time) {
 		return getEvents().get(time);
 	}
 
 	@Override
 	public boolean isSame(IWaveform other) {
-		return(other instanceof TxStream && this.getId().equals(other.getId()));
+		return(other instanceof TxStream && this.getId() == other.getId());
 	}
 
 	@Override

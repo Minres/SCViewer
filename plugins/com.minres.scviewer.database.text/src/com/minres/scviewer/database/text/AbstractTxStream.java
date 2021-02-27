@@ -12,14 +12,13 @@
 package com.minres.scviewer.database.text;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
+import com.minres.scviewer.database.EventEntry;
+import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.tx.ITx;
@@ -39,7 +38,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	protected TextDbLoader loader;
 
 	/** The events. */
-	TreeMap<Long, IEvent[]> events = new TreeMap<>();
+	IEventList events = new EventList();
 
 	/** The max concurrency. */
 	private int rowCount = -1;
@@ -73,14 +72,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @param evt the evt
 	 */
 	public void addEvent(ITxEvent evt) {
-		if (!events.containsKey(evt.getTime()))
-			events.put(evt.getTime(), new IEvent[] { evt });
-		else {
-			IEvent[] evts = events.get(evt.getTime());
-			IEvent[] newEvts = Arrays.copyOf(evts, evts.length + 1);
-			newEvts[evts.length] = evt;
-			events.put(evt.getTime(), newEvts);
-		}
+		events.put(evt.getTime(), evt);
 	}
 
 	/**
@@ -89,7 +81,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the events
 	 */
 	@Override
-	public NavigableMap<Long, IEvent[]> getEvents() {
+	public IEventList getEvents() {
 		return events;
 	}
 
@@ -100,7 +92,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the events at time
 	 */
 	@Override
-	public IEvent[] getEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(long time) {
 		return events.get(time);
 	}
 
@@ -111,12 +103,12 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the events before time
 	 */
 	@Override
-	public IEvent[] getEventsBeforeTime(Long time) {
-		Entry<Long, IEvent[]> e = events.floorEntry(time);
+	public IEvent[] getEventsBeforeTime(long time) {
+		EventEntry e = events.floorEntry(time);
 		if (e == null)
 			return new IEvent[] {};
 		else
-			return events.floorEntry(time).getValue();
+			return events.floorEntry(time).events;
 	}
 
 	/**
@@ -135,7 +127,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the id
 	 */
 	@Override
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
 
@@ -159,8 +151,8 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 			return;
 		ArrayList<Long> rowEndTime = new ArrayList<>();
 		HashMap<Long, Integer> rowByTxId = new HashMap<>();
-		for(Entry<Long, IEvent[]> entry: events.entrySet()) {
-			for(IEvent evt:entry.getValue()) {
+		for(EventEntry entry: events) {
+			for(IEvent evt:entry.events) {
 				TxEvent txEvt = (TxEvent) evt;
 				ITx tx = txEvt.getTransaction();
 				int rowIdx = 0;
