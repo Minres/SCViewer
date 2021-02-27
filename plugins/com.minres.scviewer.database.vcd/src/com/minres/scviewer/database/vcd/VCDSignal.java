@@ -10,8 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.vcd;
 
-import java.util.Map.Entry;
-
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
@@ -27,7 +26,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	private final int width;
 
-	private IEventList<Long, IEvent[]> values;
+	private IEventList values;
 	
 	public VCDSignal(String name) {
 		this(0, name, 1);
@@ -42,7 +41,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 		fullName=name;
 		this.id=id;
 		this.width=width;
-		this.values=new EventList<>();
+		this.values=new EventList();
 	}
 
 	public VCDSignal(VCDSignal<T> o, int id, String name) {
@@ -80,7 +79,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 	
 	@Override
-	public IEventList<Long, IEvent[]> getEvents() {
+	public IEventList getEvents() {
 		return values;
 	}
 
@@ -91,11 +90,11 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 
     @Override
     public IEvent[] getEventsBeforeTime(Long time) {
-    	Entry<Long, IEvent[]> e = values.floorEntry(time);
+    	EventEntry e = values.floorEntry(time);
     	if(e==null)
     		return new IEvent[] {};
     	else
-    		return values.floorEntry(time).getValue();
+    		return values.floorEntry(time).events;
     }
 
 	@Override

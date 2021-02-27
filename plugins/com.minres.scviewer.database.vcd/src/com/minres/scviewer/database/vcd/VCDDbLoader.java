@@ -26,7 +26,6 @@ import java.util.zip.GZIPInputStream;
 import com.google.common.collect.Iterables;
 import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
-import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
@@ -117,16 +116,16 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 		if(!res) throw new InputFormatException("Could not parse VCD file");
 		// calculate max time of this database
 		for(IWaveform waveform:signals) {
-			IEventList<Long, IEvent[]> events =waveform.getEvents();
+			IEventList events =waveform.getEvents();
 			if(!events.isEmpty())
 				maxTime= Math.max(maxTime, events.lastKey());
 		}
 		// extend signals to have a last value set at max time
 		for(IWaveform s:signals){
 			if(s instanceof VCDSignal<?>) {
-				IEventList<Long, IEvent[]> events = ((VCDSignal<?>)s).getEvents();
+				IEventList events = ((VCDSignal<?>)s).getEvents();
 				if(events.size()>0 && events.lastKey()<maxTime){
-					Object val = events.lastEntry().getValue();
+					Object val = events.lastEntry().events[0];
 					if(val instanceof BitVector) {
 						((VCDSignal<BitVector>)s).addSignalChange(maxTime, (BitVector) val);
 					} else if(val instanceof DoubleVal)

@@ -10,3 +10,4 @@ Export-Package: com.minres.scviewer.database,
 Bundle-ActivationPolicy: lazy
 Service-Component: OSGI-INF/component.xml,OSGI-INF/component2.xml
 Automatic-Module-Name: com.minres.scviewer.database
+Require-Bundle: org.eclipse.collections;bundle-version="10.4.0"

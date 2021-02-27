@@ -14,8 +14,8 @@ package com.minres.scviewer.database.text;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map.Entry;
 
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
@@ -39,7 +39,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	protected TextDbLoader loader;
 
 	/** The events. */
-	IEventList<Long, IEvent[]> events = new EventList<Long, IEvent[]>();
+	IEventList events = new EventList();
 
 	/** The max concurrency. */
 	private int rowCount = -1;
@@ -89,7 +89,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the events
 	 */
 	@Override
-	public IEventList<Long, IEvent[]> getEvents() {
+	public IEventList getEvents() {
 		return events;
 	}
 
@@ -112,11 +112,11 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 */
 	@Override
 	public IEvent[] getEventsBeforeTime(Long time) {
-		Entry<Long, IEvent[]> e = events.floorEntry(time);
+		EventEntry e = events.floorEntry(time);
 		if (e == null)
 			return new IEvent[] {};
 		else
-			return events.floorEntry(time).getValue();
+			return events.floorEntry(time).events;
 	}
 
 	/**
@@ -159,8 +159,8 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 			return;
 		ArrayList<Long> rowEndTime = new ArrayList<>();
 		HashMap<Long, Integer> rowByTxId = new HashMap<>();
-		for(Entry<Long, IEvent[]> entry: events.entrySet()) {
-			for(IEvent evt:entry.getValue()) {
+		for(EventEntry entry: events) {
+			for(IEvent evt:entry.events) {
 				TxEvent txEvt = (TxEvent) evt;
 				ITx tx = txEvt.getTransaction();
 				int rowIdx = 0;

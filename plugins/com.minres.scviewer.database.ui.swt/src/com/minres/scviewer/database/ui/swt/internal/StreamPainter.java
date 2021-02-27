@@ -10,7 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.eclipse.swt.SWT;
@@ -18,9 +17,9 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
-import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
@@ -72,8 +71,8 @@ public class StreamPainter extends TrackPainter{
 		long beginTime = beginPos*scaleFactor;
 		long endTime = beginTime + area.width*scaleFactor;
 
-		Entry<Long,  IEvent[]> firstTx=stream.getEvents().floorEntry(beginTime);
-		Entry<Long,  IEvent[]> lastTx=stream.getEvents().ceilingEntry(endTime);
+		EventEntry firstTx=stream.getEvents().floorEntry(beginTime);
+		EventEntry lastTx=stream.getEvents().ceilingEntry(endTime);
 		if(firstTx==null) firstTx = stream.getEvents().firstEntry();
 		if(lastTx==null) lastTx=stream.getEvents().lastEntry();
 		proj.setFillRule(SWT.FILL_EVEN_ODD);
@@ -84,16 +83,15 @@ public class StreamPainter extends TrackPainter{
 		for( int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
 			proj.drawLine(area.x, y1, area.x+area.width, y1);
 		if(firstTx==lastTx) {
-			for(IEvent txEvent: firstTx.getValue())
+			for(IEvent txEvent: firstTx.events)
 				drawTx(proj, area, ((ITxEvent)txEvent).getTransaction(), ((ITxEvent)txEvent).getRowIndex(), false);
 		}else{
 			seenTx.clear();
-			IEventList<Long, IEvent[]> entries = stream.getEvents().subMap(firstTx.getKey(), true, lastTx.getKey(), true);
 			ITxEvent highlighed=null;
 			proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 			long selectedId=waveCanvas.currentSelection!=null? waveCanvas.currentSelection.getId():-1;
-			for(Entry<Long, IEvent[]> entry: entries.entrySet())
-				for(IEvent e:entry.getValue()){
+			for(EventEntry entry: stream.getEvents().subMap(firstTx.timestamp, true, lastTx.timestamp))
+				for(IEvent e:entry.events){
 					ITxEvent evt = (ITxEvent) e;
 					ITx tx = evt.getTransaction();
 					if(selectedId==tx.getId())
@@ -155,12 +153,12 @@ public class StreamPainter extends TrackPainter{
 
 	public ITx getClicked(Point point) {
 		int lane=point.y/waveCanvas.styleProvider.getTrackHeight();
-		Entry<Long, IEvent[]> firstTx=stream.getEvents().floorEntry(point.x*waveCanvas.getScaleFactor());
+		EventEntry firstTx=stream.getEvents().floorEntry(point.x*waveCanvas.getScaleFactor());
 		if(firstTx!=null){
 			do {
-				ITx tx = getTxFromEntry(lane, point.x, firstTx.getValue());
+				ITx tx = getTxFromEntry(lane, point.x, firstTx.events);
 				if(tx!=null) return tx;
-				firstTx=stream.getEvents().lowerEntry(firstTx.getKey());
+				firstTx=stream.getEvents().lowerEntry(firstTx.timestamp);
 			}while(firstTx!=null);
 		}
 		return null;

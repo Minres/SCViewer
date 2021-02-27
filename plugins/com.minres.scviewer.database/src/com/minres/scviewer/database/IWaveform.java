@@ -39,7 +39,7 @@ public interface IWaveform extends IHierNode {
 	 *
 	 * @return the events
 	 */
-	public IEventList<Long, IEvent[]> getEvents();
+	public IEventList getEvents();
 
 	/**
 	 * Gets the events at time.
