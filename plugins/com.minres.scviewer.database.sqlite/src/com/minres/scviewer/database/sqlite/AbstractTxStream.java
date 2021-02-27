@@ -84,16 +84,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	}
 
 	private void putEvent(TxEvent ev){
-		Long time = ev.getTime();
-		if(events.containsKey(time)) {
-			IEvent[] oldV = events.get(time);
-			IEvent[] newV = new IEvent[oldV.length+1];
-			System.arraycopy(oldV, 0, newV, 0, oldV.length);
-			newV[oldV.length]=ev;
-			events.put(time, newV);
-		} else {
-			events.put(time, new IEvent[] {ev});
-		}
+		events.put(ev.getTime(), ev);
 	}
 
 	protected abstract Map<Integer, ITx> getTransactions();

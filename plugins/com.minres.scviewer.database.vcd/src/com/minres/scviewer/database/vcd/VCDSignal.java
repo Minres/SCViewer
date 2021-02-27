@@ -67,15 +67,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 
 	public void addSignalChange(Long time, T value){
-		if(values.containsKey(time)) {
-			IEvent[] oldV = values.get(time);
-			IEvent[] newV = new IEvent[oldV.length+1];
-			System.arraycopy(oldV, 0, newV, 0, oldV.length);
-			newV[oldV.length]=value;
-			values.put(time, newV);
-		} else {
-			values.put(time, new IEvent[] {value});
-		}
+		values.put(time, value);
 	}
 	
 	@Override

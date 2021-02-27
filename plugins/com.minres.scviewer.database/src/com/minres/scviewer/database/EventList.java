@@ -1,6 +1,7 @@
 package com.minres.scviewer.database;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -85,24 +86,23 @@ public class EventList  implements IEventList {
 	}
 
 	@Override
-	public IEvent[] put(long key, IEvent[] value) {
+	public void put(long key, IEvent value) {
 		if(unmodifiable) throw new UnsupportedOperationException();
-		EventEntry e = new EventEntry(key, value);
 		if(store.size()==0 || store.get(store.size()-1).timestamp < key) {
-			store.add(e);
+			store.add(new EventEntry(key, new IEvent[] {value}));
 		} else {
 			int index = Collections.binarySearch(store, new EventEntry(key));
 	        // < 0 if element is not in the list, see Collections.binarySearch
 	        if (index < 0) {
+	    		EventEntry e = new EventEntry(key, new IEvent[] {value});
 	        	index = -(index + 1);
 		        store.add(index, e);
 	        } else { 
 	            // Insertion index is index of existing element, to add new element behind it increase index
-	        	store.set(index, e);
+	        	store.get(index).append(value);
 	        }
 		}
 		end=store.size();
-        return e.events;
 	}
 
 	@Override
