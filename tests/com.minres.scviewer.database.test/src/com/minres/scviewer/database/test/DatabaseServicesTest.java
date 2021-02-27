@@ -76,11 +76,11 @@ public class DatabaseServicesTest {
 		assertEquals(3,  waveforms.size());
 		assertEquals(1,  waveformDb.getChildNodes().size());
 		for(IWaveform w:waveforms) {
-			if(w.getId().equals(1l)) {
+			if(w.getId()==1) {
 				assertEquals(2, w.getRowCount());
-			} else if(w.getId().equals(2l)) {
+			} else if(w.getId()==2l) {
 				assertEquals(1, w.getRowCount());
-			} else if(w.getId().equals(3l)) {
+			} else if(w.getId()==3l) {
 				assertEquals(1, w.getRowCount());
 			}
 		}

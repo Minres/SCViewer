@@ -69,7 +69,7 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 			ITx iTx = (ITx) element;
 			switch(field){
 			case NAME:
-				return new StyledString(iTx.getId().toString());
+				return new StyledString(String.format("%d", iTx.getId()));
 			case TX_TIME:
 				return new StyledString(waveformViewerPart.getScaledTime(iTx.getBeginTime()));
 			case TYPE:

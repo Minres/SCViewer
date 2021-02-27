@@ -90,7 +90,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	protected abstract Map<Integer, ITx> getTransactions();
 
 	@Override
-	public IEvent[] getEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(long time) {
 		return getEvents().get(time);
 	}
 
@@ -105,7 +105,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public IEvent[] getEventsBeforeTime(Long time) {
+	public IEvent[] getEventsBeforeTime(long time) {
 		EventEntry e = events.floorEntry(time);
 		if(e==null)
 			return new IEvent[]{};
