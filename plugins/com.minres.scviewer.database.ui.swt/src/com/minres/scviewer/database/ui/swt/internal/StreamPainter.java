@@ -19,7 +19,6 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventKind;
-import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
