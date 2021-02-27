@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 
 import com.minres.scviewer.database.EventList;
-import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IEventList;
 
 public class EventListTest {
@@ -20,7 +19,7 @@ public class EventListTest {
 	EventList createList(int[] times) {
 		EventList list = new EventList();
 		for(int time: times)
-			list.put(time, new IEvent[] {});
+			list.put(time, null);
 		return list;
 	}
 	

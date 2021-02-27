@@ -12,7 +12,7 @@ public interface IEventList extends Iterable<EventEntry> {
 
 	IEvent[] get(long key);
 
-	IEvent[] put(long key, IEvent[] value);
+	void put(long key, IEvent value);
 
 	long firstKey();
 
