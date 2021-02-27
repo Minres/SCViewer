@@ -16,13 +16,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 
@@ -50,11 +49,11 @@ public class DatabaseServicesTest {
 		assertEquals(14,  waves.size());
 		assertEquals(2,  waveformDb.getChildNodes().size());
 		IWaveform bus_data_wave = waves.get(0);
-		Entry<Long, IEvent[]> bus_data_entry = bus_data_wave.getEvents().floorEntry(1400000000L);
-		assertEquals("01111000", bus_data_entry.getValue()[0].toString());
+		EventEntry bus_data_entry = bus_data_wave.getEvents().floorEntry(1400000000L);
+		assertEquals("01111000", bus_data_entry.events[0].toString());
 		IWaveform rw_wave = waves.get(2);
-		Entry<Long, IEvent[]> rw_entry = rw_wave.getEvents().floorEntry(2360000000L);
-		assertEquals("1", rw_entry.getValue()[0].toString());
+		EventEntry rw_entry = rw_wave.getEvents().floorEntry(2360000000L);
+		assertEquals("1", rw_entry.events[0].toString());
 	}
 
 	@Test

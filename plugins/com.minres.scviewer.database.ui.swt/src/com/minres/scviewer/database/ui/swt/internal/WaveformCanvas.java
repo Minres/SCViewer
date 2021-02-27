@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.ScrollBar;
 
 import com.google.common.collect.Lists;
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
@@ -427,8 +428,8 @@ public class WaveformCanvas extends Canvas {
         }
         for (IWaveformPainter painter : wave2painterMap.values()) {
             if (painter instanceof StreamPainter && ((StreamPainter) painter).getStream() == tx.getStream()) {
-            	Entry<Long, IEvent[]> entry = tx.getStream().getEvents().floorEntry(tx.getBeginTime());
-            	Optional<IEvent> res = Arrays.stream(entry.getValue()).filter(e -> ((ITxEvent)e).getTransaction().equals(tx)).findFirst();
+            	EventEntry entry = tx.getStream().getEvents().floorEntry(tx.getBeginTime());
+            	Optional<IEvent> res = Arrays.stream(entry.events).filter(e -> ((ITxEvent)e).getTransaction().equals(tx)).findFirst();
             	if(res.isPresent()) {
                     int top = painter.getVerticalOffset() + styleProvider.getTrackHeight() * ((ITxEvent)res.get()).getRowIndex();
                     int bottom = top + styleProvider.getTrackHeight();
