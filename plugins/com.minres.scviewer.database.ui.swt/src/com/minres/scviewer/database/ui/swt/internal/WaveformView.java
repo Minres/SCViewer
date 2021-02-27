@@ -76,6 +76,7 @@ import org.eclipse.wb.swt.SWTResourceManager;
 import com.google.common.collect.Lists;
 import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IEventList;
@@ -255,29 +256,29 @@ public class WaveformView implements IWaveformView {
 			long time = waveformCanvas.getTimeForOffset(p.x);
 			long scaling = 5 * waveformCanvas.getScaleFactor();
 			for (Object o : waveformCanvas.getElementsAt(p)) {
-				Entry<Long, IEvent[]> floorEntry = null;
-				Entry<Long, IEvent[]> ceilEntry = null;
+				EventEntry floorEntry = null;
+				EventEntry ceilEntry = null;
 				if (o instanceof TrackEntry) {
 					TrackEntry entry = (TrackEntry) o;
-					IEventList<Long, IEvent[]> map = entry.waveform.getEvents();
+					IEventList map = entry.waveform.getEvents();
 					floorEntry = map.floorEntry(time);
 					ceilEntry = map.ceilingEntry(time);
 				} else if (o instanceof ITx) {
-					IEventList<Long, IEvent[]> map = ((ITx) o).getStream().getEvents();
+					IEventList map = ((ITx) o).getStream().getEvents();
 					floorEntry = map.floorEntry(time);
 					ceilEntry = map.ceilingEntry(time);
 				}
-				if (floorEntry != null && time - floorEntry.getKey() > scaling)
+				if (floorEntry != null && time - floorEntry.timestamp > scaling)
 					floorEntry = null;
-				if (ceilEntry != null && ceilEntry.getKey() - time > scaling)
+				if (ceilEntry != null && ceilEntry.timestamp - time > scaling)
 					ceilEntry = null;
 				if (ceilEntry == null && floorEntry != null) {
-					time = floorEntry.getKey();
+					time = floorEntry.timestamp;
 				} else if (ceilEntry != null && floorEntry == null) {
-					time = ceilEntry.getKey();
+					time = ceilEntry.timestamp;
 				} else if (ceilEntry != null && floorEntry != null) {
-					time = time - floorEntry.getKey() < ceilEntry.getKey() - time ? floorEntry.getKey()
-							: ceilEntry.getKey();
+					time = time - floorEntry.timestamp < ceilEntry.timestamp - time ? floorEntry.timestamp
+							: ceilEntry.timestamp;
 				}
 			}
 			return time;
@@ -580,10 +581,10 @@ public class WaveformView implements IWaveformView {
 				}
 			} else if (entry.waveform.getType() == WaveformType.TRANSACTION) {
 				ITx[] resultsList = new ITx[entry.waveform.getRowCount()];
-				Entry<Long, IEvent[]> firstTx = entry.waveform.getEvents().floorEntry(time);
+				EventEntry firstTx = entry.waveform.getEvents().floorEntry(time);
 				if (firstTx != null) {
 					do {
-						for (IEvent e : firstTx.getValue()) {
+						for (IEvent e : firstTx.events) {
 							if (e instanceof ITxEvent) {
 								ITxEvent evt = ((ITxEvent) e);
 								ITx tx = evt.getTransaction();
@@ -593,7 +594,7 @@ public class WaveformView implements IWaveformView {
 									resultsList[evt.getRowIndex()] = evt.getTransaction();
 							}
 						}
-						firstTx = entry.waveform.getEvents().lowerEntry(firstTx.getKey());
+						firstTx = entry.waveform.getEvents().lowerEntry(firstTx.timestamp);
 					} while (firstTx != null && !isArrayFull(resultsList));
 					boolean separator = false;
 					StringBuilder sb = new StringBuilder();
@@ -854,11 +855,11 @@ public class WaveformView implements IWaveformView {
 						}
 					}
 					if (transaction == null) {
-						Entry<Long, IEvent[]> entry = selectedWaveform.waveform.getEvents()
+						EventEntry entry = selectedWaveform.waveform.getEvents()
 								.higherEntry(currentTxSelection.getBeginTime());
 						if (entry != null)
 							do {
-								for (IEvent evt : entry.getValue()) {
+								for (IEvent evt : entry.events) {
 									if (evt instanceof ITxEvent && (evt.getKind() == EventKind.BEGIN
 											|| evt.getKind() == EventKind.SINGLE)) {
 										transaction = ((ITxEvent) evt).getTransaction();
@@ -866,7 +867,7 @@ public class WaveformView implements IWaveformView {
 									}
 								}
 								if (transaction == null)
-									entry = selectedWaveform.waveform.getEvents().higherEntry(entry.getKey());
+									entry = selectedWaveform.waveform.getEvents().higherEntry(entry.timestamp);
 							} while (entry != null && transaction == null);
 					}
 				} else if (direction == GotoDirection.PREV) {
@@ -883,11 +884,11 @@ public class WaveformView implements IWaveformView {
 						}
 					}
 					if (transaction == null) {
-						Entry<Long, IEvent[]> entry = selectedWaveform.waveform.getEvents()
+						EventEntry entry = selectedWaveform.waveform.getEvents()
 								.lowerEntry(currentTxSelection.getBeginTime());
 						if (entry != null)
 							do {
-								for (IEvent evt : Lists.reverse(Arrays.asList(entry.getValue()))) {
+								for (IEvent evt : Lists.reverse(Arrays.asList(entry.events))) {
 									if (evt instanceof ITxEvent && (evt.getKind() == EventKind.BEGIN
 											|| evt.getKind() == EventKind.SINGLE)) {
 										transaction = ((ITxEvent) evt).getTransaction();
@@ -895,7 +896,7 @@ public class WaveformView implements IWaveformView {
 									}
 								}
 								if (transaction == null)
-									entry = selectedWaveform.waveform.getEvents().lowerEntry(entry.getKey());
+									entry = selectedWaveform.waveform.getEvents().lowerEntry(entry.timestamp);
 							} while (entry != null && transaction == null);
 					}
 				}
@@ -958,14 +959,14 @@ public class WaveformView implements IWaveformView {
 			return;
 		TrackEntry sel = currentWaveformSelection.get(0);
 		long time = getCursorTime();
-		IEventList<Long, ?> map = null;
+		IEventList map = null;
 		if (sel.waveform.getType() == WaveformType.TRANSACTION || sel.waveform.getType() == WaveformType.SIGNAL) {
 			map = sel.waveform.getEvents();
 		}
 		if (map != null) {
-			Entry<Long, ?> entry = direction == GotoDirection.PREV ? map.lowerEntry(time) : map.higherEntry(time);
+			EventEntry entry = direction == GotoDirection.PREV ? map.lowerEntry(time) : map.higherEntry(time);
 			if (entry != null) {
-				time = entry.getKey();
+				time = entry.timestamp;
 				setCursorTime(time);
 				waveformCanvas.reveal(time);
 				waveformCanvas.redraw();

@@ -40,7 +40,7 @@ public class WaveformPopupMenuContribution {
 				if(elem instanceof TrackEntry) {
 					TrackEntry e = (TrackEntry) elem;
 					if(e.waveform.getType() == WaveformType.SIGNAL) {
-						Object o = e.waveform.getEvents().firstEntry().getValue()[0];
+						Object o = e.waveform.getEvents().firstEntry().events[0];
 						if(checkForDouble && o instanceof DoubleVal) 
 							return true;
 						else if(o instanceof BitVector && ((BitVector)o).getWidth()>1)
