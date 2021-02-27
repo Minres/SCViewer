@@ -19,7 +19,9 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventKind;
+import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
@@ -71,10 +73,11 @@ public class StreamPainter extends TrackPainter{
 		long beginTime = beginPos*scaleFactor;
 		long endTime = beginTime + area.width*scaleFactor;
 
-		EventEntry firstTx=stream.getEvents().floorEntry(beginTime);
-		EventEntry lastTx=stream.getEvents().ceilingEntry(endTime);
-		if(firstTx==null) firstTx = stream.getEvents().firstEntry();
-		if(lastTx==null) lastTx=stream.getEvents().lastEntry();
+		IEventList events = stream.getEvents();
+		EventEntry firstTx = events.floorEntry(beginTime);
+		EventEntry lastTx = events.ceilingEntry(endTime);
+		if(firstTx==null) firstTx = events.firstEntry();
+		if(lastTx==null) lastTx = events.lastEntry();
 		proj.setFillRule(SWT.FILL_EVEN_ODD);
 		proj.setLineStyle(SWT.LINE_SOLID);
 		proj.setLineWidth(1);
@@ -90,7 +93,7 @@ public class StreamPainter extends TrackPainter{
 			ITxEvent highlighed=null;
 			proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 			long selectedId=waveCanvas.currentSelection!=null? waveCanvas.currentSelection.getId():-1;
-			for(EventEntry entry: stream.getEvents().subMap(firstTx.timestamp, true, lastTx.timestamp))
+			for(EventEntry entry: events.subMap(firstTx.timestamp, true, lastTx.timestamp))
 				for(IEvent e:entry.events){
 					ITxEvent evt = (ITxEvent) e;
 					ITx tx = evt.getTransaction();
