@@ -1,7 +1,6 @@
 package com.minres.scviewer.database;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 

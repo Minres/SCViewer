@@ -62,7 +62,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
 
@@ -76,12 +76,12 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public IEvent[] getEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(long time) {
 		return values.get(time);
 	}
 
     @Override
-    public IEvent[] getEventsBeforeTime(Long time) {
+    public IEvent[] getEventsBeforeTime(long time) {
     	EventEntry e = values.floorEntry(time);
     	if(e==null)
     		return new IEvent[] {};
@@ -91,7 +91,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	@Override
 	public boolean isSame(IWaveform other) {
-		return( other instanceof VCDSignal<?> && this.getId().equals(other.getId()));
+		return( other instanceof VCDSignal<?> && this.getId() == other.getId());
 	}
 
 	@Override

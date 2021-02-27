@@ -45,7 +45,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	private Map<String, IWaveform> waveforms;
 
 	/** The max time. */
-	private Long maxTime;
+	private long maxTime = -1;
 
 	/**
 	 * Bind.
@@ -90,7 +90,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 * @return the max time
 	 */
 	@Override
-	public Long getMaxTime() {
+	public long getMaxTime() {
 		return maxTime;
 	}
 

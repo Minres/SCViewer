@@ -69,7 +69,7 @@ public interface IWaveformDbLoader {
 	 *
 	 * @return the max time
 	 */
-	public Long getMaxTime();
+	public long getMaxTime();
 
 	/**
 	 * Gets the all waves.

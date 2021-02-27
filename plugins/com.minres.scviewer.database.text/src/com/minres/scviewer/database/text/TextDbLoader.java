@@ -131,7 +131,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 	 * @return the max time
 	 */
 	@Override
-	public Long getMaxTime() {
+	public long getMaxTime() {
 		return maxTime;
 	}
 

@@ -93,7 +93,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the events at time
 	 */
 	@Override
-	public IEvent[] getEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(long time) {
 		return events.get(time);
 	}
 
@@ -104,7 +104,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the events before time
 	 */
 	@Override
-	public IEvent[] getEventsBeforeTime(Long time) {
+	public IEvent[] getEventsBeforeTime(long time) {
 		EventEntry e = events.floorEntry(time);
 		if (e == null)
 			return new IEvent[] {};
@@ -128,7 +128,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the id
 	 */
 	@Override
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
 

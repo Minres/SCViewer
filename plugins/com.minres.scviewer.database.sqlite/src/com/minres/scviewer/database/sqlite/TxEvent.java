@@ -28,7 +28,7 @@ public class TxEvent implements ITxEvent {
 	}
 
 	@Override
-	public Long getTime() {
+	public long getTime() {
 		return type==EventKind.BEGIN?tx.getBeginTime():tx.getEndTime();
 	}
 

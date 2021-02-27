@@ -102,11 +102,11 @@ class Tx implements ITx {
 	 */
 	@Override
 	public int compareTo(ITx o) {
-		int res = getBeginTime().compareTo(o.getBeginTime());
+		int res = Long.compare(getBeginTime(), o.getBeginTime());
 		if (res != 0)
 			return res;
 		else
-			return getId().compareTo(o.getId());
+			return Long.compare(getId(), o.getId());
 	}
 
 	/**
@@ -150,7 +150,7 @@ class Tx implements ITx {
 	 * @return the id
 	 */
 	@Override
-	public Long getId() {
+	public long getId() {
 		return getScvTx().id;
 	}
 
@@ -180,7 +180,7 @@ class Tx implements ITx {
 	 * @return the begin time
 	 */
 	@Override
-	public Long getBeginTime() {
+	public long getBeginTime() {
 		if (beginTime < 0) {
 			ScvTx tx = scvTx==null?loader.getScvTx(id):getScvTx();
 			beginTime = tx.beginTime;
@@ -195,7 +195,7 @@ class Tx implements ITx {
 	 * @return the end time
 	 */
 	@Override
-	public Long getEndTime() {
+	public long getEndTime() {
 		if (endTime < 0) {
 			ScvTx tx = scvTx==null?loader.getScvTx(id):getScvTx();
 			beginTime = tx.beginTime;
