@@ -189,6 +189,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 		if (IWaveformDbLoader.SIGNAL_ADDED.equals(evt.getPropertyName())
 				|| IWaveformDbLoader.STREAM_ADDED.equals(evt.getPropertyName())) {
 			IWaveform waveform = (IWaveform) evt.getNewValue();
+			waveforms.put(waveform.getFullName(), waveform);
 			putInHierarchy(waveform);
 			pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
 			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
