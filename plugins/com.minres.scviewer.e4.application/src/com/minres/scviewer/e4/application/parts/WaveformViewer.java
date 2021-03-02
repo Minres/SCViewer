@@ -577,7 +577,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				} else
 					sync.asyncExec(()->{
 						waveformPane.setMaxTime(database.getMaxTime());
-						if (state != null)
+						if(partConfig!=null && !partConfig.isEmpty())
+							loadState(partConfig);
+						if (state != null && !state.isEmpty())
 							restoreWaveformViewerState(state);
 						fileChecker = null;
 						if (checkForUpdates)
@@ -630,13 +632,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			if (file.exists()) 
 				filesToLoad.add(file);
 		}
-		if(partConfig!=null) {
-			this.partConfig=partConfig;
-		}
+		this.partConfig=partConfig;
 		if (!filesToLoad.isEmpty())
 			loadDatabase(persistedState);
-		if(partConfig!=null && !partConfig.isEmpty())
-			loadState(partConfig);
 	}
 
 	/**

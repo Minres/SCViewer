@@ -61,6 +61,8 @@ public class E4LifeCycle {
 		final Options opt = new Options(args, 0, Integer.MAX_VALUE);
 		opt.getSet()
 		.addOption("clearPersistedState", Multiplicity.ZERO_OR_ONE)
+		.addOption("launcher.defaultAction", Separator.BLANK, Multiplicity.ZERO_OR_ONE)
+		.addOption("launcher.openFile", Multiplicity.ZERO_OR_ONE)
 		.addOption("c", Separator.BLANK, Multiplicity.ZERO_OR_ONE);
 		if (!opt.check(Options.DEFAULT_SET, true, false)) {
 			logger.error(opt.getCheckErrors());
