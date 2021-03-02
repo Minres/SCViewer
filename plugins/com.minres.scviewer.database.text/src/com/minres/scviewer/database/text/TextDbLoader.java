@@ -167,7 +167,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 	 */
 	@Override
 	public Collection<IWaveform> getAllWaves() {
-		return new ArrayList<>(txStreams.values());
+		ArrayList<IWaveform> ret =  new ArrayList<>(txStreams.values());
+		ret.addAll(txGenerators.values());
+		return ret;
 	}
 
 	/**
