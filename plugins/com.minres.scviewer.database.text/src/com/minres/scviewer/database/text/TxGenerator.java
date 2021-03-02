@@ -82,5 +82,15 @@ class TxGenerator extends AbstractTxStream {
 	public String getKind() {
 		return stream.getKind();
 	}
+	
+	/**
+	 * Gets the full hierarchical name.
+	 *
+	 * @return the full name
+	 */
+	@Override
+	public String getFullName() {
+		return  ((AbstractTxStream)parent).getFullName()+"."+name;
+	}
 
 }
