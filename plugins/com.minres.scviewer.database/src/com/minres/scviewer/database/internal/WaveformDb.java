@@ -45,7 +45,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	private Map<String, IWaveform> waveforms;
 
 	/** The max time. */
-	private Long maxTime;
+	private long maxTime = -1;
 
 	/**
 	 * Bind.
@@ -90,7 +90,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 * @return the max time
 	 */
 	@Override
-	public Long getMaxTime() {
+	public long getMaxTime() {
 		return maxTime;
 	}
 
@@ -189,6 +189,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 		if (IWaveformDbLoader.SIGNAL_ADDED.equals(evt.getPropertyName())
 				|| IWaveformDbLoader.STREAM_ADDED.equals(evt.getPropertyName())) {
 			IWaveform waveform = (IWaveform) evt.getNewValue();
+			waveforms.put(waveform.getFullName(), waveform);
 			putInHierarchy(waveform);
 			pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
 			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
@@ -226,14 +227,13 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 					break;
 				}
 			}
-			if (childNode != null) {
+			if (childNode == null) {
+				HierNode newNode = new HierNode(name, node);
+				node.addChild(newNode);
+				node = newNode;
+			} else {
 				node = childNode;
-				break;
 			}
-			HierNode newNode = new HierNode(name, node);
-			node.addChild(newNode);
-			node = newNode;
-
 		}
 		node.addChild(waveform);
 		waveform.setParent(node);

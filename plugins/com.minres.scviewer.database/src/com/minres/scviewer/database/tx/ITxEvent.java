@@ -22,7 +22,7 @@ public interface ITxEvent extends IEvent {
 	 *
 	 * @return the time
 	 */
-	public Long getTime();
+	public long getTime();
 
 	/**
 	 * Gets the transaction.

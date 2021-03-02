@@ -577,7 +577,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				} else
 					sync.asyncExec(()->{
 						waveformPane.setMaxTime(database.getMaxTime());
-						if (state != null)
+						if(partConfig!=null && !partConfig.isEmpty())
+							loadState(partConfig);
+						if (state != null && !state.isEmpty())
 							restoreWaveformViewerState(state);
 						fileChecker = null;
 						if (checkForUpdates)
@@ -630,13 +632,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			if (file.exists()) 
 				filesToLoad.add(file);
 		}
-		if(partConfig!=null) {
-			this.partConfig=partConfig;
-		}
+		this.partConfig=partConfig;
 		if (!filesToLoad.isEmpty())
 			loadDatabase(persistedState);
-		if(partConfig!=null && !partConfig.isEmpty())
-			loadState(partConfig);
 	}
 
 	/**
@@ -815,9 +813,18 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				String trackentryName = state.get(SELECTED_TRACKENTRY_NAME);
 				//get TrackEntry Object based on name and TX Object by id and put into selectionList
 				trackEntries.stream().filter(e->trackentryName.equals(e.waveform.getFullName())).forEach(trackEntry ->
-				trackEntry.waveform.getEvents().values().stream().filter(Objects::nonNull).forEach(entries-> 
-				Arrays.stream(entries).filter(e->e instanceof ITxEvent && txId.equals(((ITxEvent)e).getTransaction().getId())).forEach(event ->
-				waveformPane.setSelection(new StructuredSelection(new Object[] {((ITxEvent)event).getTransaction(), trackEntry})))));
+					trackEntry.waveform.getEvents().entrySet().stream()
+					.map(e->e.events)
+					.filter(Objects::nonNull)
+					.forEach(entries-> 
+						Arrays.stream(entries)
+						.filter(e->e instanceof ITxEvent && txId.equals(((ITxEvent)e).getTransaction().getId()))
+						.forEach(event ->
+							waveformPane.setSelection(new StructuredSelection(
+									new Object[] {((ITxEvent)event).getTransaction(), trackEntry}))
+						)
+					)
+				);
 			} catch (NumberFormatException e) {
 			}
 		}

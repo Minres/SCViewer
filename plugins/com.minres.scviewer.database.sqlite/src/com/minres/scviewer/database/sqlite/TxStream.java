@@ -49,7 +49,7 @@ public class TxStream extends AbstractTxStream {
 	}
 
 	@Override
-	public Long getId() {
+	public long getId() {
 		return (long) scvStream.getId();
 	}
 
@@ -63,7 +63,7 @@ public class TxStream extends AbstractTxStream {
 					generators.put(scvGenerator.getId(), new TxGenerator(database, this, scvGenerator));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
 		}
@@ -81,7 +81,7 @@ public class TxStream extends AbstractTxStream {
 					transactions.put(scvTx.getId(), new Tx(database, this, generators.get(scvTx.getGenerator()), scvTx));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
 		}
@@ -89,13 +89,13 @@ public class TxStream extends AbstractTxStream {
 	}
 
 	@Override
-	public IEvent[] getEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(long time) {
 		return getEvents().get(time);
 	}
 
 	@Override
 	public boolean isSame(IWaveform other) {
-		return(other instanceof TxStream && this.getId().equals(other.getId()));
+		return(other instanceof TxStream && this.getId() == other.getId());
 	}
 
 	@Override

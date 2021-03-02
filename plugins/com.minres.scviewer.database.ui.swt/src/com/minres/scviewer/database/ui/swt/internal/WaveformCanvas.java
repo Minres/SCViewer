@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.ScrollBar;
 
 import com.google.common.collect.Lists;
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
@@ -179,10 +180,10 @@ public class WaveformCanvas extends Canvas {
 
     public void setZoomLevel(int level, long centerTime) {
     	//FIXME: keep center if zoom-out and cursor is not in view
-    	long oldScaleFactor=scaleFactor;
     	if(level<0) level = 0;
+		long xc=centerTime/this.scaleFactor; // cursor total x-offset
     	if(level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length){
-    		this.scaleFactor = (long) Math.pow(10, level/2d);
+    		this.scaleFactor = (long) Math.pow(10, level>>1);
     		if(level%2==1) this.scaleFactor*=3;
     		ITx tx = arrowPainter.getTx();
     		arrowPainter.setTx(null);
@@ -192,7 +193,6 @@ public class WaveformCanvas extends Canvas {
     		 * xcn = tc/newScaleFactor
     		 * t0n = (xcn-xoffs)*scaleFactor
     		 */
-			long xc=centerTime/oldScaleFactor; // cursor total x-offset
 			long xoffs=xc+origin.x; // cursor offset relative to left border
 			long xcn=centerTime/scaleFactor; // new total x-offset
 			long originX=xcn-xoffs;
@@ -428,8 +428,8 @@ public class WaveformCanvas extends Canvas {
         }
         for (IWaveformPainter painter : wave2painterMap.values()) {
             if (painter instanceof StreamPainter && ((StreamPainter) painter).getStream() == tx.getStream()) {
-            	Entry<Long, IEvent[]> entry = tx.getStream().getEvents().floorEntry(tx.getBeginTime());
-            	Optional<IEvent> res = Arrays.stream(entry.getValue()).filter(e -> ((ITxEvent)e).getTransaction().equals(tx)).findFirst();
+            	EventEntry entry = tx.getStream().getEvents().floorEntry(tx.getBeginTime());
+            	Optional<IEvent> res = Arrays.stream(entry.events).filter(e -> ((ITxEvent)e).getTransaction().equals(tx)).findFirst();
             	if(res.isPresent()) {
                     int top = painter.getVerticalOffset() + styleProvider.getTrackHeight() * ((ITxEvent)res.get()).getRowIndex();
                     int bottom = top + styleProvider.getTrackHeight();

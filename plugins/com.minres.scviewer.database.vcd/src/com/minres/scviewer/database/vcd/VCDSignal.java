@@ -10,12 +10,11 @@
  *******************************************************************************/
 package com.minres.scviewer.database.vcd;
 
-import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
-
+import com.minres.scviewer.database.EventEntry;
+import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
 
@@ -27,7 +26,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	private final int width;
 
-	private NavigableMap<Long, IEvent[]> values;
+	private IEventList values;
 	
 	public VCDSignal(String name) {
 		this(0, name, 1);
@@ -42,7 +41,7 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 		fullName=name;
 		this.id=id;
 		this.width=width;
-		this.values=new TreeMap<>();
+		this.values=new EventList();
 	}
 
 	public VCDSignal(VCDSignal<T> o, int id, String name) {
@@ -63,44 +62,36 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
 
 	public void addSignalChange(Long time, T value){
-		if(values.containsKey(time)) {
-			IEvent[] oldV = values.get(time);
-			IEvent[] newV = new IEvent[oldV.length+1];
-			System.arraycopy(oldV, 0, newV, 0, oldV.length);
-			newV[oldV.length]=value;
-			values.put(time, newV);
-		} else {
-			values.put(time, new IEvent[] {value});
-		}
+		values.put(time, value);
 	}
 	
 	@Override
-	public NavigableMap<Long, IEvent[]> getEvents() {
+	public IEventList getEvents() {
 		return values;
 	}
 
 	@Override
-	public IEvent[] getEventsAtTime(Long time) {
+	public IEvent[] getEventsAtTime(long time) {
 		return values.get(time);
 	}
 
     @Override
-    public IEvent[] getEventsBeforeTime(Long time) {
-    	Entry<Long, IEvent[]> e = values.floorEntry(time);
+    public IEvent[] getEventsBeforeTime(long time) {
+    	EventEntry e = values.floorEntry(time);
     	if(e==null)
     		return new IEvent[] {};
     	else
-    		return values.floorEntry(time).getValue();
+    		return values.floorEntry(time).events;
     }
 
 	@Override
 	public boolean isSame(IWaveform other) {
-		return( other instanceof VCDSignal<?> && this.getId().equals(other.getId()));
+		return( other instanceof VCDSignal<?> && this.getId() == other.getId());
 	}
 
 	@Override

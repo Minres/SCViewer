@@ -32,8 +32,8 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
 import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventKind;
-import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.tx.ITx;
@@ -249,8 +249,10 @@ public class TransactionList extends Composite {
 			}catch(SecurityException e){}
 			updateThread = new Thread(()-> {
 				final ConcurrentHashMap<String, DataType> propNames=new ConcurrentHashMap<>();
-				Collection<IEvent[]> values = stream.getEvents().values();
-				final List<ITx> txList = values.parallelStream().map(Arrays::asList)
+				Collection<EventEntry> values = stream.getEvents().entrySet();
+				final List<ITx> txList = values.parallelStream()
+						.map(e->e.events)
+						.map(Arrays::asList)
 						.flatMap(List::stream)
 						.filter(evt -> evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)
 						.map(evt-> {
@@ -258,7 +260,7 @@ public class TransactionList extends Composite {
 							tx.getAttributes().forEach(attr -> propNames.put(attr.getName(), attr.getDataType()));
 							return tx;
 						})
-						.sorted((t1, t2)-> t1.getBeginTime().compareTo(t2.getBeginTime()))
+						.sorted((t1, t2)-> Long.compare(t1.getBeginTime(),t2.getBeginTime()))
 						.collect(Collectors.toList());
 				final List<AttributeNameBean> newAttrNames=propNames.entrySet().stream()
 						.sorted((e1,e2)->e1.getKey().compareTo(e2.getKey()))

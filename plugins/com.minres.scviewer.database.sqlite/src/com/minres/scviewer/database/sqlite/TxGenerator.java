@@ -39,7 +39,7 @@ public class TxGenerator extends AbstractTxStream {
 	}
 
 	@Override
-	public Long getId() {
+	public long getId() {
 		return (long) scvGenerator.getId();
 	}
 
@@ -50,7 +50,7 @@ public class TxGenerator extends AbstractTxStream {
 
 	@Override
 	public boolean isSame(IWaveform other) {
-		return(other instanceof TxGenerator && this.getId().equals(other.getId()));
+		return(other instanceof TxGenerator && this.getId() == other.getId());
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class TxGenerator extends AbstractTxStream {
 					transactions.put(scvTx.getId(), new Tx(database, (TxStream) stream, this, scvTx));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 				e.printStackTrace();
 			}
 		}

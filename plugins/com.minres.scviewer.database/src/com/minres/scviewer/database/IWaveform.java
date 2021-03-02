@@ -10,7 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
-import java.util.NavigableMap;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -25,7 +24,7 @@ public interface IWaveform extends IHierNode {
 	 *
 	 * @return the id
 	 */
-	public Long getId();
+	public long getId();
 
 	/**
 	 * Checks if is same.
@@ -40,7 +39,7 @@ public interface IWaveform extends IHierNode {
 	 *
 	 * @return the events
 	 */
-	public NavigableMap<Long, IEvent[]> getEvents();
+	public IEventList getEvents();
 
 	/**
 	 * Gets the events at time.
@@ -48,7 +47,7 @@ public interface IWaveform extends IHierNode {
 	 * @param time the time
 	 * @return the events at time
 	 */
-	public IEvent[] getEventsAtTime(Long time);
+	public IEvent[] getEventsAtTime(long time);
 
 	/**
 	 * Gets the events before time.
@@ -56,7 +55,7 @@ public interface IWaveform extends IHierNode {
 	 * @param time the time
 	 * @return the events before time
 	 */
-	public IEvent[] getEventsBeforeTime(Long time);
+	public IEvent[] getEventsBeforeTime(long time);
 
 	/**
 	 * Gets the type.

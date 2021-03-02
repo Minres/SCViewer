@@ -337,7 +337,11 @@ public class FileBrowserDialog extends TrayDialog {
 			if(f instanceof File) {
 				if(matchers.isEmpty()) return true;
 				for (PathMatcher m : matchers) {
+					try {
 					if(m.matches(((File)f).toPath())) return true;
+					} catch (Exception e) {
+						return false;
+					}
 				}
 			}
 			return false;

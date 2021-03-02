@@ -80,7 +80,7 @@ public class HierNode implements IHierNode {
 	}
 
 	/**
-	 * Gets the full name.
+	 * Gets the full hierarchical name.
 	 *
 	 * @return the full name
 	 */

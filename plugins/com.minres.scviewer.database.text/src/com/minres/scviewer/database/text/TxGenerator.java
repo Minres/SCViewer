@@ -52,7 +52,7 @@ class TxGenerator extends AbstractTxStream {
 	 */
 	@Override
 	public boolean isSame(IWaveform other) {
-		return (other instanceof TxGenerator && this.getId().equals(other.getId()));
+		return (other instanceof TxGenerator && this.getId()==other.getId());
 	}
 
 	/**
@@ -81,6 +81,16 @@ class TxGenerator extends AbstractTxStream {
 	@Override
 	public String getKind() {
 		return stream.getKind();
+	}
+	
+	/**
+	 * Gets the full hierarchical name.
+	 *
+	 * @return the full name
+	 */
+	@Override
+	public String getFullName() {
+		return  ((AbstractTxStream)parent).getFullName()+"."+name;
 	}
 
 }

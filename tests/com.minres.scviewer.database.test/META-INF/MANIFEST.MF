@@ -2,9 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: SCViewer database tests
 Bundle-SymbolicName: com.minres.scviewer.database.test
-Bundle-Version: 1.0.1.qualifier
+Bundle-Version: 4.0.0.qualifier
 Bundle-Vendor: MINRES Technologies GmbH
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: com.minres.scviewer.database,
  com.minres.scviewer.database.sqlite;bundle-version="1.0.0",
  com.minres.scviewer.database.text;bundle-version="1.0.0",

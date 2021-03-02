@@ -37,8 +37,8 @@ public class Tx implements ITx {
 	private TxGenerator trGenerator;
 	private ScvTx scvTx;
 	private List<ITxAttribute> attributes;
-	private Long begin;
-	private Long end;
+	private long begin=-1;
+	private long end=-1;
 	private List<ITxRelation> incoming;
 	private List<ITxRelation> outgoing;
 	
@@ -50,7 +50,7 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public Long getId() {
+	public long getId() {
 		return (long) scvTx.getId();
 	}
 
@@ -69,8 +69,8 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public Long getBeginTime() {
-		if(begin==null){
+	public long getBeginTime() {
+		if(begin<0){
 		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
 				database, "tx="+scvTx.getId()+" AND type="+ AssociationType.BEGIN.ordinal());
 		try {
@@ -78,15 +78,15 @@ public class Tx implements ITx {
 				begin= scvEvent.getTime()*(Long)database.getData("TIMERESOLUTION");
 			}
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException e) {
+				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 		}
 		}
 		return begin;
 	}
 
 	@Override
-	public Long getEndTime() {
-		if(end==null){
+	public long getEndTime() {
+		if(end<0){
 		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
 				database, "tx="+scvTx.getId()+" AND type="+ AssociationType.END.ordinal());
 		try {
@@ -94,7 +94,7 @@ public class Tx implements ITx {
 				end = scvEvent.getTime()*(Long)database.getData("TIMERESOLUTION");
 			}
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException e) {
+				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 		}
 		}
 		return end;
@@ -112,7 +112,7 @@ public class Tx implements ITx {
 					
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			}
 		}
 		return attributes;
@@ -129,7 +129,7 @@ public class Tx implements ITx {
 					incoming.add(createRelation(scvRelation, false));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			}
 		}
 		return incoming;
@@ -146,7 +146,7 @@ public class Tx implements ITx {
 					outgoing.add(createRelation(scvRelation, true));
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException e) {
+					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			}
 		}
 		return outgoing;
@@ -169,7 +169,7 @@ public class Tx implements ITx {
 			else
 				return new TxRelation(trStream.getRelationType(rel.getName()), that, this);
 		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException e) {
+				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			e.printStackTrace();
 		}
 
@@ -178,11 +178,11 @@ public class Tx implements ITx {
 
 	@Override
 	public int compareTo(ITx o) {
-		int res = this.getBeginTime().compareTo(o.getBeginTime());
+		int res = Long.compare(this.getBeginTime(), o.getBeginTime());
 		if(res!=0)	
 			return res;
 		else
-			return this.getId().compareTo(o.getId());
+			return Long.compare(this.getId(), o.getId());
 	}
 
 	@Override
