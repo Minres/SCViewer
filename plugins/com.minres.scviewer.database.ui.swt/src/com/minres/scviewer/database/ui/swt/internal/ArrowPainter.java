@@ -110,46 +110,21 @@ public class ArrowPainter implements IPainter {
 	protected void deriveGeom(Collection<ITxRelation> relations, List<LinkEntry> res, boolean useTarget) {
 		for (ITxRelation iTxRelation : relations) {
 			ITx otherTx = useTarget ? iTxRelation.getTarget() : iTxRelation.getSource();
-			Rectangle bb = createLinkEntry(otherTx, otherTx.getStream());
-			if(bb!=null){
-				res.add(new LinkEntry(bb, iTxRelation.getRelationType()));
-				return;
-			} else {
-				for(IHierNode gen:otherTx.getStream().getChildNodes()) {
-					if(gen instanceof IWaveform) {
-						bb = createLinkEntry(otherTx, (IWaveform) gen);
-						if(bb!=null){
-							res.add(new LinkEntry(bb, iTxRelation.getRelationType()));
-							return;
-						}
+			for(IWaveform iWaveform: new IWaveform[]{otherTx.getStream(), otherTx.getGenerator()}) {
+				if (waveCanvas.wave2painterMap.containsKey(iWaveform)) {
+					IWaveformPainter painter = waveCanvas.wave2painterMap.get(iWaveform);
+					if(painter!=null) {
+						int height = waveCanvas.styleProvider.getTrackHeight();
+						Rectangle bb = new Rectangle(
+								(int) (otherTx.getBeginTime() / scaleFactor),
+								waveCanvas.rulerHeight + painter.getVerticalOffset() + height * getConcurrencyIndex(otherTx),
+								(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
+								height);
+						res.add(new LinkEntry(bb, iTxRelation.getRelationType()));				
 					}
 				}
 			}
 		}
-	}
-
-	private Rectangle createLinkEntry(ITx otherTx, IWaveform iWaveform) {
-		if (waveCanvas.wave2painterMap.containsKey(iWaveform)) {
-			IWaveformPainter painter = waveCanvas.wave2painterMap.get(otherTx.getStream());
-			if(painter==null) {
-				for(IHierNode gen:otherTx.getStream().getChildNodes()) {
-					if(gen instanceof IWaveform) {
-						 painter = waveCanvas.wave2painterMap.get(gen);
-						 if(painter!=null)
-							 break;
-					}
-				}
-			}
-			if(painter!=null) {
-				int height = waveCanvas.styleProvider.getTrackHeight();
-				return new Rectangle(
-						(int) (otherTx.getBeginTime() / scaleFactor),
-						waveCanvas.rulerHeight + painter.getVerticalOffset() + height * getConcurrencyIndex(otherTx),
-						(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
-						height);
-			}
-		}
-		return null;
 	}
 
 	@Override

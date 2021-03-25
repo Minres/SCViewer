@@ -1035,15 +1035,20 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				
     	boolean foundZoom=false;
 		//try to find existing zoomlevel where scaleFactor*clientAreaWidth >= maxTime, if one is found set it as new zoomlevel
-		for (int level=0; level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length; level++){
-			long scaleFactor = (long) Math.pow(10, level/2d);
-		    if(level%2==1) scaleFactor*=3;
-		    if(scaleFactor*clientAreaWidth >= maxTime) {
-		    	setZoomLevel(level);
-		    	foundZoom=true;
-		    	break;
-		    }
-		}
+    	int magnitude_factor=1;
+    	for(int magnitude=0; magnitude<Constants.UNIT_STRING.length; magnitude++) {
+			for (int multiplier=0; multiplier<Constants.UNIT_MULTIPLIER.length; multiplier++){
+				int level = magnitude*Constants.UNIT_MULTIPLIER.length+multiplier;
+				long scaleFactor = Constants.UNIT_MULTIPLIER[multiplier]*magnitude_factor;
+			    if(scaleFactor*clientAreaWidth >= maxTime) {
+			    	setZoomLevel(level);
+			    	foundZoom=true;
+			    	break;
+			    }
+			}
+			if(foundZoom) break;
+			magnitude_factor*=1000;
+    	}
 		//if no zoom level is found, set biggest one available
 		if(!foundZoom) setZoomLevel(Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length-1);
 				
