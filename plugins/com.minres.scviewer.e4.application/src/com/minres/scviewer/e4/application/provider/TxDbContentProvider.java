@@ -52,9 +52,7 @@ public class TxDbContentProvider implements ITreeContentProvider {
 	 */
 	@Override
 	public Object[] getElements(Object inputElement) {
-		if(tableEntries && inputElement instanceof IWaveformDb){
-			return new Object[]{};
-		}else if(inputElement instanceof IHierNode){
+		if(inputElement instanceof IHierNode){
 			// make a copy as the laoder might continue to add waveforms
 			ArrayList<IHierNode> nodes = new ArrayList<>(((IHierNode)inputElement).getChildNodes());
 			return  nodes.stream().filter(n ->

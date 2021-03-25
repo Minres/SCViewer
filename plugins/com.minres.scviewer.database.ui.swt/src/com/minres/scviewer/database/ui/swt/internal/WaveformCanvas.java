@@ -179,8 +179,11 @@ public class WaveformCanvas extends Canvas {
     }
 
     public void setZoomLevel(int level, long centerTime) {
+    	if(level<0) {
+			level = findFitZoomLevel();
+	    	if(level<0) level = 0;
+    	}
     	//FIXME: keep center if zoom-out and cursor is not in view
-    	if(level<0) level = 0;
 		long xc=centerTime/this.scaleFactor; // cursor total x-offset
     	if(level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length){
     		this.scaleFactor = (long) Math.pow(10, level>>1);
@@ -207,6 +210,24 @@ public class WaveformCanvas extends Canvas {
     		this.level = level;
     	}
     }
+
+	private int findFitZoomLevel() {
+		//get area actually capable of displaying data, i.e. area of the receiver which is capable of displaying data
+		Rectangle clientArea = getClientArea();
+		long clientAreaWidth = clientArea.width;
+		//try to find existing zoomlevel where scaleFactor*clientAreaWidth >= maxTime, if one is found set it as new zoomlevel
+		int magnitude_factor=1;
+		for(int magnitude=0; magnitude<Constants.UNIT_STRING.length; magnitude++) {
+			for (int multiplier=0; multiplier<Constants.UNIT_MULTIPLIER.length; multiplier++){
+				int tempLevel = magnitude*Constants.UNIT_MULTIPLIER.length+multiplier;
+				long scaleFactor = Constants.UNIT_MULTIPLIER[multiplier]*magnitude_factor;
+			    if(scaleFactor*clientAreaWidth >= maxTime)
+			    	return tempLevel;
+			}
+			magnitude_factor*=1000;
+		}
+		return -1;
+	}
 
     public long getScaleFactor() {
         return scaleFactor;

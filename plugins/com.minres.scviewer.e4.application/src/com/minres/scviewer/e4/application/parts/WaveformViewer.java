@@ -570,6 +570,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						(result.isMultiStatus() && result.getChildren().length > 0 && result.getChildren()[0].getCode() != Status.OK_STATUS.getCode() ) ){
 					// kill editor and pop up warning for user
 					sync.asyncExec(() -> {
+						if(myParent.isDisposed()) return;
 						final Display display = myParent.getDisplay();
 						MessageDialog.openWarning(display.getActiveShell(), "Error loading database", "Database cannot be loaded. Aborting...");
 						ePartService.hidePart(myPart, true);
@@ -1026,27 +1027,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * Sets the zoom fit.
 	 */
 	public void setZoomFit() {
-		//actual max time of signal
-		long maxTime = waveformPane.getMaxTime();
-		
-		//get area actually capable of displaying data, i.e. area of the receiver which is capable of displaying data
-		Rectangle clientArea = myParent.getClientArea();
-		long clientAreaWidth = clientArea.width;
-				
-    	boolean foundZoom=false;
-		//try to find existing zoomlevel where scaleFactor*clientAreaWidth >= maxTime, if one is found set it as new zoomlevel
-		for (int level=0; level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length; level++){
-			long scaleFactor = (long) Math.pow(10, level/2d);
-		    if(level%2==1) scaleFactor*=3;
-		    if(scaleFactor*clientAreaWidth >= maxTime) {
-		    	setZoomLevel(level);
-		    	foundZoom=true;
-		    	break;
-		    }
-		}
-		//if no zoom level is found, set biggest one available
-		if(!foundZoom) setZoomLevel(Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length-1);
-				
+		waveformPane.setZoomLevel(-1);
 		updateAll();
 	}
 
