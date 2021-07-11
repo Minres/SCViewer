@@ -3,6 +3,7 @@ package com.minres.scviewer.e4.application.parts;
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -229,6 +230,14 @@ public class FileBrowserDialog extends TrayDialog {
 		colSize.getColumn().setText("Size");
 		colSize.getColumn().addSelectionListener(getSelectionAdapter(colSize.getColumn(), 1));
         
+		TableViewerColumn colDate = new TableViewerColumn(tableViewer, SWT.RIGHT);
+		colDate.setLabelProvider(new FileTableLabelProvider() {
+			@Override public String getText(Object element) { return DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.MEDIUM).format(((File) element).lastModified()); }
+		});
+		colDate.getColumn().setWidth(200);
+		colDate.getColumn().setText("Modification Date");
+		colDate.getColumn().addSelectionListener(getSelectionAdapter(colDate.getColumn(), 2));
+        
 		TableViewerColumn colEmpty = new TableViewerColumn(tableViewer, SWT.CENTER);
 		colEmpty.setLabelProvider(new FileTableLabelProvider() {
 			@Override public String getText(Object element) {	return ""; }
@@ -264,7 +273,7 @@ public class FileBrowserDialog extends TrayDialog {
 				tableViewer.setInput(selectedDir.listFiles());
 			}
 		});
-		sashForm.setWeights(new int[]{3, 3});
+		sashForm.setWeights(new int[]{2, 3});
 		return area;
 	}
 
@@ -444,6 +453,9 @@ public class FileBrowserDialog extends TrayDialog {
 	            break;
 	        case 1:
 	            rc = Long.valueOf(p1.length()).compareTo(p2.length());
+	            break;
+	        case 2:
+	            rc = Long.valueOf(p1.lastModified()).compareTo(p2.lastModified());
 	            break;
 	        default:
 	            rc = 0;

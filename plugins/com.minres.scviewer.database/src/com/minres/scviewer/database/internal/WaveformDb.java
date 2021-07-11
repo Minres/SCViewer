@@ -166,16 +166,6 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	}
 
 	/**
-	 * Clear.
-	 */
-	@Override
-	public void clear() {
-		waveforms.clear();
-		childNodes.clear();
-		loaded = false;
-	}
-
-	/**
 	 * Checks if is loaded.
 	 *
 	 * @return true, if is loaded
