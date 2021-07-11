@@ -62,9 +62,4 @@ public interface IWaveformDb extends IHierNode {
 	 */
 	public boolean isLoaded();
 
-	/**
-	 * Clear.
-	 */
-	public void clear();
-
 }

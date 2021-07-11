@@ -613,7 +613,12 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		Map<String, String> state = new HashMap<>();
 		saveWaveformViewerState(state);
 		waveformPane.getStreamList().clear();
-		database.clear();
+		database =  dbFactory.getDatabase();
+		database.addPropertyChangeListener(evt -> {
+			if (IHierNode.WAVEFORMS.equals(evt.getPropertyName())) { //$NON-NLS-1$
+				myParent.getDisplay().syncExec(() -> waveformPane.setMaxTime(database.getMaxTime()));
+			}
+		});
 		if (!filesToLoad.isEmpty())
 			loadDatabase(state, 0L);
 	}
