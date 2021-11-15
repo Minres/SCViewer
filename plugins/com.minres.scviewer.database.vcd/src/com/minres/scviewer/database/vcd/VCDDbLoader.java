@@ -164,7 +164,8 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@Override
 	public void enterModule(String tokenString) {
 		if(moduleStack.isEmpty()) {
-			if("SystemC".compareTo(tokenString)!=0) moduleStack.push(tokenString);
+			if("SystemC".compareTo(tokenString)!=0)
+				moduleStack.push(tokenString);
 		} else
 			moduleStack.push(moduleStack.peek()+"."+tokenString);
 

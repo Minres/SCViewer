@@ -25,6 +25,7 @@ import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
+import com.minres.scviewer.database.IWaveformDbLoaderFactory;
 import com.minres.scviewer.database.RelationType;
 
 /**
@@ -33,7 +34,7 @@ import com.minres.scviewer.database.RelationType;
 public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeListener {
 
 	/** The loaders. */
-	private static List<IWaveformDbLoader> loaders = new LinkedList<>();
+	private static List<IWaveformDbLoaderFactory> loaderFactories = new LinkedList<>();
 
 	/** The loaded. */
 	private boolean loaded;
@@ -52,8 +53,8 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 *
 	 * @param loader the loader
 	 */
-	public synchronized void bind(IWaveformDbLoader loader) {
-		loaders.add(loader);
+	public synchronized void bind(IWaveformDbLoaderFactory loader) {
+		loaderFactories.add(loader);
 	}
 
 	/**
@@ -61,8 +62,8 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 *
 	 * @param loader the loader
 	 */
-	public synchronized void unbind(IWaveformDbLoader loader) {
-		loaders.remove(loader);
+	public synchronized void unbind(IWaveformDbLoaderFactory loader) {
+		loaderFactories.remove(loader);
 	}
 
 	/**
@@ -70,8 +71,8 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 *
 	 * @return the loaders
 	 */
-	public static List<IWaveformDbLoader> getLoaders() {
-		return Collections.unmodifiableList(loaders);
+	public static List<IWaveformDbLoaderFactory> getLoaders() {
+		return Collections.unmodifiableList(loaderFactories);
 	}
 
 	/**
@@ -124,8 +125,9 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	@Override
 	public boolean load(File inp) {
 		boolean retval = true;
-		for (IWaveformDbLoader loader : loaders) {
-			if (loader.canLoad(inp)) {
+		for (IWaveformDbLoaderFactory loaderFactory : loaderFactories) {
+			if (loaderFactory.canLoad(inp)) {
+				IWaveformDbLoader loader = loaderFactory.getLoader();
 				loader.addPropertyChangeListener(this);
 				try {
 					loader.load(this, inp);
