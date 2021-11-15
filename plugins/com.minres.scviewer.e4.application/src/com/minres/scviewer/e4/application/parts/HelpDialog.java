@@ -147,7 +147,7 @@ public class HelpDialog extends Dialog {
 			itemGo.addListener(SWT.Selection, listener);
 			location.addListener(SWT.DefaultSelection, e -> browser.setUrl(location.getText()));
 
-			browser.setUrl("http://eclipse.org");
+			browser.setUrl("https://git.minres.com/VP-Tools/SCViewer/src/branch/master/README.md#key-shortcuts");
 		} catch (SWTError e) {
 			System.out.println("Could not instantiate Browser: " + e.getMessage());
 		}
