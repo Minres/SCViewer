@@ -42,6 +42,8 @@ public class ZoomHandler {
 				waveformViewerPart.setZoomLevel(zoomLevel+1);
 			else if("fit".equalsIgnoreCase(level)) //$NON-NLS-1$
 				waveformViewerPart.setZoomFit();
+			else if("full".equalsIgnoreCase(level)) //$NON-NLS-1$
+				waveformViewerPart.setZoomFull();
 		}
 
 	}

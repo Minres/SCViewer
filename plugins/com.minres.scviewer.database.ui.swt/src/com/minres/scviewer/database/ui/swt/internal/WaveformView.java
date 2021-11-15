@@ -125,6 +125,12 @@ public class WaveformView implements IWaveformView {
 
 	protected ObservableList<TrackEntry> streams;
 
+	private boolean waveformsContainTx=false;
+	
+	public boolean isWaveformsContainTx() {
+		return waveformsContainTx;
+	}
+
 	int selectedMarker = 0;
 
 	private int tracksVerticalHeight;
@@ -515,6 +521,7 @@ public class WaveformView implements IWaveformView {
 		boolean even = true;
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
 		tl.setFont(styleProvider.getNameFont());
+		waveformsContainTx=false;
 		for (TrackEntry streamEntry : streams) {
 			streamEntry.height = styleProvider.getTrackHeight();
 			streamEntry.vOffset = tracksVerticalHeight;
@@ -522,6 +529,7 @@ public class WaveformView implements IWaveformView {
 				streamEntry.currentValue = "";
 				streamEntry.height *= streamEntry.waveform.getRowCount();
 				painter = new StreamPainter(waveformCanvas, even, streamEntry);
+				waveformsContainTx=true;
 			} else if (streamEntry.waveform.getType() == WaveformType.SIGNAL) {
 				streamEntry.currentValue = "---";
 				painter = new SignalPainter(waveformCanvas, even, streamEntry);
@@ -1147,8 +1155,12 @@ public class WaveformView implements IWaveformView {
 	 */
 	@Override
 	public void setZoomLevel(int scale) {
-		waveformCanvas.setZoomLevel(scale);
-		waveformCanvas.reveal(getCursorTime());
+		if(scale<-1) {
+			waveformCanvas.setZoomLevel(scale, getMarkerTime(selectedMarker));
+		} else {
+			waveformCanvas.setZoomLevel(scale);
+			waveformCanvas.reveal(getCursorTime());
+		}
 	}
 
 	/*
@@ -1554,14 +1566,4 @@ public class WaveformView implements IWaveformView {
 			getStreamList().add(idx, e);
 		return e;
 	}
-
-
-
-
-
-
-
-
-
-
 }

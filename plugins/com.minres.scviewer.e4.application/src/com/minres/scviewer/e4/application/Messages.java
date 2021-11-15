@@ -24,6 +24,7 @@ public class Messages extends NLS {
 	public static String SCViewerPreferencesPage_0;
 	public static String SCViewerPreferencesPage_1;
 	public static String SCViewerPreferencesPage_2;
+	public static String SCViewerPreferencesPage_3;
 	public static String StatusBarControl_1;
 	public static String StatusBarControl_2;
 	public static String StatusBarControl_3;
@@ -82,6 +83,14 @@ public class Messages extends NLS {
 	public static String cursor;
 	public static String cursor_drag;
 	public static String cursor_text;
+	public static String HelpDialog_0;
+	public static String HelpDialog_1;
+	public static String HelpDialog_2;
+	public static String HelpDialog_3;
+	public static String HelpDialog_4;
+	public static String HelpDialog_5;
+	public static String HelpDialog_6;
+	public static String HelpDialog_7;
 	public static String marker;
 	public static String marker_text;
 	public static String rel_arrow;

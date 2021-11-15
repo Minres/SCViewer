@@ -23,8 +23,11 @@ public class PreferenceConstants {
 	/** The Constant DATABASE_RELOAD. */
 	public static final String DATABASE_RELOAD="databaseReload"; //$NON-NLS-1$
 	
-	/** The Constant DATABASE_RELOAD. */
+	/** The Constant SHOW_HOVER. */
 	public static final String SHOW_HOVER="showWaveformHover"; //$NON-NLS-1$
+	
+	/** The Constant SHOW_TX_DETAILS. */
+	public static final String SHOW_TX_DETAILS="showTxDetails"; //$NON-NLS-1$
 	
 	/** The Constant TRACK_HEIGHT. */
 	public static final String TRACK_HEIGHT="trackHeigth"; //$NON-NLS-1$
