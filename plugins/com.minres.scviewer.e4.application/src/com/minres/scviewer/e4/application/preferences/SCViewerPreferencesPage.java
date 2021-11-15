@@ -39,6 +39,8 @@ public class SCViewerPreferencesPage extends FieldEditorPreferencePage {
 				getFieldEditorParent()));
 		addField(new BooleanFieldEditor(PreferenceConstants.SHOW_HOVER, Messages.SCViewerPreferencesPage_1,
 				getFieldEditorParent()));
+		addField(new BooleanFieldEditor(PreferenceConstants.SHOW_TX_DETAILS, Messages.SCViewerPreferencesPage_3,
+				getFieldEditorParent()));
 		addField(new IntegerFieldEditor(PreferenceConstants.TRACK_HEIGHT, Messages.SCViewerPreferencesPage_2,
 				getFieldEditorParent()));
 

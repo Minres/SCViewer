@@ -102,19 +102,25 @@
         </children>
       </children>
       <children xsi:type="menu:ToolBar" xmi:id="_oQdMUHcqEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.toolbar.1">
-        <children xsi:type="menu:HandledToolItem" xmi:id="_5DrGQHf4EeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomfit" label="Zoom out" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magnifier.png" tooltip="Restore default zoom level" command="_693GoHcqEeWwZ-9vrAR2UQ">
-          <parameters xmi:id="_5DrGQXf4EeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.14" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="fit"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_LFGfsEZEEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomfull" label="Zoom full" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/zoom_full.png" tooltip="Zoom full range" command="_693GoHcqEeWwZ-9vrAR2UQ">
+          <parameters xmi:id="_LFGfsUZEEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.parameter.full" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="full"/>
+        </children>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_5DrGQHf4EeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomfit" label="Zoom fit" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/zoom_fit.png" tooltip="Zoom between cursor and marker" command="_693GoHcqEeWwZ-9vrAR2UQ">
+          <parameters xmi:id="_5DrGQXf4EeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.fit" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="fit"/>
         </children>
         <children xsi:type="menu:ToolBarSeparator" xmi:id="_p1AvUHcqEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.toolbarseparator.1"/>
         <children xsi:type="menu:HandledToolItem" xmi:id="_XMQPAHcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomin" label="Zoom in" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magnifier_zoom_in.png" tooltip="Zoom in by a factor of 3" command="_693GoHcqEeWwZ-9vrAR2UQ">
-          <parameters xmi:id="_fi5w4HcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="in"/>
+          <parameters xmi:id="_fi5w4HcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.in" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="in"/>
         </children>
         <children xsi:type="menu:HandledToolItem" xmi:id="_XqTc8HcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomout" label="Zoom out" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magifier_zoom_out.png" tooltip="Zoom out by a factor of 3" command="_693GoHcqEeWwZ-9vrAR2UQ">
-          <parameters xmi:id="_d7OBYHcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.14" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="out"/>
+          <parameters xmi:id="_d7OBYHcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.out" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="out"/>
         </children>
       </children>
       <children xsi:type="menu:ToolBar" xmi:id="_fwn8wGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.toolbar.2">
-        <children xsi:type="menu:HandledToolItem" xmi:id="_j-XIgGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handledtoolitem.hover" label="Hover" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/lightbulb.png" tooltip="Enable hover window in waveform" selected="true" type="Check" command="_uyeyYGtTEeqmlpoaaMHoiw">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_j-XIgGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handledtoolitem.txdetails" label="TX Details" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/application_side_expand.png" tooltip="Show tx details parts" selected="true" type="Check" command="_Fj1gQEYoEeyKK_icsY7Xjg">
+          <tags>EnableTxDetails</tags>
+        </children>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_33tugEYnEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.handledtoolitem.hover" label="Hover" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/lightbulb.png" tooltip="Enable hover window in waveform" selected="true" type="Check" command="_uyeyYGtTEeqmlpoaaMHoiw">
           <tags>EnableHover</tags>
         </children>
       </children>
@@ -137,11 +143,12 @@
   <handlers xmi:id="_UUnX8IoNEeWxJ_wPkM6yGQ" elementId="com.minres.scviewer.e4.application.handler.set_them" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ThemeSetHandler" command="_KlGlsIoNEeWxJ_wPkM6yGQ"/>
   <handlers xmi:id="_V4EscIuGEeWid7xO48ZBXw" elementId="com.minres.scviewer.e4.application.handler.setreleationtype" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SetRelationTypeHandler" command="_E9lUgIt2EeWid7xO48ZBXw"/>
   <handlers xmi:id="__99WoJebEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handler.loadStoreSettings" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.LoadStoreSettingsHandler" command="_7-AIMJebEeW09eyIbHsdvg"/>
-  <handlers xmi:id="_x4pSEGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handler.0" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableHover" command="_uyeyYGtTEeqmlpoaaMHoiw"/>
+  <handlers xmi:id="_x4pSEGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handler.enablehover" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableHover" command="_uyeyYGtTEeqmlpoaaMHoiw"/>
   <handlers xmi:id="_h3jU8BkWEeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.handler.reloadCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ReloadHandler" command="_srACsBkREeudD5MqrWoETQ"/>
   <handlers xmi:id="_gn_boBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.txSearch" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler" command="_XDxTYBlEEeuiP60JNw0iiA"/>
   <handlers xmi:id="_CCEtAB07EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.update" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.UpdateHandler" command="_-9ED4B06EeuiP60JNw0iiA"/>
   <handlers xmi:id="_ru2NIEYEEeyPM8G0E2EYww" elementId="com.minres.scviewer.e4.application.handler.helpCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpHandler" command="_lqjIYEYEEeyPM8G0E2EYww"/>
+  <handlers xmi:id="_TwU0IEYoEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.handler.enabletxdetails" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableTxDetails" command="_Fj1gQEYoEeyKK_icsY7Xjg"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
@@ -284,6 +291,7 @@
   <commands xmi:id="_XDxTYBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.txSearch" commandName="Search Command"/>
   <commands xmi:id="_-9ED4B06EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.command.update" commandName="Update"/>
   <commands xmi:id="_lqjIYEYEEeyPM8G0E2EYww" elementId="org.eclipse.ui.help.helpAction" commandName="Help Command"/>
+  <commands xmi:id="_Fj1gQEYoEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.command.enabletxdetails" commandName="Enable Tx Details" description="Show tx details parts"/>
   <addons xmi:id="_95PfsnNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_95Pfs3NmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_95PftHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>

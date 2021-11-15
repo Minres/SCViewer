@@ -74,6 +74,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
+import org.osgi.service.prefs.BackingStoreException;
 
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.IHierNode;
@@ -82,6 +83,7 @@ import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.RelationTypeFactory;
+import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.database.tx.ITxEvent;
@@ -117,35 +119,38 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	/** The Constant DATABASE_FILE. */
 	protected static final String DATABASE_FILE = "DATABASE_FILE"; //$NON-NLS-1$
-	
+
 	/** The Constant SHOWN_WAVEFORM. */
 	protected static final String SHOWN_WAVEFORM = "SHOWN_WAVEFORM"; //$NON-NLS-1$
-	
+
 	protected static final String VALUE_DISPLAY = ".VALUE_DISPLAY"; //$NON-NLS-1$
-	
+
 	protected static final String WAVE_DISPLAY = ".WAVE_DISPLAY"; //$NON-NLS-1$
-	
+
 	/** The Constant SHOWN_CURSOR. */
 	protected static final String SHOWN_CURSOR = "SHOWN_CURSOR"; //$NON-NLS-1$
-	
+
 	/** The Constant ZOOM_LEVEL. */
 	protected static final String ZOOM_LEVEL = "ZOOM_LEVEL"; //$NON-NLS-1$
 
 	/** The Constant BASE_LINE_TIME. */
 	protected static final String BASE_LINE_TIME = "BASE_LINE_TIME"; //$NON-NLS-1$
-	
+
 	/** The Constant SELECTED_TX_ID. */
 	protected static final String SELECTED_TX_ID = "SELECTED_TX_ID"; //$NON-NLS-1$
 
 	/** The Constant SELECTED_TRACKENTRY_NAME. */
 	protected static final String SELECTED_TRACKENTRY_NAME = "SELECTED_TRACKENTRY_NAME"; //$NON-NLS-1$
-	
+
 	/** The Constant WAVEFORM_SELECTED. */
 	protected static final String WAVEFORM_SELECTED = ".WAVEFORM_SELECTED"; //$NON-NLS-1$
-	
+
 	/** The Constant FILE_CHECK_INTERVAL. */
 	protected static final long FILE_CHECK_INTERVAL = 60000;
-	
+
+	/** The Constant TX_DETAILS_SHOWN. */
+	protected static final String TX_DETAILS_SHOWN = "TX_DETAILS_SHOWN"; //$NON-NLS-1$
+
 	/** The zoom level. */
 	private String[] zoomLevel;
 
@@ -156,19 +161,19 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	public static final String WAVE_ACTION_ID = "com.minres.scviewer.ui.action.AddToWave"; //$NON-NLS-1$
 
 	private static final String MENU_CONTEXT = "com.minres.scviewer.e4.application.popupmenu.wavecontext"; //$NON-NLS-1$
-	
+
 	/** The number of active DisposeListeners */
 	private int disposeListenerNumber = 0;
-	
+
 	/** The factory. */
 	WaveformViewFactory factory = new WaveformViewFactory();
 
 	DesignBrowser browser = null;
-	
+
 	TransactionDetails detailsView = null;
-	
+
 	TransactionListView transactionList = null;
-	
+
 	/** The waveform pane. */
 	private IWaveformView waveformPane;
 
@@ -211,7 +216,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	ArrayList<File> filesToLoad = new ArrayList<>();
 
 	String partConfig = "";
-	
+
 	/** The persisted state. */
 	Map<String, String> persistedState;
 
@@ -231,10 +236,15 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	IModificationChecker fileChecker;
 
 	@Inject IWaveformDbFactory dbFactory;
-	
+
 	@Inject Composite parent;
-	
+
 	private boolean showHover;
+
+	@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.SHOW_TX_DETAILS) Boolean blah;
+	
+	private SashForm topSash = null;
+	private SashForm middleSash = null;
 
 	/**
 	 * Creates the composite.
@@ -246,7 +256,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@PostConstruct
 	public void createComposite(MPart part, EMenuService menuService, @Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE) IEclipsePreferences prefs, @Preference(value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
 		disposeListenerNumber += 1;
-		
+
 		myPart = part;
 		myParent = parent;
 		store=prefs;
@@ -258,14 +268,14 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			}
 		});
 		parent.setLayout(new FillLayout(SWT.HORIZONTAL));
-		
+
 		IEclipseContext ctx = myPart.getContext();
 		ctx.set(WaveformViewer.class, this);
 		ctx.set(IWaveformDb.class, database);
 
-		SashForm topSash = new SashForm(parent, SWT.BORDER | SWT.SMOOTH | SWT.HORIZONTAL);
+		topSash = new SashForm(parent, SWT.BORDER | SWT.SMOOTH | SWT.HORIZONTAL);
 		Composite left = new Composite(topSash, SWT.NONE);
-		SashForm middleSash = new SashForm(topSash, SWT.BORDER | SWT.SMOOTH | SWT.VERTICAL);
+		middleSash = new SashForm(topSash, SWT.BORDER | SWT.SMOOTH | SWT.VERTICAL);
 		Composite right = new Composite(topSash, SWT.NONE);
 		topSash.setWeights(new int[] {20, 60, 20});
 
@@ -275,101 +285,101 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 		ctx.set(Composite.class, left);
 		browser = ContextInjectionFactory.make(DesignBrowser.class, ctx);
-		
+
 		ctx.set(Composite.class, right);
 		detailsView = ContextInjectionFactory.make(TransactionDetails.class, ctx);
 
 		waveformPane = factory.createPanel(middleTop);
-		
+
 		ctx.set(Composite.class, middleBottom);
 		transactionList = ContextInjectionFactory.make(TransactionListView.class, ctx);
-		
+
 		waveformPane.setMaxTime(0);
 		//set selection to empty selection when opening a new waveformPane
 		selectionService.setSelection(new StructuredSelection());
-		
+
 		waveformPane.addPropertyChangeListener(IWaveformView.CURSOR_PROPERTY, evt -> {
-				Long time = (Long) evt.getNewValue();
-				eventBroker.post(WaveStatusBarControl.CURSOR_TIME, waveformPane.getScaledTime(time));
-				long marker = waveformPane.getMarkerTime(waveformPane.getSelectedMarkerId());
-				eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getScaledTime(time - marker));
+			Long time = (Long) evt.getNewValue();
+			eventBroker.post(WaveStatusBarControl.CURSOR_TIME, waveformPane.getScaledTime(time));
+			long marker = waveformPane.getMarkerTime(waveformPane.getSelectedMarkerId());
+			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getScaledTime(time - marker));
 		});
 		waveformPane.addPropertyChangeListener(IWaveformView.MARKER_PROPERTY, evt -> {
-				Long time = (Long) evt.getNewValue();
-				eventBroker.post(WaveStatusBarControl.MARKER_TIME, waveformPane.getScaledTime(time));
-				long cursor = waveformPane.getCursorTime();
-				eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getScaledTime(cursor - time));
+			Long time = (Long) evt.getNewValue();
+			eventBroker.post(WaveStatusBarControl.MARKER_TIME, waveformPane.getScaledTime(time));
+			long cursor = waveformPane.getCursorTime();
+			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getScaledTime(cursor - time));
 		});
-		
+
 		waveformPane.addSelectionChangedListener(event -> {
-				if (event.getSelection() instanceof IStructuredSelection) {
-					selectionService.setSelection(event.getSelection());
-				}
+			if (event.getSelection() instanceof IStructuredSelection) {
+				selectionService.setSelection(event.getSelection());
+			}
 		});
 
 		waveformPane.getWaveformControl().addListener(SWT.KeyDown, e -> {
-				if((e.stateMask&SWT.MOD3)!=0) { // Alt key
-				} else if((e.stateMask&SWT.MOD1)!=0) { //Ctrl/Cmd
-					int zoomlevel = waveformPane.getZoomLevel();
-					switch(e.keyCode) {
-					case '+':
-					case SWT.KEYPAD_ADD:
-						if(zoomlevel>0)
-							waveformPane.setZoomLevel(zoomlevel-1);
-						return;
-					case '-':
-					case SWT.KEYPAD_SUBTRACT:
-						if(zoomlevel<waveformPane.getZoomLevels().length-1)
-							waveformPane.setZoomLevel(zoomlevel+1);
-						return;
-					case SWT.ARROW_UP:
-						waveformPane.moveSelectedTrack(-1);
-						return;
-					case SWT.ARROW_DOWN:
-						waveformPane.moveSelectedTrack(1);
-						return;
-					default:
-						break;
-					}
-				} else if((e.stateMask&SWT.MOD2)!=0) { //Shift
-					switch(e.keyCode) {
-					case SWT.ARROW_LEFT:
-						waveformPane.scrollHorizontal(-100);
-						return;
-					case SWT.ARROW_RIGHT:
-						waveformPane.scrollHorizontal(100);
-						return;
-					default:
-						break;
-					}
-				} else {
-					switch(e.keyCode) {
-					case SWT.ARROW_LEFT:
-						waveformPane.scrollHorizontal(-10);
-						return;
-					case SWT.ARROW_RIGHT:
-						waveformPane.scrollHorizontal(10);
-						return;
-					case SWT.ARROW_UP:
-						waveformPane.moveSelection(GotoDirection.UP);
-						return;
-					case SWT.ARROW_DOWN:
-						waveformPane.moveSelection(GotoDirection.DOWN);
-						return;
-					case SWT.HOME:
-						waveformPane.scrollTo(IWaveformView.MARKER_POS);
-						return;
-					case SWT.END:
-						waveformPane.scrollTo(IWaveformView.CURSOR_POS);
-						return;
-					case SWT.DEL:
-						waveformPane.deleteSelectedTracks();
-					default:
-						break;
-					}
+			if((e.stateMask&SWT.MOD3)!=0) { // Alt key
+			} else if((e.stateMask&SWT.MOD1)!=0) { //Ctrl/Cmd
+				int zoomlevel = waveformPane.getZoomLevel();
+				switch(e.keyCode) {
+				case '+':
+				case SWT.KEYPAD_ADD:
+					if(zoomlevel>0)
+						waveformPane.setZoomLevel(zoomlevel-1);
+					return;
+				case '-':
+				case SWT.KEYPAD_SUBTRACT:
+					if(zoomlevel<waveformPane.getZoomLevels().length-1)
+						waveformPane.setZoomLevel(zoomlevel+1);
+					return;
+				case SWT.ARROW_UP:
+					waveformPane.moveSelectedTrack(-1);
+					return;
+				case SWT.ARROW_DOWN:
+					waveformPane.moveSelectedTrack(1);
+					return;
+				default:
+					break;
 				}
+			} else if((e.stateMask&SWT.MOD2)!=0) { //Shift
+				switch(e.keyCode) {
+				case SWT.ARROW_LEFT:
+					waveformPane.scrollHorizontal(-100);
+					return;
+				case SWT.ARROW_RIGHT:
+					waveformPane.scrollHorizontal(100);
+					return;
+				default:
+					break;
+				}
+			} else {
+				switch(e.keyCode) {
+				case SWT.ARROW_LEFT:
+					waveformPane.scrollHorizontal(-10);
+					return;
+				case SWT.ARROW_RIGHT:
+					waveformPane.scrollHorizontal(10);
+					return;
+				case SWT.ARROW_UP:
+					waveformPane.moveSelection(GotoDirection.UP);
+					return;
+				case SWT.ARROW_DOWN:
+					waveformPane.moveSelection(GotoDirection.DOWN);
+					return;
+				case SWT.HOME:
+					waveformPane.scrollTo(IWaveformView.MARKER_POS);
+					return;
+				case SWT.END:
+					waveformPane.scrollTo(IWaveformView.CURSOR_POS);
+					return;
+				case SWT.DEL:
+					waveformPane.deleteSelectedTracks();
+				default:
+					break;
+				}
+			}
 		});
-		
+
 		zoomLevel = waveformPane.getZoomLevels();
 		checkForUpdates = store.getBoolean(PreferenceConstants.DATABASE_RELOAD, true);
 		filesToLoad = new ArrayList<>();
@@ -461,8 +471,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						valueCol.pack();
 						table.setSize(table.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 						parent.addPaintListener( e -> {
-								Rectangle area = parent.getClientArea();
-								valueCol.setWidth(area.width - nameCol.getWidth());
+							Rectangle area = parent.getClientArea();
+							valueCol.setWidth(area.width - nameCol.getWidth());
 						});
 						parent.addFocusListener(FocusListener.focusGainedAdapter(e -> table.setFocus()));
 						return true;
@@ -484,21 +494,28 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			}
 		});
 		waveformPane.setStyleProvider(new WaveformStyleProvider(store));
+		showTxDetails(false);
 	}
 
 	@Inject
 	@Optional
 	public void reactOnPrefsChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE) IEclipsePreferences prefs) {
 		prefs.addPreferenceChangeListener(this);
-		
+
 	}
-	
+
 	@Inject
 	@Optional
 	public void reactOnShowHoverChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.SHOW_HOVER) Boolean hover) {
 		showHover=hover;
 	}
-	
+
+	@Inject
+	@Optional
+	public void reactOnShowTxDetailsChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.SHOW_TX_DETAILS) Boolean show) {
+		showTxDetails(show);
+	}
+
 	@Inject
 	@Optional
 	public void reactOnReloadDatabaseChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.DATABASE_RELOAD) Boolean checkForUpdates) {
@@ -568,7 +585,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				if (monitor.isCanceled())
 					throw new OperationCanceledException(Messages.WaveformViewer_14);
 
-				
+
 				IStatus result = jobGroup.getResult();
 				if( (!result.isMultiStatus() && result.getCode() != Status.OK_STATUS.getCode() ) ||
 						(result.isMultiStatus() && result.getChildren().length > 0 && result.getChildren()[0].getCode() != Status.OK_STATUS.getCode() ) ){
@@ -605,10 +622,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	public void fileChanged(List<File> file) {
 		final Display display = myParent.getDisplay();
 		display.asyncExec(() -> {
-				if (MessageDialog.openQuestion(display.getActiveShell(), Messages.WaveformViewer_17,
-						Messages.WaveformViewer_18)) {
-					reloadDatabase();
-				}
+			if (MessageDialog.openQuestion(display.getActiveShell(), Messages.WaveformViewer_17,
+					Messages.WaveformViewer_18)) {
+				reloadDatabase();
+			}
 		});
 		fileMonitor.removeFileChangeListener(this);
 	}
@@ -684,14 +701,14 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		saveWaveformViewerState(persistingState);
 		Properties props = new Properties();
 		props.putAll(persistingState);
-		
+
 		try (FileOutputStream out = new FileOutputStream(fileName)) {
 			props.store(out, "Written by SCViewer"); //$NON-NLS-1$
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void loadState(String fileName){
 		//clear old streams before loading tab settings
 		if(!waveformPane.getStreamList().isEmpty()) {
@@ -709,7 +726,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Save waveform viewer state.
 	 *
@@ -734,7 +751,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		}
 		persistingState.put(ZOOM_LEVEL, Integer.toString(waveformPane.getZoomLevel()));
 		persistingState.put(BASE_LINE_TIME, Long.toString(waveformPane.getBaselineTime()));
-		
+
 		// get selected transaction	of a stream	
 		ISelection selection = waveformPane.getSelection();
 		if (!selection.isEmpty()) {
@@ -749,24 +766,25 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				persistingState.put(SELECTED_TRACKENTRY_NAME, name);
 			}
 		}
+		persistingState.put(TX_DETAILS_SHOWN, Boolean.toString(store.getBoolean(PreferenceConstants.SHOW_TX_DETAILS, false)));
 	}
 
 	protected List<Object> getISelection(ISelection selection){
-	    List<Object> result = new LinkedList<> ();
+		List<Object> result = new LinkedList<> ();
 
-	    if ( selection instanceof IStructuredSelection ) {
-	        Iterator<?> i = ((IStructuredSelection)selection).iterator();
-	        while (i.hasNext()){
-	            Object o = i.next ();
-	            if (o == null) {
-	                continue;
-	            }
-	            result.add(o);
-	        }
-	    }
-	    return result;
+		if ( selection instanceof IStructuredSelection ) {
+			Iterator<?> i = ((IStructuredSelection)selection).iterator();
+			while (i.hasNext()){
+				Object o = i.next ();
+				if (o == null) {
+					continue;
+				}
+				result.add(o);
+			}
+		}
+		return result;
 	}	
-	
+
 	/**
 	 * Restore waveform viewer state.
 	 *
@@ -823,18 +841,24 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				String trackentryName = state.get(SELECTED_TRACKENTRY_NAME);
 				//get TrackEntry Object based on name and TX Object by id and put into selectionList
 				trackEntries.stream().filter(e->trackentryName.equals(e.waveform.getFullName())).forEach(trackEntry ->
-					trackEntry.waveform.getEvents().entrySet().stream()
-					.map(e->e.events)
-					.filter(Objects::nonNull)
-					.forEach(entries-> 
-						Arrays.stream(entries)
-						.filter(e->e instanceof ITxEvent && txId.equals(((ITxEvent)e).getTransaction().getId()))
-						.forEach(event ->
-							waveformPane.setSelection(new StructuredSelection(
-									new Object[] {((ITxEvent)event).getTransaction(), trackEntry}))
+				trackEntry.waveform.getEvents().entrySet().stream()
+				.map(e->e.events)
+				.filter(Objects::nonNull)
+				.forEach(entries-> 
+				Arrays.stream(entries)
+				.filter(e->e instanceof ITxEvent && txId.equals(((ITxEvent)e).getTransaction().getId()))
+				.forEach(event ->
+				waveformPane.setSelection(new StructuredSelection(
+						new Object[] {((ITxEvent)event).getTransaction(), trackEntry}))
 						)
-					)
-				);
+						)
+						);
+			} catch (NumberFormatException e) {
+			}
+		}
+		if (state.containsKey(TX_DETAILS_SHOWN)) {
+			try {
+				showTxDetails(Boolean.parseBoolean(state.get(TX_DETAILS_SHOWN)));
 			} catch (NumberFormatException e) {
 			}
 		}
@@ -970,15 +994,18 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			}
 
 		}
+		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent());		
 		setFocus();
 	}
 
 	public void removeSelectedStreamsFromList() {
 		waveformPane.deleteSelectedTracks();
+		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent());		
 	}
 
 	public void removeSelectedStreamFromList() {
 		waveformPane.deleteSelectedTracks();
+		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent());		
 	}
 	/**
 	 * Move selected.
@@ -989,7 +1016,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		waveformPane.moveSelectedTrack(i);
 	}
 
-	
+
 	/**
 	 * Move selection.
 	 *
@@ -1036,6 +1063,14 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * Sets the zoom fit.
 	 */
 	public void setZoomFit() {
+		waveformPane.setZoomLevel(-2);
+		updateAll();
+	}
+
+	/**
+	 * Sets the zoom fit.
+	 */
+	public void setZoomFull() {
 		waveformPane.setZoomLevel(-1);
 		updateAll();
 	}
@@ -1181,7 +1216,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		if(navigationRelationType!=relationType) waveformPane.setHighliteRelation(relationType);
 		navigationRelationType=relationType;
 	}
-	
+
 	public void update() {
 		waveformPane.update();
 	}
@@ -1200,17 +1235,39 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * 
 	 * @param e
 	 */
-    public void widgetDisposed(DisposeEvent e) {
-    	disposeListenerNumber -= 1;
-    	if( disposeListenerNumber == 0) {  //if the last tab is closed, reset statusbar
+	public void widgetDisposed(DisposeEvent e) {
+		disposeListenerNumber -= 1;
+		if( disposeListenerNumber == 0) {  //if the last tab is closed, reset statusbar
 			eventBroker.post(WaveStatusBarControl.ZOOM_LEVEL, null);
 			eventBroker.post(WaveStatusBarControl.CURSOR_TIME, null);
 			eventBroker.post(WaveStatusBarControl.MARKER_TIME, null);
 			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, null);
-    	}
-    }
-    
+		}
+	}
+
 	public void search(String propName, DataType type, String propValue) {
 		transactionList.getControl().setSearchProps(propName, type, propValue);
+	}
+
+	public void showTxDetails(boolean show) {
+		if(middleSash==null || topSash==null || middleSash.isDisposed() || topSash.isDisposed())
+			return;
+		if(show) {
+			middleSash.setWeights(new int[] {75, 25});
+			topSash.setWeights(new int[] {20, 60, 20});
+		} else {
+			middleSash.setWeights(new int[] {100, 0});
+			topSash.setWeights(new int[] {20, 80, 0});
+
+		}
+		detailsView.getControl().setVisible(show);
+		transactionList.getControl().setVisible(show);
+		parent.requestLayout();
+		if(store.getBoolean(PreferenceConstants.SHOW_TX_DETAILS, false) != show) {
+			store.putBoolean(PreferenceConstants.SHOW_TX_DETAILS, show);
+			try {
+				store.flush();
+			} catch (BackingStoreException e) {}
+		}
 	}
 }

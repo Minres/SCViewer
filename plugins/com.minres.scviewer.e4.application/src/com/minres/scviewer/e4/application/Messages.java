@@ -24,6 +24,7 @@ public class Messages extends NLS {
 	public static String SCViewerPreferencesPage_0;
 	public static String SCViewerPreferencesPage_1;
 	public static String SCViewerPreferencesPage_2;
+	public static String SCViewerPreferencesPage_3;
 	public static String StatusBarControl_1;
 	public static String StatusBarControl_2;
 	public static String StatusBarControl_3;
