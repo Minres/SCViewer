@@ -164,7 +164,7 @@ public class WaveformView implements IWaveformView {
 							setSelection(new StructuredSelection(res), (e.stateMask & SWT.CTRL) != 0, false);
 						} else
 							setSelection(new StructuredSelection(entry.getValue()), (e.stateMask & SWT.CTRL) != 0,
-									false);
+							false);
 					} else {
 						setSelection(new StructuredSelection(entry.getValue()), (e.stateMask & SWT.CTRL) != 0, false);
 					}
@@ -197,59 +197,64 @@ public class WaveformView implements IWaveformView {
 			down = false;
 			if (start == null)
 				return;
-			if ((e.stateMask & SWT.MODIFIER_MASK & ~SWT.SHIFT) != 0)
-				return; // don't react on modifier except shift
-			if (e.button == 1 && Math.abs(e.x - start.x) > 3) {
-				asyncUpdate(e.widget);
-				long startTime = waveformCanvas.getTimeForOffset(start.x);
-				long endTime = waveformCanvas.getTimeForOffset(end.x);
-				long targetTimeRange = endTime - startTime;
-				long currentTimeRange = waveformCanvas.getMaxVisibleTime() - waveformCanvas.getMinVisibleTime();
-				if (targetTimeRange == 0)
-					return;
-				long relation = currentTimeRange / targetTimeRange;
-				long i = 1;
-				int level = 0;
-				do {
-					if (relation < 0) {
-						if (-relation < i) {
-							break;
-						}
-						level--;
-						if (-relation < i * 3) {
-							break;
-						}
-						level--;
-					} else {
-						if (relation < i) {
-							break;
-						}
-						level++;
-						if (relation < i * 3) {
-							break;
-						}
-						level++;
-					}
-					i = i * 10;
-				} while (i < 10000);
-				if (i < 10000) {
-					int curLevel = waveformCanvas.getZoomLevel();
-					waveformCanvas.setZoomLevel(curLevel - level, (startTime + endTime) / 2);
-				}
-			} else if (e.button == 1 && ((e.stateMask & SWT.SHIFT) == 0)) {
-				// set cursor (button 1 and no shift)
-				if (Math.abs(e.x - start.x) < 3 && Math.abs(e.y - start.y) < 3) {
-					// first set cursor time
-					setCursorTime(snapOffsetToEvent(start));
-					// then set selection and reveal
-					setSelection(new StructuredSelection(initialSelected));
+			if ((e.stateMask & SWT.MODIFIER_MASK & ~(SWT.SHIFT | SWT.CTRL)) != 0)
+				return; // don't react on modifier except shift and control
+			boolean isCtrl = (e.stateMask & SWT.CTRL)!=0;
+			boolean isShift = (e.stateMask & SWT.SHIFT)!=0;
+			if (e.button == 1) {
+				if (Math.abs(e.x - start.x) > 3) { // was drag event
 					asyncUpdate(e.widget);
+					long startTime = waveformCanvas.getTimeForOffset(start.x);
+					long endTime = waveformCanvas.getTimeForOffset(end.x);
+					long targetTimeRange = endTime - startTime;
+					long currentTimeRange = waveformCanvas.getMaxVisibleTime() - waveformCanvas.getMinVisibleTime();
+					if (targetTimeRange == 0)
+						return;
+					long relation = currentTimeRange / targetTimeRange;
+					long i = 1;
+					int level = 0;
+					do {
+						if (relation < 0) {
+							if (-relation < i) {
+								break;
+							}
+							level--;
+							if (-relation < i * 3) {
+								break;
+							}
+							level--;
+						} else {
+							if (relation < i) {
+								break;
+							}
+							level++;
+							if (relation < i * 3) {
+								break;
+							}
+							level++;
+						}
+						i = i * 10;
+					} while (i < 10000);
+					if (i < 10000) {
+						int curLevel = waveformCanvas.getZoomLevel();
+						waveformCanvas.setZoomLevel(curLevel - level, (startTime + endTime) / 2);
+					}
+				} else if( isShift) { // set marker (button 1 and shift)
+					setMarkerTime(snapOffsetToEvent(start), selectedMarker);
+				} else if(isCtrl) {	// set cursor (button 1 and ctrl)
+					setCursorTime(snapOffsetToEvent(start));
+				} else { // set cursor (button 1 only)
+					if (Math.abs(e.y - start.y) < 3) {
+						// first set cursor time
+						setCursorTime(snapOffsetToEvent(start));
+						// then set selection and reveal
+						setSelection(new StructuredSelection(initialSelected));
+					}
 				}
-			} else if (e.button == 2 || (e.button == 1 && (e.stateMask & SWT.SHIFT) != 0)) {
-				// set marker (button 1 and shift)
+			} else if (e.button == 2) { // set marker (button 2)
 				setMarkerTime(snapOffsetToEvent(start), selectedMarker);
-				asyncUpdate(e.widget);
 			}
+			asyncUpdate(e.widget);
 		}
 
 		protected long snapOffsetToEvent(Point p) {
@@ -287,8 +292,8 @@ public class WaveformView implements IWaveformView {
 		@Override
 		public void handleEvent(Event e) {
 			switch (e.type) {
-			case SWT.MouseWheel:
-				break;
+//			case SWT.MouseWheel:
+//				break;
 			case SWT.MouseDown:
 				start = new Point(e.x, e.y);
 				end = new Point(e.x, e.y);
@@ -756,7 +761,7 @@ public class WaveformView implements IWaveformView {
 					ITx txSel = (ITx) selList.get(0);
 					TrackEntry trackEntry = selList.size() == 2 && selList.get(1) instanceof TrackEntry
 							? (TrackEntry) selList.get(1)
-							: null;
+									: null;
 					if (trackEntry == null) {
 						trackEntry = getEntryFor(txSel);
 						if (trackEntry == null && addIfNeeded) {
@@ -930,7 +935,7 @@ public class WaveformView implements IWaveformView {
 			return candidates.get(0);
 		default:
 			ArrayList<ITxRelation> visibleCandidates = candidates.stream().filter(this::streamsVisible)
-					.collect(Collectors.toCollection(ArrayList::new));
+			.collect(Collectors.toCollection(ArrayList::new));
 			if (visibleCandidates.isEmpty()) {
 				return new RelSelectionDialog(waveformCanvas.getShell(), candidates, target).open();
 			} else if (visibleCandidates.size() == 1) {
@@ -1230,7 +1235,7 @@ public class WaveformView implements IWaveformView {
 				if (event.y < tracksVerticalHeight) {
 					event.doit = true;
 					LocalSelectionTransfer.getTransfer()
-							.setSelection(new StructuredSelection(currentWaveformSelection));
+					.setSelection(new StructuredSelection(currentWaveformSelection));
 				}
 			}
 
