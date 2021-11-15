@@ -18,9 +18,7 @@ The viewer has the following features
  - sqlite based 
  - visualization of transaction relations
 
-To build the plugins the Eclipse SDK or PDE can be used. In both cases the Groovy
-eclipse plugin (http://groovy.codehaus.org/Eclipse+Plugin or Market) has to be
-installed.
+To build the plugins the Eclipse SDK or PDE can be used.
 
 Key Shortcuts
 =============
