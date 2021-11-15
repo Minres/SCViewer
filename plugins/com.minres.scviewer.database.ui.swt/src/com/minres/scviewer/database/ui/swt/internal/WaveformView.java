@@ -292,8 +292,8 @@ public class WaveformView implements IWaveformView {
 		@Override
 		public void handleEvent(Event e) {
 			switch (e.type) {
-//			case SWT.MouseWheel:
-//				break;
+			//			case SWT.MouseWheel:
+			//				break;
 			case SWT.MouseDown:
 				start = new Point(e.x, e.y);
 				end = new Point(e.x, e.y);
@@ -1509,6 +1509,22 @@ public class WaveformView implements IWaveformView {
 		waveformCanvas.redraw();
 	}
 
+	@Override
+	public void scrollTo(int pos) {
+		long time = 0;
+		switch(pos) {
+		case IWaveformView.CURSOR_POS:
+			time = getCursorTime();
+			break;
+		case IWaveformView.MARKER_POS:
+			time = getMarkerTime(selectedMarker);
+			break;
+		default:
+			break;
+		}
+		waveformCanvas.centerAt(time);
+	}
+
 	public void asyncUpdate(Widget widget) {
 		widget.getDisplay().asyncExec(() -> {
 			waveformCanvas.redraw();
@@ -1538,5 +1554,14 @@ public class WaveformView implements IWaveformView {
 			getStreamList().add(idx, e);
 		return e;
 	}
+
+
+
+
+
+
+
+
+
 
 }

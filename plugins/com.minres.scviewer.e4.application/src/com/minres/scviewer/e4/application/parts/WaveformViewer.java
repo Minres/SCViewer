@@ -357,9 +357,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						waveformPane.moveSelection(GotoDirection.DOWN);
 						return;
 					case SWT.HOME:
+						waveformPane.scrollTo(IWaveformView.MARKER_POS);
 						return;
 					case SWT.END:
+						waveformPane.scrollTo(IWaveformView.CURSOR_POS);
 						return;
+					case SWT.DEL:
+						waveformPane.deleteSelectedTracks();
 					default:
 						break;
 					}
