@@ -27,10 +27,14 @@ import com.minres.scviewer.database.tx.ITx;
 
 public interface IWaveformView extends PropertyChangeListener, ISelectionProvider{
 
-	String CURSOR_PROPERTY = "cursor_time";
+	static final String CURSOR_PROPERTY = "cursor_time";
 	
-	String MARKER_PROPERTY = "marker_time";
+	static final String MARKER_PROPERTY = "marker_time";
 	
+	static final int CURSOR_POS = 0;
+	
+	static final int MARKER_POS = 1;
+
 	public static final RelationType NEXT_PREV_IN_STREAM = RelationTypeFactory.create("Prev/Next in stream"); 
 
 	public void addSelectionChangedListener(ISelectionChangedListener listener);
@@ -112,6 +116,8 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	public void setBaselineTime(Long scale);
 	
 	public void scrollHorizontal(int percent);
+	
+	public void scrollTo(int pos);
 	
 	public void addDisposeListener( DisposeListener listener );
 

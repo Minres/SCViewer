@@ -496,6 +496,12 @@ public class WaveformCanvas extends Canvas {
         }
     }
 
+    public void centerAt(long time) {
+        int scaledTime = (int) (time / scaleFactor);
+        int newX = -scaledTime+getWidth()/2;
+        setOrigin(newX>0?0:newX, origin.y);
+    }
+
     public int getRulerHeight() {
         return rulerHeight;
     }
