@@ -131,7 +131,9 @@ public class AboutDialog extends Dialog {
 				if (style != null && style.underline && style.underlineStyle == SWT.UNDERLINE_LINK) {
 					Desktop.getDesktop().browse(new java.net.URI(style.data.toString()));
 				}
-			} catch (IOException | URISyntaxException | IllegalArgumentException e) {}
+			} catch (IOException | URISyntaxException | IllegalArgumentException e) {
+			} catch (UnsupportedOperationException e) {
+			}
 		});
 		
 		styleRange.start = 0;
