@@ -24,6 +24,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
+import com.minres.scviewer.e4.application.Messages;
+
 public class HelpDialog extends Dialog {
 	/**
 	 * Create the dialog.
@@ -61,22 +63,22 @@ public class HelpDialog extends Dialog {
 		container.setLayout(gridLayout);
 		ToolBar toolbar = new ToolBar(container, SWT.NONE);
 		ToolItem itemBack = new ToolItem(toolbar, SWT.PUSH);
-		itemBack.setText("Back");
+		itemBack.setText(Messages.HelpDialog_0);
 		ToolItem itemForward = new ToolItem(toolbar, SWT.PUSH);
-		itemForward.setText("Forward");
+		itemForward.setText(Messages.HelpDialog_1);
 		ToolItem itemStop = new ToolItem(toolbar, SWT.PUSH);
-		itemStop.setText("Stop");
+		itemStop.setText(Messages.HelpDialog_2);
 		ToolItem itemRefresh = new ToolItem(toolbar, SWT.PUSH);
-		itemRefresh.setText("Refresh");
+		itemRefresh.setText(Messages.HelpDialog_3);
 		ToolItem itemGo = new ToolItem(toolbar, SWT.PUSH);
-		itemGo.setText("Go");
+		itemGo.setText(Messages.HelpDialog_4);
 
 		GridData data = new GridData();
 		data.horizontalSpan = 3;
 		toolbar.setLayoutData(data);
 
 		Label labelAddress = new Label(container, SWT.NONE);
-		labelAddress.setText("Address");
+		labelAddress.setText(Messages.HelpDialog_5);
 
 		final Text location = new Text(container, SWT.BORDER);
 		data = new GridData();
@@ -112,15 +114,15 @@ public class HelpDialog extends Dialog {
 			Listener listener = event -> {
 				ToolItem item = (ToolItem) event.widget;
 				String string = item.getText();
-				if (string.equals("Back"))
+				if (string.equals(Messages.HelpDialog_0))
 					browser.back();
-				else if (string.equals("Forward"))
+				else if (string.equals(Messages.HelpDialog_1))
 					browser.forward();
-				else if (string.equals("Stop"))
+				else if (string.equals(Messages.HelpDialog_2))
 					browser.stop();
-				else if (string.equals("Refresh"))
+				else if (string.equals(Messages.HelpDialog_3))
 					browser.refresh();
-				else if (string.equals("Go"))
+				else if (string.equals(Messages.HelpDialog_4))
 					browser.setUrl(location.getText());
 			};
 			browser.addProgressListener(new ProgressListener() {
@@ -147,9 +149,9 @@ public class HelpDialog extends Dialog {
 			itemGo.addListener(SWT.Selection, listener);
 			location.addListener(SWT.DefaultSelection, e -> browser.setUrl(location.getText()));
 
-			browser.setUrl("https://git.minres.com/VP-Tools/SCViewer/src/branch/master/README.md#key-shortcuts");
+			browser.setUrl(Messages.HelpDialog_6);
 		} catch (SWTError e) {
-			System.out.println("Could not instantiate Browser: " + e.getMessage());
+			System.out.println(Messages.HelpDialog_7 + e.getMessage());
 		}
 		return container;
 	}
