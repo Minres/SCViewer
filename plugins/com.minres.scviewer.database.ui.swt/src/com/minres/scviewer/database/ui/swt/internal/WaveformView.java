@@ -99,8 +99,6 @@ public class WaveformView implements IWaveformView {
 
 	private PropertyChangeSupport pcs;
 
-	static final DecimalFormat df = new DecimalFormat("#0.00####");
-
 	private ITx currentTxSelection;
 
 	private ArrayList<TrackEntry> currentWaveformSelection = new ArrayList<>();
@@ -1477,7 +1475,7 @@ public class WaveformView implements IWaveformView {
 		StringBuilder sb = new StringBuilder();
 		double dTime = time;
 		double scaledTime = dTime / waveformCanvas.getScaleFactorPow10();
-		return sb.append(df.format(scaledTime)).append(waveformCanvas.getUnitStr()).toString();
+		return sb.append(Constants.TIME_FORMAT[waveformCanvas.getZoomLevel()].format(scaledTime)).append(waveformCanvas.getUnitStr()).toString();
 	}
 
 	/*
