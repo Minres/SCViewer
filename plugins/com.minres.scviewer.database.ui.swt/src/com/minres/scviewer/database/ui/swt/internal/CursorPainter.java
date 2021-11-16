@@ -15,6 +15,7 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.WaveformColors;
+import com.minres.scviewer.database.ui.swt.Constants;
 
 public class CursorPainter implements IPainter, ICursor {
 
@@ -84,7 +85,7 @@ public class CursorPainter implements IPainter, ICursor {
 				proj.setBackground(drawColor);
 				proj.setForeground(textColor);
 				double dTime=time;
-				proj.drawText((dTime/waveCanvas.getScaleFactorPow10())+waveCanvas.getUnitStr(), x+1, top);
+				proj.drawText(Constants.TIME_FORMAT[waveCanvas.getZoomLevel()].format(dTime/waveCanvas.getScaleFactorPow10())+waveCanvas.getUnitStr(), x+1, top);
 			}
 		}
 	}	

@@ -190,7 +190,6 @@ public class WaveformCanvas extends Canvas {
 	    	if(level<0) level = 0;
     	}
     	//FIXME: keep center if zoom-out and cursor is not in view
-		long xc=centerTime/this.scaleFactor; // cursor total x-offset
     	if(level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length){
     		this.scaleFactor = (long) Math.pow(10, level>>1);
     		if(level%2==1) this.scaleFactor*=3;
@@ -202,7 +201,9 @@ public class WaveformCanvas extends Canvas {
     		 * xcn = tc/newScaleFactor
     		 * t0n = (xcn-xoffs)*scaleFactor
     		 */
-			long xoffs=xc+origin.x; // cursor offset relative to left border
+    		Rectangle clientArea = getClientArea();
+    		long clientAreaWidth = clientArea.width;
+    		long xoffs = clientAreaWidth/2;
 			long xcn=centerTime/scaleFactor; // new total x-offset
 			long originX=xcn-xoffs;
 			if(originX>0) {
@@ -217,20 +218,20 @@ public class WaveformCanvas extends Canvas {
     	}
     }
 
-	private int findFitZoomLevel(long timeRange) {
+	private int findFitZoomLevel(long duration) {
 		//get area actually capable of displaying data, i.e. area of the receiver which is capable of displaying data
 		Rectangle clientArea = getClientArea();
 		long clientAreaWidth = clientArea.width;
 		//try to find existing zoomlevel where scaleFactor*clientAreaWidth >= maxTime, if one is found set it as new zoomlevel
-		int magnitude_factor=1;
+		final long[] UNIT_STRING_MULT={1, 1000, 1000*1000, 1000*1000*1000, 1000*1000*1000*1000, 1000*1000*1000*1000*1000 };
 		for(int magnitude=0; magnitude<Constants.UNIT_STRING.length; magnitude++) {
+			long magnitudeMultiplier = UNIT_STRING_MULT[magnitude];
 			for (int multiplier=0; multiplier<Constants.UNIT_MULTIPLIER.length; multiplier++){
-				int tempLevel = magnitude*Constants.UNIT_MULTIPLIER.length+multiplier;
-				long scaleFactor = Constants.UNIT_MULTIPLIER[multiplier]*magnitude_factor;
-			    if(scaleFactor*clientAreaWidth >= timeRange)
-			    	return tempLevel;
+				long scaleFactor = magnitudeMultiplier * Constants.UNIT_MULTIPLIER[multiplier];
+				long range = scaleFactor*clientAreaWidth;
+			    if( range >= duration)
+			    	return magnitude*Constants.UNIT_MULTIPLIER.length+multiplier;
 			}
-			magnitude_factor*=1000;
 		}
 		return -1;
 	}

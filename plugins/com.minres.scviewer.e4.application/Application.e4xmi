@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:advanced="http://www.eclipse.org/ui/2010/UIModel/application/ui/advanced" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmlns:ui="http://www.eclipse.org/ui/2010/UIModel/application/ui" xmi:id="_95PfsHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ide.application" bindingContexts="_95PfuXNmEeWBq8z1Dv39LA">
-  <children xsi:type="basic:TrimmedWindow" xmi:id="_95PfsXNmEeWBq8z1Dv39LA" label="SC Viewer" bindingContexts="_95PfunNmEeWBq8z1Dv39LA" width="1280" height="700">
+  <children xsi:type="basic:TrimmedWindow" xmi:id="_95PfsXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.trimmedwindow.main" label="SC Viewer" bindingContexts="_95PfunNmEeWBq8z1Dv39LA" width="1280" height="700">
     <children xsi:type="advanced:PerspectiveStack" xmi:id="_95QGxnNmEeWBq8z1Dv39LA">
       <children xsi:type="advanced:Perspective" xmi:id="_95QGx3NmEeWBq8z1Dv39LA">
         <children xsi:type="basic:PartStack" xmi:id="_95QGyXNmEeWBq8z1Dv39LA" elementId="org.eclipse.editorss" containerData="7500">
@@ -133,6 +133,9 @@
         <tags>Draggable</tags>
       </children>
     </trimBars>
+  </children>
+  <children xsi:type="basic:Window" xmi:id="_Gm0qAEamEeyPDuc8x6Ggxw" elementId="com.minres.scviewer.e4.application.window.help" toBeRendered="false" selectedElement="_M5eT0EamEeyPDuc8x6Ggxw" label="SC Viewer Help" width="800" height="600">
+    <children xsi:type="basic:Part" xmi:id="_M5eT0EamEeyPDuc8x6Ggxw" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.help.HelpBrowser"/>
   </children>
   <handlers xmi:id="_95PfvXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.quitCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.QuitHandler" command="_95PfvHNmEeWBq8z1Dv39LA"/>
   <handlers xmi:id="_95PfwXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.openCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.OpenHandler" command="_95PfwHNmEeWBq8z1Dv39LA"/>

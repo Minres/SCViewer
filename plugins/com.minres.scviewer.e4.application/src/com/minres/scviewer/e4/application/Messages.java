@@ -83,6 +83,8 @@ public class Messages extends NLS {
 	public static String cursor;
 	public static String cursor_drag;
 	public static String cursor_text;
+	public static String HelpBrowser_7;
+	public static String HelpBrowser_8;
 	public static String HelpDialog_0;
 	public static String HelpDialog_1;
 	public static String HelpDialog_2;

@@ -18,14 +18,14 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.wb.swt.SWTResourceManager;
 
+import com.minres.scviewer.database.ui.swt.Constants;
+
 public class RulerPainter implements IPainter {
     protected final WaveformCanvas waveCanvas;
     
     static final int RULER_TICK_MINOR = 10;
     static final int RULER_TICK_MAJOR = 100;
        
-	static final DecimalFormat df = new DecimalFormat("#.00####"); 
-
     public RulerPainter(WaveformCanvas waveCanvas) {
         this.waveCanvas=waveCanvas;
     }
@@ -52,7 +52,7 @@ public class RulerPainter implements IPainter {
 
         int minorTickY = waveCanvas.rulerHeight-5;
         int majorTickY = waveCanvas.rulerHeight-15;
-        int textY=waveCanvas.rulerHeight-20;
+        int textY=waveCanvas.rulerHeight-30;
         int baselineY=waveCanvas.rulerHeight - 1;
         int bottom=waveCanvas.rulerHeight - 2;
 
@@ -66,13 +66,22 @@ public class RulerPainter implements IPainter {
         gc.fillRectangle(new Rectangle(area.x, area.y, area.width, baselineY));
         gc.setForeground(headerFgColor);
         gc.drawLine(area.x, area.y+bottom, area.x+area.width, area.y+bottom);
-        
+        boolean allMarker=true;
+        for (long pos = startMinorIncrPos, tick = startMinorIncrVal; pos < endPos; pos+= rulerTickMinor, tick += rulerTickMinor) {
+            if ((tick % rulerTickMajor) == 0) {
+            	String text = Constants.TIME_FORMAT[waveCanvas.getZoomLevel()].format(tick/scaleFactor*unitMultiplier);
+            	if(text.length()>8) allMarker=false;
+            }
+        }
+        boolean drawText = true;
         for (long pos = startMinorIncrPos, tick = startMinorIncrVal; pos < endPos; pos+= rulerTickMinor, tick += rulerTickMinor) {
             int x0Pos = (int) (pos/scaleFactor);
             long x0Val = tick/scaleFactor;
             if ((tick % rulerTickMajor) == 0) {
-                gc.drawText(df.format(x0Val*unitMultiplier)+unit, x0Pos, area.y+textY);
+            	if(allMarker || drawText)
+            		gc.drawText(Constants.TIME_FORMAT[waveCanvas.getZoomLevel()].format(x0Val*unitMultiplier)+unit, x0Pos, area.y+textY);
                 gc.drawLine(x0Pos, area.y+majorTickY, x0Pos,area.y+ bottom);
+                drawText=!drawText;
             } else {
                 gc.drawLine(x0Pos, area.y+minorTickY, x0Pos, area.y+bottom);
             }
