@@ -27,12 +27,12 @@ http://www.eclipse.org/legal/epl-v10.html
    </url>
 
    <requires>
-      <import plugin="org.codehaus.groovy" version="2.5.8" match="greaterOrEqual"/>
       <import plugin="org.eclipse.osgi.services" version="3.4.0" match="greaterOrEqual"/>
       <import plugin="com.google.guava" version="15.0.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.osgi"/>
       <import plugin="com.minres.scviewer.database" version="1.0.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.core.runtime"/>
+      <import feature="org.eclipse.collections.feature" version="10.4.0.v20200820-2049"/>
    </requires>
 
    <plugin

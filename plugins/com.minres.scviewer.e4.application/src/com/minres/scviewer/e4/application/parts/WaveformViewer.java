@@ -240,10 +240,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@Inject Composite parent;
 
 	private boolean showHover;
-
-	@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.SHOW_TX_DETAILS) Boolean blah;
 	
 	private SashForm topSash = null;
+
 	private SashForm middleSash = null;
 
 	/**
