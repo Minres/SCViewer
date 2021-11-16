@@ -62,6 +62,7 @@
       <feature id="com.minres.scviewer.database.feature" installMode="root"/>
       <feature id="org.eclipse.e4.rcp" installMode="root"/>
       <feature id="com.opcoach.e4.preferences.feature" installMode="root"/>
+      <feature id="org.eclipse.help" installMode="root"/>
    </features>
 
    <configurations>

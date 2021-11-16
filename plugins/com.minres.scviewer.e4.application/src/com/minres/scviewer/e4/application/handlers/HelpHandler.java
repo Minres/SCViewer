@@ -10,10 +10,20 @@
  *******************************************************************************/
 package com.minres.scviewer.e4.application.handlers;
 
+import java.io.File;
+import java.net.URL;
+import java.nio.file.Paths;
+
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.e4.ui.model.application.ui.MUIElement;
 import org.eclipse.e4.ui.workbench.modeling.EModelService;
+import org.eclipse.equinox.internal.p2.core.helpers.FileUtils;
+import org.eclipse.help.HelpSystem;
+import org.eclipse.help.IHelp;
+import org.eclipse.help.standalone.Help;
+import org.eclipse.osgi.service.datalocation.Location;
 
 public class HelpHandler {
 
@@ -25,8 +35,16 @@ public class HelpHandler {
 //		MPart mel = (MPart) ms.find(DIALOG_ID, app); //$NON-NLS-1$
 //		mel.setToBeRendered(true);
 //		mel.setToBeRendered(false);
-		MUIElement w = ms.find(WINDOW_ID, app); 
-		if(w!=null) w.setToBeRendered(true);
+		try {
+			File installDir = Paths.get(Platform.getInstallLocation().getURL().toURI()).toFile();
+			File instanceDir = Paths.get(Platform.getInstanceLocation().getURL().toURI()).toFile();
+			Help helpSystem = new Help(new String[] {"-eclipseHome", installDir.getAbsolutePath(), "-data", instanceDir.getAbsolutePath()});
+			helpSystem.start();
+			helpSystem.displayHelp("/com.minres.scviewer.help/toc.xml");
+		} catch (Exception e) {
+			MUIElement w = ms.find(WINDOW_ID, app); 
+			if(w!=null) w.setToBeRendered(true);
+		} 
 	}
 
 }
