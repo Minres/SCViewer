@@ -10,8 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
-import java.text.DecimalFormat;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
@@ -40,7 +38,7 @@ public class RulerPainter implements IPainter {
     	if(headerBgColor.isDisposed())
     		headerBgColor=SWTResourceManager.getColor(255,255,255);
         String unit=waveCanvas.getUnitStr();
-        int unitMultiplier=waveCanvas.getUnitMultiplier();
+        long unitMultiplier=waveCanvas.getUnitMultiplier();
         long scaleFactor=waveCanvas.getScaleFactor();
 
         long startPos=area.x*scaleFactor; 
@@ -69,7 +67,7 @@ public class RulerPainter implements IPainter {
         boolean allMarker=true;
         for (long pos = startMinorIncrPos, tick = startMinorIncrVal; pos < endPos; pos+= rulerTickMinor, tick += rulerTickMinor) {
             if ((tick % rulerTickMajor) == 0) {
-            	String text = Constants.TIME_FORMAT[waveCanvas.getZoomLevel()].format(tick/scaleFactor*unitMultiplier);
+            	String text = Constants.getTimeFormatForLevel(waveCanvas.getZoomLevel()).format(tick/scaleFactor*unitMultiplier);
             	if(text.length()>8) allMarker=false;
             }
         }
@@ -79,7 +77,7 @@ public class RulerPainter implements IPainter {
             long x0Val = tick/scaleFactor;
             if ((tick % rulerTickMajor) == 0) {
             	if(allMarker || drawText)
-            		gc.drawText(Constants.TIME_FORMAT[waveCanvas.getZoomLevel()].format(x0Val*unitMultiplier)+unit, x0Pos, area.y+textY);
+            		gc.drawText(Constants.getTimeFormatForLevel(waveCanvas.getZoomLevel()).format(x0Val*unitMultiplier)+unit, x0Pos, area.y+textY);
                 gc.drawLine(x0Pos, area.y+majorTickY, x0Pos,area.y+ bottom);
                 drawText=!drawText;
             } else {

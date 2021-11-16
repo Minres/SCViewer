@@ -170,7 +170,7 @@ public class WaveformCanvas extends Canvas {
     }
     
     public int getMaxZoomLevel(){
-    	return Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length-1;
+    	return Constants.SCALE_MULTIPLIER.length*Constants.UNIT_STRING.length-1;
     }
 
     public void setZoomLevel(int level) {
@@ -190,9 +190,10 @@ public class WaveformCanvas extends Canvas {
 	    	if(level<0) level = 0;
     	}
     	//FIXME: keep center if zoom-out and cursor is not in view
-    	if(level<Constants.UNIT_MULTIPLIER.length*Constants.UNIT_STRING.length){
-    		this.scaleFactor = (long) Math.pow(10, level>>1);
-    		if(level%2==1) this.scaleFactor*=3;
+    	if(level<Constants.SCALE_MULTIPLIER.length*Constants.UNIT_STRING.length){
+    		int scale = level%Constants.SCALE_MULTIPLIER.length;
+    		int unit = level/Constants.SCALE_MULTIPLIER.length;
+    		this.scaleFactor = Constants.UNIT_MULTIPLIER[unit]*Constants.SCALE_MULTIPLIER[scale];
     		ITx tx = arrowPainter.getTx();
     		arrowPainter.setTx(null);
     		/*
@@ -223,14 +224,13 @@ public class WaveformCanvas extends Canvas {
 		Rectangle clientArea = getClientArea();
 		long clientAreaWidth = clientArea.width;
 		//try to find existing zoomlevel where scaleFactor*clientAreaWidth >= maxTime, if one is found set it as new zoomlevel
-		final long[] UNIT_STRING_MULT={1, 1000, 1000*1000, 1000*1000*1000, 1000*1000*1000*1000, 1000*1000*1000*1000*1000 };
-		for(int magnitude=0; magnitude<Constants.UNIT_STRING.length; magnitude++) {
-			long magnitudeMultiplier = UNIT_STRING_MULT[magnitude];
-			for (int multiplier=0; multiplier<Constants.UNIT_MULTIPLIER.length; multiplier++){
-				long scaleFactor = magnitudeMultiplier * Constants.UNIT_MULTIPLIER[multiplier];
+		for(int unitIdx=0; unitIdx<Constants.UNIT_STRING.length; unitIdx++) {
+			long magnitudeMultiplier = Constants.UNIT_MULTIPLIER[unitIdx];
+			for (int scaleIdx=0; scaleIdx<Constants.SCALE_MULTIPLIER.length; scaleIdx++){
+				long scaleFactor = magnitudeMultiplier * Constants.SCALE_MULTIPLIER[scaleIdx];
 				long range = scaleFactor*clientAreaWidth;
 			    if( range >= duration)
-			    	return magnitude*Constants.UNIT_MULTIPLIER.length+multiplier;
+			    	return unitIdx*Constants.SCALE_MULTIPLIER.length+scaleIdx;
 			}
 		}
 		return -1;
@@ -241,17 +241,17 @@ public class WaveformCanvas extends Canvas {
     }
 
     public long getScaleFactorPow10() {
-    	int scale = level/Constants.UNIT_MULTIPLIER.length;
+    	int scale = level/Constants.SCALE_MULTIPLIER.length;
     	double res = Math.pow(1000, scale);
     	return (long) res;
     }
 
     public String getUnitStr(){
-        return Constants.UNIT_STRING[level/Constants.UNIT_MULTIPLIER.length];
+        return Constants.UNIT_STRING[level/Constants.SCALE_MULTIPLIER.length];
     }
      
-    public int getUnitMultiplier(){
-        return Constants.UNIT_MULTIPLIER[level%Constants.UNIT_MULTIPLIER.length];
+    public long getUnitMultiplier(){
+        return Constants.SCALE_MULTIPLIER[level%Constants.SCALE_MULTIPLIER.length];
     }
     
     public long getTimeForOffset(int xOffset){
