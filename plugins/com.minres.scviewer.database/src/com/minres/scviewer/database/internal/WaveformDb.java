@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IHierNode;
@@ -80,7 +81,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 */
 	public WaveformDb() {
 		super();
-		waveforms = new HashMap<>();
+		waveforms = new ConcurrentHashMap<>();
 		relationTypes = new ArrayList<>();
 		maxTime = 0L;
 	}
@@ -193,7 +194,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	/**
 	 * Builds the hierarchy nodes.
 	 */
-	private void buildHierarchyNodes() {
+	private synchronized void buildHierarchyNodes() {
 		boolean needsSorting = false;
 		for (IWaveform stream : getAllWaves()) {
 			if (stream.getParent() == null) {

@@ -13,7 +13,6 @@ package com.minres.scviewer.database.ui.swt.internal;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1475,7 +1474,7 @@ public class WaveformView implements IWaveformView {
 		StringBuilder sb = new StringBuilder();
 		double dTime = time;
 		double scaledTime = dTime / waveformCanvas.getScaleFactorPow10();
-		return sb.append(Constants.TIME_FORMAT[waveformCanvas.getZoomLevel()].format(scaledTime)).append(waveformCanvas.getUnitStr()).toString();
+		return sb.append(Constants.getTimeFormatForLevel(waveformCanvas.getZoomLevel()).format(scaledTime)).append(waveformCanvas.getUnitStr()).toString();
 	}
 
 	/*
@@ -1485,11 +1484,11 @@ public class WaveformView implements IWaveformView {
 	 */
 	@Override
 	public String[] getZoomLevels() {
-		String[] res = new String[Constants.UNIT_MULTIPLIER.length * Constants.UNIT_STRING.length];
+		String[] res = new String[Constants.SCALE_MULTIPLIER.length * Constants.UNIT_STRING.length];
 		int index = 0;
 		for (String unit : Constants.UNIT_STRING) {
-			for (int factor : Constants.UNIT_MULTIPLIER) {
-				res[index++] = Integer.toString(factor) + unit;
+			for (long factor : Constants.SCALE_MULTIPLIER) {
+				res[index++] = Long.toString(factor) + unit;
 			}
 		}
 		return res;

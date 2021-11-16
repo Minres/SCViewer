@@ -19,7 +19,6 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformDb;
 
 /**
  * The Class TxDbContentProvider providing the tree content of a database for the respective viewer.

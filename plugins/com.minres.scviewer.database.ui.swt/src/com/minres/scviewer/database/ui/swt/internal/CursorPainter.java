@@ -85,7 +85,7 @@ public class CursorPainter implements IPainter, ICursor {
 				proj.setBackground(drawColor);
 				proj.setForeground(textColor);
 				double dTime=time;
-				proj.drawText(Constants.TIME_FORMAT[waveCanvas.getZoomLevel()].format(dTime/waveCanvas.getScaleFactorPow10())+waveCanvas.getUnitStr(), x+1, top);
+				proj.drawText(Constants.getTimeFormatForLevel(waveCanvas.getZoomLevel()).format(dTime/waveCanvas.getScaleFactorPow10())+waveCanvas.getUnitStr(), x+1, top);
 			}
 		}
 	}	
