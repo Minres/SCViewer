@@ -28,6 +28,7 @@ Legend:
 | MMB klick |          | Waveform | move selected marker to position  |
 | MScrl     |          | any      | scroll window up/down             |
 | MScrl     | Shift    | any      | scroll window left/right          |
+| MScrl     | Control  | Waveform | increase/decrease zoom level      |
 | Key left  |          | Waveform | scroll window to the left (slow)  |
 | Key right |          | Waveform | scroll window to the right (slow) |
 | Key left  | Shift    | Waveform | scroll window to the left (fast)  |
