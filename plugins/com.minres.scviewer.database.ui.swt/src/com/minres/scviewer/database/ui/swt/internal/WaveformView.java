@@ -122,12 +122,6 @@ public class WaveformView implements IWaveformView {
 
 	protected ObservableList<TrackEntry> streams;
 
-	private boolean waveformsContainTx=false;
-	
-	public boolean isWaveformsContainTx() {
-		return waveformsContainTx;
-	}
-
 	int selectedMarker = 0;
 
 	private int tracksVerticalHeight;
@@ -166,8 +160,7 @@ public class WaveformView implements IWaveformView {
 									: streams.subList(firstIdx, lastIdx + 1);
 							setSelection(new StructuredSelection(res), (e.stateMask & SWT.CTRL) != 0, false);
 						} else
-							setSelection(new StructuredSelection(entry.getValue()), (e.stateMask & SWT.CTRL) != 0,
-							false);
+							setSelection(new StructuredSelection(entry.getValue()), (e.stateMask & SWT.CTRL) != 0, false);
 					} else {
 						setSelection(new StructuredSelection(entry.getValue()), (e.stateMask & SWT.CTRL) != 0, false);
 					}
@@ -295,8 +288,15 @@ public class WaveformView implements IWaveformView {
 		@Override
 		public void handleEvent(Event e) {
 			switch (e.type) {
-			//			case SWT.MouseWheel:
-			//				break;
+			case SWT.MouseWheel:
+				if((e.stateMask & SWT.CTRL) != 0) {
+					int zoom = waveformCanvas.getZoomLevel();
+					if(e.count<0)
+						waveformCanvas.setZoomLevel(zoom+1);
+					else
+						waveformCanvas.setZoomLevel(zoom-1);
+				} 
+				break;
 			case SWT.MouseDown:
 				start = new Point(e.x, e.y);
 				end = new Point(e.x, e.y);
@@ -469,6 +469,17 @@ public class WaveformView implements IWaveformView {
 
 		toolTipHandler = new ToolTipHandler(parent.getShell());
 		toolTipHandler.activateHoverHelp(waveformCanvas);
+	    // This is the filter that prevents it
+	    getControl().getDisplay().addFilter(SWT.MouseWheel, new Listener() {
+	        @Override
+	        public void handleEvent(Event e) {
+	            // Check if it's the correct widget
+	            if((e.widget.equals(waveformCanvas) || e.widget.equals(this)) && (e.stateMask & SWT.CTRL) != 0) {
+	            	waveformMouseListener.handleEvent(e);
+	                e.doit = false;
+	            }
+	        }
+	    });
 	}
 
 	private void createTextPane(Composite namePane, String text) {
@@ -518,7 +529,6 @@ public class WaveformView implements IWaveformView {
 		boolean even = true;
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
 		tl.setFont(styleProvider.getNameFont());
-		waveformsContainTx=false;
 		for (TrackEntry streamEntry : streams) {
 			streamEntry.height = styleProvider.getTrackHeight();
 			streamEntry.vOffset = tracksVerticalHeight;
@@ -526,7 +536,6 @@ public class WaveformView implements IWaveformView {
 				streamEntry.currentValue = "";
 				streamEntry.height *= streamEntry.waveform.getRowCount();
 				painter = new StreamPainter(waveformCanvas, even, streamEntry);
-				waveformsContainTx=true;
 			} else if (streamEntry.waveform.getType() == WaveformType.SIGNAL) {
 				streamEntry.currentValue = "---";
 				painter = new SignalPainter(waveformCanvas, even, streamEntry);
@@ -762,27 +771,30 @@ public class WaveformView implements IWaveformView {
 				if (!add)
 					currentWaveformSelection.clear();
 				List<?> selList = sel.toList();
-				if (selList.get(0) instanceof ITx) {
-					ITx txSel = (ITx) selList.get(0);
-					TrackEntry trackEntry = selList.size() == 2 && selList.get(1) instanceof TrackEntry
-							? (TrackEntry) selList.get(1)
-									: null;
-					if (trackEntry == null) {
-						trackEntry = getEntryFor(txSel);
-						if (trackEntry == null && addIfNeeded) {
-							trackEntry = new TrackEntry(txSel.getStream(), styleProvider);
-							streams.add(trackEntry);
+				for(Object o: selList) {
+					if (o instanceof ITx) {
+						ITx txSel = (ITx) o;
+						TrackEntry trackEntry = selList.size() == 2 && selList.get(1) instanceof TrackEntry
+								? (TrackEntry) selList.get(1)
+										: null;
+						if (trackEntry == null) {
+							trackEntry = getEntryFor(txSel);
+							if (trackEntry == null && addIfNeeded) {
+								trackEntry = new TrackEntry(txSel.getStream(), styleProvider);
+								streams.add(trackEntry);
+							}
 						}
+						currentTxSelection = txSel;
+						currentWaveformSelection.clear();
+						currentWaveformSelection.add(trackEntry);
+						selectionChanged = true;
+					} else if (o instanceof TrackEntry) {
+						TrackEntry e = (TrackEntry)o;
+						if(!currentWaveformSelection.contains(e))
+							currentWaveformSelection.add(e);
+						selectionChanged = true;
 					}
-					currentTxSelection = txSel;
-					currentWaveformSelection.clear();
-					currentWaveformSelection.add(trackEntry);
-					selectionChanged = true;
-				} else if (selList.size() == 1 && selList.get(0) instanceof TrackEntry) {
-					currentWaveformSelection.add((TrackEntry) selList.get(0));
-					if (currentTxSelection != null)
-						currentTxSelection = null;
-					selectionChanged = true;
+					
 				}
 			}
 		} else {
@@ -1563,4 +1575,9 @@ public class WaveformView implements IWaveformView {
 			getStreamList().add(idx, e);
 		return e;
 	}
+	
+	public boolean waveformsContainsTx() {
+		return  streams.stream().filter(e -> e.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent();
+	}
+
 }

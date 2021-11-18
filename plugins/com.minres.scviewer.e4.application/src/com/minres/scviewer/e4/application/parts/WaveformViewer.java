@@ -337,6 +337,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				case SWT.ARROW_DOWN:
 					waveformPane.moveSelectedTrack(1);
 					return;
+				case 'a':
+					selectAll();
 				default:
 					break;
 				}
@@ -1268,5 +1270,12 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				store.flush();
 			} catch (BackingStoreException e) {}
 		}
+	}
+
+	public void selectAll() {
+		List<TrackEntry> entries = waveformPane.getStreamList();
+		ISelection sel = new StructuredSelection(entries);
+		waveformPane.setSelection(sel);
+		designBrowser.selectAllWaveforms();
 	}
 }

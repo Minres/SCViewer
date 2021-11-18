@@ -12,18 +12,19 @@
     <children xsi:type="basic:Part" xmi:id="_hXh-kEYFEeyPM8G0E2EYww" elementId="com.minres.scviewer.e4.application.dialog.onlinehelp" toBeRendered="false" visible="false" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.HelpDialog" label="SCViewer Online Help" bindingContexts="_95Pfu3NmEeWBq8z1Dv39LA" closeable="true"/>
     <mainMenu xmi:id="_95PfyXNmEeWBq8z1Dv39LA" elementId="menu:org.eclipse.ui.main.menu">
       <children xsi:type="menu:Menu" xmi:id="_95QGwHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.menu.file" label="File">
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_igsK0BkREeudD5MqrWoETQ" elementId="" label="Open Database" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" mnemonics="M1+O" command="_95PfwHNmEeWBq8z1Dv39LA"/>
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_VJG3YHgvEeWwZ-9vrAR2UQ" elementId="" label="Re-load Database" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/database_refresh.png" mnemonics="M1+R" command="_srACsBkREeudD5MqrWoETQ"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_igsK0BkREeudD5MqrWoETQ" elementId="" label="Open Database" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" mnemonics="" command="_95PfwHNmEeWBq8z1Dv39LA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_VJG3YHgvEeWwZ-9vrAR2UQ" elementId="" label="Re-load Database" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/database_refresh.png" mnemonics="" command="_srACsBkREeudD5MqrWoETQ"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_e7MOYJedEeW09eyIbHsdvg" elementId="" label="Load active tab settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_page.png" command="_7-AIMJebEeW09eyIbHsdvg">
           <parameters xmi:id="_4vtYgJehEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.parameter.30" name="com.minres.scviewer.e4.application.commandparameter.loadStore" value="load"/>
         </children>
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGwnNmEeWBq8z1Dv39LA" label="Save active tab settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/script_save.png" command="_7-AIMJebEeW09eyIbHsdvg">
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGwnNmEeWBq8z1Dv39LA" label="Save active tab settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/script_save.png" mnemonics="" command="_7-AIMJebEeW09eyIbHsdvg">
           <parameters xmi:id="_61QIsJehEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.parameter.31" name="com.minres.scviewer.e4.application.commandparameter.loadStore" value="store"/>
         </children>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGw3NmEeWBq8z1Dv39LA" label="Quit" command="_95PfvHNmEeWBq8z1Dv39LA"/>
       </children>
       <children xsi:type="menu:Menu" xmi:id="_ZyHC0HgvEeWwZ-9vrAR2UQ" elementId="" label="Edit">
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_cPlx4HgvEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.delete" label="Delete" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/cross.png" command="_WUZ2wHXHEeWwZ-9vrAR2UQ"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_FiwZcEhdEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.delete" label="Delete" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/cross.png" command="_WUZ2wHXHEeWwZ-9vrAR2UQ"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_cPlx4HgvEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.delete" label="Select All" iconURI="" command="_bV-TMHXHEeWwZ-9vrAR2UQ"/>
       </children>
       <children xsi:type="menu:Menu" xmi:id="_XmZY4HchEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.menu.navigate" label="Navigate">
         <children xsi:type="menu:Menu" xmi:id="_VCn_cHgwEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.menu.waveform" label="Waveform ...">
@@ -109,10 +110,10 @@
           <parameters xmi:id="_5DrGQXf4EeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.fit" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="fit"/>
         </children>
         <children xsi:type="menu:ToolBarSeparator" xmi:id="_p1AvUHcqEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.toolbarseparator.1"/>
-        <children xsi:type="menu:HandledToolItem" xmi:id="_XMQPAHcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomin" label="Zoom in" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magnifier_zoom_in.png" tooltip="Zoom in by a factor of 3" command="_693GoHcqEeWwZ-9vrAR2UQ">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_XMQPAHcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomin" label="Zoom in" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magnifier_zoom_in.png" tooltip="Zoom in" command="_693GoHcqEeWwZ-9vrAR2UQ">
           <parameters xmi:id="_fi5w4HcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.in" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="in"/>
         </children>
-        <children xsi:type="menu:HandledToolItem" xmi:id="_XqTc8HcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomout" label="Zoom out" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magifier_zoom_out.png" tooltip="Zoom out by a factor of 3" command="_693GoHcqEeWwZ-9vrAR2UQ">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_XqTc8HcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledtoolitem.zoomout" label="Zoom out" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/magifier_zoom_out.png" tooltip="Zoom out" command="_693GoHcqEeWwZ-9vrAR2UQ">
           <parameters xmi:id="_d7OBYHcrEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.out" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="out"/>
         </children>
       </children>
@@ -157,16 +158,6 @@
       <tags>type:user</tags>
     </bindings>
   </bindingTables>
-  <bindingTables xmi:id="_zZFy0GVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingtable.waveform" bindingContext="_q4VSsGVNEeqSQM-A6dw9ig">
-    <bindings xmi:id="_1o3dEGVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.keybinding.zoom_in" keySequence="M1++" command="_693GoHcqEeWwZ-9vrAR2UQ">
-      <tags>type:user</tags>
-      <parameters xmi:id="_53UagGVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.parameter.33" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="in"/>
-    </bindings>
-    <bindings xmi:id="_8i3awGVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.keybinding.zoom_out" keySequence="M1+-" command="_693GoHcqEeWwZ-9vrAR2UQ">
-      <tags>type:user</tags>
-      <parameters xmi:id="__UCh4GVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.parameter.34" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="out"/>
-    </bindings>
-  </bindingTables>
   <bindingTables xmi:id="_XullMGVOEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingtable.window" bindingContext="_95PfunNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95PfwnNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.load" keySequence="M1+L" command="_7-AIMJebEeW09eyIbHsdvg">
       <tags>type:user</tags>
@@ -182,20 +173,22 @@
     <bindings xmi:id="_3PRIQGVPEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.keybinding.open" keySequence="M1+O" command="_95PfwHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
     </bindings>
-  </bindingTables>
-  <bindingTables xmi:id="_mnMrUGVmEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingtable.0" bindingContext="_iQ3kQGVmEeqSQM-A6dw9ig">
-    <bindings xmi:id="_n9yDwGVmEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.keybinding.0" keySequence="M1+A" command="_bV-TMHXHEeWwZ-9vrAR2UQ">
+    <bindings xmi:id="_QcOn8EheEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.keybinding.1" keySequence="M1+A" command="_bV-TMHXHEeWwZ-9vrAR2UQ"/>
+    <bindings xmi:id="_1o3dEGVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.keybinding.zoom_in" keySequence="M1++" command="_693GoHcqEeWwZ-9vrAR2UQ">
       <tags>type:user</tags>
+      <parameters xmi:id="_53UagGVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.parameter.33" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="in"/>
     </bindings>
+    <bindings xmi:id="_8i3awGVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.keybinding.zoom_out" keySequence="M1+-" command="_693GoHcqEeWwZ-9vrAR2UQ">
+      <tags>type:user</tags>
+      <parameters xmi:id="__UCh4GVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.parameter.34" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="out"/>
+    </bindings>
+    <bindings xmi:id="_KjmnsEheEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.keybinding.0" keySequence="M1+R" command="_srACsBkREeudD5MqrWoETQ"/>
   </bindingTables>
   <rootContext xmi:id="_95PfuXNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.contexts.dialogAndWindow" name="In Dialog and Windows">
-    <children xmi:id="_95PfunNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.contexts.window" name="In Windows">
-      <children xmi:id="_q4VSsGVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingcontext.waveform" name="In Waveform Part"/>
-      <children xmi:id="_iQ3kQGVmEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingcontext.indesignbrowser" name="In DesignBrowser"/>
-    </children>
+    <children xmi:id="_95PfunNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.contexts.window" name="In Windows"/>
     <children xmi:id="_95Pfu3NmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.contexts.dialog" name="In Dialogs"/>
   </rootContext>
-  <descriptors xmi:id="_KicY0HRMEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.partdescriptor.waveformviewer" label="SCViewer" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/scviewer.png" bindingContexts="_q4VSsGVNEeqSQM-A6dw9ig" allowMultiple="true" category="General" closeable="true" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.WaveformViewer">
+  <descriptors xmi:id="_KicY0HRMEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.partdescriptor.waveformviewer" label="SCViewer" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/scviewer.png" allowMultiple="true" category="General" closeable="true" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.WaveformViewer">
     <tags>categoryTag:General</tags>
     <handlers xmi:id="_BSIuEHacEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handler.navigateEventCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.NavigateEvent" command="_79rx4HabEeWwZ-9vrAR2UQ"/>
     <handlers xmi:id="_JpdGwHXKEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handler.navigateTransCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.NavigateTrans" command="_Gn3lEHXKEeWwZ-9vrAR2UQ"/>

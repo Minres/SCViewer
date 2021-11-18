@@ -226,6 +226,10 @@ public class DesignBrowser {
 			}
 		});
 	}
+	
+	public Control getControl() {
+		return top;
+	}
 
 	/**
 	 * Creates the table composite.

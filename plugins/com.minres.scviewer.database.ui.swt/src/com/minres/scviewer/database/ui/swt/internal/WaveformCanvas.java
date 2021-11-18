@@ -179,6 +179,7 @@ public class WaveformCanvas extends Canvas {
     }
 
     public void setZoomLevel(int level, long centerTime) {
+		int maxLevel = findFitZoomLevel(maxTime);
     	if(level<0) {
     		if(level<-1) {
     			long cTime = getCursorPainters().get(0).getTime();
@@ -186,11 +187,11 @@ public class WaveformCanvas extends Canvas {
     			level = findFitZoomLevel(time_diff);
     			centerTime = (centerTime>cTime?cTime:centerTime)+time_diff/2;
     		} else
-    			level = findFitZoomLevel(maxTime);
+    			level=maxLevel;
 	    	if(level<0) level = 0;
     	}
     	//FIXME: keep center if zoom-out and cursor is not in view
-    	if(level<Constants.SCALE_MULTIPLIER.length*Constants.UNIT_STRING.length){
+    	if(level<Constants.SCALE_MULTIPLIER.length*Constants.UNIT_STRING.length && level <= maxLevel){
     		int scale = level%Constants.SCALE_MULTIPLIER.length;
     		int unit = level/Constants.SCALE_MULTIPLIER.length;
     		this.scaleFactor = Constants.UNIT_MULTIPLIER[unit]*Constants.SCALE_MULTIPLIER[scale];
