@@ -1,5 +1,4 @@
 theme: jekyll-theme-minimal
-logo: /assets/img/SCVIewer_logo.png
+logo: /assets/img/SCViewer_logo.png
 title: SCViewer
 description: A a simple tool to display waveforms
-show_downloads: true
