@@ -1,37 +1,43 @@
-## Welcome to GitHub Pages
+## Welcome to SCViewer
 
-You can use the [editor on GitHub](https://github.com/Minres/SCViewer/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+SCViewer is a simpelt tool to display VCD and transaction streams created by the SystemC VCD trace implementation and the SystemC Verification Library (SCV).
+The viewer has the following features
+* support of VCD files (compressed and uncompressed)
+  * real numbers
+  * showing vectors and real numbers as analog (step-wise & continuous)
+  * various value representations of bit vectors
+* support of SCV transaction recordings in various formats
+   * text log files (compressed and uncompressed)
+   * visualization of transaction relations
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Key Shortcuts
 
-### Markdown
+Legend:
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+* Left Mouse Button: LMB
+* Middle Mouse Button: MMB
+* Mouse Scroll wheel: MScrl
+* Context any means Name List, Value List or Waveform
 
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Minres/SCViewer/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+| Input     | Modifier | Context  | Action                            |
+|-----------|----------|----------|-----------------------------------|
+| LMB klick |          | any      | select                            |
+| LMB klick | Shift    | Waveform | move selected marker to position  |
+| LMB klick | Control  | Waveform | move cursor to position           |
+| LMB drag  |          | Waveform | zoom to range                     |
+| MMB klick |          | Waveform | move selected marker to position  |
+| MScrl     |          | any      | scroll window up/down             |
+| MScrl     | Shift    | any      | scroll window left/right          |
+| Key left  |          | Waveform | scroll window to the left (slow)  |
+| Key right |          | Waveform | scroll window to the right (slow) |
+| Key left  | Shift    | Waveform | scroll window to the left (fast)  |
+| Key right | Shift    | Waveform | scroll window to the right (fast) |
+| Key up    |          | Waveform | move selection up                 |
+| Key down  |          | Waveform | move selection down               |
+| Key up    | Control  | Waveform | move selected track up            |
+| Key down  | Control  | Waveform | move selected track down          |
+| Key +     | Control  | Waveform | zoom in                           |
+| Key -     | Control  | Waveform | zoom out                          |
+| Key Pos1  |          | Waveform | jump to selected marker           |
+| Key End   |          | Waveform | jump to cursor                    |
+| Key Del   |          | any      | delete selected entries           |
