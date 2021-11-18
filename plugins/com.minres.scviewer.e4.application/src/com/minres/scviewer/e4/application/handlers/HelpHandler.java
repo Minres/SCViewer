@@ -10,23 +10,24 @@
  *******************************************************************************/
 package com.minres.scviewer.e4.application.handlers;
 
+import org.eclipse.e4.core.di.annotations.CanExecute;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.MApplication;
-import org.eclipse.e4.ui.model.application.ui.MUIElement;
+import org.eclipse.e4.ui.model.application.ui.basic.MWindow;
 import org.eclipse.e4.ui.workbench.modeling.EModelService;
 
 public class HelpHandler {
 
-	static final String DIALOG_ID="com.minres.scviewer.e4.application.dialog.onlinehelp"; //$NON-NLS-1$
 	static final String WINDOW_ID="com.minres.scviewer.e4.application.window.help"; //$NON-NLS-1$
+	@CanExecute
+	public boolean canExecute(MApplication app) {
+		return !app.getChildren().stream().filter(e -> e.getElementId().equals(WINDOW_ID)).findFirst().isPresent();
+	}
 	
 	@Execute
-	public void execute(MApplication app, /*MWindow window,*/ EModelService ms /*@Named("mdialog01.dialog.0") MDialog dialog*/) {
-//		MPart mel = (MPart) ms.find(DIALOG_ID, app); //$NON-NLS-1$
-//		mel.setToBeRendered(true);
-//		mel.setToBeRendered(false);
-		MUIElement w = ms.find(WINDOW_ID, app); 
-		if(w!=null) w.setToBeRendered(true);
+	public void execute(MApplication app, MWindow window, EModelService modelService /*@Named("mdialog01.dialog.0") MDialog dialog*/) {
+		MWindow newWin = (MWindow)modelService.cloneSnippet(app, WINDOW_ID, null);
+		app.getChildren().add(newWin);
 	}
 
 }

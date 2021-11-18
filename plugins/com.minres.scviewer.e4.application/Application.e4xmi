@@ -135,9 +135,6 @@
       </children>
     </trimBars>
   </children>
-  <children xsi:type="basic:Window" xmi:id="_Gm0qAEamEeyPDuc8x6Ggxw" elementId="com.minres.scviewer.e4.application.window.help" toBeRendered="false" selectedElement="_M5eT0EamEeyPDuc8x6Ggxw" label="SC Viewer Help" width="800" height="600">
-    <children xsi:type="basic:Part" xmi:id="_M5eT0EamEeyPDuc8x6Ggxw" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.help.HelpBrowser"/>
-  </children>
   <handlers xmi:id="_95PfvXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.quitCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.QuitHandler" command="_95PfvHNmEeWBq8z1Dv39LA"/>
   <handlers xmi:id="_95PfwXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.openCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.OpenHandler" command="_95PfwHNmEeWBq8z1Dv39LA"/>
   <handlers xmi:id="_95PfxHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.saveCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SaveHandler" command="_95Pfw3NmEeWBq8z1Dv39LA"/>
@@ -157,6 +154,7 @@
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
     </bindings>
+    <bindings xmi:id="_2-008EhnEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.keybinding.help" keySequence="F1" command="_lqjIYEYEEeyPM8G0E2EYww"/>
   </bindingTables>
   <bindingTables xmi:id="_XullMGVOEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingtable.window" bindingContext="_95PfunNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95PfwnNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.load" keySequence="M1+L" command="_7-AIMJebEeW09eyIbHsdvg">
@@ -244,6 +242,9 @@
       </children>
     </menus>
   </descriptors>
+  <snippets xsi:type="basic:Window" xmi:id="_R8mJUEhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.window.help" selectedElement="_R8mJUUhwEeyp3vLifEzGbQ" label="SC Viewer Help" width="800" height="600">
+    <children xsi:type="basic:Part" xmi:id="_R8mJUUhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.help.HelpBrowser"/>
+  </snippets>
   <commands xmi:id="_95PfvHNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.file.exit" commandName="Quit Command"/>
   <commands xmi:id="_95PfwHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.open" commandName="Open Command"/>
   <commands xmi:id="_95Pfw3NmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.file.save" commandName="Save Command"/>
