@@ -3,8 +3,11 @@ package com.minres.scviewer.e4.application.parts.help;
 import java.io.File;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.eclipse.e4.core.contexts.IEclipseContext;
+import org.eclipse.e4.ui.model.application.ui.MUIElement;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ResourceLocator;
@@ -21,6 +24,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ProgressBar;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -29,6 +33,10 @@ import com.minres.scviewer.e4.application.Messages;
 
 public class HelpBrowser {
 
+	@Inject IEclipseContext ctx;
+	
+	@Inject MUIElement element;
+	
 	private static void decorateItem(ToolItem item, String label, String imageName) {
 		String fullpath = File.separator+"icons"+File.separator+imageName; //$NON-NLS-1$
 		ImageDescriptor descr =  ResourceLocator.imageDescriptorFromBundle("com.minres.scviewer.e4.application", fullpath).orElse(null); //$NON-NLS-1$
@@ -41,13 +49,12 @@ public class HelpBrowser {
 		item.setData(label);
 	}
 
-	@Inject
-	public HelpBrowser() {
-		
-	}
-	
 	@PostConstruct
 	protected Control createComposite(Composite container) {
+//		container.getShell().addListener(SWT.Close, e -> {
+//			e.doit= false;
+//			element.setVisible(false);
+//		});
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 3;
 		container.setLayout(gridLayout);
@@ -141,6 +148,8 @@ public class HelpBrowser {
 		}
 		return container;
 	}
-
-
+	
+	void handleShellCloseEvent(){
+		
+	}
 }
