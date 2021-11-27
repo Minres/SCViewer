@@ -7,22 +7,23 @@
 	<parent>
 		<groupId>com.minres.scviewer</groupId>
 		<artifactId>com.minres.scviewer.parent</artifactId>
-		<version>2.14.2</version>
+		<version>2.15.0</version>
 		<relativePath>../..</relativePath>
 	</parent>
-    <build>
-        <plugins>
-            <!-- make sure that zipped p2 repositories have the fully qualified version -->
-            <plugin>
-                <groupId>org.eclipse.tycho</groupId>
-                <artifactId>tycho-p2-repository-plugin</artifactId>
-                <version>${tycho-version}</version>
-                <configuration>
-                    <finalName>${project.artifactId}-${qualifiedVersion}</finalName>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+	<build>
+		<plugins>
+			<!-- make sure that zipped p2 repositories have the fully qualified version -->
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-p2-repository-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<finalName>${project.artifactId}-${qualifiedVersion}</finalName>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
 	<profiles>
 		<profile>
 			<!-- Activate this profile to perform the release to Bintray -->
@@ -33,38 +34,78 @@
 			<build>
 				<plugins>
 					<plugin>
-						<groupId>com.carrotgarden.maven</groupId>
-						<artifactId>bintray-maven-plugin</artifactId>
-    					<version>1.5.20191113165555</version>
-   						<configuration>
-							<skip>false</skip>
-							<!-- Bintray organization name. -->
-							<subject>minres</subject>
-							<!-- Bintray target repository. -->
-							<repository>eclipse</repository>
-							<!-- Bintray package name -->
-							<bintrayPackage>SCViewer</bintrayPackage>
-							<!-- Bintray package version number -->
-							<bintrayVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</bintrayVersion>
-							<!-- remove any preexisting files -->
-							<performDestroy>true</performDestroy>
-							<!-- information used when creating the package  -->							
-							<packageVcsUrl>https://git.minres.com/VP-Tools/SCViewer.git</packageVcsUrl>
-							<packageLicenses>EPL-1.0</packageLicenses>
-							<!-- Local folder content to sync to the remote repo. -->
-							<sourceFolder>${project.build.directory}/repository</sourceFolder>
-							<!-- Remote folder for local content upload, relative path. -->
-							<targetFolder>SCViewer/${parsedVersion.majorVersion}.${parsedVersion.minorVersion}</targetFolder>
-							<!-- Bintray credentials in settings.xml. -->
-							<serverId>bintray-minres-deploy</serverId>
-						</configuration>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>3.0.0</version>
 						<executions>
-							<!-- Activate "bintray:upload" during "package" -->
 							<execution>
 								<phase>package</phase>
 								<goals>
-                                    <goal>upload</goal>
-                                </goals>
+									<goal>exec</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<executable>bash</executable>
+							<!-- optional -->
+							<workingDirectory>${software.download.area}</workingDirectory>
+							<arguments>
+								<argument>-c</argument>
+								<argument>if [ -d gh-pages ]; then cd gh-pages; git pull; else git clone --branch gh-pages https://git.minres.com/VP-Tools/SCViewer.git gh-pages; fi</argument>
+							</arguments>
+							<environmentVariables>
+								<LANG>en_US</LANG>
+							</environmentVariables>
+						</configuration>
+					</plugin>
+ 					<plugin>
+						<groupId>org.eclipse.tycho.extras</groupId>
+						<artifactId>tycho-eclipserun-plugin</artifactId>
+						<version>${tycho-version}</version>
+						<configuration>
+							<!-- IMPORTANT: DO NOT split the arg line -->
+							<appArgLine>-application org.eclipse.ant.core.antRunner -buildfile packaging-p2-composite.ant p2.composite.add -Dsite.label="SCViewer Software Repository" -Dproject.build.directory=${project.build.directory} -DunqualifiedVersion=${unqualifiedVersion} -Dsoftware.download.area="${software.download.area}/gh-pages/repository"</appArgLine>
+							<repositories>
+								<repository>
+									<id>2020-03</id>
+									<layout>p2</layout>
+									<url>http://download.eclipse.org/releases/2020-03/</url>
+								</repository>
+							</repositories>
+							<dependencies>
+								<dependency>
+									<artifactId>org.eclipse.ant.core</artifactId>
+									<type>eclipse-plugin</type>
+								</dependency>
+								<dependency>
+									<artifactId>org.apache.ant</artifactId>
+									<type>eclipse-plugin</type>
+								</dependency>
+								<dependency>
+									<artifactId>org.eclipse.equinox.p2.repository.tools</artifactId>
+									<type>eclipse-plugin</type>
+								</dependency>
+								<dependency>
+									<artifactId>org.eclipse.equinox.p2.core.feature</artifactId>
+									<type>eclipse-feature</type>
+								</dependency>
+								<dependency>
+									<artifactId>org.eclipse.equinox.p2.extras.feature</artifactId>
+									<type>eclipse-feature</type>
+								</dependency>
+								<dependency>
+									<artifactId>org.eclipse.equinox.ds</artifactId>
+									<type>eclipse-plugin</type>
+								</dependency>
+							</dependencies>
+						</configuration>
+						<executions>
+							<execution>
+								<id>add-p2-composite-repository</id>
+								<phase>package</phase>
+								<goals>
+									<goal>eclipse-run</goal>
+								</goals>
 							</execution>
 						</executions>
 					</plugin>
