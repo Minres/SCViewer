@@ -50,6 +50,7 @@ import com.minres.scviewer.database.IWaveformDbFactory;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.database.ui.swt.WaveformViewFactory;
 import com.minres.scviewer.ui.views.TxOutlinePage;
 
@@ -66,13 +67,6 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 			waveformDbFactory=null;
 	}
 	
-	private final static String[] zoomLevel={
-		"1fs", "10fs", "100fs",
-		"1ps", "10ps", "100ps",
-		"1ns", "10ns", "100ns",
-		"1µs", "10µs", "10µs",
-		"1ms", "10ms", "100ms", "1s"};
-		
 	public static final String ID = "com.minres.scviewer.ui.TxEditorPart"; //$NON-NLS-1$
 
 	public static final String WAVE_ACTION_ID = "com.minres.scviewer.ui.action.AddToWave";
@@ -85,7 +79,6 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 	private Composite myParent;
 
     private StatusLineContributionItem cursorStatusLineItem;
-	private StatusLineContributionItem zoomStatusLineItem;
 
 	public TxEditorPart() {
 	}
@@ -132,7 +125,6 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 				}
 			}
 		}).run();
-		zoomStatusLineItem.setText("Zoom level: "+zoomLevel[waveformView.getZoomLevel()]);
 		cursorStatusLineItem.setText("Cursor: "+ waveformView.getCursorTime()/1000000+"ns");
 		MenuManager menuMgr = new MenuManager("#PopupMenu");
 //		menuMgr.setRemoveAllWhenShown(true);
@@ -306,11 +298,9 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 		// Initialize the editor part
 		setSite(site);
 		setInput(input);
-		zoomStatusLineItem = new StatusLineContributionItem("TxEditorZoomContributionItem");
         cursorStatusLineItem = new StatusLineContributionItem("TxEditorCursorContributionItem");
 		IActionBars actionBars = getEditorSite().getActionBars();
 		IStatusLineManager manager = actionBars.getStatusLineManager();
-		manager.add(zoomStatusLineItem);
         manager.add(cursorStatusLineItem);
 		actionBars.updateActionBars();
 	}
@@ -388,16 +378,8 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 		waveformView.moveSelection( next);		
 	}
 
-	public void setZoomLevel(Integer level) {
-		waveformView.setZoomLevel(level);
-	}
-
-	public void setZoomFit() {
-		waveformView.setZoomLevel(6);		
-	}
-
-	public int getZoomLevel() {
-		return waveformView.getZoomLevel();
+	public void setZoom(ZoomKind kind) {
+		waveformView.getWaveformZoom().zoom(kind);		
 	}
 
 	public void removeSelected() {

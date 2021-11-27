@@ -79,23 +79,17 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	
     public void setHighliteRelation(RelationType relationType);
 
-	public long getMaxTime();
-
 	public void setMaxTime(long maxTime);
-
-	public void setZoomLevel(int scale);
-
-	public int getZoomLevel();
 
 	public void setCursorTime(long time);
 
-	public void setMarkerTime(long time, int index);
+	public void setMarkerTime(int marker, long time);
 
 	public long getCursorTime();
 
-	public int getSelectedMarkerId();
+	public int getSelectedMarker();
 
-	public long getMarkerTime(int index);
+	public long getMarkerTime(int marker);
 
 	public void addPropertyChangeListener(PropertyChangeListener listener);
 
@@ -105,16 +99,8 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 
 	public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener);
 
-	public String getScaledTime(long time);
-
-	public String[] getZoomLevels();
-
 	public List<ICursor> getCursorList();
 
-	public long getBaselineTime();
-
-	public void setBaselineTime(Long scale);
-	
 	public void scrollHorizontal(int percent);
 	
 	public void scrollTo(int pos);
@@ -124,4 +110,7 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	public void deleteSelectedTracks();
 
 	public TrackEntry addWaveform(IWaveform waveform, int pos);
+
+	public IWaveformZoom getWaveformZoom();
+	
 }

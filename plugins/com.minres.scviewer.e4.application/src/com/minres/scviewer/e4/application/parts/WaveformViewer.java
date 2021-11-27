@@ -94,6 +94,7 @@ import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
+import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.database.ui.swt.Constants;
 import com.minres.scviewer.database.ui.swt.IToolTipContentProvider;
 import com.minres.scviewer.database.ui.swt.IToolTipHelpTextProvider;
@@ -131,7 +132,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	protected static final String SHOWN_CURSOR = "SHOWN_CURSOR"; //$NON-NLS-1$
 
 	/** The Constant ZOOM_LEVEL. */
-	protected static final String ZOOM_LEVEL = "ZOOM_LEVEL"; //$NON-NLS-1$
+	protected static final String SCALING_FACTOR = "SCALING_FACTOR"; //$NON-NLS-1$
 
 	/** The Constant BASE_LINE_TIME. */
 	protected static final String BASE_LINE_TIME = "BASE_LINE_TIME"; //$NON-NLS-1$
@@ -150,9 +151,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	/** The Constant TX_DETAILS_SHOWN. */
 	protected static final String TX_DETAILS_SHOWN = "TX_DETAILS_SHOWN"; //$NON-NLS-1$
-
-	/** The zoom level. */
-	private String[] zoomLevel;
 
 	/** The Constant ID. */
 	public static final String ID = "com.minres.scviewer.ui.TxEditorPart"; //$NON-NLS-1$
@@ -299,15 +297,15 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 		waveformPane.addPropertyChangeListener(IWaveformView.CURSOR_PROPERTY, evt -> {
 			Long time = (Long) evt.getNewValue();
-			eventBroker.post(WaveStatusBarControl.CURSOR_TIME, waveformPane.getScaledTime(time));
-			long marker = waveformPane.getMarkerTime(waveformPane.getSelectedMarkerId());
-			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getScaledTime(time - marker));
+			eventBroker.post(WaveStatusBarControl.CURSOR_TIME, waveformPane.getWaveformZoom().timeToString(time));
+			long marker = waveformPane.getMarkerTime(waveformPane.getSelectedMarker());
+			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getWaveformZoom().timeToString(time - marker));
 		});
 		waveformPane.addPropertyChangeListener(IWaveformView.MARKER_PROPERTY, evt -> {
 			Long time = (Long) evt.getNewValue();
-			eventBroker.post(WaveStatusBarControl.MARKER_TIME, waveformPane.getScaledTime(time));
+			eventBroker.post(WaveStatusBarControl.MARKER_TIME, waveformPane.getWaveformZoom().timeToString(time));
 			long cursor = waveformPane.getCursorTime();
-			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getScaledTime(cursor - time));
+			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getWaveformZoom().timeToString(cursor - time));
 		});
 
 		waveformPane.addSelectionChangedListener(event -> {
@@ -319,17 +317,14 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		waveformPane.getWaveformControl().addListener(SWT.KeyDown, e -> {
 			if((e.stateMask&SWT.MOD3)!=0) { // Alt key
 			} else if((e.stateMask&SWT.MOD1)!=0) { //Ctrl/Cmd
-				int zoomlevel = waveformPane.getZoomLevel();
 				switch(e.keyCode) {
 				case '+':
 				case SWT.KEYPAD_ADD:
-					if(zoomlevel>0)
-						waveformPane.setZoomLevel(zoomlevel-1);
+					waveformPane.getWaveformZoom().zoom(ZoomKind.IN);
 					return;
 				case '-':
 				case SWT.KEYPAD_SUBTRACT:
-					if(zoomlevel<waveformPane.getZoomLevels().length-1)
-						waveformPane.setZoomLevel(zoomlevel+1);
+					waveformPane.getWaveformZoom().zoom(ZoomKind.OUT);
 					return;
 				case SWT.ARROW_UP:
 					waveformPane.moveSelectedTrack(-1);
@@ -381,7 +376,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			}
 		});
 
-		zoomLevel = waveformPane.getZoomLevels();
 		checkForUpdates = store.getBoolean(PreferenceConstants.DATABASE_RELOAD, true);
 		filesToLoad = new ArrayList<>();
 		persistedState = part.getPersistedState();
@@ -392,7 +386,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		}
 		if (!filesToLoad.isEmpty())
 			loadDatabase(persistedState);
-		eventBroker.post(WaveStatusBarControl.ZOOM_LEVEL, zoomLevel[waveformPane.getZoomLevel()]);
 		menuService.registerContextMenu(waveformPane.getNameControl(), MENU_CONTEXT);
 		menuService.registerContextMenu(waveformPane.getValueControl(),	MENU_CONTEXT);
 		menuService.registerContextMenu(waveformPane.getWaveformControl(), MENU_CONTEXT);
@@ -750,8 +743,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			persistingState.put(SHOWN_CURSOR + index, Long.toString(cursor.getTime()));
 			index++;
 		}
-		persistingState.put(ZOOM_LEVEL, Integer.toString(waveformPane.getZoomLevel()));
-		persistingState.put(BASE_LINE_TIME, Long.toString(waveformPane.getBaselineTime()));
+		persistingState.put(SCALING_FACTOR, Long.toString(waveformPane.getWaveformZoom().getScale()));
+		persistingState.put(BASE_LINE_TIME, Long.toString(waveformPane.getWaveformZoom().getMinVisibleTime()));
 
 		// get selected transaction	of a stream	
 		ISelection selection = waveformPane.getSelection();
@@ -822,17 +815,17 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				cursors.get(i).setTime(time);
 			}
 		}
-		if (state.containsKey(ZOOM_LEVEL)) {
+		if (state.containsKey(SCALING_FACTOR)) {
 			try {
-				Integer scale = Integer.parseInt(state.get(ZOOM_LEVEL));
-				waveformPane.setZoomLevel(scale);
+				long scale = Long.parseLong(state.get(SCALING_FACTOR));
+				waveformPane.getWaveformZoom().setScale(scale);
 			} catch (NumberFormatException e) {
 			}
 		}
 		if (state.containsKey(BASE_LINE_TIME)) {
 			try {
 				Long scale = Long.parseLong(state.get(BASE_LINE_TIME));
-				waveformPane.setBaselineTime(scale);
+				waveformPane.getWaveformZoom().setMinVisibleTime(scale);
 			} catch (NumberFormatException e) {
 			}
 		}
@@ -871,12 +864,11 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	private void updateAll() {
 		eventBroker.post(ACTIVE_WAVEFORMVIEW, this);
-		eventBroker.post(WaveStatusBarControl.ZOOM_LEVEL, zoomLevel[waveformPane.getZoomLevel()]);
 		long cursor = waveformPane.getCursorTime();
-		long marker = waveformPane.getMarkerTime(waveformPane.getSelectedMarkerId());
-		eventBroker.post(WaveStatusBarControl.CURSOR_TIME, waveformPane.getScaledTime(cursor));
-		eventBroker.post(WaveStatusBarControl.MARKER_TIME, waveformPane.getScaledTime(marker));
-		eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getScaledTime(cursor - marker));
+		long marker = waveformPane.getMarkerTime(waveformPane.getSelectedMarker());
+		eventBroker.post(WaveStatusBarControl.CURSOR_TIME, waveformPane.getWaveformZoom().timeToString(cursor));
+		eventBroker.post(WaveStatusBarControl.MARKER_TIME, waveformPane.getWaveformZoom().timeToString(marker));
+		eventBroker.post(WaveStatusBarControl.MARKER_DIFF, waveformPane.getWaveformZoom().timeToString(cursor - marker));
 	}
 
 	/**
@@ -1047,42 +1039,33 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	}
 
 	/**
-	 * Sets the zoom level.
-	 *
-	 * @param level the new zoom level
+	 * Execute the zoom according to kind.
+	 * 
+	 * @param kind the type of zoom to execute
 	 */
-	public void setZoomLevel(Integer level) {
-		if (level < 0)
-			level = 0;
-		if (level > zoomLevel.length - 1)
-			level = zoomLevel.length - 1;
-		waveformPane.setZoomLevel(level);
+	public void zoom(ZoomKind kind) {
+		waveformPane.getWaveformZoom().zoom(kind);
 		updateAll();
 	}
 
 	/**
-	 * Sets the zoom fit.
+	 * Execute the zoom kind.
+	 * 
+	 * @param direction the direction of the pan (-1, 0, 1)
 	 */
-	public void setZoomFit() {
-		waveformPane.setZoomLevel(-2);
+	public void pan(int direction) {
+		switch(direction) {
+		case -1: 
+			waveformPane.scrollHorizontal(-10);
+			return;
+		case 1:
+			waveformPane.scrollHorizontal(10);
+			return;
+		case 0:
+			waveformPane.scrollTo(IWaveformView.CURSOR_POS);
+			return;
+		}
 		updateAll();
-	}
-
-	/**
-	 * Sets the zoom fit.
-	 */
-	public void setZoomFull() {
-		waveformPane.setZoomLevel(-1);
-		updateAll();
-	}
-
-	/**
-	 * Gets the zoom level.
-	 *
-	 * @return the zoom level
-	 */
-	public int getZoomLevel() {
-		return waveformPane.getZoomLevel();
 	}
 
 	/**
@@ -1113,7 +1096,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @return the scaled time
 	 */
 	public String getScaledTime(Long time) {
-		return waveformPane.getScaledTime(time);
+		return waveformPane.getWaveformZoom().timeToString(time);
 	}
 
 	/**
@@ -1239,7 +1222,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	public void widgetDisposed(DisposeEvent e) {
 		disposeListenerNumber -= 1;
 		if( disposeListenerNumber == 0) {  //if the last tab is closed, reset statusbar
-			eventBroker.post(WaveStatusBarControl.ZOOM_LEVEL, null);
 			eventBroker.post(WaveStatusBarControl.CURSOR_TIME, null);
 			eventBroker.post(WaveStatusBarControl.MARKER_TIME, null);
 			eventBroker.post(WaveStatusBarControl.MARKER_DIFF, null);

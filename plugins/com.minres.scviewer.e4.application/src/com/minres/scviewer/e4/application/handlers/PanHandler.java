@@ -18,12 +18,11 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 
-import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
-public class ZoomHandler {
+public class PanHandler {
 
-	final static String PARAMTER_ID="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level"; //$NON-NLS-1$
+	final static String PARAMTER_ID="com.minres.scviewer.e4.application.command.pancommand.parameter.direction"; //$NON-NLS-1$
 
 	@CanExecute
 	public boolean canExecute(EPartService partService) {
@@ -36,14 +35,12 @@ public class ZoomHandler {
 		Object obj = part.getObject();
 		if(obj instanceof WaveformViewer){
 			WaveformViewer waveformViewerPart = (WaveformViewer) obj;
-			if("in".equalsIgnoreCase(level)) //$NON-NLS-1$
-				waveformViewerPart.zoom(ZoomKind.IN);
-			else if("out".equalsIgnoreCase(level)) //$NON-NLS-1$
-				waveformViewerPart.zoom(ZoomKind.OUT);
-			else if("fit".equalsIgnoreCase(level)) //$NON-NLS-1$
-				waveformViewerPart.zoom(ZoomKind.FIT);
-			else if("full".equalsIgnoreCase(level)) //$NON-NLS-1$
-				waveformViewerPart.zoom(ZoomKind.FULL);
+			if("left".equalsIgnoreCase(level)) //$NON-NLS-1$
+				waveformViewerPart.pan(-1);
+			else if("right".equalsIgnoreCase(level)) //$NON-NLS-1$
+				waveformViewerPart.pan(+1);
+			else if("cursor".equalsIgnoreCase(level)) //$NON-NLS-1$
+				waveformViewerPart.pan(0);
 		}
 
 	}

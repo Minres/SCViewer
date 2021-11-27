@@ -139,19 +139,7 @@
                </visibleWhen>
             </command>
            <command
-                 commandId="com.minres.scviewer.ui.zoom"
-                 id="com.minres.scviewer.ui.zoom.command"
-                 style="pulldown"
-                 tooltip="Set zoom level">
-              <visibleWhen
-                    checkEnabled="false">
-                 <reference
-                       definitionId="com.minres.scviewer.ui.waveEditorActive">
-                 </reference>
-              </visibleWhen>
-           </command>
-           <command
-                 commandId="com.minres.scviewer.ui.zoomin"
+                 commandId="com.minres.scviewer.ui.zoom.in"
                  label="Zoom in"
                  style="push"
                  tooltip="Zoom into">
@@ -163,7 +151,7 @@
               </visibleWhen>
            </command>
            <command
-                 commandId="com.minres.scviewer.ui.zoomout"
+                 commandId="com.minres.scviewer.ui.zoom.out"
                  label="Zoom out"
                  style="push"
                  tooltip="Zoom out of">
@@ -175,119 +163,6 @@
               </visibleWhen>
            </command>
          </toolbar>
-      </menuContribution>
-      <menuContribution
-            locationURI="menu:com.minres.scviewer.ui.zoom.command">
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="100ps"
-               style="push"
-               tooltip="Resolution 100ps">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="5">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="1ns"
-               style="push"
-               tooltip="Resolution 1ns">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="6">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="10ns"
-               style="push"
-               tooltip="Resolution 10ns">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="7">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="100ns"
-               style="push"
-               tooltip="Resolution 100ns">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="8">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="1µs"
-               style="push"
-               tooltip="Resolution 1us">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="9">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="10µs"
-               style="push"
-               tooltip="Resolution 10us">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="10">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="100µs"
-               style="push"
-               tooltip="Resolution 100us">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="11">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="1ms"
-               style="push"
-               tooltip="Resolution 1ms">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="12">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="10ms"
-               style="push"
-               tooltip="Resolution 10ms">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="13">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="100ms"
-               style="push"
-               tooltip="Resolution 100ms">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="14">
-            </parameter>
-         </command>
-         <command
-               commandId="com.minres.scviewer.ui.zoom"
-               label="1s"
-               style="push"
-               tooltip="Resolution 1s">
-            <parameter
-                  name="com.minres.scviewer.ui.zoom.level"
-                  value="15">
-            </parameter>
-         </command>
       </menuContribution>
       <menuContribution
             allPopups="false"
@@ -305,7 +180,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="com.minres.scviewer.ui.zoomin"
+               commandId="com.minres.scviewer.ui.zoom.in"
                label="Zoom in"
                style="push"
                tooltip="Zoom into">
@@ -317,7 +192,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="com.minres.scviewer.ui.zoomout"
+               commandId="com.minres.scviewer.ui.zoom.out"
                label="Zoom out"
                style="push"
                tooltip="Zoom out of">
@@ -367,23 +242,20 @@
             name="Prev">
       </command>
       <command
-            defaultHandler="com.minres.scviewer.ui.handler.Zoom"
-            description="Set the zoom level"
-            id="com.minres.scviewer.ui.zoom"
-            name="Zoom">
-         <commandParameter
-               id="com.minres.scviewer.ui.zoom.level"
-               name="level"
-               optional="true">
-         </commandParameter>
-      </command>
-      <command
-            id="com.minres.scviewer.ui.zoomin"
+            id="com.minres.scviewer.ui.zoom.in"
             name="Zoom in">
       </command>
       <command
-            id="com.minres.scviewer.ui.zoomout"
+            id="com.minres.scviewer.ui.zoom.out"
             name="Zoom out">
+      </command>
+      <command
+            id="com.minres.scviewer.ui.zoom.fit"
+            name="Zoom fit">
+      </command>
+      <command
+            id="com.minres.scviewer.ui.zoom.full"
+            name="Zoom full">
       </command>
       <command
             id="com.minres.scviewer.ui.removeWave"
@@ -411,8 +283,8 @@
          </enabledWhen>
       </handler>
       <handler
-            class="com.minres.scviewer.ui.handler.ZoomInOut"
-            commandId="com.minres.scviewer.ui.zoomin">
+            class="com.minres.scviewer.ui.handler.Zoom"
+            commandId="com.minres.scviewer.ui.zoom.in">
          <enabledWhen>
             <reference
                   definitionId="com.minres.scviewer.ui.waveEditorActive">
@@ -420,8 +292,8 @@
          </enabledWhen>
       </handler>
       <handler
-            class="com.minres.scviewer.ui.handler.ZoomInOut"
-            commandId="com.minres.scviewer.ui.zoomout">
+            class="com.minres.scviewer.ui.handler.Zoom"
+            commandId="com.minres.scviewer.ui.zoom.out">
          <enabledWhen>
             <reference
                   definitionId="com.minres.scviewer.ui.waveEditorActive">
@@ -493,15 +365,11 @@
             icon="res/images/next-green.png">
       </image>
       <image
-            commandId="com.minres.scviewer.ui.zoom"
-            icon="res/images/zoom.png">
-      </image>
-      <image
-            commandId="com.minres.scviewer.ui.zoomin"
+            commandId="com.minres.scviewer.ui.zoom.in"
             icon="res/images/zoom_in.png">
       </image>
       <image
-            commandId="com.minres.scviewer.ui.zoomout"
+            commandId="com.minres.scviewer.ui.zoom.out"
             icon="res/images/zoom_out.png">
       </image>
       <image

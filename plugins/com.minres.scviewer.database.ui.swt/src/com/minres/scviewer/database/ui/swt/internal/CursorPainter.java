@@ -15,7 +15,6 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.WaveformColors;
-import com.minres.scviewer.database.ui.swt.Constants;
 
 public class CursorPainter implements IPainter, ICursor {
 
@@ -66,7 +65,7 @@ public class CursorPainter implements IPainter, ICursor {
 		Rectangle area = proj.unProject(clientRect);
 		if(!waveCanvas.painterList.isEmpty()){
 			
-			long scaleFactor=waveCanvas.getScaleFactor();
+			long scaleFactor=waveCanvas.getScale();
 			long beginPos = area.x;
 			
 			maxPosX = area.x + area.width;
@@ -84,8 +83,7 @@ public class CursorPainter implements IPainter, ICursor {
 				proj.drawLine(x, top, x, area.y+area.height);
 				proj.setBackground(drawColor);
 				proj.setForeground(textColor);
-				double dTime=time;
-				proj.drawText(Constants.getTimeFormatForLevel(waveCanvas.getZoomLevel()).format(dTime/waveCanvas.getScaleFactorPow10())+waveCanvas.getUnitStr(), x+1, top);
+				proj.drawText(waveCanvas.timeToString(time), x+1, top);
 			}
 		}
 	}	

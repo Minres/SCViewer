@@ -29,21 +29,25 @@ import com.minres.scviewer.e4.application.parts.WaveformViewer;
 public class NavigateEvent {
 
 	final static String PARAMTER_ID="com.minres.scviewer.e4.application.command.navigateEventCommand.parameter.dir"; //$NON-NLS-1$
-	
+
 	@CanExecute
-	public Boolean canExecute(ESelectionService selectionService){
-		Object sel = selectionService.getSelection();
-		if( sel instanceof IStructuredSelection) {
-			Object o= ((IStructuredSelection)sel).getFirstElement();
-			return o instanceof IWaveform || o instanceof ITx || o instanceof TrackEntry;
+	public Boolean canExecute(EPartService partService){
+		MPart part = partService.getActivePart();
+		if(part.getObject() instanceof WaveformViewer){
+			Object sel = ((WaveformViewer)part.getObject()).getSelection();
+			if( sel instanceof IStructuredSelection) {
+				if(((IStructuredSelection)sel).isEmpty()) return false;
+				Object o= ((IStructuredSelection)sel).getFirstElement();
+				return o instanceof IWaveform || o instanceof ITx || o instanceof TrackEntry;
+			}
 		}
 		return false;
 	}
-	
+
 	@Execute
 	public void execute(@Named(PARAMTER_ID) String param, EPartService partService) {
-//	public void execute(EPartService partService) {
-//		String param="next";
+		//	public void execute(EPartService partService) {
+		//		String param="next";
 		MPart part = partService.getActivePart();
 		Object obj = part.getObject();
 		if(obj instanceof WaveformViewer){

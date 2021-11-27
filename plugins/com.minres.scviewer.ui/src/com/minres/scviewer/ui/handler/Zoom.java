@@ -16,25 +16,30 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 
+import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.ui.TxEditorPart;
 
 public class Zoom extends AbstractHandler {
-	private static final String PARM_MSG = "com.minres.scviewer.ui.zoom.level";
+	private static final String ZOOMIN_ID   = "com.minres.scviewer.ui.zoom.in";
+	private static final String ZOOMOUT_ID  = "com.minres.scviewer.ui.zoom.out";
+	private static final String ZOOMFIT_ID  = "com.minres.scviewer.ui.zoom.fit";
+	private static final String ZOOMFULL_ID = "com.minres.scviewer.ui.zoom.full";
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IEditorPart editor = HandlerUtil.getActiveEditor(event);
-	    String msg = event.getParameter(PARM_MSG);
-	    if (msg == null) {
-			if(editor instanceof TxEditorPart){
-				((TxEditorPart)editor).setZoomFit();
-			}
-	    } else {
-	    	Integer level = Integer.parseInt(msg);
-			if(editor instanceof TxEditorPart){
-				((TxEditorPart)editor).setZoomLevel(level);
-			}
-	    }
+		if(editor instanceof TxEditorPart){
+		    String id = event.getCommand().getId();
+			TxEditorPart txEditor=(TxEditorPart) editor;
+		    if (ZOOMIN_ID.compareTo(id) == 0)
+		    	txEditor.setZoom(ZoomKind.IN);
+		    else if(ZOOMOUT_ID.compareTo(id) == 0)
+		    	txEditor.setZoom(ZoomKind.OUT);
+		    else if(ZOOMFIT_ID.compareTo(id) == 0)
+		    	txEditor.setZoom(ZoomKind.FIT);
+		    else if(ZOOMFULL_ID.compareTo(id) == 0)
+		    	txEditor.setZoom(ZoomKind.FULL);
+		}
 		return null;
 	}
 
