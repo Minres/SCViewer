@@ -13,6 +13,7 @@ package com.minres.scviewer.database.ui.swt.internal;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.wb.swt.SWTResourceManager;
 
@@ -37,26 +38,26 @@ public class RulerPainter implements IPainter {
     	Color headerBgColor = waveCanvas.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
     	if(headerBgColor.isDisposed())
     		headerBgColor=SWTResourceManager.getColor(255,255,255);
-        String unit=waveCanvas.getUnitStr();
-        long unitMultiplier=waveCanvas.getUnitMultiplier();
-        long scaleFactor=waveCanvas.getScaleFactor();
+    	
+        long scaleFactor=waveCanvas.getScale();
+        long startTime=waveCanvas.getMinVisibleTime(); 
+        long endTime=waveCanvas.getMaxVisibleTime();
 
-        long startPos=area.x*scaleFactor; 
-        long startVal=startPos - proj.getTranslation().x*scaleFactor;
-        long endPos=startPos+area.width*scaleFactor;
-
-        long rulerTickMinor = RULER_TICK_MINOR*scaleFactor;
-        long rulerTickMajor = RULER_TICK_MAJOR*scaleFactor;
-
+        long multiplier = Constants.POWERS_OF_TEN[waveCanvas.getScaleMagnitude()];
+        long rulerTickMinor = RULER_TICK_MINOR*multiplier;
+        long rulerTickMajor = RULER_TICK_MAJOR*multiplier;
+        if((endTime-startTime)/rulerTickMinor>area.width/5) {
+        	rulerTickMinor*=10;
+        	rulerTickMajor*=10;
+        }
         int minorTickY = waveCanvas.rulerHeight-5;
         int majorTickY = waveCanvas.rulerHeight-15;
         int textY=waveCanvas.rulerHeight-30;
         int baselineY=waveCanvas.rulerHeight - 1;
         int bottom=waveCanvas.rulerHeight - 2;
 
-        long modulo = startVal % rulerTickMinor;
-        long startMinorIncrPos = startPos+rulerTickMinor-modulo;
-        long startMinorIncrVal = startVal+rulerTickMinor-modulo;
+        long startTickTime = startTime+rulerTickMinor-(startTime % rulerTickMinor);
+        long majorTickDist = rulerTickMajor/scaleFactor;
         
         gc.setBackground(waveCanvas.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
         gc.fillRectangle(new Rectangle(area.x, area.y, area.width, waveCanvas.rulerHeight));
@@ -64,20 +65,20 @@ public class RulerPainter implements IPainter {
         gc.fillRectangle(new Rectangle(area.x, area.y, area.width, baselineY));
         gc.setForeground(headerFgColor);
         gc.drawLine(area.x, area.y+bottom, area.x+area.width, area.y+bottom);
-        boolean allMarker=true;
-        for (long pos = startMinorIncrPos, tick = startMinorIncrVal; pos < endPos; pos+= rulerTickMinor, tick += rulerTickMinor) {
-            if ((tick % rulerTickMajor) == 0) {
-            	String text = Constants.getTimeFormatForLevel(waveCanvas.getZoomLevel()).format(tick/scaleFactor*unitMultiplier);
-            	if(text.length()>8) allMarker=false;
+        int maxTextLength=0;
+        for (long tickTime = startTickTime; tickTime < endTime; tickTime+= rulerTickMinor) {
+            if ((tickTime % rulerTickMajor) == 0) {
+            	Point textSize = gc.textExtent(waveCanvas.timeToString(tickTime));
+            	maxTextLength=textSize.x>maxTextLength?textSize.x:maxTextLength;
             }
         }
-        boolean drawText = true;
-        for (long pos = startMinorIncrPos, tick = startMinorIncrVal; pos < endPos; pos+= rulerTickMinor, tick += rulerTickMinor) {
-            int x0Pos = (int) (pos/scaleFactor);
-            long x0Val = tick/scaleFactor;
-            if ((tick % rulerTickMajor) == 0) {
-            	if(allMarker || drawText)
-            		gc.drawText(Constants.getTimeFormatForLevel(waveCanvas.getZoomLevel()).format(x0Val*unitMultiplier)+unit, x0Pos, area.y+textY);
+        boolean drawEvery = majorTickDist>maxTextLength;
+        boolean drawText=true;
+        for (long tickTime = startTickTime; tickTime < endTime; tickTime+= rulerTickMinor) {
+            int x0Pos = (int) (tickTime/scaleFactor) + proj.getTranslation().x;
+            if ((tickTime % rulerTickMajor) == 0) {
+            	if(drawEvery ||  drawText)
+            		gc.drawText(waveCanvas.timeToString(tickTime), x0Pos, area.y+textY);
                 gc.drawLine(x0Pos, area.y+majorTickY, x0Pos,area.y+ bottom);
                 drawText=!drawText;
             } else {

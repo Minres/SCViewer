@@ -82,7 +82,7 @@ public class SignalPainter extends TrackPainter {
 	}
 
 	private int getXPosEnd(long time) {
-		long ltmp = time / this.waveCanvas.getScaleFactor();
+		long ltmp = time / this.waveCanvas.getScale();
 		return ltmp > maxPosX ? maxPosX : (int) ltmp;
 	}
 	
@@ -95,7 +95,7 @@ public class SignalPainter extends TrackPainter {
 		proj.setFillRule(SWT.FILL_EVEN_ODD);
 		proj.fillRectangle(area);
 
-		long scaleFactor = this.waveCanvas.getScaleFactor();
+		long scaleFactor = this.waveCanvas.getScale();
 		long beginPos = area.x;
 		long beginTime = beginPos*scaleFactor;
         long endTime = beginTime + area.width*scaleFactor;
@@ -114,7 +114,7 @@ public class SignalPainter extends TrackPainter {
 		yOffsetT = this.waveCanvas.styleProvider.getTrackHeight() / 5 + area.y;
 		yOffsetM = this.waveCanvas.styleProvider.getTrackHeight() / 2 + area.y;
 		yOffsetB = 4 * this.waveCanvas.styleProvider.getTrackHeight() / 5 + area.y;
-		int xSigChangeBeginVal = Math.max(area.x, (int) (left.time / this.waveCanvas.getScaleFactor()));
+		int xSigChangeBeginVal = Math.max(area.x, (int) (left.time / this.waveCanvas.getScale()));
 		int xSigChangeBeginPos = area.x;
 		int xSigChangeEndPos = Math.max(area.x, getXPosEnd(right.time));
 		
@@ -127,7 +127,7 @@ public class SignalPainter extends TrackPainter {
 				right.time = endTime;
 			} else {
 				multiple = true;
-				long eTime = (xSigChangeBeginVal + 1) * this.waveCanvas.getScaleFactor();
+				long eTime = (xSigChangeBeginVal + 1) * this.waveCanvas.getScale();
 				right.set(entries.floorEntry(eTime), endTime);
 				right.time = eTime;
 			}
@@ -147,7 +147,7 @@ public class SignalPainter extends TrackPainter {
 			multiple = false;
 			if (xSigChangeEndPos == xSigChangeBeginPos) {
 				multiple = true;
-				long eTime = (xSigChangeBeginPos + 1) * this.waveCanvas.getScaleFactor();
+				long eTime = (xSigChangeBeginPos + 1) * this.waveCanvas.getScale();
 				EventEntry entry = entries.floorEntry(eTime);
 				if(entry!=null && entry.timestamp> right.time)
 					right.set(entry, endTime);

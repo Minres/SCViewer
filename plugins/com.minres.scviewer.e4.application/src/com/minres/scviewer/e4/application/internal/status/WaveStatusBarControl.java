@@ -27,9 +27,6 @@ import com.minres.scviewer.e4.application.Messages;
  */
 public class WaveStatusBarControl extends StatusBarControl {
 
-	/** The Constant ZOOM_LEVEL. */
-	public static final String ZOOM_LEVEL="ZoomLevelUpdate"; //$NON-NLS-1$
-	
 	/** The Constant CURSOR_TIME. */
 	public static final String CURSOR_TIME="CursorPosUpdate"; //$NON-NLS-1$
 	
@@ -45,7 +42,7 @@ public class WaveStatusBarControl extends StatusBarControl {
 
 
 	/** The zoom contribution. */
-	StatusLineContributionItem cursorContribution, markerContribution, markerDiffContribution, zoomContribution;
+	StatusLineContributionItem cursorContribution, markerContribution, markerDiffContribution;
 
 	/**
 	 * Instantiates a new wave status bar control.
@@ -59,11 +56,9 @@ public class WaveStatusBarControl extends StatusBarControl {
 		cursorContribution = new StatusLineContributionItem(Messages.WaveStatusBarControl_5, true, 20);
 		markerContribution = new StatusLineContributionItem(Messages.WaveStatusBarControl_6, true, 20);
 		markerDiffContribution = new StatusLineContributionItem(Messages.WaveStatusBarControl_7, true, 20);
-		zoomContribution = new StatusLineContributionItem(Messages.WaveStatusBarControl_8, true, 8);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,cursorContribution);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,markerContribution);
 		manager.appendToGroup(StatusLineManager.BEGIN_GROUP,markerDiffContribution);
-		manager.appendToGroup(StatusLineManager.BEGIN_GROUP, zoomContribution);
 	}
 
 	/**
@@ -87,17 +82,6 @@ public class WaveStatusBarControl extends StatusBarControl {
 			}
 		}
 	}
-
-	/**
-	 * Gets the zoom event.
-	 *
-	 * @param text the text
-	 * @return the zoom event
-	 */
-	@Inject @Optional
-	public void  getZoomEvent(@UIEventTopic(ZOOM_LEVEL) String text) {
-		zoomContribution.setText(text);
-	} 
 
 	/**
 	 * Gets the cursor event.

@@ -89,8 +89,8 @@ import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
+import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
-import com.minres.scviewer.database.ui.swt.Constants;
 
 public class WaveformView implements IWaveformView {
 
@@ -202,41 +202,17 @@ public class WaveformView implements IWaveformView {
 					asyncUpdate(e.widget);
 					long startTime = waveformCanvas.getTimeForOffset(start.x);
 					long endTime = waveformCanvas.getTimeForOffset(end.x);
-					long targetTimeRange = endTime - startTime;
-					long currentTimeRange = waveformCanvas.getMaxVisibleTime() - waveformCanvas.getMinVisibleTime();
-					if (targetTimeRange == 0)
-						return;
-					long relation = currentTimeRange / targetTimeRange;
-					long i = 1;
-					int level = 0;
-					do {
-						if (relation < 0) {
-							if (-relation < i) {
-								break;
-							}
-							level--;
-							if (-relation < i * 3) {
-								break;
-							}
-							level--;
-						} else {
-							if (relation < i) {
-								break;
-							}
-							level++;
-							if (relation < i * 3) {
-								break;
-							}
-							level++;
-						}
-						i = i * 10;
-					} while (i < 10000);
-					if (i < 10000) {
-						int curLevel = waveformCanvas.getZoomLevel();
-						waveformCanvas.setZoomLevel(curLevel - level, (startTime + endTime) / 2);
+					if(startTime<endTime) {
+						waveformCanvas.setVisibleRange(startTime, endTime);
+					} else {
+						long targetTimeRange = startTime-endTime;
+						long currentTimeRange = waveformCanvas.getMaxVisibleTime() - waveformCanvas.getMinVisibleTime();
+						long factor = currentTimeRange/targetTimeRange *waveformCanvas.getScale();
+						waveformCanvas.setScalingFactor(factor, (startTime+endTime)/2);
+												
 					}
 				} else if( isShift) { // set marker (button 1 and shift)
-					setMarkerTime(snapOffsetToEvent(start), selectedMarker);
+					setMarkerTime(selectedMarker, snapOffsetToEvent(start));
 				} else if(isCtrl) {	// set cursor (button 1 and ctrl)
 					setCursorTime(snapOffsetToEvent(start));
 				} else { // set cursor (button 1 only)
@@ -248,14 +224,14 @@ public class WaveformView implements IWaveformView {
 					}
 				}
 			} else if (e.button == 2) { // set marker (button 2)
-				setMarkerTime(snapOffsetToEvent(start), selectedMarker);
+				setMarkerTime(selectedMarker, snapOffsetToEvent(start));
 			}
 			asyncUpdate(e.widget);
 		}
 
 		protected long snapOffsetToEvent(Point p) {
 			long time = waveformCanvas.getTimeForOffset(p.x);
-			long scaling = 5 * waveformCanvas.getScaleFactor();
+			long scaling = 5 * waveformCanvas.getScale();
 			for (Object o : waveformCanvas.getElementsAt(p)) {
 				EventEntry floorEntry = null;
 				EventEntry ceilEntry = null;
@@ -290,11 +266,10 @@ public class WaveformView implements IWaveformView {
 			switch (e.type) {
 			case SWT.MouseWheel:
 				if((e.stateMask & SWT.CTRL) != 0) {
-					int zoom = waveformCanvas.getZoomLevel();
 					if(e.count<0)
-						waveformCanvas.setZoomLevel(zoom+1);
+						waveformCanvas.setScale(waveformCanvas.getScale()*11/10);
 					else
-						waveformCanvas.setZoomLevel(zoom-1);
+						waveformCanvas.setScale(waveformCanvas.getScale()*10/11);
 				} 
 				break;
 			case SWT.MouseDown:
@@ -469,12 +444,12 @@ public class WaveformView implements IWaveformView {
 
 		toolTipHandler = new ToolTipHandler(parent.getShell());
 		toolTipHandler.activateHoverHelp(waveformCanvas);
-	    // This is the filter that prevents it
+	    // This is the filter that prevents the default handling of mouse wheel in waveformCanvas
 	    getControl().getDisplay().addFilter(SWT.MouseWheel, new Listener() {
 	        @Override
 	        public void handleEvent(Event e) {
 	            // Check if it's the correct widget
-	            if((e.widget.equals(waveformCanvas) || e.widget.equals(this)) && (e.stateMask & SWT.CTRL) != 0) {
+	            if(e.widget.equals(waveformCanvas) && (e.stateMask & SWT.CTRL) != 0) {
 	            	waveformMouseListener.handleEvent(e);
 	                e.doit = false;
 	            }
@@ -1140,46 +1115,11 @@ public class WaveformView implements IWaveformView {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.minres.scviewer.database.swt.IWaveformPanel#getMaxTime()
-	 */
-	@Override
-	public long getMaxTime() {
-		return waveformCanvas.getMaxTime();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see com.minres.scviewer.database.swt.IWaveformPanel#setMaxTime(long)
 	 */
 	@Override
 	public void setMaxTime(long maxTime) {
 		this.waveformCanvas.setMaxTime(maxTime);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.minres.scviewer.database.swt.IWaveformPanel#setZoomLevel(int)
-	 */
-	@Override
-	public void setZoomLevel(int scale) {
-		if(scale<-1) {
-			waveformCanvas.setZoomLevel(scale, getMarkerTime(selectedMarker));
-		} else {
-			waveformCanvas.setZoomLevel(scale);
-			waveformCanvas.reveal(getCursorTime());
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.minres.scviewer.database.swt.IWaveformPanel#getZoomLevel()
-	 */
-	@Override
-	public int getZoomLevel() {
-		return waveformCanvas.getZoomLevel();
 	}
 
 	/*
@@ -1200,10 +1140,10 @@ public class WaveformView implements IWaveformView {
 	 * @see com.minres.scviewer.database.swt.IWaveformPanel#setMarkerTime(long, int)
 	 */
 	@Override
-	public void setMarkerTime(long time, int index) {
-		if (waveformCanvas.getCursorPainters().size() > index + 1) {
-			final Long oldVal = waveformCanvas.getCursorPainters().get(1 + index).getTime();
-			waveformCanvas.getCursorPainters().get(1 + index).setTime(time);
+	public void setMarkerTime(int marker, long time) {
+		if (waveformCanvas.getCursorPainters().size() > marker + 1) {
+			final Long oldVal = waveformCanvas.getCursorPainters().get(1 + marker).getTime();
+			waveformCanvas.getCursorPainters().get(1 + marker).setTime(time);
 			pcs.firePropertyChange(MARKER_PROPERTY, oldVal, time);
 		}
 	}
@@ -1224,7 +1164,7 @@ public class WaveformView implements IWaveformView {
 	 * @see com.minres.scviewer.database.swt.IWaveformPanel#getActMarkerTime()
 	 */
 	@Override
-	public int getSelectedMarkerId() {
+	public int getSelectedMarker() {
 		return selectedMarker;
 	}
 
@@ -1476,58 +1416,16 @@ public class WaveformView implements IWaveformView {
 		return this.pcs.hasListeners(propertyName);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.minres.scviewer.database.swt.IWaveformPanel#getScaledTime(long)
-	 */
-	@Override
-	public String getScaledTime(long time) {
-		StringBuilder sb = new StringBuilder();
-		double dTime = time;
-		double scaledTime = dTime / waveformCanvas.getScaleFactorPow10();
-		return sb.append(Constants.getTimeFormatForLevel(waveformCanvas.getZoomLevel()).format(scaledTime)).append(waveformCanvas.getUnitStr()).toString();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.minres.scviewer.database.swt.IWaveformPanel#getZoomLevels()
-	 */
-	@Override
-	public String[] getZoomLevels() {
-		String[] res = new String[Constants.SCALE_MULTIPLIER.length * Constants.UNIT_STRING.length];
-		int index = 0;
-		for (String unit : Constants.UNIT_STRING) {
-			for (long factor : Constants.SCALE_MULTIPLIER) {
-				res[index++] = Long.toString(factor) + unit;
-			}
-		}
-		return res;
-	}
-
-	@Override
-	public long getBaselineTime() {
-		return -waveformCanvas.getScaleFactorPow10() * waveformCanvas.getOrigin().x;
-	}
-
-	@Override
-	public void setBaselineTime(Long time) {
-		Point origin = waveformCanvas.getOrigin();
-		origin.x = (int) (-time / waveformCanvas.getScaleFactorPow10());
-		waveformCanvas.setOrigin(origin);
-	}
-
 	@Override
 	public void scrollHorizontal(int percent) {
 		if (percent < -100)
 			percent = -100;
 		if (percent > 100)
 			percent = 100;
-		int diff = (waveformCanvas.getWidth() * percent) / 100;
-		Point o = waveformCanvas.getOrigin();
-		waveformCanvas.setOrigin(o.x - diff, o.y);
-		waveformCanvas.redraw();
+		long minTime = waveformCanvas.getMinVisibleTime();
+		long duration = waveformCanvas.getMaxVisibleTime()-minTime;
+		long diff = (duration * percent) / 100;
+		waveformCanvas.setMinVisibleTime(minTime+diff);
 	}
 
 	@Override
@@ -1580,4 +1478,8 @@ public class WaveformView implements IWaveformView {
 		return  streams.stream().filter(e -> e.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent();
 	}
 
+	@Override
+	public IWaveformZoom getWaveformZoom() {
+		return waveformCanvas;
+	}
 }

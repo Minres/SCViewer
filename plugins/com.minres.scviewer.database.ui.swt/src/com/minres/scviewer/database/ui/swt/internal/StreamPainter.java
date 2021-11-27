@@ -67,7 +67,7 @@ public class StreamPainter extends TrackPainter{
 		proj.setFillRule(SWT.FILL_EVEN_ODD);
 		proj.fillRectangle(area);
 
-		long scaleFactor = this.waveCanvas.getScaleFactor();
+		long scaleFactor = this.waveCanvas.getScale();
 		long beginPos = area.x;
 		long beginTime = beginPos*scaleFactor;
 		long endTime = beginTime + area.width*scaleFactor;
@@ -130,8 +130,8 @@ public class StreamPainter extends TrackPainter{
 
 		int offset = concurrencyIndex*this.waveCanvas.styleProvider.getTrackHeight();
 		Rectangle bb = new Rectangle(
-				(int)(tx.getBeginTime()/this.waveCanvas.getScaleFactor()), area.y+offset+txBase,
-				(int)((tx.getEndTime()-tx.getBeginTime())/this.waveCanvas.getScaleFactor()), txHeight);
+				(int)(tx.getBeginTime()/this.waveCanvas.getScale()), area.y+offset+txBase,
+				(int)((tx.getEndTime()-tx.getBeginTime())/this.waveCanvas.getScale()), txHeight);
 
 		if(bb.x+bb.width<area.x || bb.x>area.x+area.width) return;
 		if(bb.width==0){
@@ -155,7 +155,7 @@ public class StreamPainter extends TrackPainter{
 
 	public ITx getClicked(Point point) {
 		int lane=point.y/waveCanvas.styleProvider.getTrackHeight();
-		EventEntry firstTx=stream.getEvents().floorEntry(point.x*waveCanvas.getScaleFactor());
+		EventEntry firstTx=stream.getEvents().floorEntry(point.x*waveCanvas.getScale());
 		if(firstTx!=null){
 			do {
 				ITx tx = getTxFromEntry(lane, point.x, firstTx.events);
@@ -175,9 +175,9 @@ public class StreamPainter extends TrackPainter{
 	}
 
 	protected ITx getTxFromEntry(int lane, int offset, IEvent[] firstTx) {
-		long timePoint=offset*waveCanvas.getScaleFactor();
-		long timePointLow=(offset-5)*waveCanvas.getScaleFactor();
-		long timePointHigh=(offset+5)*waveCanvas.getScaleFactor();
+		long timePoint=offset*waveCanvas.getScale();
+		long timePointLow=(offset-5)*waveCanvas.getScale();
+		long timePointHigh=(offset+5)*waveCanvas.getScale();
 		for(IEvent e:firstTx){
 			if(e instanceof ITxEvent) {
 				ITxEvent evt = (ITxEvent) e;
