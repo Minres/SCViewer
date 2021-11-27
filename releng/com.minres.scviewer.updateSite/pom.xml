@@ -51,7 +51,7 @@
 							<workingDirectory>${software.download.area}</workingDirectory>
 							<arguments>
 								<argument>-c</argument>
-								<argument>if [ -d gh-pages ]; then cd gh-pages; git pull; else git clone --branch gh-pages https://git.minres.com/VP-Tools/SCViewer.git gh-pages; fi</argument>
+								<argument>if [ -d SCViewer-GHP ]; then cd SCViewer-GHP; git pull; else git clone -v --branch gh-pages https://git.minres.com/VP-Tools/SCViewer.git SCViewer-GHP; fi</argument>
 							</arguments>
 							<environmentVariables>
 								<LANG>en_US</LANG>
@@ -64,7 +64,7 @@
 						<version>${tycho-version}</version>
 						<configuration>
 							<!-- IMPORTANT: DO NOT split the arg line -->
-							<appArgLine>-application org.eclipse.ant.core.antRunner -buildfile packaging-p2-composite.ant p2.composite.add -Dsite.label="SCViewer Software Repository" -Dproject.build.directory=${project.build.directory} -DunqualifiedVersion=${unqualifiedVersion} -Dsoftware.download.area="${software.download.area}/gh-pages/repository"</appArgLine>
+							<appArgLine>-application org.eclipse.ant.core.antRunner -buildfile packaging-p2-composite.ant p2.composite.add -Dsite.label="SCViewer Software Repository" -Dproject.build.directory=${project.build.directory} -DunqualifiedVersion=${unqualifiedVersion} -Dsoftware.download.area="${software.download.area}/SCViewer-GHP/repository"</appArgLine>
 							<repositories>
 								<repository>
 									<id>2020-03</id>
