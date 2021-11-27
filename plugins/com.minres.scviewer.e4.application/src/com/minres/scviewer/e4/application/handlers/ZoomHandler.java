@@ -18,6 +18,7 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 
+import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
 public class ZoomHandler {
@@ -35,15 +36,14 @@ public class ZoomHandler {
 		Object obj = part.getObject();
 		if(obj instanceof WaveformViewer){
 			WaveformViewer waveformViewerPart = (WaveformViewer) obj;
-			int zoomLevel = waveformViewerPart.getZoomLevel();
 			if("in".equalsIgnoreCase(level)) //$NON-NLS-1$
-				waveformViewerPart.setZoomLevel(zoomLevel-1);
+				waveformViewerPart.setZoom(ZoomKind.IN);
 			else if("out".equalsIgnoreCase(level)) //$NON-NLS-1$
-				waveformViewerPart.setZoomLevel(zoomLevel+1);
+				waveformViewerPart.setZoom(ZoomKind.OUT);
 			else if("fit".equalsIgnoreCase(level)) //$NON-NLS-1$
-				waveformViewerPart.setZoomFit();
+				waveformViewerPart.setZoom(ZoomKind.FIT);
 			else if("full".equalsIgnoreCase(level)) //$NON-NLS-1$
-				waveformViewerPart.setZoomFull();
+				waveformViewerPart.setZoom(ZoomKind.FULL);
 		}
 
 	}

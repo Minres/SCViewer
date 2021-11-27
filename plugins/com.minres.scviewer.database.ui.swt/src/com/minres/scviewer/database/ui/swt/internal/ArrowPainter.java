@@ -75,7 +75,7 @@ public class ArrowPainter implements IPainter {
 		this.tx = newTx;
 		iRect = new LinkedList<>();
 		oRect = new LinkedList<>();
-		scaleFactor = waveCanvas.getScaleFactor();
+		scaleFactor = waveCanvas.getScale();
 		if (tx != null) {
 			calculateGeometries();
 		}
@@ -133,7 +133,7 @@ public class ArrowPainter implements IPainter {
 		Color highliteColor = waveCanvas.styleProvider.getColor(WaveformColors.REL_ARROW_HIGHLITE);
 
 		if(tx==null) return;
-		scaleFactor = waveCanvas.getScaleFactor();
+		scaleFactor = waveCanvas.getScale();
 		if(calculateGeometries())
 			return;
 		int correctionValue = (int)(selectionOffset);
