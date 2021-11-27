@@ -177,8 +177,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	
 	@Override
 	public void setScale(long factor) {
-		long tc=cursorPainters.get(0).getTime(); // cursor time
-		setScalingFactor(factor, tc);
+		setScalingFactor(factor, (getMaxVisibleTime()+getMinVisibleTime())/2);
 	}
 
 	@Override
