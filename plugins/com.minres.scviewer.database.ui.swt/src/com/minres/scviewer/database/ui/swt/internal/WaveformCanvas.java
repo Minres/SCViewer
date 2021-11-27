@@ -570,7 +570,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			break;
 		case FULL:
 			setScale(WaveformCanvas.ZOOM_FULL);
-			break;			
+			break;
 		}
 	}
 

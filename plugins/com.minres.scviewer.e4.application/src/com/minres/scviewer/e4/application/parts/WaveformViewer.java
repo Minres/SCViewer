@@ -1039,10 +1039,32 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	}
 
 	/**
-	 * Execute the zoom kind.
+	 * Execute the zoom according to kind.
+	 * 
+	 * @param kind the type of zoom to execute
 	 */
-	public void setZoom(ZoomKind kind) {
+	public void zoom(ZoomKind kind) {
 		waveformPane.getWaveformZoom().zoom(kind);
+		updateAll();
+	}
+
+	/**
+	 * Execute the zoom kind.
+	 * 
+	 * @param direction the direction of the pan (-1, 0, 1)
+	 */
+	public void pan(int direction) {
+		switch(direction) {
+		case -1: 
+			waveformPane.scrollHorizontal(-10);
+			return;
+		case 1:
+			waveformPane.scrollHorizontal(10);
+			return;
+		case 0:
+			waveformPane.scrollTo(IWaveformView.CURSOR_POS);
+			return;
+		}
 		updateAll();
 	}
 
