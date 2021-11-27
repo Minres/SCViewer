@@ -6,11 +6,11 @@
 	<parent>
 		<groupId>com.minres.scviewer</groupId>
 		<artifactId>com.minres.scviewer.parent</artifactId>
-		<version>2.14.2</version>
+		<version>2.15.0</version>
 		<relativePath>../..</relativePath>
 	</parent>
 	<artifactId>com.minres.scviewer.e4.product</artifactId>
-  	<version>2.14.2</version>
+  	<version>2.15.0</version>
 	<packaging>eclipse-repository</packaging>
 	<groupId>com.minres.scviewer</groupId>
 	<build>
