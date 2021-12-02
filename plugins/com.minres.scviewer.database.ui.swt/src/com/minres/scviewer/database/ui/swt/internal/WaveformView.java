@@ -54,6 +54,7 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -61,6 +62,7 @@ import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -69,6 +71,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ScrollBar;
+import org.eclipse.swt.widgets.Slider;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.wb.swt.SWTResourceManager;
 
@@ -91,6 +94,7 @@ import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.swt.sb.FlatScrollBar;
 
 public class WaveformView implements IWaveformView {
 
@@ -330,8 +334,22 @@ public class WaveformView implements IWaveformView {
 		rightSash.setBackground(SWTResourceManager.getColor(SWT.COLOR_GRAY));
 
 		Composite valuePane = new Composite(rightSash, SWT.NONE);
-		waveformCanvas = new WaveformCanvas(rightSash, SWT.NONE, styleProvider);
-
+		
+		Composite waveformPane = new Composite(rightSash, SWT.NONE);
+		GridLayout gl_waveformPane = new GridLayout(1, false);
+		gl_waveformPane.verticalSpacing = 0;
+		gl_waveformPane.marginWidth = 0;
+		gl_waveformPane.marginHeight = 0;
+		waveformPane.setLayout(gl_waveformPane);
+		
+		waveformCanvas = new WaveformCanvas(waveformPane, SWT.NONE | SWT.V_SCROLL /*| SWT.H_SCROLL*/, styleProvider);
+		waveformCanvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		
+		Composite timeSliderPane = new WaveformSlider(waveformPane, SWT.NONE);
+		GridData gd_timeSlider = new GridData(SWT.FILL, SWT.BOTTOM, false, false, 1, 1);
+		gd_timeSlider.heightHint = 18;
+		timeSliderPane.setLayoutData(gd_timeSlider);
+		
 		// create the name pane
 		createTextPane(namePane, "Name");
 
