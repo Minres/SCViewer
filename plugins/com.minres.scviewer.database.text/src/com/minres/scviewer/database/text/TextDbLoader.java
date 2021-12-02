@@ -345,10 +345,10 @@ public class TextDbLoader implements IWaveformDbLoader {
 			String curLine = reader.readLine();
 			String nextLine = null;
 			while ((nextLine = reader.readLine()) != null && curLine != null) {
-				curLine = parseLine(curLine, nextLine);
+				curLine = parseLine(curLine, nextLine, false);
 			}
 			if (curLine != null)
-				parseLine(curLine, nextLine);
+				parseLine(curLine, nextLine, true);
 			for(Entry<Long, ScvTx> e: transactionById.entrySet()) {
 				ScvTx scvTx = e.getValue();
 				scvTx.endTime=loader.maxTime;
@@ -385,16 +385,16 @@ public class TextDbLoader implements IWaveformDbLoader {
 		 * @throws IOException Signals that an I/O exception has occurred.
 		 * @throws InputFormatException Signals that the input format is wrong
 		 */
-		private String parseLine(String curLine, String nextLine) throws IOException, InputFormatException {
+		private String parseLine(String curLine, String nextLine, boolean last) throws IOException, InputFormatException {
 			String[] tokens = curLine.split("\\s+");
-			if ("tx_record_attribute".equals(tokens[0])) {
+			if ("tx_record_attribute".equals(tokens[0]) && tokens.length>4) {
 				Long id = Long.parseLong(tokens[1]);
 				String name = tokens[2].substring(1, tokens[2].length()-1);
 				DataType type = DataType.valueOf(tokens[3]);
 				String remaining = tokens.length > 5 ? String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length)) : "";
 				TxAttributeType attrType = getAttrType(name, type, AssociationType.RECORD);
 				transactionById.get(id).attributes.add(new TxAttribute(attrType, getAttrString(attrType, remaining)));
-			} else if ("tx_begin".equals(tokens[0])) {
+			} else if ("tx_begin".equals(tokens[0]) && tokens.length>4) {
 				Long id = Long.parseLong(tokens[1]);
 				Long genId = Long.parseLong(tokens[2]);
 				TxGenerator gen = loader.txGenerators.get(genId);
@@ -413,7 +413,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 					}
 				}
 				transactionById.put(id, scvTx);
-			} else if ("tx_end".equals(tokens[0])) {
+			} else if ("tx_end".equals(tokens[0]) && tokens.length>4) {
 				Long id = Long.parseLong(tokens[1]);
 				ScvTx scvTx = transactionById.get(id);
 				assert Long.parseLong(tokens[2]) == scvTx.generatorId;
@@ -443,7 +443,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 				}
 				txSink.put(scvTx.getId(), scvTx);
 				transactionById.remove(id);
-			} else if ("tx_relation".equals(tokens[0])) {
+			} else if ("tx_relation".equals(tokens[0]) && tokens.length>3) {
 				Long tr2 = Long.parseLong(tokens[2]);
 				Long tr1 = Long.parseLong(tokens[3]);
 				String relType = tokens[1].substring(1, tokens[1].length() - 1);
@@ -483,7 +483,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 				}
 			} else if (")".equals(tokens[0])) {
 				generator = null;
-			} else
+			} else if(!last)			
 				throw new InputFormatException("Don't know what to do with: '" + curLine + "'");
 			return nextLine;
 		}
