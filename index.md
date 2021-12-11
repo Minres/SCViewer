@@ -10,6 +10,10 @@ The viewer has the following features
    * text log files (compressed and uncompressed)
    * visualization of transaction relations
 
+SCViewer is available as standalone version and can be downloaded at [Github](https://github.com/Minres/SCViewer/releases).
+
+It can also be installed into an Eclipse application by using the update site at https://minres.github.io/SCViewer/repository.
+
 ## Key Shortcuts
 
 Legend:
