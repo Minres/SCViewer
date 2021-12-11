@@ -1,4 +1,4 @@
-## Welcome to SCViewer
+# Welcome to SCViewer
 
 SCViewer is a simple tool to display VCD and transaction streams created by the SystemC VCD trace implementation and the SystemC Verification Library (SCV).
 The viewer has the following features
@@ -13,6 +13,12 @@ The viewer has the following features
 SCViewer is available as standalone version and can be downloaded at [Github](https://github.com/Minres/SCViewer/releases).
 
 It can also be installed into an Eclipse application by using the update site at https://minres.github.io/SCViewer/repository.
+
+> Please note that this is work in progress
+
+------------------------
+
+# Help
 
 ## Key Shortcuts
 
