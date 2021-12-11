@@ -1,3 +1,7 @@
+---
+title: SCViewer
+---
+
 # Welcome to SCViewer
 
 SCViewer is a simple tool to display VCD and transaction streams created by the SystemC VCD trace implementation and the SystemC Verification Library (SCV).
