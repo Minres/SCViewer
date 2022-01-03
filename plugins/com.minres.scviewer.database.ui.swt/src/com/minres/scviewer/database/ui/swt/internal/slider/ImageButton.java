@@ -1,111 +1,100 @@
 package com.minres.scviewer.database.ui.swt.internal.slider;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.SWTException;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 
 public class ImageButton extends Composite
 {
-	private Color   textColor;
-	private Image   image;
-	private Image   grayImage;
-	private ImageData imageData;
-	private String  text = "";
+	private Image   hoverImage;
+	private Image   normalImage;
+	private Image   pressedImage;
 	private int     width;
 	private int     height;
 	private boolean hover;
+	private boolean pressed;
+	private boolean autoFire;
+	private ActionTimer actionTimer;
+	private ActionTimer.TimerAction timerAction;
 
-	public ImageButton(Composite parent, int style)
-	{
+	public ImageButton(Composite parent, int style)	{
 		super(parent, style);
-
-		textColor = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
-
-		/* Add dispose listener for the image */
+		
+		timerAction = new ActionTimer.TimerAction() {
+			@Override
+			public void run() {
+				notifyListeners();
+			}
+			@Override
+			public boolean isEnabled() {
+				return pressed;
+			}
+		};
+		actionTimer = new ActionTimer(timerAction, this.getDisplay() );
+		
 		addListener(SWT.Dispose, event ->  {
-				if (image != null)
-					image.dispose();
+			if (hoverImage != null)	hoverImage.dispose();
+			if (normalImage != null) normalImage.dispose();
+			if (pressedImage != null) pressedImage.dispose();
 		});
 
-		/* Add custom paint listener that paints the stars */
 		addListener(SWT.Paint, event -> {
-				paintControl(event);
+			paintControl(event);
 		});
 
-		/* Listen for click events */
 		addListener(SWT.MouseDown, event -> {
-				System.out.println("Click");
-		});
-		addListener(SWT.MouseDown, event -> {
+			pressed=true;
+			notifyListeners();
+		    if(autoFire) actionTimer.activate();
+			redraw();
 		});
 
 		addListener(SWT.MouseUp, event -> {
+			pressed=false;
+			redraw();
 		});
 
 		addListener(SWT.MouseMove, event -> {
-			hover=false;
+			Point sz = ((ImageButton)event.widget).getSize();
+			final boolean within_x = event.x>0 && event.x<sz.x-1;
+			final boolean within_y = event.y>0 && event.y<sz.y-1;
+			hover= within_x && within_y;
 			redraw();
-		});
-
-		addListener(SWT.MouseWheel, event -> {
-		});
-
-		addListener(SWT.MouseHover, event -> {
-			hover=true;
-			redraw();
-		});
-
-		addListener(SWT.MouseDoubleClick, event -> {
 		});
 	}
 
 	private void paintControl(Event event) { 
 		GC gc = event.gc;
 
-		if (image != null)
-		{
-//			gc.drawImage(image, 1, 1);
-//			if(hover) {
-//				Rectangle rect = image.getBounds ();
-//				Transform tr = new Transform (event.display);
-//				tr.setElements (1, 0, 0, -1, 1, 2*(1+rect.height));
-//				gc.setTransform (tr);
-//				gc.drawImage (image, 1, 1);
-//				gc.setTransform (null);
-//			}
-			if(hover) {
-				gc.drawImage(image, 1, 1);
+		if (hoverImage != null)	{
+			if(pressed)
+				gc.drawImage(pressedImage, 1, 1);
+			else if(hover) {
+				gc.drawImage(hoverImage, 1, 1);
 			} else {
-				gc.drawImage(grayImage, 1, 1);
+				gc.drawImage(normalImage, 1, 1);
 			}
-			Point textSize = gc.textExtent(text);
-			gc.setForeground(textColor);
-			gc.drawText(text, (width - textSize.x) / 2 + 1, (height - textSize.y) / 2 + 1, true);
 		}
 	}
 
-	public void setImage(Image img)
+	public void setImage(Image[] imgs)
 	{
-		image = new Image(Display.getDefault(), img, SWT.IMAGE_COPY);
-		grayImage = new Image(Display.getDefault(),img,SWT.IMAGE_GRAY);
-		width = img.getBounds().width;
-		height = img.getBounds().height;
-		imageData = img.getImageData();
-		redraw();
-	}
-
-	public void setText(String text)
-	{
-		this.text = text;
+		Display d = Display.getDefault();
+		hoverImage = new Image(d, imgs[0], SWT.IMAGE_COPY);
+		normalImage = imgs.length>1? 
+				new Image(d, imgs[1], SWT.IMAGE_COPY):
+					new Image(d,imgs[0],SWT.IMAGE_GRAY);
+		pressedImage = imgs.length>2?
+				new Image(d, imgs[2], SWT.IMAGE_COPY):
+					new Image(d,imgs[0],SWT.IMAGE_DISABLE);
+		width = imgs[0].getBounds().width;
+		height = imgs[0].getBounds().height;
 		redraw();
 	}
 
@@ -125,5 +114,77 @@ public class ImageButton extends Composite
 		/* Return computed dimensions plus border */
 		return new Point(overallWidth + 2, overallHeight + 2);
 	}
+	/**
+	 * Adds the listener to the collection of listeners who will be notified when
+	 * the user changes the receiver's value, by sending it one of the messages
+	 * defined in the <code>SelectionListener</code> interface.
+	 * <p>
+	 * <code>widgetSelected</code> is called when the user changes the receiver's
+	 * value. <code>widgetDefaultSelected</code> is not called.
+	 * </p>
+	 *
+	 * @param listener the listener which should be notified
+	 *
+	 * @exception IllegalArgumentException
+	 *                <ul>
+	 *                <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
+	 *                </ul>
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 *
+	 * @see SelectionListener
+	 * @see #removeSelectionListener
+	 */
+	public void addSelectionListener(final SelectionListener listener) {
+		checkWidget();
+		SelectionListenerUtil.addSelectionListener(this, listener);
+	}
+
+	/**
+	 * Removes the listener from the collection of listeners who will be notified
+	 * when the user changes the receiver's value.
+	 *
+	 * @param listener the listener which should no longer be notified
+	 *
+	 * @exception IllegalArgumentException
+	 *                <ul>
+	 *                <li>ERROR_NULL_ARGUMENT - if the listener is null</li>
+	 *                </ul>
+	 * @exception SWTException
+	 *                <ul>
+	 *                <li>ERROR_WIDGET_DISPOSED - if the receiver has been
+	 *                disposed</li>
+	 *                <li>ERROR_THREAD_INVALID_ACCESS - if not called from the
+	 *                thread that created the receiver</li>
+	 *                </ul>
+	 *
+	 * @see SelectionListener
+	 * @see #addSelectionListener
+	 */
+	public void removeSelectionListener(final SelectionListener listener) {
+		checkWidget();
+		SelectionListenerUtil.removeSelectionListener(this, listener);
+	}
+
+	private void notifyListeners() {
+		Event e = new Event();
+		e.widget=this;
+		e.type=SWT.Selection;
+		SelectionListenerUtil.fireSelectionListeners(this,e);
+	}
+
+	public boolean isAutoFire() {
+		return autoFire;
+	}
+
+	public void setAutoFire(boolean autoFire) {
+		this.autoFire = autoFire;
+	}
+
 
 }

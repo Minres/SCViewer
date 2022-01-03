@@ -31,7 +31,6 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.ScrollBar;
 
 import com.google.common.collect.Lists;
 import com.minres.scviewer.database.EventEntry;
@@ -81,6 +80,9 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	private List<CursorPainter> cursorPainters;
 
+	IScrollBar horizontal;
+	IScrollBar vertical;
+
 	HashMap<IWaveform, IWaveformPainter> wave2painterMap;
 	/**
 	 * Constructor for ScrollableCanvas.
@@ -90,8 +92,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	 * @param style
 	 *            the style of this control.
 	 */
-	public WaveformCanvas(final Composite parent, int style, IWaveformStyleProvider styleProvider) {
-		super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.V_SCROLL | SWT.H_SCROLL);
+	public WaveformCanvas(final Composite parent, int style, IWaveformStyleProvider styleProvider, IWaveformScrollBarProvider scrollbarProvider) {
+		super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND);
 		this.styleProvider=styleProvider;
 		addControlListener(new ControlAdapter() { /* resize listener. */
 			@Override
@@ -106,6 +108,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		cursorPainters= new ArrayList<>();
 		wave2painterMap=new HashMap<>();
 
+		horizontal = (style& SWT.H_SCROLL)==0?scrollbarProvider.getHorizontalSb() : new ScrollBarAdapter(getHorizontalBar());
+		vertical = (style& SWT.V_SCROLL)==0?scrollbarProvider.getVerticalSb() : new ScrollBarAdapter(getVerticalBar());
 		initScrollBars();
 		// order is important: it is bottom to top
 		trackAreaPainter=new TrackAreaPainter(this);
@@ -149,12 +153,10 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	public void setOrigin(int x, int y) {
 		checkWidget();
-		ScrollBar hBar = getHorizontalBar();
-		if(x<=0) hBar.setSelection(-x);
-		x = -hBar.getSelection();
-		ScrollBar vBar = getVerticalBar();
-		if(y<=0) vBar.setSelection(-y);
-		y = -vBar.getSelection();
+		if(x<=0) horizontal.setSelection(-x);
+		x = -horizontal.getSelection();
+		if(y<=0) vertical.setSelection(-y);
+		y = -vertical.getSelection();
 		origin.x = x;
 		origin.y = y;
 		syncScrollBars();
@@ -284,7 +286,6 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	/* Initialize the scrollbar and register listeners. */
 	private void initScrollBars() {
-		ScrollBar horizontal = getHorizontalBar();
 		horizontal.setEnabled(false);
 		horizontal.setVisible(true);
 		horizontal.addSelectionListener(new SelectionAdapter() {
@@ -292,10 +293,9 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			public void widgetSelected(SelectionEvent event) {
 				if (painterList.isEmpty())
 					return;
-				setOrigin(-((ScrollBar) event.widget).getSelection(), origin.y);
+				setOrigin(-horizontal.getSelection(), origin.y);
 			}
 		});
-		ScrollBar vertical = getVerticalBar();
 		vertical.setEnabled(false);
 		vertical.setVisible(true);
 		vertical.addSelectionListener(new SelectionAdapter() {
@@ -303,7 +303,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			public void widgetSelected(SelectionEvent event) {
 				if (painterList.isEmpty())
 					return;
-				setOrigin(origin.x, -((ScrollBar) event.widget).getSelection());
+				setOrigin(origin.x, -vertical.getSelection());
 			}
 		});
 	}
@@ -321,10 +321,9 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		int height = trackAreaPainter.getHeight(); // incl. Ruler
 		long width = maxTime / scaleFactor;
 		Rectangle clientArea=getClientArea();
-		ScrollBar horizontal = getHorizontalBar();
-		horizontal.setIncrement(getClientArea().width / 100);
-		horizontal.setPageIncrement(getClientArea().width);
 		int clientWidthw = clientArea.width;
+		horizontal.setIncrement(clientWidthw / 100);
+		horizontal.setPageIncrement(clientWidthw/2);
 		if (width > clientWidthw) { /* image is wider than client area */
 			horizontal.setMinimum(0);
 			horizontal.setMaximum((int)width);
@@ -338,10 +337,9 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		horizontal.setThumb(clientWidthw);
 		horizontal.setSelection(-origin.x);
 
-		ScrollBar vertical = getVerticalBar();
-		vertical.setIncrement(getClientArea().height / 100);
-		vertical.setPageIncrement(getClientArea().height);
 		int clientHeighth = clientArea.height;
+		vertical.setIncrement(clientHeighth / 100);
+		vertical.setPageIncrement(clientHeighth/2);
 		if (height > clientHeighth) { /* image is higher than client area */
 			vertical.setMinimum(0);
 			vertical.setMaximum(height);
@@ -437,8 +435,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		int lower = (int) (tx.getBeginTime() / scaleFactor);
 		int higher = (int) (tx.getEndTime() / scaleFactor);
 		Point size = getSize();
-		size.x -= getVerticalBar().getSize().x + 2;
-		size.y -= getHorizontalBar().getSize().y;
+		size.x -= vertical.getSize().x + 2;
+		size.y -= horizontal.getSize().y;
 		if (lower < -origin.x) {
 			setOrigin(-lower, origin.y);
 		} else if (higher > (size.x - origin.x)) {
@@ -467,9 +465,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			if(te.waveform == waveform) {
 				Point size = getSize();
 				size.y -=+rulerHeight;
-				ScrollBar sb = getHorizontalBar();
-				if((sb.getStyle()&SWT.SCROLLBAR_OVERLAY)!=0 && sb.isVisible())
-					size.y-=  getHorizontalBar().getSize().y;
+				if((horizontal.getStyle()&SWT.SCROLLBAR_OVERLAY)!=0 && horizontal.isVisible())
+					size.y-=  horizontal.getSize().y;
 				int top = te.vOffset;
 				int bottom = top + styleProvider.getTrackHeight();
 				if (top < -origin.y) {
@@ -484,8 +481,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	public void reveal(long time) {
 		int scaledTime = (int) (time / scaleFactor);
 		Point size = getSize();
-		size.x -= getVerticalBar().getSize().x + 2;
-		size.y -= getHorizontalBar().getSize().y;
+		size.x -= vertical.getSize().x + 2;
+		size.y -= horizontal.getSize().y;
 		if (scaledTime < -origin.x) {
 			setOrigin(-scaledTime+10, origin.y);
 		} else if (scaledTime > (size.x - origin.x)) {

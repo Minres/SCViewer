@@ -59,7 +59,7 @@ public class RangeSlider extends Canvas {
 	private int maximum;
 	private int lowerValue;
 	private int upperValue;
-	private final Image slider, sliderHover, sliderDrag, sliderSelected;
+	private final Image[] slider, sliderHover, sliderDrag, sliderSelected;
 	private final Image vSlider, vSliderHover, vSliderDrag, vSliderSelected;
 	private int orientation;
 	private int increment;
@@ -114,10 +114,18 @@ public class RangeSlider extends Canvas {
 		maximum = upperValue = 100;
 		increment = 1;
 		pageIncrement = 10;
-		slider = SWTResourceManager.getImage(this.getClass(), "marker_r.png");
-		sliderHover = SWTResourceManager.getImage(this.getClass(), "marker_r_lt.png");
-		sliderDrag = SWTResourceManager.getImage(this.getClass(), "marker_r_bl.png");
-		sliderSelected = SWTResourceManager.getImage(this.getClass(), "marker_r_bl_lt.png");
+		slider = new Image[] {
+				SWTResourceManager.getImage(this.getClass(), "marker_l.png"),
+				SWTResourceManager.getImage(this.getClass(), "marker_r.png")};
+		sliderHover = new Image[] {
+				SWTResourceManager.getImage(this.getClass(), "marker_l_lt.png"),
+				SWTResourceManager.getImage(this.getClass(), "marker_r_lt.png")};
+		sliderDrag = new Image[] {
+				SWTResourceManager.getImage(this.getClass(), "marker_l_bl.png"),
+				SWTResourceManager.getImage(this.getClass(), "marker_r_bl.png")};
+		sliderSelected = new Image[] {
+				SWTResourceManager.getImage(this.getClass(), "marker_l_bl_lt.png"),
+				SWTResourceManager.getImage(this.getClass(), "marker_r_bl_lt.png")};
 
 		vSlider = SWTResourceManager.getImage(this.getClass(), "h-slider-normal.png");
 		vSliderHover = SWTResourceManager.getImage(this.getClass(), "h-slider-hover.png");
@@ -371,7 +379,7 @@ public class RangeSlider extends Canvas {
 		if (coordLower == null) {
 			return;
 		}
-		final Image img = orientation == SWT.HORIZONTAL ? slider : vSlider;
+		final Image img = orientation == SWT.HORIZONTAL ? slider[0] : vSlider;
 		final int x = e.x, y = e.y;
 		lowerHover = x >= coordLower.x && x <= coordLower.x + img.getBounds().width && y >= coordLower.y && y <= coordLower.y + img.getBounds().height;
 		upperHover = ((e.stateMask & (SWT.CTRL | SWT.SHIFT)) != 0 || !lowerHover) && //
@@ -621,7 +629,6 @@ public class RangeSlider extends Canvas {
 	 */
 	private void drawHorizontalRangeSlider(final GC gc) {
 		drawBackgroundHorizontal(gc);
-		drawBarsHorizontal(gc);
 		if (lowerHover || (selectedElement & LOWER) != 0) {
 			coordUpper = drawHorizontalKnob(gc, upperValue, true);
 			coordLower = drawHorizontalKnob(gc, lowerValue, false);
@@ -640,6 +647,7 @@ public class RangeSlider extends Canvas {
 		final Rectangle clientArea = getClientArea();
 
 		gc.setBackground(getBackground());
+		//gc.setBackground(SWTResourceManager.getColor(SWT.COLOR_BLUE));//getBackground());
 		gc.fillRectangle(clientArea);
 
 		if (isEnabled()) {
@@ -647,7 +655,7 @@ public class RangeSlider extends Canvas {
 		} else {
 			gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_GRAY));
 		}
-		gc.drawRoundRectangle(minHeight/3+imgWidth, minHeight/3, clientArea.width - 2*(minHeight/3+imgWidth), clientArea.height -  2*minHeight/3+3, 3, 3);
+		gc.drawRoundRectangle(imgWidth, minHeight/3, clientArea.width - 2*imgWidth, clientArea.height -  2*minHeight/3, 3, 3);
 
 		final float pixelSize = computePixelSizeForHorizontalSlider();
 		final int startX = (int) (pixelSize * lowerValue);
@@ -657,7 +665,7 @@ public class RangeSlider extends Canvas {
 		} else {
 			gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_GRAY));
 		}
-		gc.fillRectangle(minHeight/3+3 + startX, minHeight/3, endX - startX - 3, clientArea.height - 2*minHeight/3+3);
+		gc.fillRectangle(imgWidth+startX, minHeight/3, endX - startX, clientArea.height - 2*minHeight/3);
 
 	}
 
@@ -665,15 +673,7 @@ public class RangeSlider extends Canvas {
 	 * @return how many pixels corresponds to 1 point of value
 	 */
 	private float computePixelSizeForHorizontalSlider() {
-		return (getClientArea().width - 20f) / (maximum - minimum);
-	}
-
-	/**
-	 * Draw the bars
-	 *
-	 * @param gc graphic context
-	 */
-	private void drawBarsHorizontal(final GC gc) {
+		return (getClientArea().width - 2.0f*imgWidth) / (maximum - minimum);
 	}
 
 	/**
@@ -687,33 +687,36 @@ public class RangeSlider extends Canvas {
 	 */
 	private Point drawHorizontalKnob(final GC gc, final int value, final boolean upper) {
 		final float pixelSize = computePixelSizeForHorizontalSlider();
-		final int x = (int) (pixelSize * value);
+		int x = (int) (pixelSize * value);
+		final int idx = upper?1:0;
 		Image image;
 		if (upper) {
 			if (upperHover) {
-				image = dragInProgress || (selectedElement & UPPER) != 0 ? sliderDrag : sliderHover;
+				image = dragInProgress || (selectedElement & UPPER) != 0 ? sliderDrag[idx] : sliderHover[idx];
 			} else if ((selectedElement & UPPER) != 0 && !lowerHover) {
-				image = hasFocus ? sliderSelected : sliderHover;
+				image = hasFocus ? sliderSelected[idx] : sliderHover[idx];
 			} else {
-				image = slider;
+				image = slider[idx];
 			}
 		} else {
 			if (lowerHover) {
-				image = dragInProgress || (selectedElement & LOWER) != 0 ? sliderDrag : sliderHover;
+				image = dragInProgress || (selectedElement & LOWER) != 0 ? sliderDrag[idx] : sliderHover[idx];
 			} else if ((selectedElement & LOWER) != 0 && !upperHover) {
-				image = hasFocus ? sliderSelected : sliderHover;
+				image = hasFocus ? sliderSelected[idx] : sliderHover[idx];
 			} else {
-				image = slider;
+				image = slider[idx];
 			}
 		}
+		if(upper)
+			x+=slider[idx].getBounds().width;
 		if (isEnabled()) {
-			gc.drawImage(image, x + 5, getClientArea().height / 2 - slider.getBounds().height / 2);
+			gc.drawImage(image, x, getClientArea().height / 2 - slider[idx].getBounds().height / 2);
 		} else {
 			final Image temp = new Image(getDisplay(), image, SWT.IMAGE_DISABLE);
-			gc.drawImage(temp, x + 5, getClientArea().height / 2 - slider.getBounds().height / 2);
+			gc.drawImage(temp, x, getClientArea().height / 2 - slider[idx].getBounds().height / 2);
 			temp.dispose();
 		}
-		return new Point(x + 5, getClientArea().height / 2 - slider.getBounds().height / 2);
+		return new Point(x, getClientArea().height / 2 - slider[idx].getBounds().height / 2);
 	}
 
 	/**
@@ -775,7 +778,6 @@ public class RangeSlider extends Canvas {
 	 * @param gc graphic context
 	 */
 	private void drawBarsVertical(final GC gc) {
-		final Rectangle clientArea = getClientArea();
 		if (isEnabled()) {
 			gc.setForeground(getForeground());
 		} else {
