@@ -56,13 +56,13 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.TextLayout;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -71,7 +71,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ScrollBar;
-import org.eclipse.swt.widgets.Slider;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.wb.swt.SWTResourceManager;
 
@@ -94,6 +93,8 @@ import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.swt.internal.slider.ImageButton;
+import com.minres.scviewer.database.ui.swt.internal.slider.RangeSlider;
 import com.minres.scviewer.database.ui.swt.sb.FlatScrollBar;
 
 public class WaveformView implements IWaveformView {
@@ -345,11 +346,37 @@ public class WaveformView implements IWaveformView {
 		waveformCanvas = new WaveformCanvas(waveformPane, SWT.NONE | SWT.V_SCROLL /*| SWT.H_SCROLL*/, styleProvider);
 		waveformCanvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		
-		Composite timeSliderPane = new WaveformSlider(waveformPane, SWT.NONE);
-		GridData gd_timeSlider = new GridData(SWT.FILL, SWT.BOTTOM, false, false, 1, 1);
-		gd_timeSlider.heightHint = 18;
-		timeSliderPane.setLayoutData(gd_timeSlider);
 		
+		//Composite timeSliderPane = new WaveformSlider(waveformPane, SWT.NONE);
+		Composite timeSliderPane = new Composite(waveformPane, SWT.NONE);
+//		timeSliderPane.setBackground(SWTResourceManager.getColor(SWT.COLOR_RED));
+		GridData gd_timeSliderPane = new GridData(SWT.FILL, SWT.BOTTOM, false, false, 1, 1);
+//		gd_timeSliderPane.heightHint = 22;
+		timeSliderPane.setLayoutData(gd_timeSliderPane);
+		GridLayout  gl_timeSliderPane = new GridLayout(3, false);
+		gl_timeSliderPane.marginHeight=0;
+		gl_timeSliderPane.marginWidth=0;
+		gl_timeSliderPane.horizontalSpacing=0;
+		gl_timeSliderPane.verticalSpacing=0;
+		timeSliderPane.setLayout(gl_timeSliderPane);
+		ImageButton b1 = new ImageButton(timeSliderPane, SWT.NONE);
+		GridData gd_b1 = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_b1.widthHint=18;
+		gd_b1.heightHint=18;
+		b1.setLayoutData(gd_b1);
+		b1.setImage(SWTResourceManager.getImage(RangeSlider.class, "bullet_left.png"));
+		
+		Composite timeSlider = new RangeSlider(timeSliderPane, SWT.ON|SWT.HIGH|SWT.SMOOTH|SWT.CONTROL);
+		GridData gd_timeSlide = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
+		timeSlider.setLayoutData(gd_timeSlide);
+		
+		ImageButton b2 = new ImageButton(timeSliderPane, SWT.NONE);
+		GridData gd_b2 = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
+		gd_b2.widthHint=18;
+		gd_b2.heightHint=18;
+		b2.setLayoutData(gd_b2);
+		b2.setImage(SWTResourceManager.getImage(RangeSlider.class, "bullet_right.png"));
+
 		// create the name pane
 		createTextPane(namePane, "Name");
 
