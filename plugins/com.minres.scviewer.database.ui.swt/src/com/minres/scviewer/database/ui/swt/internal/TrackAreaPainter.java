@@ -19,7 +19,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import com.minres.scviewer.database.ui.WaveformColors;
 
 public class TrackAreaPainter implements IPainter {
-	
+
 	/**
 	 * 
 	 */
@@ -35,14 +35,15 @@ public class TrackAreaPainter implements IPainter {
 	}
 
 	public void paintArea(Projection proj, Rectangle a) {
-	    Rectangle area = proj.unProject(new Rectangle(a.x, a.y+waveCanvas.rulerHeight, a.width, a.height-waveCanvas.rulerHeight));
-	    proj.setBackground(this.waveCanvas.styleProvider.getColor(WaveformColors.TRACK_BG_EVEN));
-	    proj.setFillRule(SWT.FILL_EVEN_ODD);
-	    proj.fillRectangle(area);
+		Rectangle area = proj.unProject(new Rectangle(a.x, a.y+waveCanvas.rulerHeight, a.width, a.height-waveCanvas.rulerHeight));
+		proj.setBackground(this.waveCanvas.styleProvider.getColor(WaveformColors.TRACK_BG_EVEN));
+		proj.setFillRule(SWT.FILL_EVEN_ODD);
+		proj.fillRectangle(area);
 		if(trackVerticalOffset.size()>0){
 			Integer firstKey=trackVerticalOffset.floorKey(area.y);
 			if(firstKey==null) firstKey=trackVerticalOffset.firstKey();
 			Integer lastKey = trackVerticalOffset.floorKey(area.y+area.height);
+			//if(lastKey==null) lastKey= trackVerticalOffset.lastKey();
 			Rectangle subArea = new Rectangle(area.x, 0, area.width, 0);
 			if(lastKey.equals(firstKey)){
 				subArea.y=firstKey;
@@ -61,9 +62,9 @@ public class TrackAreaPainter implements IPainter {
 
 	public void addTrackPainter(IWaveformPainter trackPainter){
 		trackVerticalOffset.put(trackPainter.getVerticalOffset()+waveCanvas.rulerHeight, trackPainter);
-		
+
 	}
-	
+
 	public int getHeight(){
 		if(trackVerticalOffset.size()==0) return 1;
 		return trackVerticalOffset.lastKey() + trackVerticalOffset.lastEntry().getValue().getHeight();

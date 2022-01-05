@@ -31,6 +31,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.ScrollBar;
 
 import com.google.common.collect.Lists;
 import com.minres.scviewer.database.EventEntry;
@@ -45,21 +46,22 @@ import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.database.ui.swt.Constants;
+import com.minres.scviewer.database.ui.swt.internal.slider.TimeZoomScrollbar;
 
 public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	public static final long ZOOM_FIT = -2;
 
 	public static final long ZOOM_FULL = -1;
-	
+
 	private boolean doubleBuffering = true;
 
 	IWaveformStyleProvider styleProvider;
 
 	private int scaleMagnitude = 6;
-	
+
 	private long scaleFactor = Constants.POWERS_OF_TEN[scaleMagnitude];
-	
+
 	private long maxTime;
 
 	protected Point origin; /* original size */
@@ -80,8 +82,9 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	private List<CursorPainter> cursorPainters;
 
-	IScrollBar horizontal;
-	IScrollBar vertical;
+	private TimeZoomScrollbar horizontal;
+
+	private ScrollBar vertical;
 
 	HashMap<IWaveform, IWaveformPainter> wave2painterMap;
 	/**
@@ -92,13 +95,13 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	 * @param style
 	 *            the style of this control.
 	 */
-	public WaveformCanvas(final Composite parent, int style, IWaveformStyleProvider styleProvider, IWaveformScrollBarProvider scrollbarProvider) {
-		super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND);
+	public WaveformCanvas(final Composite parent, int style, IWaveformStyleProvider styleProvider, TimeZoomScrollbar.IProvider scrollbarProvider) {
+		super(parent, (style & ~SWT.H_SCROLL) | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.V_SCROLL );
 		this.styleProvider=styleProvider;
 		addControlListener(new ControlAdapter() { /* resize listener. */
 			@Override
 			public void controlResized(ControlEvent event) {
-				syncScrollBars();
+				syncSb();
 			}
 		});
 		addPaintListener((final PaintEvent event) -> paint(event.gc));
@@ -108,8 +111,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		cursorPainters= new ArrayList<>();
 		wave2painterMap=new HashMap<>();
 
-		horizontal = (style& SWT.H_SCROLL)==0?scrollbarProvider.getHorizontalSb() : new ScrollBarAdapter(getHorizontalBar());
-		vertical = (style& SWT.V_SCROLL)==0?scrollbarProvider.getVerticalSb() : new ScrollBarAdapter(getVerticalBar());
+		horizontal = scrollbarProvider.getScrollBar();
+		vertical = getVerticalBar();
 		initScrollBars();
 		// order is important: it is bottom to top
 		trackAreaPainter=new TrackAreaPainter(this);
@@ -118,10 +121,10 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		painterList.add(arrowPainter);
 		rulerPainter=new RulerPainter(this);
 		painterList.add(rulerPainter);
-		CursorPainter cp = new CursorPainter(this, scaleFactor * 10, cursorPainters.size()-1);
+		CursorPainter cp = new CursorPainter(this, getScale() * 10, cursorPainters.size()-1);
 		painterList.add(cp);
 		cursorPainters.add(cp);
-		CursorPainter marker = new CursorPainter(this, scaleFactor * 100, cursorPainters.size()-1);
+		CursorPainter marker = new CursorPainter(this, getScale() * 100, cursorPainters.size()-1);
 		painterList.add(marker);
 		cursorPainters.add(marker);
 		wave2painterMap=new HashMap<>();
@@ -154,12 +157,12 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	public void setOrigin(int x, int y) {
 		checkWidget();
 		if(x<=0) horizontal.setSelection(-x);
-		x = -horizontal.getSelection();
+		x = -horizontal.getSelection()[0];
 		if(y<=0) vertical.setSelection(-y);
 		y = -vertical.getSelection();
 		origin.x = x;
 		origin.y = y;
-		syncScrollBars();
+		syncSb();
 	}
 
 	@Override
@@ -169,14 +172,14 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	public void setMaxTime(long maxTime) {
 		this.maxTime = maxTime;
-		syncScrollBars();
+		syncSb();
 	}
 
 	@Override
 	public long getScale() {
 		return scaleFactor;
 	}
-	
+
 	@Override
 	public void setScale(long factor) {
 		setScalingFactor(factor, (getMaxVisibleTime()+getMinVisibleTime())/2);
@@ -208,34 +211,38 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			factor=1;
 		else if(factor>maxFactor)
 			factor=maxFactor;
-		if(factor!=scaleFactor || (getMaxVisibleTime()+getMinVisibleTime()/2) != centerTime) {
-			scaleFactor = factor;
-			scaleMagnitude = 0;
-			for(int i=Constants.POWERS_OF_TEN.length-1; i>0; i--) {
-				if(scaleFactor>=Constants.POWERS_OF_TEN[i]) {
-					scaleMagnitude = i;
-					break;
-				}
-			}
+		if(factor!=getScale() || (getMaxVisibleTime()+getMinVisibleTime()/2) != centerTime) {
+			updateScaleFactor(factor);
 			ITx tx = arrowPainter.getTx();
 			arrowPainter.setTx(null);
 			/*
 			 * xc = tc/oldScaleFactor
 			 * xoffs = xc+origin.x
 			 * xcn = tc/newScaleFactor
-			 * t0n = (xcn-xoffs)*scaleFactor
+			 * t0n = (xcn-xoffs)*getScale()
 			 */
 			long xoffs = clientAreaWidth/2;
-			long xcn=centerTime/scaleFactor; // new total x-offset
+			long xcn=centerTime/getScale(); // new total x-offset
 			long originX=xcn-xoffs;
 			if(originX>0) {
 				origin.x=(int) -originX; // new cursor time offset relative to left border
 			}else {
 				origin.x=0;
 			}
-			syncScrollBars();
+			syncSb();
 			arrowPainter.setTx(tx);    		
 			redraw();
+		}
+	}
+
+	private void updateScaleFactor(long factor) {
+		scaleFactor = factor;
+		scaleMagnitude = 0;
+		for(int i=Constants.POWERS_OF_TEN.length-1; i>0; i--) {
+			if(scaleFactor>=Constants.POWERS_OF_TEN[i]) {
+				scaleMagnitude = i;
+				break;
+			}
 		}
 	}
 
@@ -247,7 +254,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	}
 
 	public long getTimeForOffset(int xOffset){
-		return (xOffset-origin.x) * scaleFactor;
+		return (xOffset-origin.x) * getScale();
 	}
 
 	public void addPainter(IPainter painter) {
@@ -267,7 +274,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	void clearAllWaveformPainter(boolean update) {
 		trackAreaPainter.trackVerticalOffset.clear();
 		wave2painterMap.clear();
-		if(update) syncScrollBars();
+		if(update) syncSb();
 	}
 
 	public void addWaveformPainter(IWaveformPainter painter) {
@@ -277,7 +284,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	void addWaveformPainter(IWaveformPainter painter, boolean update) {
 		trackAreaPainter.addTrackPainter(painter);
 		wave2painterMap.put(painter.getTrackEntry().waveform, painter);
-		if(update) syncScrollBars();
+		if(update) syncSb();
 	}
 
 	public List<CursorPainter> getCursorPainters() {
@@ -291,9 +298,18 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		horizontal.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				if (painterList.isEmpty())
-					return;
-				setOrigin(-horizontal.getSelection(), origin.y);
+				if (!painterList.isEmpty()) {
+					int[] sel = horizontal.getSelection();
+					//long width = maxTime / getScale();
+					int currentThumbWidth = getClientArea().width;
+					int newThumbWidth = sel[1]-sel[0];
+					if(currentThumbWidth!=newThumbWidth) {						
+						long newScaleFactor =getScale()*newThumbWidth/currentThumbWidth;					
+						updateScaleFactor(Math.max(1, newScaleFactor));
+					}
+					origin.x=-sel[0];
+					syncSb();
+				}
 			}
 		});
 		vertical.setEnabled(false);
@@ -301,9 +317,10 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		vertical.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				if (painterList.isEmpty())
-					return;
-				setOrigin(origin.x, -vertical.getSelection());
+				if (!painterList.isEmpty()) {
+					origin.y=-vertical.getSelection();
+					syncSb();
+				}
 			}
 		});
 	}
@@ -313,48 +330,50 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	 * range, it will correct it. This function considers only following factors
 	 * :<b> transform, image size, client area</b>.
 	 */
-	public void syncScrollBars() {
-		if (painterList.isEmpty()) {
-			redraw();
-			return;
+	public void syncSb() {
+		if (!painterList.isEmpty()) {
+			syncHSb();
+			syncVSb();
+			fireSelectionEvent();
 		}
-		int height = trackAreaPainter.getHeight(); // incl. Ruler
-		long width = maxTime / scaleFactor;
-		Rectangle clientArea=getClientArea();
-		int clientWidthw = clientArea.width;
-		horizontal.setIncrement(clientWidthw / 100);
-		horizontal.setPageIncrement(clientWidthw/2);
-		if (width > clientWidthw) { /* image is wider than client area */
-			horizontal.setMinimum(0);
-			horizontal.setMaximum((int)width);
-			horizontal.setEnabled(true);
-			if (-origin.x > horizontal.getMaximum() - clientWidthw) {
-				origin.x = -horizontal.getMaximum() + clientWidthw;
-			}
-		} else { /* image is narrower than client area */
-			horizontal.setEnabled(false);
-		}
-		horizontal.setThumb(clientWidthw);
-		horizontal.setSelection(-origin.x);
+		this.getDisplay().asyncExec(() -> {redraw();});
+	}
 
-		int clientHeighth = clientArea.height;
-		vertical.setIncrement(clientHeighth / 100);
-		vertical.setPageIncrement(clientHeighth/2);
-		if (height > clientHeighth) { /* image is higher than client area */
+	private void syncVSb() {
+		Rectangle clientArea=getClientArea();
+		int height = trackAreaPainter.getHeight(); // incl. Ruler
+		int clientHeight = clientArea.height;
+		vertical.setIncrement(clientHeight / 100);
+		vertical.setPageIncrement(clientHeight/2);
+		if (height > clientHeight) { /* image is higher than client area */
 			vertical.setMinimum(0);
 			vertical.setMaximum(height);
 			vertical.setEnabled(true);
-			if ( -origin.y > vertical.getMaximum() - clientHeighth) {
-				origin.y = -vertical.getMaximum() + clientHeighth;
+			if ( -origin.y > vertical.getMaximum() - clientHeight) {
+				origin.y = -vertical.getMaximum() + clientHeight;
 			}
 		} else { /* image is less higher than client area */
-			vertical.setMaximum(clientHeighth);
+			vertical.setMaximum(clientHeight);
 			vertical.setEnabled(false);
 		}
-		vertical.setThumb(clientHeighth);
+		vertical.setThumb(clientHeight);
 		vertical.setSelection(-origin.y);
-		redraw();
-		fireSelectionEvent();
+	}
+
+	private void syncHSb() {
+		horizontal.setEnabled(wave2painterMap.size()>0);
+		Rectangle clientArea=getClientArea();
+		long width = maxTime / getScale();
+		int clientWidth = clientArea.width;
+		horizontal.setIncrement(clientWidth / 100);
+		horizontal.setPageIncrement(clientWidth/2);
+		horizontal.setMinimum(0);
+		horizontal.setMaximum((int)width);
+		if (width>0 && -origin.x > horizontal.getMaximum() - clientWidth) {
+			origin.x = -horizontal.getMaximum() + clientWidth;
+		}
+		horizontal.setSelection(new int[] {Math.max(-origin.x,0), Math.min(clientWidth-origin.x, horizontal.getMaximum())});
+		horizontal.setButtonsEnabled(width > clientWidth);
 	}
 
 	/* Paint function */
@@ -404,7 +423,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 					result.add(entry.getValue().getTrackEntry());
 				}
 			} else if (p instanceof CursorPainter) {
-				if (Math.abs(point.x - origin.x - ((CursorPainter) p).getTime()/scaleFactor) < 2) {
+				if (Math.abs(point.x - origin.x - ((CursorPainter) p).getTime()/getScale()) < 2) {
 					result.add(p);
 				}
 			}
@@ -432,8 +451,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	}
 
 	public void reveal(ITx tx) {
-		int lower = (int) (tx.getBeginTime() / scaleFactor);
-		int higher = (int) (tx.getEndTime() / scaleFactor);
+		int lower = (int) (tx.getBeginTime() / getScale());
+		int higher = (int) (tx.getEndTime() / getScale());
 		Point size = getSize();
 		size.x -= vertical.getSize().x + 2;
 		size.y -= horizontal.getSize().y;
@@ -479,7 +498,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	}
 
 	public void reveal(long time) {
-		int scaledTime = (int) (time / scaleFactor);
+		int scaledTime = (int) (time / getScale());
 		Point size = getSize();
 		size.x -= vertical.getSize().x + 2;
 		size.y -= horizontal.getSize().y;
@@ -492,7 +511,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	@Override
 	public void centerAt(long time) {
-		int scaledTime = (int) (time / scaleFactor);
+		int scaledTime = (int) (time / getScale());
 		int newX = -scaledTime+getWidth()/2;
 		setOrigin(newX>0?0:newX, origin.y);
 	}
@@ -529,15 +548,15 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		}
 	}
 
-	
+
 	@Override
 	public long getMaxVisibleTime() {
-		return (getClientArea().width-origin.x)*scaleFactor;
+		return (getClientArea().width-origin.x)*getScale();
 	}
 
 	@Override
 	public long getMinVisibleTime() {
-		return -origin.x * scaleFactor;
+		return -origin.x * getScale();
 	}
 
 	@Override
@@ -545,7 +564,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		long duration = getMaxVisibleTime()-getMinVisibleTime();
 		if(time>0) {
 			if((time+duration)<getMaxTime()) {
-				int scaledTime = (int) (time / scaleFactor);
+				int scaledTime = (int) (time / getScale());
 				setOrigin(-scaledTime, origin.y);
 			}
 		} else {

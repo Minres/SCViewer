@@ -54,9 +54,7 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.TextLayout;
@@ -93,10 +91,7 @@ import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
-import com.minres.scviewer.database.ui.swt.internal.slider.ImageButton;
-import com.minres.scviewer.database.ui.swt.internal.slider.RangeSlider;
-import com.minres.scviewer.database.ui.swt.internal.slider.ZoomingScrollbar;
-import com.minres.scviewer.database.ui.swt.sb.FlatScrollBar;
+import com.minres.scviewer.database.ui.swt.internal.slider.TimeZoomScrollbar;
 
 public class WaveformView implements IWaveformView {
 
@@ -344,21 +339,16 @@ public class WaveformView implements IWaveformView {
 		gl_waveformPane.marginHeight = 0;
 		waveformPane.setLayout(gl_waveformPane);
 		
-		IWaveformScrollBarProvider sbProvider = new IWaveformScrollBarProvider() {
-			@Override
-			public IScrollBar getVerticalSb() {
-				return null;
-			}
+		waveformCanvas = new WaveformCanvas(waveformPane, SWT.NONE | SWT.V_SCROLL /*| SWT.H_SCROLL*/, styleProvider, new TimeZoomScrollbar.IProvider() {
 			
 			@Override
-			public IScrollBar getHorizontalSb() {
-				ZoomingScrollbar timeSliderPane = new ZoomingScrollbar(waveformPane, SWT.NONE);
+			public TimeZoomScrollbar getScrollBar() {
+				TimeZoomScrollbar timeSliderPane = new TimeZoomScrollbar(waveformPane, SWT.NONE);
 				GridData gd_timeSliderPane = new GridData(SWT.FILL, SWT.BOTTOM, false, false, 1, 1);
 				timeSliderPane.setLayoutData(gd_timeSliderPane);
 				return timeSliderPane;
 			}
-		};
-		waveformCanvas = new WaveformCanvas(waveformPane, SWT.NONE | SWT.V_SCROLL /*| SWT.H_SCROLL*/, styleProvider, sbProvider);
+		});
 		waveformCanvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		
 		// create the name pane
@@ -551,7 +541,7 @@ public class WaveformView implements IWaveformView {
 			tracksVerticalHeight += streamEntry.height;
 			even = !even;
 		}
-		waveformCanvas.syncScrollBars();
+		waveformCanvas.syncSb();
 		nameList.setSize(nameMaxWidth + 15, tracksVerticalHeight);
 		nameListScrolled.setMinSize(nameMaxWidth + 15, tracksVerticalHeight);
 		nameList.redraw();

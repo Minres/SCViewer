@@ -15,6 +15,7 @@ public class ImageButton extends Composite
 	private Image   hoverImage;
 	private Image   normalImage;
 	private Image   pressedImage;
+	private Image   disabledImage;
 	private int     width;
 	private int     height;
 	private boolean hover;
@@ -24,8 +25,7 @@ public class ImageButton extends Composite
 	private ActionTimer.TimerAction timerAction;
 
 	public ImageButton(Composite parent, int style)	{
-		super(parent, style);
-		
+		super(parent, style);		
 		timerAction = new ActionTimer.TimerAction() {
 			@Override
 			public void run() {
@@ -37,30 +37,28 @@ public class ImageButton extends Composite
 			}
 		};
 		actionTimer = new ActionTimer(timerAction, this.getDisplay() );
-		
 		addListener(SWT.Dispose, event ->  {
 			if (hoverImage != null)	hoverImage.dispose();
 			if (normalImage != null) normalImage.dispose();
 			if (pressedImage != null) pressedImage.dispose();
+			if (disabledImage != null) disabledImage.dispose();
 		});
-
 		addListener(SWT.Paint, event -> {
 			paintControl(event);
 		});
-
 		addListener(SWT.MouseDown, event -> {
+			if(!isEnabled()) return;
 			pressed=true;
 			notifyListeners();
 		    if(autoFire) actionTimer.activate();
 			redraw();
 		});
-
 		addListener(SWT.MouseUp, event -> {
 			pressed=false;
 			redraw();
 		});
-
 		addListener(SWT.MouseMove, event -> {
+			if(!isEnabled()) return;
 			Point sz = ((ImageButton)event.widget).getSize();
 			final boolean within_x = event.x>0 && event.x<sz.x-1;
 			final boolean within_y = event.y>0 && event.y<sz.y-1;
@@ -71,47 +69,38 @@ public class ImageButton extends Composite
 
 	private void paintControl(Event event) { 
 		GC gc = event.gc;
-
 		if (hoverImage != null)	{
 			if(pressed)
 				gc.drawImage(pressedImage, 1, 1);
 			else if(hover) {
 				gc.drawImage(hoverImage, 1, 1);
-			} else {
+			} else if(isEnabled()){
 				gc.drawImage(normalImage, 1, 1);
-			}
+			} else
+				gc.drawImage(disabledImage, 1, 1);
 		}
 	}
 
-	public void setImage(Image[] imgs)
-	{
+	public void setImage(Image[] imgs) {
+		assert(imgs.length==3);
 		Display d = Display.getDefault();
-		hoverImage = new Image(d, imgs[0], SWT.IMAGE_COPY);
-		normalImage = imgs.length>1? 
-				new Image(d, imgs[1], SWT.IMAGE_COPY):
-					new Image(d,imgs[0],SWT.IMAGE_GRAY);
-		pressedImage = imgs.length>2?
-				new Image(d, imgs[2], SWT.IMAGE_COPY):
-					new Image(d,imgs[0],SWT.IMAGE_DISABLE);
+		normalImage =   new Image(d, imgs[0], SWT.IMAGE_COPY);
+		hoverImage =    new Image(d, imgs[1], SWT.IMAGE_COPY);
+		pressedImage =  new Image(d, imgs[2], SWT.IMAGE_COPY);
+		disabledImage = new Image(d, imgs[0], SWT.IMAGE_DISABLE);
 		width = imgs[0].getBounds().width;
 		height = imgs[0].getBounds().height;
 		redraw();
 	}
 
 	@Override
-	public Point computeSize(int wHint, int hHint, boolean changed)
-	{
+	public Point computeSize(int wHint, int hHint, boolean changed) {
 		int overallWidth = width;
 		int overallHeight = height;
-
-		/* Consider hints */
 		if (wHint != SWT.DEFAULT && wHint < overallWidth)
 			overallWidth = wHint;
-
 		if (hHint != SWT.DEFAULT && hHint < overallHeight)
 			overallHeight = hHint;
-
-		/* Return computed dimensions plus border */
 		return new Point(overallWidth + 2, overallHeight + 2);
 	}
 	/**
@@ -185,6 +174,4 @@ public class ImageButton extends Composite
 	public void setAutoFire(boolean autoFire) {
 		this.autoFire = autoFire;
 	}
-
-
 }

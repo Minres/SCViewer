@@ -55,6 +55,7 @@ public class RangeSlider extends Canvas {
 	private static int minWidth = 18;
 	private static int minHeight = 18;
 	private static int imgWidth = 8;
+	private static int minThumbWidth = 5;
 	private int minimum;
 	private int maximum;
 	private int lowerValue;
@@ -143,17 +144,6 @@ public class RangeSlider extends Canvas {
 		isOn = (style & SWT.ON) == SWT.ON;
 		selectedElement = isFullSelection ? BOTH : LOWER;
 
-//		addListener(SWT.Dispose, event -> {
-//			SWTResourceManager.dsafeDispose(slider);
-//			SWTGraphicUtil.safeDispose(sliderHover);
-//			SWTGraphicUtil.safeDispose(sliderDrag);
-//			SWTGraphicUtil.safeDispose(sliderSelected);
-//
-//			SWTGraphicUtil.safeDispose(vSlider);
-//			SWTGraphicUtil.safeDispose(vSliderHover);
-//			SWTGraphicUtil.safeDispose(vSliderDrag);
-//			SWTGraphicUtil.safeDispose(vSliderSelected);
-//		});
 		addMouseListeners();
 		addListener(SWT.Resize, event -> {
 		});
@@ -300,14 +290,14 @@ public class RangeSlider extends Canvas {
 				} else if ((selectedElement & UPPER) != 0) {
 					upperValue = (int) Math.round((x - 9d) / computePixelSizeForHorizontalSlider()) + minimum;
 					if (!isSmooth) {
-						upperValue = (int) (Math.ceil(upperValue / increment) * increment) - increment;
+						upperValue = Math.min(lowerValue, (int) (Math.ceil(upperValue / increment) * increment) - increment);
 					}
 					checkUpperValue();
 					handleToolTip(upperValue);
 				} else {
 					lowerValue = (int) Math.round((x - 9d) / computePixelSizeForHorizontalSlider()) + minimum;
 					if (!isSmooth) {
-						lowerValue = (int) (Math.ceil(lowerValue / increment) * increment) - increment;
+						lowerValue = Math.max(upperValue, (int) (Math.ceil(lowerValue / increment) * increment) - increment);
 					}
 					checkLowerValue();
 					handleToolTip(lowerValue);
@@ -380,11 +370,12 @@ public class RangeSlider extends Canvas {
 			return;
 		}
 		final Image img = orientation == SWT.HORIZONTAL ? slider[0] : vSlider;
+		final Rectangle imgBounds = img.getBounds();
 		final int x = e.x, y = e.y;
-		lowerHover = x >= coordLower.x && x <= coordLower.x + img.getBounds().width && y >= coordLower.y && y <= coordLower.y + img.getBounds().height;
+		lowerHover = x >= coordLower.x && x <= coordLower.x + imgBounds.width && y >= coordLower.y && y <= coordLower.y + imgBounds.height;
 		upperHover = ((e.stateMask & (SWT.CTRL | SWT.SHIFT)) != 0 || !lowerHover) && //
-				x >= coordUpper.x && x <= coordUpper.x + img.getBounds().width && //
-				y >= coordUpper.y && y <= coordUpper.y + img.getBounds().height;
+				x >= coordUpper.x && x <= coordUpper.x + imgBounds.width && //
+				y >= coordUpper.y && y <= coordUpper.y + imgBounds.height;
 		lowerHover &= (e.stateMask & SWT.CTRL) != 0 || !upperHover;
 		if (!lowerHover && !upperHover && isFullSelection && isBetweenKnobs(x, y)) {
 			lowerHover = upperHover = true;
@@ -403,7 +394,7 @@ public class RangeSlider extends Canvas {
 		int value = -1;
 		final Rectangle clientArea = getClientArea();
 		if (orientation == SWT.HORIZONTAL) {
-			if (x < 9 + clientArea.width - 20 && x >= 9 && y >= 9 && y <= 9 + clientArea.height - 20) {
+			if (x < clientArea.width - 2*imgWidth && x >= imgWidth && y >= minHeight/3 && y <=  clientArea.height - minHeight/3) {
 				value = (int) Math.round((x - 9d) / computePixelSizeForHorizontalSlider()) + minimum;
 			}
 		} else if (y < 9 + clientArea.height - 20 && y >= 9 && x >= 9 && x <= 9 + clientArea.width - 20) {
@@ -579,11 +570,11 @@ public class RangeSlider extends Canvas {
 		if (lowerValue < minimum) {
 			lowerValue = minimum;
 		}
-		if (lowerValue > maximum) {
-			lowerValue = maximum;
+		if (lowerValue > (maximum-minThumbWidth)) {
+			lowerValue = (maximum-minThumbWidth);
 		}
-		if (lowerValue > upperValue) {
-			lowerValue = upperValue;
+		if (lowerValue > (upperValue-minThumbWidth)) {
+			lowerValue = (upperValue-minThumbWidth);
 		}
 	}
 
@@ -591,14 +582,14 @@ public class RangeSlider extends Canvas {
 	 * Check if the upper value is in ranges
 	 */
 	private void checkUpperValue() {
-		if (upperValue < minimum) {
-			upperValue = minimum;
+		if (upperValue < (minimum+minThumbWidth)) {
+			upperValue = minimum+minThumbWidth;
 		}
 		if (upperValue > maximum) {
 			upperValue = maximum;
 		}
-		if (upperValue < lowerValue) {
-			upperValue = lowerValue;
+		if (upperValue < (lowerValue+minThumbWidth)) {
+			upperValue = lowerValue+minThumbWidth;
 		}
 	}
 
@@ -1422,10 +1413,19 @@ public class RangeSlider extends Canvas {
 	 * @see #getMaximum()
 	 */
 	public void setSelection(final int lowerValue, final int upperValue) {
+		setSelection(lowerValue, upperValue, false);
+	}
+	public void setSelection(final int lowerValue, final int upperValue, boolean update) {
 		checkWidget();
 		if (lowerValue <= upperValue && lowerValue >= minimum && upperValue <= maximum && (this.lowerValue != lowerValue || this.upperValue != upperValue)) {
 			this.lowerValue = lowerValue;
 			this.upperValue = upperValue;
+			if(update) {
+				Event e = new Event();
+				e.type=SWT.Selection;
+				e.doit=true;
+				validateNewValues(e);			
+			}
 			redraw();
 		}
 	}
