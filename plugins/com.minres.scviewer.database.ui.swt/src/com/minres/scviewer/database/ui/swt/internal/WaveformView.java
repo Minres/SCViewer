@@ -205,7 +205,7 @@ public class WaveformView implements IWaveformView {
 					long endTime = waveformCanvas.getTimeForOffset(end.x);
 					if(startTime<endTime) {
 						waveformCanvas.setVisibleRange(startTime, endTime);
-					} else {
+					} else if(start.x!=end.x){
 						long targetTimeRange = startTime-endTime;
 						long currentTimeRange = waveformCanvas.getMaxVisibleTime() - waveformCanvas.getMinVisibleTime();
 						long factor = currentTimeRange/targetTimeRange *waveformCanvas.getScale();

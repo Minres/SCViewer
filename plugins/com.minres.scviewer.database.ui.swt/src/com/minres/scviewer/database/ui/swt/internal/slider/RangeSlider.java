@@ -96,8 +96,10 @@ public class RangeSlider extends Canvas {
 		addListener(SWT.MouseDown, e -> {
 			if (e.button == 1) {
 				selectKnobs(e);
-				if (upperHover || lowerHover) {
-					selectedElement = (lowerHover ? LOWER : NONE) + (upperHover ? UPPER : NONE);
+				selectedElement = (lowerHover ? LOWER : NONE) | (upperHover ? UPPER : NONE);
+				if (selectedElement!=NONE) {
+					if((e.stateMask & SWT.CTRL)==0)
+						selectedElement=BOTH;
 					startDragLowerValue = previousLowerValue = lowerValue;
 					startDragUpperValue = previousUpperValue = upperValue;
 					startDragPoint = new Point(e.x, e.y);
@@ -112,6 +114,16 @@ public class RangeSlider extends Canvas {
 				super.setToolTipText(clientToolTipText);
 				selectedElement=NONE;
 				redraw();
+			} else {
+				if(e.x<coordLower.x) {
+					translateValues(-pageIncrement);
+					validateNewValues(e);
+					redraw();
+				} else if(e.x>coordUpper.x+markerWidth) {
+					translateValues(pageIncrement);
+					validateNewValues(e);
+					redraw();
+				}
 			}
 		});
 
@@ -211,20 +223,18 @@ public class RangeSlider extends Canvas {
 	}
 
 	private void selectKnobs(final Event e) {
-		if (coordLower == null) {
-			return;
+		if (coordLower != null) {
+			final Rectangle imgBounds = slider[0].getBounds();
+			final int x = e.x, y = e.y;
+			lowerHover = x >= coordLower.x && x <= coordLower.x + imgBounds.width && y >= coordLower.y && y <= coordLower.y + imgBounds.height;
+			upperHover = ((e.stateMask & (SWT.CTRL | SWT.SHIFT)) != 0 || !lowerHover) && //
+					x >= coordUpper.x && x <= coordUpper.x + imgBounds.width && //
+					y >= coordUpper.y && y <= coordUpper.y + imgBounds.height;
+					lowerHover &= (e.stateMask & SWT.CTRL) != 0 || !upperHover;
+			if (!lowerHover && !upperHover && isBetweenKnobs(x, y)) {
+				lowerHover = upperHover = true;
+			}		
 		}
-		final Image img = slider[0];
-		final Rectangle imgBounds = img.getBounds();
-		final int x = e.x, y = e.y;
-		lowerHover = x >= coordLower.x && x <= coordLower.x + imgBounds.width && y >= coordLower.y && y <= coordLower.y + imgBounds.height;
-		upperHover = ((e.stateMask & (SWT.CTRL | SWT.SHIFT)) != 0 || !lowerHover) && //
-				x >= coordUpper.x && x <= coordUpper.x + imgBounds.width && //
-				y >= coordUpper.y && y <= coordUpper.y + imgBounds.height;
-				lowerHover &= (e.stateMask & SWT.CTRL) != 0 || !upperHover;
-				if (!lowerHover && !upperHover && isBetweenKnobs(x, y)) {
-					lowerHover = upperHover = true;
-				}
 	}
 
 	private int getCursorValue(int x, int y) {
@@ -296,14 +306,10 @@ public class RangeSlider extends Canvas {
 	}
 
 	private void handleMouseWheel(final Event e) {
-		if (selectedElement == NONE) {
-			e.doit = false; // we are consuming this event
-			return;
-		}
 		previousLowerValue = lowerValue;
 		previousUpperValue = upperValue;
-		final int amount = increment * ((e.stateMask & SWT.SHIFT) != 0 ? 10 : (e.stateMask & SWT.CTRL) != 0 ? 2 : 1);
-		if (selectedElement == BOTH) {
+		final int amount = Math.max(1, ((e.stateMask & SWT.SHIFT) != 0 ? (upperValue-lowerValue)/6 : (upperValue-lowerValue)/15));
+		if ((e.stateMask&SWT.CTRL)==0) {
 			int newLower = lowerValue + e.count * amount;
 			int newUpper = upperValue + e.count * amount;
 			if (newUpper > maximum) {
@@ -315,12 +321,23 @@ public class RangeSlider extends Canvas {
 			}
 			upperValue = newUpper;
 			lowerValue = newLower;
-		} else if ((selectedElement & LOWER) != 0) {
-			lowerValue += e.count * amount;
-			checkLowerValue();
 		} else {
-			upperValue += e.count * amount;
-			checkUpperValue();
+			int newLower = lowerValue + e.count * amount/2;
+			int newUpper = upperValue - e.count * amount/2;
+			int dist = newUpper - newLower;
+			if (newUpper > maximum) {
+				newUpper = maximum;
+				newLower = maximum - dist;
+			} else if (newLower < minimum) {
+				newLower = minimum;
+				newUpper = minimum + dist;
+			}
+			if(newUpper<=newLower) {
+				newLower=lowerValue + (upperValue - lowerValue)/2;
+				newUpper=newLower+1;
+			}
+			upperValue = newUpper;
+			lowerValue = newLower;
 		}
 		validateNewValues(e);
 		e.doit = false; // we are consuming this event
