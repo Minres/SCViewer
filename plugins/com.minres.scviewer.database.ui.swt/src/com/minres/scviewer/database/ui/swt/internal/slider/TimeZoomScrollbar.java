@@ -64,18 +64,18 @@ public class TimeZoomScrollbar extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int[] value = timeSlider.getSelection();
-				int diff = value[1]-value[0];
-				int newLow = Math.max(0, value[0]-Math.max(1,  diff/10));
-				timeSlider.setSelection(newLow, newLow+diff, true);
+				int incr=timeSlider.getIncrement();
+				int lower = Math.max(timeSlider.getMinimum(), value[0]-incr);
+				timeSlider.setValues(lower, lower + (value[1]-value[0]), true);
 			}
 		});
 		rightButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int[] value = timeSlider.getSelection();
-				int diff = value[1]-value[0];
-				int newHigh = Math.min(timeSlider.getMaximum(), value[1] + diff/10);
-				timeSlider.setSelection(newHigh-diff, newHigh, true);
+				int incr=timeSlider.getIncrement();
+				int upper = Math.min(timeSlider.getMaximum(), value[1]+incr);
+				timeSlider.setValues(upper - (value[1]-value[0]), upper, true);
 			}
 		});
 
@@ -104,19 +104,13 @@ public class TimeZoomScrollbar extends Composite {
 	}
 	public void setSelection(int[] sel) {
 		assert(sel.length==2);
-		timeSlider.setSelection(sel[0], sel[1]);
+		timeSlider.setValues(sel[0], sel[1]);
 	}
 	public int[] getSelection() {
 		return timeSlider.getSelection();
 	}
 	public void addSelectionListener(SelectionListener selectionListener) {
 		timeSlider.addSelectionListener(selectionListener);	
-	}
-	public void setIncrement(int value) {
-		timeSlider.setIncrement(value);	
-	}
-	public void setPageIncrement(int value) {
-		timeSlider.setPageIncrement(value);	
 	}
 	public void setMinimum(int value) {
 		timeSlider.setMinimum(value);	

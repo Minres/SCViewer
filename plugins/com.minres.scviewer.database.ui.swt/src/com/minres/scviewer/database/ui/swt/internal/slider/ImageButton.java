@@ -2,6 +2,9 @@ package com.minres.scviewer.database.ui.swt.internal.slider;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -46,24 +49,36 @@ public class ImageButton extends Composite
 		addListener(SWT.Paint, event -> {
 			paintControl(event);
 		});
-		addListener(SWT.MouseDown, event -> {
-			if(!isEnabled()) return;
-			pressed=true;
-			notifyListeners();
-		    if(autoFire) actionTimer.activate();
-			redraw();
+		addMouseTrackListener(new MouseTrackAdapter() {
+			public void mouseEnter(MouseEvent arg0) {
+				if(isEnabled()) {
+					hover=true;
+					redraw();
+				}
+			}
+			public void mouseExit(MouseEvent arg0) {
+				if(isEnabled()) {
+					hover=false;
+					redraw();
+				}
+			}
 		});
-		addListener(SWT.MouseUp, event -> {
-			pressed=false;
-			redraw();
-		});
-		addListener(SWT.MouseMove, event -> {
-			if(!isEnabled()) return;
-			Point sz = ((ImageButton)event.widget).getSize();
-			final boolean within_x = event.x>0 && event.x<sz.x-1;
-			final boolean within_y = event.y>0 && event.y<sz.y-1;
-			hover= within_x && within_y;
-			redraw();
+		addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				if(isEnabled()) {
+					pressed=true;
+					notifyListeners();
+					if(autoFire) actionTimer.activate();
+					redraw();
+				}
+			}
+
+			@Override
+			public void mouseUp(MouseEvent e) {
+				pressed=false;
+				redraw();
+			}
 		});
 	}
 

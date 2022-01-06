@@ -267,11 +267,24 @@ public class WaveformView implements IWaveformView {
 			switch (e.type) {
 			case SWT.MouseWheel:
 				if((e.stateMask & SWT.CTRL) != 0) {
-					if(e.count<0)
+					if(e.count<0) // up scroll
 						waveformCanvas.setScale(waveformCanvas.getScale()*11/10);
-					else
+					else // down scroll
 						waveformCanvas.setScale(waveformCanvas.getScale()*10/11);
-				} 
+					e.doit=false;
+				} else if((e.stateMask & SWT.SHIFT) != 0) {
+					long upper = waveformCanvas.getMaxVisibleTime();
+					long lower = waveformCanvas.getMinVisibleTime();
+					long duration = upper-lower;
+					if(e.count<0) { // up scroll
+						long newLower = Math.min(waveformCanvas.getMaxTime()-duration, lower+duration/10);
+						waveformCanvas.setMinVisibleTime(newLower);
+					} else {// down scroll
+						long newLower = Math.max(0, lower-duration/10);
+						waveformCanvas.setMinVisibleTime(newLower);
+					}
+					e.doit=false;
+				}
 				break;
 			case SWT.MouseDown:
 				start = new Point(e.x, e.y);
