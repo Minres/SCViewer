@@ -92,11 +92,11 @@ public class RangeSlider extends Canvas {
 
 	private void addMouseListeners() {
 		addListener(SWT.MouseDown, e -> {
-			if (e.button == 1) {
+			if (e.button == 1 || e.button == 2) {
 				selectKnobs(e);
 				selectedElement = (lowerHover ? LOWER : NONE) | (upperHover ? UPPER : NONE);
 				if (selectedElement!=NONE) {
-					if((e.stateMask & SWT.CTRL)==0)
+					if((e.stateMask & SWT.CTRL)==0 && e.button != 2)
 						selectedElement=BOTH;
 					startDragLowerValue = previousLowerValue = lowerValue;
 					startDragUpperValue = previousUpperValue = upperValue;
@@ -112,7 +112,7 @@ public class RangeSlider extends Canvas {
 				super.setToolTipText(clientToolTipText);
 				selectedElement=NONE;
 				redraw();
-			} else {
+			} else if (e.button == 1) {
 				if(e.x<coordLower.x) {
 					translateValues(-pageIncrement);
 					validateNewValues(e);

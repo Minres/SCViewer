@@ -30,25 +30,43 @@ Legend:
 * Mouse Scroll wheel: MScrl
 * Context any means Name List, Value List or Waveform
 
-| Input     | Modifier | Context  | Action                            |
-|-----------|----------|----------|-----------------------------------|
-| LMB klick |          | any      | select                            |
-| LMB klick | Shift    | Waveform | move selected marker to position  |
-| LMB klick | Control  | Waveform | move cursor to position           |
-| LMB drag  |          | Waveform | zoom to range                     |
-| MMB klick |          | Waveform | move selected marker to position  |
-| MScrl     |          | any      | scroll window up/down             |
-| MScrl     | Shift    | any      | scroll window left/right          |
-| Key left  |          | Waveform | scroll window to the left (slow)  |
-| Key right |          | Waveform | scroll window to the right (slow) |
-| Key left  | Shift    | Waveform | scroll window to the left (fast)  |
-| Key right | Shift    | Waveform | scroll window to the right (fast) |
-| Key up    |          | Waveform | move selection up                 |
-| Key down  |          | Waveform | move selection down               |
-| Key up    | Control  | Waveform | move selected track up            |
-| Key down  | Control  | Waveform | move selected track down          |
-| Key +     | Control  | Waveform | zoom in                           |
-| Key -     | Control  | Waveform | zoom out                          |
-| Key Pos1  |          | Waveform | jump to selected marker           |
-| Key End   |          | Waveform | jump to cursor                    |
-| Key Del   |          | any      | delete selected entries           |
+| Input      | Modifier | Context  | Action                            |
+|------------|----------|----------|-----------------------------------|
+| LMB click  |          | any      | select                            |
+| LMB click  | Shift    | Waveform | move selected marker to position  |
+| LMB click  | Control  | Waveform | move cursor to position           |
+| LMB drag   |          | Waveform | zoom to range                     |
+| MMB click  |          | Waveform | move selected marker to position  |
+| MScrl      |          | any      | scroll window up/down             |
+| MScrl      | Shift    | any      | scroll window left/right          |
+| MScrl      | Control  | Waveform | zoom in/out                       |
+| Key left   |          | Waveform | scroll window to the left (slow)  |
+| Key right  |          | Waveform | scroll window to the right (slow) |
+| Key left   | Shift    | Waveform | scroll window to the left (fast)  |
+| Key right  | Shift    | Waveform | scroll window to the right (fast) |
+| Key up     |          | Waveform | move selection up                 |
+| Key down   |          | Waveform | move selection down               |
+| Key up     | Control  | Waveform | move selected track up            |
+| Key down   | Control  | Waveform | move selected track down          |
+| Key +      | Control  | Waveform | zoom in                           |
+| Key -      | Control  | Waveform | zoom out                          |
+| Key Pos1   |          | Waveform | jump to selected marker           |
+| Key End    |          | Waveform | jump to cursor                    |
+| Key Del    |          | any      | delete selected entries           |
+| LMB click  |          | ZoomBar  | increment/decrement 1 page        |
+| LMB drag   |          | ZoomBar  | drag both markers (pan)           |
+| LMB drag   | Control  | ZoomBar  | drag one marker (zoom)            |
+| MMB drag   |          | ZoomBar  | drag one marker (zoom)            |
+| xMB dclick |          | ZoomBar  | pan to position                   |
+| MScrl      |          | ZoomBar  | scroll window left/right          |
+| MScrl      | Shift    | ZoomBar  | scroll window left/right double speed |
+| MScrl      | Control  | ZoomBar  | zoom in/out                       |
+| Key left   |          | ZoomBar  | scroll window to the left (slow)  |
+| Key right  |          | ZoomBar  | scroll window to the right (slow) |
+| Key up     |          | ZoomBar  | scroll window to the left (slow)  |
+| Key down   |          | ZoomBar  | scroll window to the right (slow) |
+| Key PgUp   |          | ZoomBar  | scroll window to the left (fast)  |
+| Key PgDown |          | ZoomBar  | scroll window to the right (fast) |
+| Key Pos1   |          | ZoomBar  | scroll to begin                   |
+| Key End    |          | ZoomBar  | scroll to end                     |
+

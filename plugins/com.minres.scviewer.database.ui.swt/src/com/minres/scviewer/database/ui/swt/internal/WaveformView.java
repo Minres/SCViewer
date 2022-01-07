@@ -113,6 +113,10 @@ public class WaveformView implements IWaveformView {
 
 	private final Canvas valueList;
 
+	private final Control nameFill;
+	
+	private final Control valueFill;
+
 	final WaveformCanvas waveformCanvas;
 
 	final ToolTipHandler toolTipHandler;
@@ -379,7 +383,10 @@ public class WaveformView implements IWaveformView {
 			@Override
 			public void controlResized(ControlEvent e) {
 				nameListScrolled.getVerticalBar().setVisible(false);
-
+				if(nameListScrolled.getSize().y == nameList.getSize().y) {
+					((GridData)nameFill.getLayoutData()).heightHint=18;
+					namePane.layout();
+				}
 			}
 		});
 		nameList = new Canvas(nameListScrolled, SWT.NONE) {
@@ -398,7 +405,8 @@ public class WaveformView implements IWaveformView {
 		});
 		nameList.addMouseListener(nameValueMouseListener);
 		nameListScrolled.setContent(nameList);
-
+		nameFill = createFill(namePane);
+		
 		createTextPane(valuePane, "Value");
 
 		valuePane.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
@@ -411,7 +419,10 @@ public class WaveformView implements IWaveformView {
 			@Override
 			public void controlResized(ControlEvent e) {
 				valueListScrolled.getVerticalBar().setVisible(false);
-
+				if(valueListScrolled.getSize().y == valueList.getSize().y) {
+					((GridData)valueFill.getLayoutData()).heightHint=18;
+					valuePane.layout();
+				}
 			}
 		});
 		valueList = new Canvas(valueListScrolled, SWT.NONE) {
@@ -430,6 +441,7 @@ public class WaveformView implements IWaveformView {
 		});
 		valueList.addMouseListener(nameValueMouseListener);
 		valueListScrolled.setContent(valueList);
+		valueFill = createFill(valuePane);
 
 		waveformCanvas.setMaxTime(1);
 		waveformCanvas.addPaintListener(waveformMouseListener);
@@ -487,6 +499,15 @@ public class WaveformView implements IWaveformView {
 	            }
 	        }
 	    });
+	}
+
+	private Control createFill(Composite pane) {
+		Label cLabel = new Label(pane, SWT.NONE);
+		cLabel.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
+		GridData gd_cLabel = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		gd_cLabel.heightHint = 0;
+		cLabel.setLayoutData(gd_cLabel);
+		return cLabel;
 	}
 
 	private void createTextPane(Composite namePane, String text) {
