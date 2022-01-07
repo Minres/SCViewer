@@ -40,7 +40,6 @@ public class RangeSlider extends Canvas {
 	private int previousUpperValue, previousLowerValue;
 	private int startDragUpperValue, startDragLowerValue;
 	private Point startDragPoint;
-	private final boolean isSmooth;
 	private final boolean isFullSelection=false;
 	private final boolean isHighQuality;
 	private final boolean isOn;
@@ -68,7 +67,6 @@ public class RangeSlider extends Canvas {
 		maximum = upperValue = 100;
 		increment = 1;
 		pageIncrement = 10;
-		isSmooth = (style & SWT.SMOOTH) == SWT.SMOOTH;
 		isHighQuality = (style & SWT.HIGH) == SWT.HIGH;
 		isOn = (style & SWT.ON) == SWT.ON;
 		selectedElement = NONE;
@@ -86,7 +84,7 @@ public class RangeSlider extends Canvas {
 
 	@Override
 	public int getStyle() {
-		return super.getStyle() | (isSmooth ? SWT.SMOOTH : SWT.NONE) | //
+		return super.getStyle() | //
 				(isOn ? SWT.ON : SWT.NONE) | //
 				(isFullSelection ? SWT.CONTROL : SWT.NONE) | //
 				(isHighQuality ? SWT.HIGH : SWT.NONE);
@@ -166,7 +164,8 @@ public class RangeSlider extends Canvas {
 		}
 	}
 
-
+	private boolean busy = false;
+	
 	private void handleMouseMove(final Event e) {
 		if (selectedElement==NONE) {
 			final boolean wasUpper = upperHover;
@@ -190,28 +189,20 @@ public class RangeSlider extends Canvas {
 				}
 				upperValue = newUpper;
 				lowerValue = newLower;
-				if (!isSmooth) {
-					lowerValue = (int) (Math.ceil(lowerValue / increment) * increment) - increment;
-					upperValue = (int) (Math.ceil(upperValue / increment) * increment) - increment;
-				}
 				handleToolTip(lowerValue, upperValue);
 			} else if (selectedElement == UPPER) {
-				upperValue = (int) Math.round((x - 9d) / computePixelSizeForSlider()) + minimum;
-				if (!isSmooth) {
-					upperValue = Math.min(lowerValue, (int) (Math.ceil(upperValue / increment) * increment) - increment);
-				}
+				upperValue = (int) Math.round((double)(x - markerWidth) / computePixelSizeForSlider()) + minimum;
 				checkUpperValue();
 				handleToolTip(upperValue);
 			} else if (selectedElement == LOWER){
-				lowerValue = (int) Math.round((x - 9d) / computePixelSizeForSlider()) + minimum;
-				if (!isSmooth) {
-					lowerValue = Math.max(upperValue, (int) (Math.ceil(lowerValue / increment) * increment) - increment);
-				}
+				lowerValue = (int) Math.round((double)(x - markerWidth) / computePixelSizeForSlider()) + minimum;
 				checkLowerValue();
 				handleToolTip(lowerValue);
 			}
-			if (isOn) {
+			if (isOn && !busy) {
 				validateNewValues(e);
+				busy=true;
+				getDisplay().timerExec(50, ()->{busy=false;});
 			} else {
 				redraw();
 			}
@@ -565,12 +556,6 @@ public class RangeSlider extends Canvas {
 		return pageIncrement;
 	}
 
-//	public void setIncrement(final int increment) {
-//		checkWidget();
-//		this.increment = increment;
-//		redraw();
-//	}
-
 	public void setMaximum(final int value) {
 		setLimits(minimum, value);
 	}
@@ -616,12 +601,6 @@ public class RangeSlider extends Canvas {
 		setValues(value, upperValue);
 	}
 
-//	public void setPageIncrement(final int pageIncrement) {
-//		checkWidget();
-//		this.pageIncrement = pageIncrement;
-//		redraw();
-//	}
-
 	public void setValues(final int[] values) {
 		if (values.length == 2) {
 			setValues(values[0], values[1]);
@@ -642,6 +621,9 @@ public class RangeSlider extends Canvas {
 				e.type=SWT.Selection;
 				e.doit=true;
 				validateNewValues(e);			
+			} else {
+				increment = Math.max(1,  (upperValue-lowerValue)/100);
+				pageIncrement = Math.max(1, (upperValue-lowerValue)/2);
 			}
 			redraw();
 		}

@@ -12,10 +12,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.wb.swt.SWTResourceManager;
 
-public class TimeZoomScrollbar extends Composite {
+public class ZoomBar extends Composite {
 	
 	static public interface IProvider {
-		TimeZoomScrollbar getScrollBar();
+		ZoomBar getScrollBar();
 	}
 
 	final RangeSlider timeSlider;
@@ -26,7 +26,7 @@ public class TimeZoomScrollbar extends Composite {
 	 * @param parent
 	 * @param style
 	 */
-	public TimeZoomScrollbar(Composite parent, int style) {
+	public ZoomBar(Composite parent, int style) {
 		super(parent, SWT.NO_FOCUS);
 		GridLayout gridLayout = new GridLayout(3, false);
 		gridLayout.horizontalSpacing = 0;

@@ -46,7 +46,7 @@ import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.database.ui.swt.Constants;
-import com.minres.scviewer.database.ui.swt.internal.slider.TimeZoomScrollbar;
+import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
 
 public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
@@ -54,6 +54,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	public static final long ZOOM_FULL = -1;
 
+	private static final int INITIAL_ZOOM_BAR_MAX = 1000;
+	
 	private boolean doubleBuffering = true;
 
 	IWaveformStyleProvider styleProvider;
@@ -82,22 +84,17 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	private List<CursorPainter> cursorPainters;
 
-	private TimeZoomScrollbar horizontal;
+	private ZoomBar horizontal;
 
 	private int[] lastHorSelection;
+	
+	private long sliderScaleFactor = 1;
 	
 	private ScrollBar vertical;
 
 	HashMap<IWaveform, IWaveformPainter> wave2painterMap;
-	/**
-	 * Constructor for ScrollableCanvas.
-	 * 
-	 * @param parent
-	 *            the parent of this control.super(parent, style | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.NO_REDRAW_RESIZE | SWT.V_SCROLL | SWT.H_SCROLL);
-	 * @param style
-	 *            the style of this control.
-	 */
-	public WaveformCanvas(final Composite parent, int style, IWaveformStyleProvider styleProvider, TimeZoomScrollbar.IProvider scrollbarProvider) {
+
+	public WaveformCanvas(final Composite parent, int style, IWaveformStyleProvider styleProvider, ZoomBar.IProvider scrollbarProvider) {
 		super(parent, (style & ~SWT.H_SCROLL) | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.V_SCROLL );
 		this.styleProvider=styleProvider;
 		addControlListener(new ControlAdapter() { /* resize listener. */
@@ -158,10 +155,6 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	public void setOrigin(int x, int y) {
 		checkWidget();
-//		if(x<=0) horizontal.setSelection(-x);
-//		x = -horizontal.getSelection()[0];
-//		if(y<=0) vertical.setSelection(-y);
-//		y = -vertical.getSelection();
 		origin.x = x;
 		origin.y = y;
 		syncSb();
@@ -174,6 +167,12 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	public void setMaxTime(long maxTime) {
 		this.maxTime = maxTime;
+		if(maxTime>INITIAL_ZOOM_BAR_MAX) {
+			long maxBarTime = maxTime;
+			while(maxBarTime>Integer.MAX_VALUE)	maxBarTime/=1000;
+			horizontal.setMaximum((int) maxBarTime);
+		}
+		sliderScaleFactor = maxTime/horizontal.getMaximum();
 		syncSb();
 	}
 
@@ -302,22 +301,22 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			public void widgetSelected(SelectionEvent event) {
 				if (!painterList.isEmpty()) {
 					int[] sel = horizontal.getSelection();
-					long lowerTime = sel[0]*maxTime/horizontal.getMaximum();
-					long upperTime = sel[1]*maxTime/horizontal.getMaximum();
+					long lowerTime = sel[0]*sliderScaleFactor;
+					long upperTime = sel[1]*sliderScaleFactor;
 					if(sel[1]-sel[0] != lastHorSelection[1]-lastHorSelection[0]) {
 						long time_diff = upperTime-lowerTime;
 						long factor = time_diff/getClientArea().width;
 						setScalingFactor(factor, lowerTime+time_diff/2);
 					} else {
-						origin.x = -(int) (lowerTime / getScale());
-						event.widget.getDisplay().asyncExec(() -> {redraw();});
+						origin.x = -(int) (lowerTime/getScale());
+						WaveformCanvas.this.getDisplay().asyncExec(() -> {redraw();});
 					}
 					lastHorSelection=sel;
 				}
 			}
 		});
 		horizontal.setMinimum(0);
-		horizontal.setMaximum(10000);
+		horizontal.setMaximum(INITIAL_ZOOM_BAR_MAX);
 		lastHorSelection = horizontal.getSelection();
 		
 		vertical.setEnabled(false);
@@ -328,7 +327,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 				if (!painterList.isEmpty()) {
 					origin.y=-vertical.getSelection();
 					fireSelectionEvent();
-					event.widget.getDisplay().asyncExec(() -> {redraw();});
+					WaveformCanvas.this.getDisplay().asyncExec(() -> {redraw();});
 				}
 			}
 		});
@@ -345,7 +344,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			syncVSb();
 			fireSelectionEvent();
 		}
-		this.getDisplay().asyncExec(() -> {redraw();});
+		redraw();
 	}
 
 	private void syncVSb() {
@@ -373,10 +372,9 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		horizontal.setEnabled(wave2painterMap.size()>0);
 		Rectangle clientArea=getClientArea();
 		int clientWidth = clientArea.width;
-		if(maxTime>0) {
-			int lower = (int) (            -origin.x  * getScale() * horizontal.getMaximum() / maxTime);
-			int upper = (int) ((clientWidth-origin.x) * getScale() * horizontal.getMaximum() / maxTime);
-			int[] curSel = horizontal.getSelection();
+		if(sliderScaleFactor>0) {
+			int lower = (int) ( (           -origin.x  * getScale()) / sliderScaleFactor);
+			int upper = (int) (((clientWidth-origin.x) * getScale()) / sliderScaleFactor);
 			lastHorSelection = new int[] {Math.max(lower,0), Math.min(upper, horizontal.getMaximum())};
 			horizontal.setSelection(lastHorSelection);
 		}

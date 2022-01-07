@@ -91,7 +91,7 @@ import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
-import com.minres.scviewer.database.ui.swt.internal.slider.TimeZoomScrollbar;
+import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
 
 public class WaveformView implements IWaveformView {
 
@@ -352,11 +352,11 @@ public class WaveformView implements IWaveformView {
 		gl_waveformPane.marginHeight = 0;
 		waveformPane.setLayout(gl_waveformPane);
 		
-		waveformCanvas = new WaveformCanvas(waveformPane, SWT.NONE | SWT.V_SCROLL /*| SWT.H_SCROLL*/, styleProvider, new TimeZoomScrollbar.IProvider() {
+		waveformCanvas = new WaveformCanvas(waveformPane, SWT.NONE | SWT.V_SCROLL /*| SWT.H_SCROLL*/, styleProvider, new ZoomBar.IProvider() {
 			
 			@Override
-			public TimeZoomScrollbar getScrollBar() {
-				TimeZoomScrollbar timeSliderPane = new TimeZoomScrollbar(waveformPane, SWT.NONE);
+			public ZoomBar getScrollBar() {
+				ZoomBar timeSliderPane = new ZoomBar(waveformPane, SWT.NONE);
 				GridData gd_timeSliderPane = new GridData(SWT.FILL, SWT.BOTTOM, false, false, 1, 1);
 				timeSliderPane.setLayoutData(gd_timeSliderPane);
 				return timeSliderPane;
