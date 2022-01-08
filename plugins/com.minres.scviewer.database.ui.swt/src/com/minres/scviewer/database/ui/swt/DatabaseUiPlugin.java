@@ -13,6 +13,7 @@ package com.minres.scviewer.database.ui.swt;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.wb.swt.SWTResourceManager;
 import org.osgi.framework.BundleContext;
 
 public class DatabaseUiPlugin extends Plugin {
@@ -24,6 +25,7 @@ public class DatabaseUiPlugin extends Plugin {
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		SWTResourceManager.dispose();
 		getLog().log(new Status(IStatus.OK, "org.eclipse.e4.core", "Stopping org.eclipse.e4.core bundle..."));
 	}
 }

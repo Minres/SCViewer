@@ -78,7 +78,6 @@
 
    <repositories>
       <repository location="http://https://minres.github.io/SCViewer/repository" enabled="true" />
-      <repository location="http://https://minres.github.io/SCViewer/repository" enabled="true" />
    </repositories>
 
    <preferencesInfo>
