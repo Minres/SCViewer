@@ -174,7 +174,7 @@
 					<chunkedOutput>true</chunkedOutput>
 					<xincludeSupported>true</xincludeSupported>
 					<!-- <foCustomization>src/test/resources/docbook-fo.xsl</foCustomization> -->
-					<eclipsePluginId>com.minres.scviewer.doc</eclipsePluginId>
+					<eclipsePluginId>com.minres.scviewer.e4.application.help</eclipsePluginId>
 				</configuration>
 			</plugin>
 		</plugins>
