@@ -121,7 +121,7 @@
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
     </bindings>
-    <bindings xmi:id="_2-008EhnEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.keybinding.help" keySequence="F1" command="_lqjIYEYEEeyPM8G0E2EYww"/>
+    <bindings xmi:id="_2-008EhnEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.keybinding.help" keySequence="F1" command="_RdUMoHCOEeyub8CfGE1sGA"/>
   </bindingTables>
   <bindingTables xmi:id="_XullMGVOEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingtable.window" bindingContext="_95PfunNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95PfwnNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.load" keySequence="M1+L" command="_7-AIMJebEeW09eyIbHsdvg">
@@ -252,6 +252,9 @@
   </descriptors>
   <snippets xsi:type="basic:Window" xmi:id="_R8mJUEhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.window.web_help" selectedElement="_R8mJUUhwEeyp3vLifEzGbQ" label="SCViewer Web Help" width="800" height="600">
     <children xsi:type="basic:Part" xmi:id="_R8mJUUhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.help.HelpBrowser"/>
+  </snippets>
+  <snippets xsi:type="basic:Window" xmi:id="_cg-28HClEeyNn6bZ9_VasA" elementId="com.minres.scviewer.e4.application.window.help_content" selectedElement="_cg-28XClEeyNn6bZ9_VasA" label="SCViewer Help Content" width="800" height="600">
+    <children xsi:type="basic:Part" xmi:id="_cg-28XClEeyNn6bZ9_VasA" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.help.HelpBrowser"/>
   </snippets>
   <commands xmi:id="_95PfvHNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.file.exit" commandName="Quit Command"/>
   <commands xmi:id="_95PfwHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.open" commandName="Open Command"/>
