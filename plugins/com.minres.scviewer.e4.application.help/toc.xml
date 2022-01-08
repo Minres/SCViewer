@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?NLS TYPE="org.eclipse.help.toc"?>
-
-<toc label="Sample Table of Contents">
-	<topic label="Main Topic"  href="html/maintopic.html"> 
-		<topic label="Sub Topic" href="html/subtopic.html"/> 
-	</topic>
-	<topic label="Main Topic 2"/>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<toc label="SCViewer User Guide" topic="SCViewerHelp.html">
+   <topic label="Introduction" href="ch01.html">
+      <topic label="SCViewer overview" href="ch01.html#_overview"/>
+      <topic label="SCViewer features" href="ch01s02.html"/>
+   </topic>
+   <topic label="Reference" href="ch02.html">
+      <topic label="Key Shortcuts" href="ch02.html#_keybindings"/>
+   </topic>
 </toc>

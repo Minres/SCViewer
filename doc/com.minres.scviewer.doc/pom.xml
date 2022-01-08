@@ -17,7 +17,7 @@
 		<asciidoctorj.pdf.version>1.5.0-alpha.16</asciidoctorj.pdf.version>
 		<asciidoctorj.version>1.5.6</asciidoctorj.version>
 		<jruby.version>1.7.26</jruby.version>
-		<help.plugin.target.dir>target/eclipse</help.plugin.target.dir>
+		<help.plugin.target.dir>../../plugins/com.minres.scviewer.e4.application.help</help.plugin.target.dir>
 	</properties>
 
 	<build>

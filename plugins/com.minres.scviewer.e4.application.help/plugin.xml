@@ -1,16 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.4"?>
-<plugin>
-
-   <extension
-         point="org.eclipse.help.toc">
-      <toc
-            file="toc.xml">
-      </toc>
-      <toc
-            file="testToc.xml"
-            primary="true">
-      </toc>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<plugin name="DocBook Online Help Sample" id="com.minres.scviewer.doc" version="1.0" provider-name="Example provider">
+   <extension point="org.eclipse.help.toc">
+      <toc file="toc.xml" primary="true"/>
    </extension>
-
+   <extension point="org.eclipse.help.index">
+      <index file="index.xml"/>
+   </extension>
 </plugin>
