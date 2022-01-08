@@ -18,7 +18,7 @@ import org.eclipse.e4.ui.workbench.modeling.EModelService;
 
 public class HelpHandler {
 
-	static final String WINDOW_ID="com.minres.scviewer.e4.application.window.help"; //$NON-NLS-1$
+	static final String WINDOW_ID="com.minres.scviewer.e4.application.window.web_help"; //$NON-NLS-1$
 	@CanExecute
 	public boolean canExecute(MApplication app) {
 		return !app.getChildren().stream().filter(e -> e.getElementId().equals(WINDOW_ID)).findFirst().isPresent();

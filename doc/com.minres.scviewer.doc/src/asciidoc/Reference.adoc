@@ -1,0 +1,39 @@
+// ///////////////////////////////////////////////////////////////////////////////////////////////////// Reference //////////////////////////////////////////////////////
+
+[#_reference]
+== Reference
+
+In this section you will find detailed descriptions of all GUI and menu elements of the SCViewer including their functions and keyboard shortcuts.
+
+[#_keybindings]
+=== Key Shortcuts
+
+Legend:
+
+* Left Mouse Button: LMB
+* Middle Mouse Button: MMB
+* Mouse Scroll wheel: MScrl
+* Context any means Name List, Value List or Waveform
+
+| Input     | Modifier | Context  | Action                            |
+|-----------|----------|----------|-----------------------------------|
+| LMB klick |          | any      | select                            |
+| LMB klick | Shift    | Waveform | move selected marker to position  |
+| LMB klick | Control  | Waveform | move cursor to position           |
+| LMB drag  |          | Waveform | zoom to range                     |
+| MMB klick |          | Waveform | move selected marker to position  |
+| MScrl     |          | any      | scroll window up/down             |
+| MScrl     | Shift    | any      | scroll window left/right          |
+| Key left  |          | Waveform | scroll window to the left (slow)  |
+| Key right |          | Waveform | scroll window to the right (slow) |
+| Key left  | Shift    | Waveform | scroll window to the left (fast)  |
+| Key right | Shift    | Waveform | scroll window to the right (fast) |
+| Key up    |          | Waveform | move selection up                 |
+| Key down  |          | Waveform | move selection down               |
+| Key up    | Control  | Waveform | move selected track up            |
+| Key down  | Control  | Waveform | move selected track down          |
+| Key +     | Control  | Waveform | zoom in                           |
+| Key -     | Control  | Waveform | zoom out                          |
+| Key Pos1  |          | Waveform | jump to selected marker           |
+| Key End   |          | Waveform | jump to cursor                    |
+| Key Del   |          | any      | delete selected entries           |

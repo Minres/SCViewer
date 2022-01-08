@@ -57,7 +57,8 @@
       </children>
       <children xsi:type="menu:Menu" xmi:id="_95QGxHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.menu.help" label="Help">
         <children xsi:type="menu:HandledMenuItem" xmi:id="_UQRi0B07EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handledmenuitem.checkforupdate" visible="false" label="Check for Update" enabled="false" command="_-9ED4B06EeuiP60JNw0iiA"/>
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGxXNmEeWBq8z1Dv39LA" label="Online Help" command="_lqjIYEYEEeyPM8G0E2EYww"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_qJS-MHCOEeyub8CfGE1sGA" label="Help Content" command="_RdUMoHCOEeyub8CfGE1sGA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGxXNmEeWBq8z1Dv39LA" label="Web Help" command="_lqjIYEYEEeyPM8G0E2EYww"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_4xtmgEYEEeyPM8G0E2EYww" label="About" command="_95PfxnNmEeWBq8z1Dv39LA"/>
       </children>
     </mainMenu>
@@ -113,8 +114,9 @@
   <handlers xmi:id="_h3jU8BkWEeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.handler.reloadCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ReloadHandler" command="_srACsBkREeudD5MqrWoETQ"/>
   <handlers xmi:id="_gn_boBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.txSearch" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler" command="_XDxTYBlEEeuiP60JNw0iiA"/>
   <handlers xmi:id="_CCEtAB07EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.update" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.UpdateHandler" command="_-9ED4B06EeuiP60JNw0iiA"/>
-  <handlers xmi:id="_ru2NIEYEEeyPM8G0E2EYww" elementId="com.minres.scviewer.e4.application.handler.helpCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpHandler" command="_lqjIYEYEEeyPM8G0E2EYww"/>
+  <handlers xmi:id="_ru2NIEYEEeyPM8G0E2EYww" elementId="com.minres.scviewer.e4.application.handler.help" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpHandler" command="_lqjIYEYEEeyPM8G0E2EYww"/>
   <handlers xmi:id="_TwU0IEYoEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.handler.enabletxdetails" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableTxDetails" command="_Fj1gQEYoEeyKK_icsY7Xjg"/>
+  <handlers xmi:id="_htyxgHCOEeyub8CfGE1sGA" elementId="com.minres.scviewer.e4.application.handler.helpContent" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpContentsHandler" command="_RdUMoHCOEeyub8CfGE1sGA"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
@@ -248,7 +250,7 @@
       </children>
     </toolbar>
   </descriptors>
-  <snippets xsi:type="basic:Window" xmi:id="_R8mJUEhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.window.help" selectedElement="_R8mJUUhwEeyp3vLifEzGbQ" label="SC Viewer Help" width="800" height="600">
+  <snippets xsi:type="basic:Window" xmi:id="_R8mJUEhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.window.web_help" selectedElement="_R8mJUUhwEeyp3vLifEzGbQ" label="SCViewer Web Help" width="800" height="600">
     <children xsi:type="basic:Part" xmi:id="_R8mJUUhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.help.HelpBrowser"/>
   </snippets>
   <commands xmi:id="_95PfvHNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.file.exit" commandName="Quit Command"/>
@@ -292,12 +294,13 @@
   <commands xmi:id="_uyeyYGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.command.enablehover" commandName="Enable hover" description="Enable hover window in waveform"/>
   <commands xmi:id="_srACsBkREeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.reload" commandName="Reload Command"/>
   <commands xmi:id="_XDxTYBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.txSearch" commandName="Search Command"/>
-  <commands xmi:id="_-9ED4B06EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.command.update" commandName="Update"/>
-  <commands xmi:id="_lqjIYEYEEeyPM8G0E2EYww" elementId="org.eclipse.ui.help.helpAction" commandName="Help Command"/>
-  <commands xmi:id="_Fj1gQEYoEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.command.enabletxdetails" commandName="Enable Tx Details" description="Show tx details parts"/>
+  <commands xmi:id="_-9ED4B06EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.command.update" commandName="Update Command"/>
+  <commands xmi:id="_lqjIYEYEEeyPM8G0E2EYww" elementId="org.eclipse.ui.help.helpCommand" commandName="Help Command"/>
+  <commands xmi:id="_Fj1gQEYoEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.command.enabletxdetails" commandName="Enable Tx Details Command" description="Show tx details parts"/>
   <commands xmi:id="_y2BUsE-HEeyuGJbYVZjX8w" elementId="com.minres.scviewer.e4.application.command.pancommand" commandName="Pan Command">
     <parameters xmi:id="_y2BUsU-HEeyuGJbYVZjX8w" elementId="com.minres.scviewer.e4.application.command.pancommand.parameter.direction" name="direction" optional="false"/>
   </commands>
+  <commands xmi:id="_RdUMoHCOEeyub8CfGE1sGA" elementId="org.eclipse.ui.help.helpContentCommand" commandName="Help Content Command" description=""/>
   <addons xmi:id="_95PfsnNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_95Pfs3NmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_95PftHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>
