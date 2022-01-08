@@ -1,0 +1,28 @@
+[#_start]
+= SCViewer User Guide
+:doctype: book
+:source-highlighter: coderay
+:coderay-linenums-mode: inline
+:coderay-css: class
+:listing-caption: Listing
+:icons: font
+//add table-of-contents (toc) and set its depth
+:toc:
+:toclevels: 6
+//set directories
+:imagesdir: ./images
+:iconsdir: ./icons
+:stylesdir: ./styles
+:scriptsdir: ./js
+:title-logo-image: image:Minres_logo_square.png[]
+//add math support, also do via cmd-line a 'gem install asciimath'
+:stem: 
+
+// unset toc, otherwise it appears in table cells -> known bug, should be fixed in later versions!
+:toc!:
+
+// ///////////////////////////////////////////////////////////////////////////////////////////////////// OVERVIEW ///////////////////////////////////////////////////////
+include::Overview.adoc[]
+
+// ///////////////////////////////////////////////////////////////////////////////////////////////////// Reference //////////////////////////////////////////////////////
+include::Reference.adoc[]

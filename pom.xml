@@ -8,6 +8,7 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>releng/com.minres.scviewer.target</module>
+		<module>doc/com.minres.scviewer.doc</module>
 		<module>plugins/com.minres.scviewer.database</module>
 		<module>plugins/com.minres.scviewer.database.sqlite</module>
 		<module>plugins/com.minres.scviewer.database.text</module>
@@ -15,12 +16,14 @@
 		<module>tests/com.minres.scviewer.database.test</module>
 		<module>plugins/com.minres.scviewer.database.ui.swt</module>
 		<module>plugins/com.minres.scviewer.e4.application</module>
+		<module>plugins/com.minres.scviewer.e4.application.help</module>
 		<module>plugins/com.minres.scviewer.ui</module>
 		<module>features/com.minres.scviewer.database.feature</module>
 		<module>features/com.minres.scviewer.ui.feature</module>
 		<module>features/com.minres.scviewer.feature</module>
 		<module>features/com.minres.scviewer.e4.platform.feature</module>
 		<module>features/com.minres.scviewer.e4.feature</module>
+		<module>features/com.minres.scviewer.e4.help.feature</module>
 		<module>releng/com.minres.scviewer.updateSite</module>
 		<module>products/com.minres.scviewer.e4.product</module>
 	</modules>

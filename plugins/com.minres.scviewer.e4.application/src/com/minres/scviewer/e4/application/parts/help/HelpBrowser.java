@@ -4,6 +4,7 @@ import java.io.File;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.ui.model.application.ui.MUIElement;
@@ -48,32 +49,28 @@ public class HelpBrowser {
 	}
 
 	@PostConstruct
-	protected Control createComposite(Composite container) {
-//		container.getShell().addListener(SWT.Close, e -> {
-//			e.doit= false;
-//			element.setVisible(false);
-//		});
+	protected Control createComposite(Composite container, @Named("help_url") String helpUrl) {
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 3;
 		container.setLayout(gridLayout);
 		ToolBar toolbar = new ToolBar(container, SWT.NONE);
 		ToolItem itemBack = new ToolItem(toolbar, SWT.PUSH);
-		decorateItem(itemBack, Messages.HelpDialog_0, "arrow_undo.png"); //$NON-NLS-1$
+		decorateItem(itemBack, Messages.HelpBrowser_0, "arrow_undo.png"); //$NON-NLS-1$
 		ToolItem itemForward = new ToolItem(toolbar, SWT.PUSH);
-		decorateItem(itemForward, Messages.HelpDialog_1, "arrow_redo.png"); //$NON-NLS-1$
+		decorateItem(itemForward, Messages.HelpBrowser_1, "arrow_redo.png"); //$NON-NLS-1$
 		ToolItem itemStop = new ToolItem(toolbar, SWT.PUSH);
-		decorateItem(itemStop, Messages.HelpDialog_2, "cross.png"); //$NON-NLS-1$
+		decorateItem(itemStop, Messages.HelpBrowser_2, "cross.png"); //$NON-NLS-1$
 		ToolItem itemRefresh = new ToolItem(toolbar, SWT.PUSH);
-		decorateItem(itemRefresh, Messages.HelpDialog_3, "arrow_refresh.png"); //$NON-NLS-1$
+		decorateItem(itemRefresh, Messages.HelpBrowser_3, "arrow_refresh.png"); //$NON-NLS-1$
 		ToolItem itemGo = new ToolItem(toolbar, SWT.PUSH);
-		decorateItem(itemGo, Messages.HelpDialog_4, "accept.png"); //$NON-NLS-1$
+		decorateItem(itemGo, Messages.HelpBrowser_4, "accept.png"); //$NON-NLS-1$
 
 		GridData data = new GridData();
 		data.horizontalSpan = 3;
 		toolbar.setLayoutData(data);
 
 		Label labelAddress = new Label(container, SWT.NONE);
-		labelAddress.setText(Messages.HelpDialog_5);
+		labelAddress.setText(Messages.HelpBrowser_5);
 
 		final Text location = new Text(container, SWT.BORDER);
 		data = new GridData();
@@ -81,10 +78,8 @@ public class HelpBrowser {
 		data.horizontalSpan = 2;
 		data.grabExcessHorizontalSpace = true;
 		location.setLayoutData(data);
-
-		final Browser browser;
 		try {
-			browser = new Browser(container, SWT.NONE);
+			final Browser browser = new Browser(container, SWT.NONE);
 			data = new GridData();
 			//			data.widthHint = 800;
 			//			data.heightHint =600;
@@ -109,15 +104,15 @@ public class HelpBrowser {
 			Listener listener = event -> {
 				ToolItem item = (ToolItem) event.widget;
 				String string = (String) item.getData();
-				if (string.equals(Messages.HelpDialog_0))
+				if (string.equals(Messages.HelpBrowser_0))
 					browser.back();
-				else if (string.equals(Messages.HelpDialog_1))
+				else if (string.equals(Messages.HelpBrowser_1))
 					browser.forward();
-				else if (string.equals(Messages.HelpDialog_2))
+				else if (string.equals(Messages.HelpBrowser_2))
 					browser.stop();
-				else if (string.equals(Messages.HelpDialog_3))
+				else if (string.equals(Messages.HelpBrowser_3))
 					browser.refresh();
-				else if (string.equals(Messages.HelpDialog_4))
+				else if (string.equals(Messages.HelpBrowser_4))
 					browser.setUrl(location.getText());
 			};
 			browser.addProgressListener(new ProgressListener() {
@@ -140,14 +135,10 @@ public class HelpBrowser {
 			itemRefresh.addListener(SWT.Selection, listener);
 			itemGo.addListener(SWT.Selection, listener);
 			location.addListener(SWT.DefaultSelection, e -> browser.setUrl(location.getText()));
-			browser.setUrl(Messages.HelpDialog_6);
+			browser.setUrl(helpUrl);
 		} catch (SWTError e) {
 			MessageDialog.openWarning(container.getDisplay().getActiveShell(), Messages.HelpBrowser_7,Messages.HelpBrowser_8+e.getMessage());
 		}
 		return container;
-	}
-	
-	void handleShellCloseEvent(){
-		
 	}
 }

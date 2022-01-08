@@ -1,0 +1,182 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>com.minres.scviewer.doc</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<parent>
+		<groupId>com.minres.scviewer</groupId>
+		<artifactId>com.minres.scviewer.parent</artifactId>
+		<version>2.15.1</version>
+		<relativePath>../..</relativePath>
+	</parent>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<asciidoctor.maven.plugin.version>1.5.6</asciidoctor.maven.plugin.version>
+		<asciidoctorj.pdf.version>1.5.0-alpha.16</asciidoctorj.pdf.version>
+		<asciidoctorj.version>1.5.6</asciidoctorj.version>
+		<jruby.version>1.7.26</jruby.version>
+		<help.plugin.target.dir>../../plugins/com.minres.scviewer.e4.application.help</help.plugin.target.dir>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.asciidoctor</groupId>
+				<artifactId>asciidoctor-maven-plugin</artifactId>
+				<version>${asciidoctor.maven.plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-pdf</artifactId>
+                        <version>${asciidoctorj.pdf.version}</version>
+                    </dependency>
+                    <!-- Comment this section to use the default jruby artifact provided by the plugin -->
+                    <dependency>
+                        <groupId>org.jruby</groupId>
+                        <artifactId>jruby-complete</artifactId>
+                        <version>${jruby.version}</version>
+                    </dependency>
+                    <!-- Comment this section to use the default AsciidoctorJ artifact provided by the plugin -->
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj</artifactId>
+                        <version>${asciidoctorj.version}</version>
+                    </dependency>
+                </dependencies>
+			    <configuration>
+					<sourceDirectory>src/asciidoc</sourceDirectory>
+					<sourceDocumentName>SCViewerHelp.adoc</sourceDocumentName>
+					<headerFooter>true</headerFooter>
+				</configuration>
+				<executions>
+					<execution>
+						<id>output-html</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>process-asciidoc</goal>
+						</goals>
+						<configuration>
+							<sourceHighlighter>coderay</sourceHighlighter>
+							<backend>html</backend>
+							<attributes>
+								<toc />
+								<linkcss>false</linkcss>
+							</attributes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>output-docbook</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>process-asciidoc</goal>
+						</goals>
+						<configuration>
+							<backend>docbook</backend>
+						</configuration>
+					</execution>
+					<execution>
+						<id>output-pdf</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>process-asciidoc</goal>
+						</goals>
+						<configuration>
+							<backend>pdf</backend>
+							<sourceHighlighter>coderay</sourceHighlighter>
+							<attributes>
+								<icons>font</icons>
+								<pagenums />
+								<toc />
+								<idprefix />
+								<idseparator>-</idseparator>
+							</attributes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<id>copy-asciidoc-resources</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<resources>
+								<resource>
+									<directory>target/generated-docs/</directory>
+									<includes>
+										<include>SCViewerHelp.xml</include>
+										<include>**/*.jpg</include>
+										<include>**/*.png</include>
+										<include>**/*.svg</include>
+									</includes>
+								</resource>
+							</resources>
+							<outputDirectory>src/docbkx</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.agilejava.docbkx</groupId>
+				<artifactId>docbkx-maven-plugin</artifactId>
+				<version>2.0.17</version>
+				<executions>
+					<execution>
+						<!-- <phase>generate-sources</phase> -->
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>generate-eclipse</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.docbook</groupId>
+						<artifactId>docbook-xml</artifactId>
+						<version>4.4</version>
+						<scope>runtime</scope>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<sourceDirectory>src/docbkx</sourceDirectory>
+		            <targetDirectory>${help.plugin.target.dir}</targetDirectory>
+					<preProcess>
+						<copy todir="${help.plugin.target.dir}/images">
+							<fileset dir="src/docbkx/images" />
+						</copy>
+						<copy todir="${help.plugin.target.dir}/css">
+							<fileset dir="src/docbkx/css" />
+						</copy>
+					</preProcess>
+					<imgSrcPath>./</imgSrcPath>
+
+		            <useExtensions>1</useExtensions>
+		            <highlightSource>1</highlightSource>
+		            <highlightDefaultLanguage>java</highlightDefaultLanguage>
+		            <calloutsExtension>1</calloutsExtension>
+		            <paperType>A4</paperType>
+		            <!--<fop1Extensions>1</fop1Extensions>
+		            <foCustomization>${basedir}/conf/customization-fopdf.xsl</foCustomization>-->
+
+					<!-- This copies content (images, etc) for the HTML version -->
+					<!-- Any parameters specific to HTML version go here -->
+					<htmlStylesheet>css/narrow_style.css</htmlStylesheet>
+					<!-- <includes>titlepage/titlepage.templates.xml</includes> -->
+					<includes>SCViewerHelp.xml</includes>
+					<chunkedOutput>true</chunkedOutput>
+					<xincludeSupported>true</xincludeSupported>
+					<!-- <foCustomization>src/test/resources/docbook-fo.xsl</foCustomization> -->
+					<eclipsePluginId>com.minres.scviewer.doc</eclipsePluginId>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
