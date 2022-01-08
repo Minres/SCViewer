@@ -16,6 +16,7 @@ http://www.accellera.org/activities/committees/systemc-verification.
 === SCViewer features
 
 Features include:
+
 * support of VCD files (compressed and uncompressed)
 ** real numbers
 ** showing vectors and real numbers as analog (step-wise & continuous)
