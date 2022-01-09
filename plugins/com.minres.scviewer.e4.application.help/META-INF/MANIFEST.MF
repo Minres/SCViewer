@@ -5,4 +5,4 @@ Bundle-SymbolicName: com.minres.scviewer.e4.application.help;singleton:=true
 Bundle-Version: 2.15.1
 Bundle-Vendor: MINRES Technologies GmbH
 Automatic-Module-Name: com.minres.scviewer.e4.application.help
-Bundle-RequiredExecutionEnvironment: JavaSE-11, JavaSE-15
+Bundle-RequiredExecutionEnvironment: JavaSE-11
