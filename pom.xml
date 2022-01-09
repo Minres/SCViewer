@@ -29,7 +29,7 @@
 	</modules>
 
 	<properties>
-		<tycho-version>1.5.0</tycho-version>
+		<tycho-version>2.3.0</tycho-version>
 		<groovy-eclipse-compiler-version>3.6.0-03</groovy-eclipse-compiler-version>
 		<groovy-eclipse-batch-version>3.0.3-01</groovy-eclipse-batch-version>
 		<software.download.area>${project.basedir}/../../..</software.download.area>
@@ -74,6 +74,9 @@
 							<version>2.15.1</version>
 						</artifact>
 					</target>
+              		<executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironment>
+		            <executionEnvironmentDefault>org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironmentDefault>
+					<includePackedArtifacts>true</includePackedArtifacts>
 					<environments>
 						<environment>
 							<os>linux</os>
