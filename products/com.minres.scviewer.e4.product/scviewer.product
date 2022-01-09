@@ -63,6 +63,7 @@
       <feature id="org.eclipse.e4.rcp" installMode="root"/>
       <feature id="com.opcoach.e4.preferences.feature" installMode="root"/>
       <feature id="com.minres.scviewer.e4.help.feature" installMode="root"/>
+      <feature id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped" installMode="root"/> 
    </features>
 
    <configurations>

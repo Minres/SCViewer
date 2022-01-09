@@ -74,6 +74,9 @@
 							<version>2.15.1</version>
 						</artifact>
 					</target>
+              		<executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironment>
+		            <executionEnvironmentDefault>org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironmentDefault>
+					<includePackedArtifacts>true</includePackedArtifacts>
 					<environments>
 						<environment>
 							<os>linux</os>
