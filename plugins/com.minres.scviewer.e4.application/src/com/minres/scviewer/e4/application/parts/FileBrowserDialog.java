@@ -115,7 +115,7 @@ public class FileBrowserDialog extends TrayDialog {
 		getButton(IDialogConstants.OK_ID).setEnabled(!tableViewer.getSelection().isEmpty());
 		if(parent instanceof Shell) {
 			Point size = ((Shell)parent).computeSize(SWT.DEFAULT, SWT.DEFAULT);
-			((Shell)parent).setSize(size.x, 400);
+			((Shell)parent).setSize(Math.max(size.x, 600), Math.max(size.y, 450));
 			((Shell)parent).setText("Select database");
 		}
 		return ret;
