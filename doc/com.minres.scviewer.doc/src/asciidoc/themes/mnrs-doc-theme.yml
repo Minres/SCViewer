@@ -1,0 +1,55 @@
+page:
+  layout: portrait
+  margin: [2.3cm, 2cm, 2cm, 2.2cm]
+  size: A4
+base:
+  font-color: #000000
+  font-color-mnrs-grey: #6a747c
+  font-color-mnrs-blue: #197788
+  font-family: titillium
+  font-size: 12
+  line-height-length: 16
+  line-height: $base-line-height-length / $base-font-size
+  align: justify
+  vertical-spacing: $base-line-height-length
+heading:
+  font-color: $base-font-color-mnrs-grey
+  font-size: $base-font-size * 1.25
+  font-style: bold
+  line-height: $base-line-height * 1.2
+  margin-bottom: $vertical-spacing
+link:
+  font-color: $base_font-color-mnrs-blue 
+outline-list:
+  indent: $base-font-size * 1.5
+footer:
+  height: $base-line-height-length * 3.0
+  font-color:  $base-font-color-mnrs-grey
+  font-size: $base-font-size * 0.9
+  line-height: 1
+  recto:
+    left:
+      content: '{description} v{revision}, &#169; 2021 MINRES'
+    right:
+      content: '{page-number}'
+  verso:
+    left:
+      content: $footer_recto_right_content
+    right:
+      content: $footer_recto_left_content
+table:
+  border_color: $base-font-color
+  border_width: 0.1
+title-page:
+  align: right
+  font-color: $base-font-color-mnrs-grey
+  font-size: $base-font-size * 1.80
+  font-style: bold
+font:
+   fallbacks: titilliumtext22l002-webfont.ttf
+   catalog:
+      titillium:
+        normal: titilliumtext22l002-webfont.ttf
+        bold: titilliumtext22l005-webfont.ttf
+        italic: TitilliumWeb-Italic.ttf
+        bold_italic: TitilliumWeb-BoldItalic.ttf

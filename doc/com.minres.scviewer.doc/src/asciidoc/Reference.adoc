@@ -1,5 +1,3 @@
-// ///////////////////////////////////////////////////////////////////////////////////////////////////// Reference //////////////////////////////////////////////////////
-
 [#_reference]
 == Reference
 
@@ -54,4 +52,4 @@ Legend:
 | Key PgDown |          | ZoomBar  | scroll window to the right (fast) 
 | Key Pos1   |          | ZoomBar  | scroll to begin                   
 | Key End    |          | ZoomBar  | scroll to end                     
-
+|===

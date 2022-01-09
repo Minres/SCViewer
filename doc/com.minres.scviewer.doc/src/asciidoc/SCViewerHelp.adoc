@@ -1,5 +1,6 @@
 [#_start]
 = SCViewer User Guide
+:title-logo-image: image:Minres_logo_docs.png[width=750, align="right"]
 :doctype: book
 :source-highlighter: coderay
 :coderay-linenums-mode: inline
@@ -8,21 +9,31 @@
 :icons: font
 //add table-of-contents (toc) and set its depth
 :toc:
-:toclevels: 6
+:toclevels: 3
+:data-uri:                             
+:sectnums:                                                          
+:toc-title: Contents                                              
+:homepage: https://www.minres.com/                                       
+:keywords:                                             
+:title-page: 
+:xrefstyle: short
+:table-caption: Table
+:figure-caption: Figure
+:appendix-caption: Appendix
+:section-refsig: Chapter
 //set directories
 :imagesdir: ./images
 :iconsdir: ./icons
 :stylesdir: ./styles
 :scriptsdir: ./js
-:title-logo-image: image:Minres_logo_square.png[]
-//add math support, also do via cmd-line a 'gem install asciimath'
-:stem: 
+:pdf-themesdir: ./themes
+:pdf-theme: mnrs-doc 
+:pdf-fontsdir: ./fonts
+
 
 // unset toc, otherwise it appears in table cells -> known bug, should be fixed in later versions!
 :toc!:
 
-// ///////////////////////////////////////////////////////////////////////////////////////////////////// OVERVIEW ///////////////////////////////////////////////////////
 include::Overview.adoc[]
 
-// ///////////////////////////////////////////////////////////////////////////////////////////////////// Reference //////////////////////////////////////////////////////
 include::Reference.adoc[]
