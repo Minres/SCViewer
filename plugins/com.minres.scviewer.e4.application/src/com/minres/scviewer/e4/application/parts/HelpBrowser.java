@@ -1,4 +1,4 @@
-package com.minres.scviewer.e4.application.parts.help;
+package com.minres.scviewer.e4.application.parts;
 
 import java.io.File;
 

@@ -251,10 +251,10 @@
     </toolbar>
   </descriptors>
   <snippets xsi:type="basic:Window" xmi:id="_R8mJUEhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.window.web_help" selectedElement="_R8mJUUhwEeyp3vLifEzGbQ" label="SCViewer Web Help" width="800" height="600">
-    <children xsi:type="basic:Part" xmi:id="_R8mJUUhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.help.HelpBrowser"/>
+    <children xsi:type="basic:Part" xmi:id="_R8mJUUhwEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.HelpBrowser"/>
   </snippets>
   <snippets xsi:type="basic:Window" xmi:id="_cg-28HClEeyNn6bZ9_VasA" elementId="com.minres.scviewer.e4.application.window.help_content" selectedElement="_cg-28XClEeyNn6bZ9_VasA" label="SCViewer Help Content" width="800" height="600">
-    <children xsi:type="basic:Part" xmi:id="_cg-28XClEeyNn6bZ9_VasA" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.help.HelpBrowser"/>
+    <children xsi:type="basic:Part" xmi:id="_cg-28XClEeyNn6bZ9_VasA" elementId="com.minres.scviewer.e4.application.part.container" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.HelpBrowser"/>
   </snippets>
   <commands xmi:id="_95PfvHNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.file.exit" commandName="Quit Command"/>
   <commands xmi:id="_95PfwHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.open" commandName="Open Command"/>
