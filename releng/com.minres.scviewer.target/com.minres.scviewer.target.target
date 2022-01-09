@@ -3,7 +3,7 @@
 <target name="com.minres.scviewer.target" sequenceNumber="138">
 <locations>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="http://download.eclipse.org/releases/2020-03/"/>
+		<repository location="http://download.eclipse.org/releases/2021-09/"/>
 		<unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
 		<unit id="org.eclipse.equinox.p2.sdk.feature.jar" version="0.0.0"/> <!-- needed by Linux exectable-->
 		<unit id="org.eclipse.equinox.sdk.feature.group" version="0.0.0"/>
@@ -13,12 +13,8 @@
 		<unit id="org.eclipse.pde.feature.group" version="0.0.0"/>	<!-- org.junit for testing -->
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="https://www.opcoach.com/repository/2020-03/"/>
+		<repository location="https://www.opcoach.com/repository/2021-09/"/>
 		<unit id="com.opcoach.e4.preferences.feature.feature.group" version="0.0.0"/>
-	</location>
-	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="http://dist.springsource.org/snapshot/GRECLIPSE/e4.15/"/>
-		<unit id="org.codehaus.groovy25.feature.feature.group" version="0.0.0"/>
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 		<repository location="http://download.eclipse.org/nattable/releases/1.6.0/repository/"/>
@@ -36,6 +32,11 @@
 		<unit id="org.eclipse.collections.feature.feature.group" version="0.0.0"/>
 		<unit id="org.eclipse.collections.feature.source.feature.group" version="0.0.0"/>
 	</location>
+	<!--
+    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
+      <unit id="org.eclipse.justj.openjdk.hotspot.jre.full.feature.group" version="0.0.0"/>
+      <repository location="https://download.eclipse.org/justj/sandbox/jres/14/updates/nightly/latest"/>
+    </location>-->
 </locations>
-	<targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11"/>
+	<targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-15"/>
 </target>
