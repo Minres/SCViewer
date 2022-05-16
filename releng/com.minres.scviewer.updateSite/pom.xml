@@ -67,9 +67,9 @@
 							<appArgLine>-application org.eclipse.ant.core.antRunner -buildfile packaging-p2-composite.ant p2.composite.add -Dsite.label="SCViewer Software Repository" -Dproject.build.directory=${project.build.directory} -DunqualifiedVersion=${unqualifiedVersion} -Dsoftware.download.area="${software.download.area}/SCViewer-GHP/repository"</appArgLine>
 							<repositories>
 								<repository>
-									<id>2020-03</id>
+									<id>2021-12</id>
 									<layout>p2</layout>
-									<url>http://download.eclipse.org/releases/2020-03/</url>
+									<url>http://download.eclipse.org/releases/2021-12/</url>
 								</repository>
 							</repositories>
 							<dependencies>
