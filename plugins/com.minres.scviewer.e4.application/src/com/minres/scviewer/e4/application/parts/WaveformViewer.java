@@ -109,7 +109,6 @@ import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
 /**
  * The Class WaveformViewerPart.
  */
-@SuppressWarnings("restriction")
 public class WaveformViewer implements IFileChangeListener, IPreferenceChangeListener, DisposeListener {
 
 	/** The Constant ACTIVE_WAVEFORMVIEW. */

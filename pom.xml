@@ -108,24 +108,13 @@
 							<goal>plugin-source</goal>
 						</goals>
 					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.eclipse.tycho.extras</groupId>
-				<artifactId>tycho-source-feature-plugin</artifactId>
-				<version>${tycho-version}</version>
-
-				<executions>
 					<execution>
-						<id>source-feature</id>
-						<phase>package</phase>
+						<id>feature-source</id>
 						<goals>
-							<goal>source-feature</goal>
+							<goal>feature-source</goal>
 						</goals>
 					</execution>
 				</executions>
-
 				<configuration>
 					<excludes>
 						<plugin id="com.google.guava" />
@@ -135,9 +124,12 @@
 						<plugin id="org.eclipse.core.filesystem.linux.x86_64" />
 						<plugin id="org.eclipse.core.filesystem.win32.x86_64" />
 						<plugin id="com.opcoach.e4.preferences" />
+						<plugin id="javax.servlet" />
+						<feature id="com.minres.scviewer.e4.help.feature"/>
 					</excludes>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-p2-plugin</artifactId>

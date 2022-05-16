@@ -18,7 +18,6 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
 
-@SuppressWarnings("restriction")
 public class EnableTxDetails {
 	static final String TAG_NAME = "EnableTxDetails"; //$NON-NLS-1$
 
