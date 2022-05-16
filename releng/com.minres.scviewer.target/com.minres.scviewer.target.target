@@ -37,6 +37,11 @@
 		<repository location="https://download.eclipse.org/justj/jres/15/updates/release/latest"/>
 		<unit id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.feature.group" version="0.0.0"/>
 	</location>
+	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+		<repository location="https://download.eclipse.org/tools/orbit/downloads/2021-09"/>
+		<unit id="org.apache.commons.compress" version="1.20.0.v20210713-1928"/>
+		<unit id="org.apache.commons.compress.source" version="1.20.0.v20210713-1928"/>
+	</location>
 </locations>
 	<targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-15"/>
 </target>
