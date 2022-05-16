@@ -1,0 +1,25 @@
+[#_introduction]
+== Introduction
+
+[#_overview]
+=== SCViewer overview
+
+SCViewer is composed of a set of eclipse plugins to display VCD and transaction streams 
+created by the SystemC VCD trace implementation and the SystemC Verification Library (SCV).
+For further description of the SCV please refer to 
+http://www.accellera.org/activities/committees/systemc-verification.
+
+
+[#_features]
+=== SCViewer features
+
+Features include:
+
+* support of VCD files (compressed and uncompressed)
+** real numbers
+** showing vectors and real numbers as analog (step-wise & continuous)
+* various value representations of bit vectors
+* support of SCV transaction recordings in various formats
+** text log files (compressed and uncompressed)
+** sqlite based 
+** visualization of transaction relations

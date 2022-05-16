@@ -1,17 +1,22 @@
 package com.minres.scviewer.e4.application.parts;
 
+import java.io.File;
+
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.e4.core.contexts.IEclipseContext;
+import org.eclipse.e4.ui.model.application.ui.MUIElement;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.ResourceLocator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTError;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -19,66 +24,53 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ProgressBar;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
 import com.minres.scviewer.e4.application.Messages;
 
-public class HelpDialog extends Dialog {
-	/**
-	 * Create the dialog.
-	 *
-	 * @param parentShell the parent shell
-	 */
-	@Inject
-	public HelpDialog(Shell parentShell) {
-		super(parentShell);
-		setShellStyle(getShellStyle() | SWT.MODELESS | SWT.MAX | SWT.BORDER | SWT.TITLE);
-		setBlockOnOpen(false);
+public class HelpBrowser {
+
+	@Inject IEclipseContext ctx;
+	
+	@Inject MUIElement element;
+	
+	private static void decorateItem(ToolItem item, String label, String imageName) {
+		String fullpath = File.separator+"icons"+File.separator+imageName; //$NON-NLS-1$
+		ImageDescriptor descr =  ResourceLocator.imageDescriptorFromBundle("com.minres.scviewer.e4.application", fullpath).orElse(null); //$NON-NLS-1$
+		if(descr == null) {
+			item.setText(label);
+		} else {
+			item.setImage(descr.createImage());
+			item.setToolTipText(label);
+		}
+		item.setData(label);
 	}
 
-	@Override
-	protected boolean isResizable() {
-		return true;
-	}
-
-	@Override
-	protected Point getInitialSize() {
-		return new Point(800, 600);
-	}
-
-	/**
-	 * Create contents of the dialog.
-	 *
-	 * @param parent the parent
-	 * @return the control
-	 */
-	@Override
-	protected Control createDialogArea(Composite parent) {
-		Composite container = (Composite) super.createDialogArea(parent);
+	@PostConstruct
+	protected Control createComposite(Composite container, @Named("help_url") String helpUrl) {
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 3;
 		container.setLayout(gridLayout);
 		ToolBar toolbar = new ToolBar(container, SWT.NONE);
 		ToolItem itemBack = new ToolItem(toolbar, SWT.PUSH);
-		itemBack.setText(Messages.HelpDialog_0);
+		decorateItem(itemBack, Messages.HelpBrowser_0, "arrow_undo.png"); //$NON-NLS-1$
 		ToolItem itemForward = new ToolItem(toolbar, SWT.PUSH);
-		itemForward.setText(Messages.HelpDialog_1);
+		decorateItem(itemForward, Messages.HelpBrowser_1, "arrow_redo.png"); //$NON-NLS-1$
 		ToolItem itemStop = new ToolItem(toolbar, SWT.PUSH);
-		itemStop.setText(Messages.HelpDialog_2);
+		decorateItem(itemStop, Messages.HelpBrowser_2, "cross.png"); //$NON-NLS-1$
 		ToolItem itemRefresh = new ToolItem(toolbar, SWT.PUSH);
-		itemRefresh.setText(Messages.HelpDialog_3);
+		decorateItem(itemRefresh, Messages.HelpBrowser_3, "arrow_refresh.png"); //$NON-NLS-1$
 		ToolItem itemGo = new ToolItem(toolbar, SWT.PUSH);
-		itemGo.setText(Messages.HelpDialog_4);
+		decorateItem(itemGo, Messages.HelpBrowser_4, "accept.png"); //$NON-NLS-1$
 
 		GridData data = new GridData();
 		data.horizontalSpan = 3;
 		toolbar.setLayoutData(data);
 
 		Label labelAddress = new Label(container, SWT.NONE);
-		labelAddress.setText(Messages.HelpDialog_5);
+		labelAddress.setText(Messages.HelpBrowser_5);
 
 		final Text location = new Text(container, SWT.BORDER);
 		data = new GridData();
@@ -86,10 +78,8 @@ public class HelpDialog extends Dialog {
 		data.horizontalSpan = 2;
 		data.grabExcessHorizontalSpace = true;
 		location.setLayoutData(data);
-
-		final Browser browser;
 		try {
-			browser = new Browser(container, SWT.NONE);
+			final Browser browser = new Browser(container, SWT.NONE);
 			data = new GridData();
 			//			data.widthHint = 800;
 			//			data.heightHint =600;
@@ -113,16 +103,16 @@ public class HelpDialog extends Dialog {
 			/* event handling */
 			Listener listener = event -> {
 				ToolItem item = (ToolItem) event.widget;
-				String string = item.getText();
-				if (string.equals(Messages.HelpDialog_0))
+				String string = (String) item.getData();
+				if (string.equals(Messages.HelpBrowser_0))
 					browser.back();
-				else if (string.equals(Messages.HelpDialog_1))
+				else if (string.equals(Messages.HelpBrowser_1))
 					browser.forward();
-				else if (string.equals(Messages.HelpDialog_2))
+				else if (string.equals(Messages.HelpBrowser_2))
 					browser.stop();
-				else if (string.equals(Messages.HelpDialog_3))
+				else if (string.equals(Messages.HelpBrowser_3))
 					browser.refresh();
-				else if (string.equals(Messages.HelpDialog_4))
+				else if (string.equals(Messages.HelpBrowser_4))
 					browser.setUrl(location.getText());
 			};
 			browser.addProgressListener(new ProgressListener() {
@@ -138,40 +128,17 @@ public class HelpDialog extends Dialog {
 				}
 			});
 			browser.addStatusTextListener(event -> status.setText(event.text));
-			browser.addLocationListener(LocationListener.changedAdapter(event -> {
-				if (event.top) location.setText(event.location);
-			}
-					));
+			browser.addLocationListener(LocationListener.changedAdapter(event -> { if (event.top) location.setText(event.location);	}));
 			itemBack.addListener(SWT.Selection, listener);
 			itemForward.addListener(SWT.Selection, listener);
 			itemStop.addListener(SWT.Selection, listener);
 			itemRefresh.addListener(SWT.Selection, listener);
 			itemGo.addListener(SWT.Selection, listener);
 			location.addListener(SWT.DefaultSelection, e -> browser.setUrl(location.getText()));
-
-			browser.setUrl(Messages.HelpDialog_6);
+			browser.setUrl(helpUrl);
 		} catch (SWTError e) {
-			System.out.println(Messages.HelpDialog_7 + e.getMessage());
+			MessageDialog.openWarning(container.getDisplay().getActiveShell(), Messages.HelpBrowser_7,Messages.HelpBrowser_8+e.getMessage());
 		}
 		return container;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	protected void createButtonsForButtonBar(Composite parent) {
-		// create OK button
-		createButton(parent, IDialogConstants.OK_ID, IDialogConstants.CLOSE_LABEL,	true);
-	}
-
-	/**
-	 * Open the dialog.
-	 * @return the result
-	 */
-	@PostConstruct
-	@Override
-	public int open() {
-		return super.open();
-	}
-
 }

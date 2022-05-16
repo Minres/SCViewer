@@ -4,10 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.minres.scviewer</groupId>
 	<artifactId>com.minres.scviewer.parent</artifactId>
-	<version>2.15.1</version>
+	<version>2.16.0</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>releng/com.minres.scviewer.target</module>
+		<module>doc/com.minres.scviewer.doc</module>
 		<module>plugins/com.minres.scviewer.database</module>
 		<module>plugins/com.minres.scviewer.database.sqlite</module>
 		<module>plugins/com.minres.scviewer.database.text</module>
@@ -15,20 +16,20 @@
 		<module>tests/com.minres.scviewer.database.test</module>
 		<module>plugins/com.minres.scviewer.database.ui.swt</module>
 		<module>plugins/com.minres.scviewer.e4.application</module>
+		<module>plugins/com.minres.scviewer.e4.application.help</module>
 		<module>plugins/com.minres.scviewer.ui</module>
 		<module>features/com.minres.scviewer.database.feature</module>
 		<module>features/com.minres.scviewer.ui.feature</module>
 		<module>features/com.minres.scviewer.feature</module>
 		<module>features/com.minres.scviewer.e4.platform.feature</module>
 		<module>features/com.minres.scviewer.e4.feature</module>
+		<module>features/com.minres.scviewer.e4.help.feature</module>
 		<module>releng/com.minres.scviewer.updateSite</module>
 		<module>products/com.minres.scviewer.e4.product</module>
 	</modules>
 
 	<properties>
-		<tycho-version>1.5.0</tycho-version>
-		<groovy-eclipse-compiler-version>3.6.0-03</groovy-eclipse-compiler-version>
-		<groovy-eclipse-batch-version>3.0.3-01</groovy-eclipse-batch-version>
+		<tycho-version>2.3.0</tycho-version>
 		<software.download.area>${project.basedir}/../../..</software.download.area>
 	</properties>
 
@@ -68,9 +69,12 @@
 						<artifact>
 							<groupId>com.minres.scviewer</groupId>
 							<artifactId>com.minres.scviewer.target</artifactId>
-							<version>2.15.1</version>
+							<version>2.16.0</version>
 						</artifact>
 					</target>
+              		<executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironment>
+		            <executionEnvironmentDefault>org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironmentDefault>
+					<includePackedArtifacts>true</includePackedArtifacts>
 					<environments>
 						<environment>
 							<os>linux</os>
@@ -102,24 +106,13 @@
 							<goal>plugin-source</goal>
 						</goals>
 					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.eclipse.tycho.extras</groupId>
-				<artifactId>tycho-source-feature-plugin</artifactId>
-				<version>${tycho-version}</version>
-
-				<executions>
 					<execution>
-						<id>source-feature</id>
-						<phase>package</phase>
+						<id>feature-source</id>
 						<goals>
-							<goal>source-feature</goal>
+							<goal>feature-source</goal>
 						</goals>
 					</execution>
 				</executions>
-
 				<configuration>
 					<excludes>
 						<plugin id="com.google.guava" />
@@ -129,9 +122,12 @@
 						<plugin id="org.eclipse.core.filesystem.linux.x86_64" />
 						<plugin id="org.eclipse.core.filesystem.win32.x86_64" />
 						<plugin id="com.opcoach.e4.preferences" />
+						<plugin id="javax.servlet" />
+						<feature id="com.minres.scviewer.e4.help.feature"/>
 					</excludes>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-p2-plugin</artifactId>

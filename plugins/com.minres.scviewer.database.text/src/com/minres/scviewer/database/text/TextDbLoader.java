@@ -13,6 +13,7 @@ package com.minres.scviewer.database.text;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,6 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorInputStream;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -56,6 +58,8 @@ import com.minres.scviewer.database.tx.ITx;
  */
 public class TextDbLoader implements IWaveformDbLoader {
 
+	enum FileType { NONE, PLAIN, GZIP, LZ4};
+	
 	/** the file size limit of a zipped txlog where the loader starts to use a file mapped database */
 	private static final long MEMMAP_LIMIT=256l*1024l*1024l;
 	
@@ -190,8 +194,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 	@Override
 	public boolean canLoad(File inputFile) {
 		if (!inputFile.isDirectory() && inputFile.exists()) {
-			boolean gzipped = isGzipped(inputFile);
-			try(InputStream stream = gzipped ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile)){
+			FileType fType = getFileType(inputFile);
+			try(InputStream stream = fType==FileType.GZIP ? new GZIPInputStream(new FileInputStream(inputFile)) :
+				fType==FileType.LZ4? new FramedLZ4CompressorInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile)){
 				byte[] buffer = new byte[x.length];
 				int readCnt = stream.read(buffer, 0, x.length);
 				if (readCnt == x.length) {
@@ -213,13 +218,18 @@ public class TextDbLoader implements IWaveformDbLoader {
 	 * @param f the f
 	 * @return true, if is gzipped
 	 */
-	private static boolean isGzipped(File f) {
+	private static FileType getFileType(File f) {
 		try (InputStream is = new FileInputStream(f)) {
-			byte[] signature = new byte[2];
+			byte[] signature = new byte[4];
 			int nread = is.read(signature); // read the gzip signature
-			return nread == 2 && signature[0] == (byte) 0x1f && signature[1] == (byte) 0x8b;
+			if(nread > 2 && signature[0] == (byte) 0x1f && signature[1] == (byte) 0x8b)
+				return FileType.GZIP;
+			else if(nread>4 && signature[0] == (byte) 0x04 && signature[1] == (byte) 0x22 && signature[2] == (byte) 0x4d && signature[3] == (byte) 0x18)
+				return FileType.LZ4;
+			else
+				return FileType.PLAIN;
 		} catch (IOException e) {
-			return false;
+			return FileType.NONE;
 		}
 	}
 
@@ -235,8 +245,8 @@ public class TextDbLoader implements IWaveformDbLoader {
 	@Override
 	public void load(IWaveformDb db, File file) throws InputFormatException {
 		dispose();
-		boolean gzipped = isGzipped(file);
-		if (file.length() < MEMMAP_LIMIT * (gzipped ? 1 : 10)
+		FileType fType = getFileType(file);
+		if (file.length() < MEMMAP_LIMIT * (fType!=FileType.PLAIN ? 1 : 10)
 				|| "memory".equals(System.getProperty("ScvBackingDB", "file")))
 			mapDb = DBMaker.memoryDirectDB().make();
 		else {
@@ -256,7 +266,8 @@ public class TextDbLoader implements IWaveformDbLoader {
 		try {
 			
 			parser.txSink = mapDb.hashMap("transactions", Serializer.LONG, Serializer.JAVA).create();
-			parser.parseInput(gzipped ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file));
+			InputStream is = new BufferedInputStream(new FileInputStream(file));
+			parser.parseInput(fType==FileType.GZIP ? new GZIPInputStream(is) : fType==FileType.LZ4? new FramedLZ4CompressorInputStream(is) : is);
 			transactions = parser.txSink;
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 		} catch (Exception e) {

@@ -109,7 +109,6 @@ import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
 /**
  * The Class WaveformViewerPart.
  */
-@SuppressWarnings("restriction")
 public class WaveformViewer implements IFileChangeListener, IPreferenceChangeListener, DisposeListener {
 
 	/** The Constant ACTIVE_WAVEFORMVIEW. */
@@ -787,18 +786,15 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	protected void restoreWaveformViewerState(Map<String, String> state) {
 		Integer waves = state.containsKey(SHOWN_WAVEFORM+"S") ? Integer.parseInt(state.get(SHOWN_WAVEFORM + "S")):0; //$NON-NLS-1$ //$NON-NLS-2$
 		List<TrackEntry> trackEntries = new LinkedList<>();
+		List<TrackEntry> selectedTrackEntries = new LinkedList<>();
 		for (int i = 0; i < waves; i++) {
 			IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
 			if (waveform != null) {
 				TrackEntry trackEntry = waveformPane.addWaveform(waveform, -1);
 				//check if t is selected
-				boolean isSelected = Boolean.parseBoolean(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED));
-				if(isSelected) {
-					trackEntry.selected = true;
-				} else {
-					trackEntry.selected = false;
-				}
 				trackEntries.add(trackEntry);
+				if(Boolean.parseBoolean(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED)))
+					selectedTrackEntries.add(trackEntry);
 				String v = state.get(SHOWN_WAVEFORM + i + VALUE_DISPLAY);
 				if(v!=null)
 					trackEntry.valueDisplay=ValueDisplay.valueOf(v);
@@ -856,6 +852,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			} catch (NumberFormatException e) {
 			}
 		}
+		ISelection sel = new StructuredSelection(selectedTrackEntries);
+		waveformPane.setSelection(sel);
 		updateAll();
 	}
 

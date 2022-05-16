@@ -91,6 +91,7 @@ import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
 
 public class WaveformView implements IWaveformView {
 
@@ -111,6 +112,10 @@ public class WaveformView implements IWaveformView {
 	private final Canvas nameList;
 
 	private final Canvas valueList;
+
+	private final Control nameFill;
+	
+	private final Control valueFill;
 
 	final WaveformCanvas waveformCanvas;
 
@@ -204,7 +209,7 @@ public class WaveformView implements IWaveformView {
 					long endTime = waveformCanvas.getTimeForOffset(end.x);
 					if(startTime<endTime) {
 						waveformCanvas.setVisibleRange(startTime, endTime);
-					} else {
+					} else if(start.x!=end.x){
 						long targetTimeRange = startTime-endTime;
 						long currentTimeRange = waveformCanvas.getMaxVisibleTime() - waveformCanvas.getMinVisibleTime();
 						long factor = currentTimeRange/targetTimeRange *waveformCanvas.getScale();
@@ -266,11 +271,24 @@ public class WaveformView implements IWaveformView {
 			switch (e.type) {
 			case SWT.MouseWheel:
 				if((e.stateMask & SWT.CTRL) != 0) {
-					if(e.count<0)
+					if(e.count<0) // up scroll
 						waveformCanvas.setScale(waveformCanvas.getScale()*11/10);
-					else
+					else // down scroll
 						waveformCanvas.setScale(waveformCanvas.getScale()*10/11);
-				} 
+					e.doit=false;
+				} else if((e.stateMask & SWT.SHIFT) != 0) {
+					long upper = waveformCanvas.getMaxVisibleTime();
+					long lower = waveformCanvas.getMinVisibleTime();
+					long duration = upper-lower;
+					if(e.count<0) { // up scroll
+						long newLower = Math.min(waveformCanvas.getMaxTime()-duration, lower+duration/10);
+						waveformCanvas.setMinVisibleTime(newLower);
+					} else {// down scroll
+						long newLower = Math.max(0, lower-duration/10);
+						waveformCanvas.setMinVisibleTime(newLower);
+					}
+					e.doit=false;
+				}
 				break;
 			case SWT.MouseDown:
 				start = new Point(e.x, e.y);
@@ -330,8 +348,26 @@ public class WaveformView implements IWaveformView {
 		rightSash.setBackground(SWTResourceManager.getColor(SWT.COLOR_GRAY));
 
 		Composite valuePane = new Composite(rightSash, SWT.NONE);
-		waveformCanvas = new WaveformCanvas(rightSash, SWT.NONE, styleProvider);
-
+		
+		Composite waveformPane = new Composite(rightSash, SWT.NONE);
+		GridLayout gl_waveformPane = new GridLayout(1, false);
+		gl_waveformPane.verticalSpacing = 0;
+		gl_waveformPane.marginWidth = 0;
+		gl_waveformPane.marginHeight = 0;
+		waveformPane.setLayout(gl_waveformPane);
+		
+		waveformCanvas = new WaveformCanvas(waveformPane, SWT.NONE | SWT.V_SCROLL /*| SWT.H_SCROLL*/, styleProvider, new ZoomBar.IProvider() {
+			
+			@Override
+			public ZoomBar getScrollBar() {
+				ZoomBar timeSliderPane = new ZoomBar(waveformPane, SWT.NONE);
+				GridData gd_timeSliderPane = new GridData(SWT.FILL, SWT.BOTTOM, false, false, 1, 1);
+				timeSliderPane.setLayoutData(gd_timeSliderPane);
+				return timeSliderPane;
+			}
+		});
+		waveformCanvas.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+		
 		// create the name pane
 		createTextPane(namePane, "Name");
 
@@ -347,7 +383,10 @@ public class WaveformView implements IWaveformView {
 			@Override
 			public void controlResized(ControlEvent e) {
 				nameListScrolled.getVerticalBar().setVisible(false);
-
+				if(nameListScrolled.getSize().y == nameList.getSize().y) {
+					((GridData)nameFill.getLayoutData()).heightHint=18;
+					namePane.layout();
+				}
 			}
 		});
 		nameList = new Canvas(nameListScrolled, SWT.NONE) {
@@ -366,7 +405,8 @@ public class WaveformView implements IWaveformView {
 		});
 		nameList.addMouseListener(nameValueMouseListener);
 		nameListScrolled.setContent(nameList);
-
+		nameFill = createFill(namePane);
+		
 		createTextPane(valuePane, "Value");
 
 		valuePane.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
@@ -379,7 +419,10 @@ public class WaveformView implements IWaveformView {
 			@Override
 			public void controlResized(ControlEvent e) {
 				valueListScrolled.getVerticalBar().setVisible(false);
-
+				if(valueListScrolled.getSize().y == valueList.getSize().y) {
+					((GridData)valueFill.getLayoutData()).heightHint=18;
+					valuePane.layout();
+				}
 			}
 		});
 		valueList = new Canvas(valueListScrolled, SWT.NONE) {
@@ -398,6 +441,7 @@ public class WaveformView implements IWaveformView {
 		});
 		valueList.addMouseListener(nameValueMouseListener);
 		valueListScrolled.setContent(valueList);
+		valueFill = createFill(valuePane);
 
 		waveformCanvas.setMaxTime(1);
 		waveformCanvas.addPaintListener(waveformMouseListener);
@@ -455,6 +499,15 @@ public class WaveformView implements IWaveformView {
 	            }
 	        }
 	    });
+	}
+
+	private Control createFill(Composite pane) {
+		Label cLabel = new Label(pane, SWT.NONE);
+		cLabel.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
+		GridData gd_cLabel = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		gd_cLabel.heightHint = 0;
+		cLabel.setLayoutData(gd_cLabel);
+		return cLabel;
 	}
 
 	private void createTextPane(Composite namePane, String text) {
@@ -522,7 +575,7 @@ public class WaveformView implements IWaveformView {
 			tracksVerticalHeight += streamEntry.height;
 			even = !even;
 		}
-		waveformCanvas.syncScrollBars();
+		waveformCanvas.syncSb();
 		nameList.setSize(nameMaxWidth + 15, tracksVerticalHeight);
 		nameListScrolled.setMinSize(nameMaxWidth + 15, tracksVerticalHeight);
 		nameList.redraw();
