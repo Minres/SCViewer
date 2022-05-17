@@ -186,33 +186,6 @@ public class TextDbLoader implements IWaveformDbLoader {
 	}
 
 	/**
-	 * Can load.
-	 *
-	 * @param inputFile the input file
-	 * @return true, if successful
-	 */
-	@Override
-	public boolean canLoad(File inputFile) {
-		if (!inputFile.isDirectory() && inputFile.exists()) {
-			FileType fType = getFileType(inputFile);
-			try(InputStream stream = fType==FileType.GZIP ? new GZIPInputStream(new FileInputStream(inputFile)) :
-				fType==FileType.LZ4? new FramedLZ4CompressorInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile)){
-				byte[] buffer = new byte[x.length];
-				int readCnt = stream.read(buffer, 0, x.length);
-				if (readCnt == x.length) {
-					for (int i = 0; i < x.length; i++)
-						if (buffer[i] != x[i])
-							return false;
-				}
-				return true;
-			} catch (Exception e) {
-				return false;
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * Checks if is gzipped.
 	 *
 	 * @param f the f
@@ -222,9 +195,15 @@ public class TextDbLoader implements IWaveformDbLoader {
 		try (InputStream is = new FileInputStream(f)) {
 			byte[] signature = new byte[4];
 			int nread = is.read(signature); // read the gzip signature
-			if(nread > 2 && signature[0] == (byte) 0x1f && signature[1] == (byte) 0x8b)
+			if(nread >= 2 &&
+					signature[0] == (byte) 0x1f &&
+					signature[1] == (byte) 0x8b)
 				return FileType.GZIP;
-			else if(nread>4 && signature[0] == (byte) 0x04 && signature[1] == (byte) 0x22 && signature[2] == (byte) 0x4d && signature[3] == (byte) 0x18)
+			else if(nread>=4 &&
+					signature[0] == (byte) 0x04 && 
+					signature[1] == (byte) 0x22 &&
+					signature[2] == (byte) 0x4d &&
+					signature[3] == (byte) 0x18)
 				return FileType.LZ4;
 			else
 				return FileType.PLAIN;
@@ -268,10 +247,11 @@ public class TextDbLoader implements IWaveformDbLoader {
 			parser.txSink = mapDb.hashMap("transactions", Serializer.LONG, Serializer.JAVA).create();
 			InputStream is = new BufferedInputStream(new FileInputStream(file));
 			parser.parseInput(fType==FileType.GZIP ? new GZIPInputStream(is) : fType==FileType.LZ4? new FramedLZ4CompressorInputStream(is) : is);
-			transactions = parser.txSink;
 		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 		} catch (Exception e) {
 			throw new InputFormatException(e.toString());
+		} finally {
+			transactions = parser.txSink;			
 		}
 		txStreams.values().parallelStream().forEach(TxStream::calculateConcurrency);
 	}
@@ -351,20 +331,22 @@ public class TextDbLoader implements IWaveformDbLoader {
 		 * @throws IOException Signals that an I/O exception has occurred.
 		 * @throws InputFormatException Signals that the input format is wrong
 		 */
-		void parseInput(InputStream inputStream) throws IOException, InputFormatException {
-			reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-			String curLine = reader.readLine();
-			String nextLine = null;
-			while ((nextLine = reader.readLine()) != null && curLine != null) {
-				curLine = parseLine(curLine, nextLine, false);
-			}
-			if (curLine != null)
-				parseLine(curLine, nextLine, true);
-			for(Entry<Long, ScvTx> e: transactionById.entrySet()) {
-				ScvTx scvTx = e.getValue();
-				scvTx.endTime=loader.maxTime;
-				txSink.put(e.getKey(), scvTx);
-			}
+		void parseInput(InputStream inputStream) throws InputFormatException {
+			try {
+				reader =  new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+				String curLine = reader.readLine();
+				String nextLine = null;
+				while ((nextLine = reader.readLine()) != null && curLine != null) {
+					curLine = parseLine(curLine, nextLine, false);
+				}
+				if (curLine != null)
+					parseLine(curLine, nextLine, true);
+				for(Entry<Long, ScvTx> e: transactionById.entrySet()) {
+					ScvTx scvTx = e.getValue();
+					scvTx.endTime=loader.maxTime;
+					txSink.put(e.getKey(), scvTx);
+				}
+			} catch(IOException e) {}
 		}
 
 		/**

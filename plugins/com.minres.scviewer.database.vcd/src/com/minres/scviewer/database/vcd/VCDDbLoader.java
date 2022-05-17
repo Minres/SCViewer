@@ -66,34 +66,6 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	}
 
 
-	/**
-	 * Can load.
-	 *
-	 * @param inputFile the input file
-	 * @return true, if successful
-	 */
-	@Override
-	public boolean canLoad(File inputFile) {
-		if(!inputFile.isDirectory() || inputFile.exists()) {
-			String name = inputFile.getName();
-			if(!(name.endsWith(".vcd") ||
-					name.endsWith(".vcdz") ||
-					name.endsWith(".vcdgz")  ||
-					name.endsWith(".vcd.gz")) )
-				return false;
-			boolean gzipped = isGzipped(inputFile);
-			try(InputStream stream = gzipped ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile)){
-				byte[] buffer = new byte[8];
-				if (stream.read(buffer, 0, buffer.length) == buffer.length) {
-					return buffer[0]=='$';
-				}
-			} catch (Exception e) {
-				return false;
-			}
-		}
-		return false;
-	}
-
 	/* (non-Javadoc)
 	 * @see com.minres.scviewer.database.ITrDb#load(java.io.File)
 	 */

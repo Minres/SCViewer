@@ -78,24 +78,24 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 		return streams;
 	}
 
-	@Override
-	public boolean canLoad(File inputFile) {
-		if (!inputFile.isDirectory() && inputFile.exists()) {
-			try(InputStream stream = new FileInputStream(inputFile)){
-				byte[] buffer = new byte[x.length];
-				int readCnt = stream.read(buffer, 0, x.length);
-				if (readCnt == x.length) {
-					for (int i = 0; i < x.length; i++)
-						if (buffer[i] != x[i])
-							return false;
-				}
-				return true;
-			} catch (Exception e) {
-				return false;
-			}
-		}
-		return false;
-	}
+//	@Override
+//	public boolean canLoad(File inputFile) {
+//		if (!inputFile.isDirectory() && inputFile.exists()) {
+//			try(InputStream stream = new FileInputStream(inputFile)){
+//				byte[] buffer = new byte[x.length];
+//				int readCnt = stream.read(buffer, 0, x.length);
+//				if (readCnt == x.length) {
+//					for (int i = 0; i < x.length; i++)
+//						if (buffer[i] != x[i])
+//							return false;
+//				}
+//				return true;
+//			} catch (Exception e) {
+//				return false;
+//			}
+//		}
+//		return false;
+//	}
 
 	@Override
 	public void load(IWaveformDb db, File file) throws InputFormatException {

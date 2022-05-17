@@ -19,6 +19,7 @@ import java.util.zip.GZIPInputStream;
 
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.IWaveformDbLoaderFactory;
+import com.minres.scviewer.database.text.TextDbLoader.FileType;
 
 /**
  * The Class TextDbLoader.
@@ -52,21 +53,22 @@ public class TextDbLoaderFactory implements IWaveformDbLoaderFactory {
 	 */
 	@Override
 	public boolean canLoad(File inputFile) {
-		if (!inputFile.isDirectory() && inputFile.exists()) {
-			boolean gzipped = isGzipped(inputFile);
-			try(InputStream stream = gzipped ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile)){
-				byte[] buffer = new byte[x.length];
-				int readCnt = stream.read(buffer, 0, x.length);
-				if (readCnt == x.length) {
-					for (int i = 0; i < x.length; i++)
-						if (buffer[i] != x[i])
-							return false;
-				}
+		try (InputStream is = new FileInputStream(inputFile)) {
+			byte[] signature = new byte[4];
+			int nread = is.read(signature); // read the gzip signature
+			if(nread >= 2 && 
+					signature[0] == (byte) 0x1f && 
+					signature[1] == (byte) 0x8b)
 				return true;
-			} catch (Exception e) {
-				return false;
-			}
-		}
+			else if(nread>=4 && 
+					signature[0] == (byte) 0x04 && 
+					signature[1] == (byte) 0x22 && 
+					signature[2] == (byte) 0x4d && 
+					signature[3] == (byte) 0x18)
+				return true;
+			else
+				return true;
+		} catch (IOException e) {}
 		return false;
 	}
 
