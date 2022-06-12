@@ -11,11 +11,14 @@
  *******************************************************************************/
 package com.minres.scviewer.database.text;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
+
+import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorInputStream;
 
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.IWaveformDbLoaderFactory;
@@ -53,21 +56,16 @@ public class TextDbLoaderFactory implements IWaveformDbLoaderFactory {
 	 */
 	@Override
 	public boolean canLoad(File inputFile) {
+		FileType fType = TextDbLoader.getFileType(inputFile);
 		try (InputStream is = new FileInputStream(inputFile)) {
-			byte[] signature = new byte[4];
-			int nread = is.read(signature); // read the gzip signature
-			if(nread >= 2 && 
-					signature[0] == (byte) 0x1f && 
-					signature[1] == (byte) 0x8b)
-				return true;
-			else if(nread>=4 && 
-					signature[0] == (byte) 0x04 && 
-					signature[1] == (byte) 0x22 && 
-					signature[2] == (byte) 0x4d && 
-					signature[3] == (byte) 0x18)
-				return true;
-			else
-				return true;
+			InputStream plainIs = fType==FileType.GZIP ? new GZIPInputStream(is) : fType==FileType.LZ4? new FramedLZ4CompressorInputStream(is) : is;
+			byte[] buffer = new byte[x.length];
+			int readCnt = plainIs.read(buffer, 0, x.length);
+			if (readCnt == x.length) {
+				for (int i = 0; i < x.length; i++)
+					if (buffer[i] != x[i]) return false;
+			}
+			return true;
 		} catch (IOException e) {}
 		return false;
 	}

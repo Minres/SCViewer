@@ -59,14 +59,14 @@ import com.minres.scviewer.database.tx.ITx;
 public class TextDbLoader implements IWaveformDbLoader {
 
 	enum FileType { NONE, PLAIN, GZIP, LZ4};
-	
+
 	/** the file size limit of a zipped txlog where the loader starts to use a file mapped database */
 	private static final long MEMMAP_LIMIT=256l*1024l*1024l;
-	
+
 	private static final long MAPDB_INITIAL_ALLOC = 512l*1024l*1024l;
-	
+
 	private static final long MAPDB_INCREMENTAL_ALLOC = 128l*1024l*1024l;
-	
+
 	/** The max time. */
 	private Long maxTime = 0L;
 
@@ -191,7 +191,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 	 * @param f the f
 	 * @return true, if is gzipped
 	 */
-	private static FileType getFileType(File f) {
+	static FileType getFileType(File f) {
 		try (InputStream is = new FileInputStream(f)) {
 			byte[] signature = new byte[4];
 			int nread = is.read(signature); // read the gzip signature
@@ -243,7 +243,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 		}
 		TextDbParser parser = new TextDbParser(this);
 		try {
-			
+
 			parser.txSink = mapDb.hashMap("transactions", Serializer.LONG, Serializer.JAVA).create();
 			InputStream is = new BufferedInputStream(new FileInputStream(file));
 			parser.parseInput(fType==FileType.GZIP ? new GZIPInputStream(is) : fType==FileType.LZ4? new FramedLZ4CompressorInputStream(is) : is);
@@ -379,80 +379,86 @@ public class TextDbLoader implements IWaveformDbLoader {
 		 * @throws InputFormatException Signals that the input format is wrong
 		 */
 		private String parseLine(String curLine, String nextLine, boolean last) throws IOException, InputFormatException {
-			String[] tokens = curLine.split("\\s+");
-			if ("tx_record_attribute".equals(tokens[0]) && tokens.length>4) {
-				Long id = Long.parseLong(tokens[1]);
-				String name = tokens[2].substring(1, tokens[2].length()-1);
-				DataType type = DataType.valueOf(tokens[3]);
-				String remaining = tokens.length > 5 ? String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length)) : "";
-				TxAttributeType attrType = getAttrType(name, type, AssociationType.RECORD);
-				transactionById.get(id).attributes.add(new TxAttribute(attrType, getAttrString(attrType, remaining)));
-			} else if ("tx_begin".equals(tokens[0]) && tokens.length>4) {
-				Long id = Long.parseLong(tokens[1]);
-				Long genId = Long.parseLong(tokens[2]);
-				TxGenerator gen = loader.txGenerators.get(genId);
-				ScvTx scvTx = new ScvTx(id, gen.stream.getId(), genId,
-						Long.parseLong(tokens[3]) * stringToScale(tokens[4]));
-				loader.maxTime = loader.maxTime > scvTx.beginTime ? loader.maxTime : scvTx.beginTime;
-				if (nextLine != null && nextLine.charAt(0) == 'a') {
-					int idx = 0;
-					while (nextLine != null && nextLine.charAt(0) == 'a') {
-						String[] attrTokens = nextLine.split("\\s+");
-						TxAttributeType attrType = gen.beginAttrs.get(idx);
-						TxAttribute attr = new TxAttribute(attrType, getAttrString(attrType, attrTokens[1]));
-						scvTx.attributes.add(attr);
-						idx++;
-						nextLine = reader.readLine();
+			if(curLine.charAt(0)=='t') {
+				String[] tokens = curLine.split(" ");
+				//if ("tx_record_attribute".equals(tokens[0]) && tokens.length>4) {
+				if (curLine.charAt(5)=='c' && tokens.length>4) {
+					Long id = Long.parseLong(tokens[1]);
+					String name = tokens[2].substring(1, tokens[2].length()-1);
+					DataType type = DataType.valueOf(tokens[3]);
+					String remaining = tokens.length > 5 ? String.join(" ", Arrays.copyOfRange(tokens, 5, tokens.length)) : "";
+					TxAttributeType attrType = getAttrType(name, type, AssociationType.RECORD);
+					transactionById.get(id).attributes.add(new TxAttribute(attrType, getAttrString(attrType, remaining)));
+				//} else if ("tx_begin".equals(tokens[0]) && tokens.length>4) {
+				} else if (curLine.charAt(3)=='b' && tokens.length>4) {
+					Long id = Long.parseLong(tokens[1]);
+					Long genId = Long.parseLong(tokens[2]);
+					TxGenerator gen = loader.txGenerators.get(genId);
+					ScvTx scvTx = new ScvTx(id, gen.stream.getId(), genId,
+							Long.parseLong(tokens[3]) * stringToScale(tokens[4]));
+					loader.maxTime = loader.maxTime > scvTx.beginTime ? loader.maxTime : scvTx.beginTime;
+					if (nextLine != null && nextLine.charAt(0) == 'a') {
+						int idx = 0;
+						while (nextLine != null && nextLine.charAt(0) == 'a') {
+							String[] attrTokens = nextLine.split("\\s+");
+							TxAttributeType attrType = gen.beginAttrs.get(idx);
+							TxAttribute attr = new TxAttribute(attrType, getAttrString(attrType, attrTokens[1]));
+							scvTx.attributes.add(attr);
+							idx++;
+							nextLine = reader.readLine();
+						}
 					}
-				}
-				transactionById.put(id, scvTx);
-			} else if ("tx_end".equals(tokens[0]) && tokens.length>4) {
-				Long id = Long.parseLong(tokens[1]);
-				ScvTx scvTx = transactionById.get(id);
-				assert Long.parseLong(tokens[2]) == scvTx.generatorId;
-				scvTx.endTime = Long.parseLong(tokens[3]) * stringToScale(tokens[4]);
-				loader.maxTime = loader.maxTime > scvTx.endTime ? loader.maxTime : scvTx.endTime;
-				TxGenerator gen = loader.txGenerators.get(scvTx.generatorId);
-				TxStream stream = loader.txStreams.get(gen.stream.getId());
-				if (scvTx.beginTime == scvTx.endTime) {
-					stream.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
-					gen.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
-				} else {
-					stream.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
-					gen.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
-					stream.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
-					gen.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
-				}
-				if (nextLine != null && nextLine.charAt(0) == 'a') {
-					int idx = 0;
-					while (nextLine != null && nextLine.charAt(0) == 'a') {
-						String[] attrTokens = nextLine.split("\\s+");
-						TxAttributeType attrType = gen.endAttrs.get(idx);
-						TxAttribute attr = new TxAttribute(attrType, getAttrString(attrType, attrTokens[1]));
-						scvTx.attributes.add(attr);
-						idx++;
-						nextLine = reader.readLine();
+					transactionById.put(id, scvTx);
+				//} else if ("tx_end".equals(tokens[0]) && tokens.length>4) {
+				} else if (curLine.charAt(3)=='e' && tokens.length>4) {
+					Long id = Long.parseLong(tokens[1]);
+					ScvTx scvTx = transactionById.get(id);
+					assert Long.parseLong(tokens[2]) == scvTx.generatorId;
+					scvTx.endTime = Long.parseLong(tokens[3]) * stringToScale(tokens[4]);
+					loader.maxTime = loader.maxTime > scvTx.endTime ? loader.maxTime : scvTx.endTime;
+					TxGenerator gen = loader.txGenerators.get(scvTx.generatorId);
+					TxStream stream = loader.txStreams.get(gen.stream.getId());
+					if (scvTx.beginTime == scvTx.endTime) {
+						stream.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
+						gen.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
+					} else {
+						stream.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
+						gen.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
+						stream.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
+						gen.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
 					}
+					if (nextLine != null && nextLine.charAt(0) == 'a') {
+						int idx = 0;
+						while (nextLine != null && nextLine.charAt(0) == 'a') {
+							String[] attrTokens = nextLine.split("\\s+");
+							TxAttributeType attrType = gen.endAttrs.get(idx);
+							TxAttribute attr = new TxAttribute(attrType, getAttrString(attrType, attrTokens[1]));
+							scvTx.attributes.add(attr);
+							idx++;
+							nextLine = reader.readLine();
+						}
+					}
+					txSink.put(scvTx.getId(), scvTx);
+					transactionById.remove(id);
+				//} else if ("tx_relation".equals(tokens[0]) && tokens.length>3) {
+				} else if (curLine.charAt(5)=='l' && tokens.length>3) {
+					Long tr2 = Long.parseLong(tokens[2]);
+					Long tr1 = Long.parseLong(tokens[3]);
+					String relType = tokens[1].substring(1, tokens[1].length() - 1);
+					if (!loader.relationTypes.containsKey(relType))
+						loader.relationTypes.put(relType, RelationTypeFactory.create(relType));
+					ScvRelation rel = new ScvRelation(loader.relationTypes.get(relType), tr1, tr2);
+					loader.relationsOut.put(tr1, rel);
+					loader.relationsIn.put(tr2, rel);
 				}
-				txSink.put(scvTx.getId(), scvTx);
-				transactionById.remove(id);
-			} else if ("tx_relation".equals(tokens[0]) && tokens.length>3) {
-				Long tr2 = Long.parseLong(tokens[2]);
-				Long tr1 = Long.parseLong(tokens[3]);
-				String relType = tokens[1].substring(1, tokens[1].length() - 1);
-				if (!loader.relationTypes.containsKey(relType))
-					loader.relationTypes.put(relType, RelationTypeFactory.create(relType));
-				ScvRelation rel = new ScvRelation(loader.relationTypes.get(relType), tr1, tr2);
-				loader.relationsOut.put(tr1, rel);
-				loader.relationsIn.put(tr2, rel);
-			} else if ("scv_tr_stream".equals(tokens[0])) {
+			} else if (curLine.length()>13 && "scv_tr_stream".equals(curLine.substring(0, 13))) {
 				Matcher matcher = scv_tr_stream.matcher(curLine);
 				if (matcher.matches()) {
 					Long id = Long.parseLong(matcher.group(1));
 					TxStream stream = new TxStream(loader, id, matcher.group(2), matcher.group(3));
 					add(id, stream);
 				}
-			} else if ("scv_tr_generator".equals(tokens[0])) {
+			} else if (curLine.length()>16 && "scv_tr_generator".equals(curLine.substring(0, 16))) {
 				Matcher matcher = scv_tr_generator.matcher(curLine);
 				if ((matcher.matches())) {
 					Long id = Long.parseLong(matcher.group(1));
@@ -460,21 +466,21 @@ public class TextDbLoader implements IWaveformDbLoader {
 					generator = new TxGenerator(loader, id, matcher.group(2), stream);
 					add(id, generator);
 				}
-			} else if ("begin_attribute".equals(tokens[0])) {
+			} else if (curLine.length()>15 && "begin_attribute".equals(curLine.substring(0, 15))) {
 				Matcher matcher = begin_attribute.matcher(curLine);
 				if ((matcher.matches())) {
 					TxAttributeType attrType = getAttrType(matcher.group(2), DataType.valueOf(matcher.group(3)),
 							AssociationType.BEGIN);
 					generator.beginAttrs.add(attrType);
 				}
-			} else if ("end_attribute".equals(tokens[0])) {
+			} else if (curLine.length()>13 && "end_attribute".equals(curLine.substring(0, 13))) {
 				Matcher matcher = end_attribute.matcher(curLine);
 				if ((matcher.matches())) {
 					TxAttributeType attrType = getAttrType(matcher.group(2), DataType.valueOf(matcher.group(3)),
 							AssociationType.END);
 					generator.endAttrs.add(attrType);
 				}
-			} else if (")".equals(tokens[0])) {
+			} else if (curLine.charAt(0) == ')') {
 				generator = null;
 			} else if(!last)			
 				throw new InputFormatException("Don't know what to do with: '" + curLine + "'");
