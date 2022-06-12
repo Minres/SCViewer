@@ -49,13 +49,6 @@ public interface IWaveformDbLoader {
 	public void removePropertyChangeListener(PropertyChangeListener l) ;
 
 	/**
-	 * Can load the given file.
-	 *
-	 * @param inputFile the input file
-	 * @return true, if successful
-	 */
-	public boolean canLoad(File inputFile);
-	/**
 	 * Load.
 	 *
 	 * @param db  the db

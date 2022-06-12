@@ -356,7 +356,7 @@ public class SignalPainter extends TrackPainter {
 		public RealStencil(IEventList entries, Object left, boolean continous) {
 			this.continous=continous;
 			Collection<EventEntry> values = entries.entrySet();
-			minVal=(Double) left;
+			minVal=((DoubleVal) left).value;
 			range=2.0;
 			if(!values.isEmpty()) {
 				double maxVal=minVal;
