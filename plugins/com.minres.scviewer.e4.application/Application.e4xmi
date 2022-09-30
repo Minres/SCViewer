@@ -56,7 +56,7 @@
         <children xsi:type="menu:HandledMenuItem" xmi:id="_JTXBgYl_EeWxJ_wPkM6yGQ" elementId="" label="Preferences" command="_AxH6sIl_EeWxJ_wPkM6yGQ"/>
       </children>
       <children xsi:type="menu:Menu" xmi:id="_95QGxHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.menu.help" label="Help">
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_UQRi0B07EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handledmenuitem.checkforupdate" visible="false" label="Check for Update" enabled="false" command="_-9ED4B06EeuiP60JNw0iiA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_UQRi0B07EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handledmenuitem.checkforupdate" label="Check for Update" enabled="false" command="_-9ED4B06EeuiP60JNw0iiA"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_qJS-MHCOEeyub8CfGE1sGA" label="Help Content" command="_RdUMoHCOEeyub8CfGE1sGA"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGxXNmEeWBq8z1Dv39LA" label="Web Help" command="_lqjIYEYEEeyPM8G0E2EYww"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_4xtmgEYEEeyPM8G0E2EYww" label="About" command="_95PfxnNmEeWBq8z1Dv39LA"/>
