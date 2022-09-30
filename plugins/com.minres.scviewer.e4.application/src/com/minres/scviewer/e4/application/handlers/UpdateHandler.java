@@ -21,13 +21,14 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 
+import com.minres.scviewer.e4.application.Messages;
+
 public class UpdateHandler {
 
 	boolean cancelled = false;
 
 	@Execute
 	public void execute(IProvisioningAgent agent, UISynchronize sync, IWorkbench workbench) {
-		// update using a progress monitor
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
@@ -44,17 +45,18 @@ public class UpdateHandler {
 	private IStatus update(IProvisioningAgent agent, IProgressMonitor monitor, UISynchronize sync,
 			IWorkbench workbench) {
 		ProvisioningSession session = new ProvisioningSession(agent);
-		// update the whole running profile, otherwise specify IUs
 		UpdateOperation operation = new UpdateOperation(session);
 		try {
-			operation.getProvisioningContext().setArtifactRepositories(new URI("http://https://minres.github.io/SCViewer/repository"));
-			operation.getProvisioningContext().setMetadataRepositories(new URI("http://https://minres.github.io/SCViewer/repository"));
-		} catch (URISyntaxException e) {}
-		SubMonitor sub = SubMonitor.convert(monitor, "Checking for application updates...", 200);
-		// check if updates are available
+			operation.getProvisioningContext().setArtifactRepositories(new URI(Messages.UpdateHandler_URI));
+			operation.getProvisioningContext().setMetadataRepositories(new URI(Messages.UpdateHandler_URI));
+		} catch (URISyntaxException e) {
+		}
+		SubMonitor sub = SubMonitor.convert(monitor, Messages.UpdateHandler_2, 200);
 		IStatus status = operation.resolveModal(sub.newChild(100));
 		if (status.getCode() == UpdateOperation.STATUS_NOTHING_TO_UPDATE) {
-			showMessage(sync, "Nothing to update");
+			sync.syncExec(() -> {
+				MessageDialog.openInformation(null, Messages.UpdateHandler_10, Messages.UpdateHandler_3);
+			});
 			return Status.CANCEL_STATUS;
 		} else {
 			ProvisioningJob provisioningJob = operation.getProvisioningJob(sub.newChild(100));
@@ -62,8 +64,8 @@ public class UpdateHandler {
 				sync.syncExec(new Runnable() {
 					@Override
 					public void run() {
-						boolean performUpdate = MessageDialog.openQuestion(null, "Updates available",
-								"There are updates available. Do you want to install them now?");
+						boolean performUpdate = MessageDialog.openQuestion(null, Messages.UpdateHandler_4,
+								Messages.UpdateHandler_5);
 						if (performUpdate) {
 							provisioningJob.addJobChangeListener(new JobChangeAdapter() {
 								@Override
@@ -74,22 +76,21 @@ public class UpdateHandler {
 											@Override
 											public void run() {
 												boolean restart = MessageDialog.openQuestion(null,
-														"Updates installed, restart?",
-														"Updates have been installed successfully, do you want to restart?");
+														Messages.UpdateHandler_6, Messages.UpdateHandler_7);
 												if (restart) {
 													workbench.restart();
 												}
 											}
 										});
 									} else {
-										showError(sync, event.getResult().getMessage());
+										sync.syncExec(() -> {
+											MessageDialog.openInformation(null, Messages.UpdateHandler_11,
+													event.getResult().getMessage());
+										});
 										cancelled = true;
 									}
 								}
 							});
-							// since we switched to the UI thread for interacting with the user
-							// we need to schedule the provisioning thread, otherwise it would
-							// be executed also in the UI thread and not in a background thread
 							provisioningJob.schedule();
 						} else {
 							cancelled = true;
@@ -98,43 +99,22 @@ public class UpdateHandler {
 				});
 			} else {
 				if (operation.hasResolved()) {
-					showError(sync, "Couldn't get provisioning job: " + operation.getResolutionResult());
+					sync.syncExec(() -> {
+						MessageDialog.openInformation(null, Messages.UpdateHandler_11,
+								Messages.UpdateHandler_8 + operation.getResolutionResult());
+					});
 				} else {
-					showError(sync, "Couldn't resolve provisioning job");
+					sync.syncExec(() -> {
+						MessageDialog.openInformation(null, Messages.UpdateHandler_11, Messages.UpdateHandler_9);
+					});
 				}
 				cancelled = true;
 			}
 		}
 		if (cancelled) {
-			// reset cancelled flag
 			cancelled = false;
 			return Status.CANCEL_STATUS;
 		}
 		return Status.OK_STATUS;
-	}
-
-	private void showMessage(UISynchronize sync, final String message) {
-		// as the provision needs to be executed in a background thread
-		// we need to ensure that the message dialog is executed in
-		// the UI thread
-		sync.syncExec(new Runnable() {
-
-			@Override
-			public void run() {
-				MessageDialog.openInformation(null, "Information", message);
-			}
-		});
-	}
-
-	private void showError(UISynchronize sync, final String message) {
-		// as the provision needs to be executed in a background thread
-		// we need to ensure that the message dialog is executed in
-		// the UI thread
-		sync.syncExec(new Runnable() {
-			@Override
-			public void run() {
-				MessageDialog.openError(null, "Error", message);
-			}
-		});
 	}
 }
