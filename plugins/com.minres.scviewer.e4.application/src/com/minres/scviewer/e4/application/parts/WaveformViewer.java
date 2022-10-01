@@ -74,6 +74,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
+import org.eclipse.wb.swt.SWTResourceManager;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.minres.scviewer.database.DataType;
@@ -415,7 +416,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					if(res.get(0) instanceof ITx) {
 						ITx tx = (ITx)res.get(0);
 						final Display display = parent.getDisplay();
-						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
+						final Font font = SWTResourceManager.getFont("Terminal", 10, SWT.NORMAL);
 
 						final Label label = new Label(parent, SWT.SHADOW_IN);
 						label.setForeground(display.getSystemColor(SWT.COLOR_BLACK));
@@ -471,8 +472,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 						return true;
 					} else if(res.get(0) instanceof TrackEntry) {
 						TrackEntry te = (TrackEntry)res.get(0);
-						final Font font = new Font(Display.getCurrent(), "Terminal", 10, SWT.NORMAL);
-
+						final Font font = SWTResourceManager.getFont("Terminal", 10, SWT.NORMAL);
 						final Label label = new Label(parent, SWT.NONE);
 						label.setText(te.waveform.getFullName());
 						label.setFont(font);
