@@ -68,6 +68,7 @@
 
    <configurations>
       <plugin id="com.minres.scviewer.database.text" autoStart="true" startLevel="2" />
+      <plugin id="com.minres.scviewer.database.ftr" autoStart="true" startLevel="2" />
       <plugin id="com.minres.scviewer.database.vcd" autoStart="true" startLevel="2" />
       <plugin id="org.apache.felix.scr" autoStart="true" startLevel="1" />
       <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />

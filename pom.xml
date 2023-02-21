@@ -11,6 +11,7 @@
 		<module>doc/com.minres.scviewer.doc</module>
 		<module>plugins/com.minres.scviewer.database</module>
 		<module>plugins/com.minres.scviewer.database.sqlite</module>
+		<module>plugins/com.minres.scviewer.database.ftr</module>
 		<module>plugins/com.minres.scviewer.database.text</module>
 		<module>plugins/com.minres.scviewer.database.vcd</module>
 		<module>tests/com.minres.scviewer.database.test</module>

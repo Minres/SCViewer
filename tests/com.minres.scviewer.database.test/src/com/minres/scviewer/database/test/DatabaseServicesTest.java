@@ -15,15 +15,23 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.minres.scviewer.database.EventEntry;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
+import com.minres.scviewer.database.tx.ITxEvent;
 
 public class DatabaseServicesTest {
 
@@ -50,7 +58,7 @@ public class DatabaseServicesTest {
 		assertEquals(2,  waveformDb.getChildNodes().size());
 		IWaveform bus_data_wave = waves.get(0);
 		EventEntry bus_data_entry = bus_data_wave.getEvents().floorEntry(1400000000L);
-		assertEquals("01111000", bus_data_entry.events[0].toString());
+		assertEquals("00001011", bus_data_entry.events[0].toString());
 		IWaveform rw_wave = waves.get(2);
 		EventEntry rw_entry = rw_wave.getEvents().floorEntry(2360000000L);
 		assertEquals("1", rw_entry.events[0].toString());
@@ -62,8 +70,8 @@ public class DatabaseServicesTest {
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
-		assertEquals(3,  waveformDb.getAllWaves().size());
-		assertEquals(1,  waveformDb.getChildNodes().size());
+		assertEquals(0,  waveformDb.getAllWaves().size());
+		assertEquals(0,  waveformDb.getChildNodes().size());
 	}
 
 	@Test
@@ -73,7 +81,7 @@ public class DatabaseServicesTest {
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
 		List<IWaveform> waveforms =  waveformDb.getAllWaves();
-		assertEquals(3,  waveforms.size());
+		assertEquals(8,  waveforms.size());
 		assertEquals(1,  waveformDb.getChildNodes().size());
 		for(IWaveform w:waveforms) {
 			if(w.getId()==1) {
@@ -92,7 +100,7 @@ public class DatabaseServicesTest {
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
-		assertEquals(3,  waveformDb.getAllWaves().size());
+		assertEquals(8,  waveformDb.getAllWaves().size());
 		assertEquals(1,  waveformDb.getChildNodes().size());
 	}
 
@@ -106,4 +114,38 @@ public class DatabaseServicesTest {
 		assertEquals(1,  waveformDb.getChildNodes().size());
 	}
 
+	@Test
+	public void testFtr() throws Exception {
+		File f = new File("inputs/my_db.ftr").getAbsoluteFile();
+		assertTrue(f.exists());
+		waveformDb.load(f);
+		assertNotNull(waveformDb);
+		List<IWaveform> waveforms =  waveformDb.getAllWaves();
+		assertEquals(8,  waveforms.size());
+		assertEquals(1,  waveformDb.getChildNodes().size());
+		for(IWaveform w:waveforms) {
+			if(w.getId()==1) {
+				assertEquals(2, w.getRowCount());
+			} else if(w.getId()==2l) {
+				assertEquals(1, w.getRowCount());
+			} else if(w.getId()==3l) {
+				assertEquals(1, w.getRowCount());
+			}
+		}
+		//waveforms.stream().filter(s -> s.getId()==1).collect(Collectors.toList());
+		waveforms.stream().filter(s -> s.getId()==1).forEach(s -> {
+			assertEquals(27, s.getEvents().size());
+		});
+		waveforms.stream().filter(s -> s.getId()==1).map(s -> s.getEventsAtTime(0)).forEach(el ->  {
+			assertEquals(1, el.length);
+			IEvent evt = el[0];
+			assertTrue(evt instanceof ITxEvent);
+			ITx tx = ((ITxEvent)evt).getTransaction();
+			assertNotNull(tx);
+			assertEquals(0, tx.getBeginTime());
+			assertEquals(280000000, tx.getEndTime());
+			List<ITxAttribute> attr = tx.getAttributes();
+			assertEquals(3, attr.size());
+		});
+	}
 }

@@ -9,7 +9,7 @@
  * Contributors:
  *     IT Just working - initial API and implementation
  *******************************************************************************/
-package com.minres.scviewer.database.text;
+package com.minres.scviewer.database.ftr;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +35,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	private Long id;
 
 	/** The loader. */
-	protected TextDbLoader loader;
+	protected FtrDbLoader loader;
 
 	/** The events. */
 	IEventList events = new EventList();
@@ -50,7 +50,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @param id     the id
 	 * @param name   the name
 	 */
-	protected AbstractTxStream(TextDbLoader loader, Long id, String name) {
+	protected AbstractTxStream(FtrDbLoader loader, Long id, String name) {
 		super(name);
 		fullName=name;
 		this.loader = loader;
@@ -157,7 +157,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 				ITx tx = txEvt.getTransaction();
 				int rowIdx = 0;
 				switch(evt.getKind()) {
-				case END:
+				case END: //TODO: might throw NPE in concurrent execution
 					Long txId = txEvt.getTransaction().getId();
 					txEvt.setConcurrencyIndex(rowByTxId.get(txId));
 					rowByTxId.remove(txId);
@@ -186,4 +186,5 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 		//getChildNodes().parallelStream().forEach(c -> ((TxGenerator)c).calculateConcurrency());
 		getChildNodes().stream().forEach(c -> ((TxGenerator)c).calculateConcurrency());
 	}
+
 }

@@ -7,6 +7,8 @@ Bundle-Vendor: MINRES Technologies GmbH
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Export-Package: com.minres.scviewer.database,
  com.minres.scviewer.database.tx
+Import-Package: org.slf4j
+Require-Bundle: javax.inject;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy
 Service-Component: OSGI-INF/component.xml,OSGI-INF/component2.xml
 Automatic-Module-Name: com.minres.scviewer.database
