@@ -585,6 +585,7 @@ public class WaveformView implements IWaveformView {
 		if (trackVerticalOffset.isEmpty()) {
 			waveformCanvas.setOrigin(0, 0);
 		}
+		tl.dispose();
 	}
 
 	private int calculateValueWidth() {
@@ -595,6 +596,7 @@ public class WaveformView implements IWaveformView {
 			tl.setText(v.currentValue);
 			valueMaxWidth = Math.max(valueMaxWidth, tl.getBounds().width);
 		}
+		tl.dispose();
 		return valueMaxWidth + 15;
 	}
 

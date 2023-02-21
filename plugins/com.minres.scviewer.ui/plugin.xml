@@ -316,30 +316,25 @@
             id="com.minres.scviewer.ui.oneWaveSeleted">
             <with
                   variable="selection">
-               <and>
-                  <count
-                        value="1">
-                  </count>
- 				<iterate
-           operator="or">
-       				<instanceof value="com.minres.scviewer.database.IWaveform"/>
-    			</iterate>      
-            </and>
+               <iterate
+                     ifEmpty="false"
+                     operator="or">
+                  <instanceof
+                        value="com.minres.scviewer.database.ui.TrackEntry">
+                  </instanceof>
+               </iterate>
             </with>
       </definition>
       <definition
             id="com.minres.scviewer.ui.oneTxSeleted">
             <with
                   variable="selection">
-               <and>
-                  <count
-                        value="1">
-                  </count>
- 				<iterate
-           operator="or">
-       				<instanceof value="com.minres.scviewer.database.tx.ITx"/>
-    			</iterate>      
-            </and>
+               <iterate
+                     operator="or">
+                  <instanceof
+                        value="com.minres.scviewer.database.tx.ITx">
+                  </instanceof>
+               </iterate>
             </with>
       </definition>
       <definition

@@ -20,6 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
@@ -47,7 +52,9 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 
 	/** The max time. */
 	private long maxTime = -1;
-
+	
+	private static final Logger LOG = LoggerFactory.getLogger(WaveformDb.class);
+	
 	/**
 	 * Bind.
 	 *
@@ -132,6 +139,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 				try {
 					loader.load(this, inp);
 				} catch (Exception e) {
+					LOG.error("error loading file "+inp.getName(), e);
 					retval=false;
 				}
 				loader.removePropertyChangeListener(this);

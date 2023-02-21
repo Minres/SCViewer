@@ -12,6 +12,8 @@
 		<unit id="org.eclipse.rcptt.core.feature.group" version="0.0.0"/><!-- com.google.guave-->
 		<unit id="org.eclipse.pde.feature.group" version="0.0.0"/>	<!-- org.junit for testing -->
 		<unit id="javax.servlet" version="0.0.0"/>
+		<unit id="org.eclipse.equinox.core.feature.feature.group" version="0.0.0"/>
+		<unit id="org.eclipse.equinox.p2.core.feature.feature.group" version="0.0.0"/>
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 		<repository location="https://www.opcoach.com/repository/2021-12/"/>
@@ -26,7 +28,7 @@
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 		<repository location="http://download.eclipse.org/nebula/releases/latest"/>
-		<unit id="org.eclipse.nebula.widgets.xviewer.feature.feature.group" version="1.1.0.202011020719"/>
+		<unit id="org.eclipse.nebula.widgets.xviewer.feature.feature.group" version="1.1.0.202208171809"/>
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 		<repository location="http://download.eclipse.org/collections/10.4.0/repository"/>
@@ -39,8 +41,12 @@
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 		<repository location="https://download.eclipse.org/tools/orbit/downloads/2021-12"/>
-		<unit id="org.apache.commons.compress" version="0.0.0"/>
-		<unit id="org.apache.commons.compress.source" version="0.0.0"/>
+		<unit id="org.apache.commons.compress" version="1.21.0.v20211103-2100"/>
+		<unit id="org.apache.commons.compress.source" version="1.21.0.v20211103-2100"/>
+		<unit id="ch.qos.logback.slf4j" version="1.0.7.v201505121915"/>
+		<unit id="ch.qos.logback.slf4j.source" version="1.0.7.v201505121915"/>
+		<unit id="org.slf4j.api" version="1.7.2.v20121108-1250"/>
+		<unit id="org.slf4j.api.source" version="1.7.2.v20121108-1250"/>
 	</location>
 </locations>
 	<targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-15"/>

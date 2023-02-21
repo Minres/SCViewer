@@ -51,6 +51,9 @@ public enum DataType {
 	// T*
 	ARRAY,
 	/** The string. */
-	// T[N]
-	STRING // string, std::string
+	// string, std::string
+	STRING, 
+	/** The time. */
+	// sc_time
+	TIME
 }

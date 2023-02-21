@@ -183,7 +183,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 			}
 		}
 		rowCount=rowEndTime.size()>0?rowEndTime.size():1;
-		getChildNodes().parallelStream().forEach(c -> ((TxGenerator)c).calculateConcurrency());
+		//getChildNodes().parallelStream().forEach(c -> ((TxGenerator)c).calculateConcurrency());
+		getChildNodes().stream().forEach(c -> ((TxGenerator)c).calculateConcurrency());
 	}
-
 }

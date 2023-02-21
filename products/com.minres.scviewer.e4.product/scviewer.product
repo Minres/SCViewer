@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="2.16.1" useFeatures="true" includeLaunchers="true">
+<product name="SCViewer" uid="scviewer" id="com.minres.scviewer.e4.application.product" application="org.eclipse.e4.ui.workbench.swt.E4Application" version="2.17.0" useFeatures="true" includeLaunchers="true" autoIncludeRequirements="true">
 
    <configIni use="default">
    </configIni>
@@ -63,11 +63,12 @@
       <feature id="org.eclipse.e4.rcp" installMode="root"/>
       <feature id="com.opcoach.e4.preferences.feature" installMode="root"/>
       <feature id="com.minres.scviewer.e4.help.feature" installMode="root"/>
-      <feature id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped" installMode="root"/> 
+      <feature id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped" installMode="root"/>
    </features>
 
    <configurations>
       <plugin id="com.minres.scviewer.database.text" autoStart="true" startLevel="2" />
+      <plugin id="com.minres.scviewer.database.ftr" autoStart="true" startLevel="2" />
       <plugin id="com.minres.scviewer.database.vcd" autoStart="true" startLevel="2" />
       <plugin id="org.apache.felix.scr" autoStart="true" startLevel="1" />
       <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />

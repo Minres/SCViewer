@@ -95,6 +95,17 @@ public class Messages extends NLS {
 	public static String marker_text;
 	public static String rel_arrow;
 	public static String rel_arrow_highlite;
+	public static String UpdateHandler_URI;
+	public static String UpdateHandler_10;
+	public static String UpdateHandler_11;
+	public static String UpdateHandler_2;
+	public static String UpdateHandler_3;
+	public static String UpdateHandler_4;
+	public static String UpdateHandler_5;
+	public static String UpdateHandler_6;
+	public static String UpdateHandler_7;
+	public static String UpdateHandler_8;
+	public static String UpdateHandler_9;
 
 	static {
 		// initialize resource bundle

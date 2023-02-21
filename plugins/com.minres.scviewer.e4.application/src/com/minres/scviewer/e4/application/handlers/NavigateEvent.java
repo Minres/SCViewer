@@ -32,7 +32,7 @@ public class NavigateEvent {
 	@CanExecute
 	public Boolean canExecute(EPartService partService){
 		MPart part = partService.getActivePart();
-		if(part.getObject() instanceof WaveformViewer){
+		if(part!=null && part.getObject() instanceof WaveformViewer){
 			Object sel = ((WaveformViewer)part.getObject()).getSelection();
 			if( sel instanceof IStructuredSelection) {
 				if(((IStructuredSelection)sel).isEmpty()) return false;
