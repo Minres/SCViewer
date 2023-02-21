@@ -333,6 +333,10 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 			addStreamToList(stream);
 	}
 
+	public void removeStreamFromList(TrackEntry entry){
+		waveformView.getStreamList().remove(entry);
+	}
+
 	public void removeStreamFromList(IWaveform waveform){
 		if(getEditorInput() instanceof TxEditorInput && ((TxEditorInput) getEditorInput()).getStreamNames().contains(waveform.getFullName())){
 			((TxEditorInput) getEditorInput()).getStreamNames().remove(waveform.getFullName());

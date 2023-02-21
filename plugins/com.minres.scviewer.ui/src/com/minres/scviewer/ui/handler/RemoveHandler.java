@@ -18,7 +18,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 
-import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.ui.TxEditorPart;
 
 public class RemoveHandler extends AbstractHandler {
@@ -29,8 +29,12 @@ public class RemoveHandler extends AbstractHandler {
 		if(editor instanceof TxEditorPart){
 			TxEditorPart editorPart = (TxEditorPart) editor;
 			ISelection selection =editorPart.getSelection();
-			if(selection instanceof StructuredSelection && ((StructuredSelection)selection).getFirstElement() instanceof IWaveform){
-				editorPart.removeStreamFromList((IWaveform) ((StructuredSelection)selection).getFirstElement());
+			if(selection instanceof StructuredSelection) {
+				for(Object elem:((StructuredSelection) selection).toList()) {
+					if(elem instanceof TrackEntry){
+						editorPart.removeStreamFromList((TrackEntry) elem);
+					}
+				}
 				editorPart.setSelection(new StructuredSelection());
 			}
 		}
