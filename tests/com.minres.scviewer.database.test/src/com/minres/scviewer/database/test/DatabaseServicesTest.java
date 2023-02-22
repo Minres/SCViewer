@@ -148,4 +148,38 @@ public class DatabaseServicesTest {
 			assertEquals(3, attr.size());
 		});
 	}
+	@Test
+	public void testCFtr() throws Exception {
+		File f = new File("inputs/my_db_c.ftr").getAbsoluteFile();
+		assertTrue(f.exists());
+		waveformDb.load(f);
+		assertNotNull(waveformDb);
+		List<IWaveform> waveforms =  waveformDb.getAllWaves();
+		assertEquals(8,  waveforms.size());
+		assertEquals(1,  waveformDb.getChildNodes().size());
+		for(IWaveform w:waveforms) {
+			if(w.getId()==1) {
+				assertEquals(2, w.getRowCount());
+			} else if(w.getId()==2l) {
+				assertEquals(1, w.getRowCount());
+			} else if(w.getId()==3l) {
+				assertEquals(1, w.getRowCount());
+			}
+		}
+		//waveforms.stream().filter(s -> s.getId()==1).collect(Collectors.toList());
+		waveforms.stream().filter(s -> s.getId()==1).forEach(s -> {
+			assertEquals(27, s.getEvents().size());
+		});
+		waveforms.stream().filter(s -> s.getId()==1).map(s -> s.getEventsAtTime(0)).forEach(el ->  {
+			assertEquals(1, el.length);
+			IEvent evt = el[0];
+			assertTrue(evt instanceof ITxEvent);
+			ITx tx = ((ITxEvent)evt).getTransaction();
+			assertNotNull(tx);
+			assertEquals(0, tx.getBeginTime());
+			assertEquals(280000000, tx.getEndTime());
+			List<ITxAttribute> attr = tx.getAttributes();
+			assertEquals(3, attr.size());
+		});
+	}
 }
