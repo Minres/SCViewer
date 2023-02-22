@@ -97,9 +97,8 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	/** The pcs. */
 	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-	/** The Constant x. */
-	static final byte[] x = "scv_tr_stream".getBytes();
-
+	long time_scale_factor = 1000l;
+	
 	/**
 	 * Adds the property change listener.
 	 *
@@ -319,6 +318,15 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					long tag = readTag();
 					switch((int)tag) {
 					case 6: // info
+						CborDecoder cbd = new CborDecoder(new ByteArrayInputStream(readByteString()));
+						long sz = cbd.readArrayLength();
+						assert(sz==3);
+						long time_numerator=cbd.readInt();
+						long time_denominator=cbd.readInt();
+						loader.time_scale_factor = 1000000000000000l*time_numerator/time_denominator;
+						long epoch_tag = cbd.readTag();
+						assert(epoch_tag==1);
+						cbd.readInt(); // epoch
 						break;
 					case 8: { // dictionary uncompressed
 						parseDict(new CborDecoder(new ByteArrayInputStream(readByteString())));
@@ -413,8 +421,8 @@ public class FtrDbLoader implements IWaveformDbLoader {
 						assert(len==4);
 						long txId = cborDecoder.readInt();
 						long genId = cborDecoder.readInt();
-						long startTime = cborDecoder.readInt()*1000; //TODO: scale based on info
-						long endTime = cborDecoder.readInt()*1000; //TODO: scale based on info
+						long startTime = cborDecoder.readInt()*loader.time_scale_factor;
+						long endTime = cborDecoder.readInt()*loader.time_scale_factor;
 						TxGenerator gen = loader.txGenerators.get(genId);
 						FtrTx scvTx = new FtrTx(txId, gen.stream.getId(), genId, startTime, endTime, blockId, blockOffset);
 						loader.maxTime = loader.maxTime > scvTx.endTime ? loader.maxTime : scvTx.endTime;
