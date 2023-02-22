@@ -11,7 +11,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database.text;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,22 +30,6 @@ public class TextDbLoaderFactory implements IWaveformDbLoaderFactory {
 
 	/** The Constant x. */
 	static final byte[] x = "scv_tr_stream".getBytes();
-
-	/**
-	 * Checks if f is gzipped.
-	 *
-	 * @param f the f
-	 * @return true, if is gzipped
-	 */
-	private static boolean isGzipped(File f) {
-		try (InputStream is = new FileInputStream(f)) {
-			byte[] signature = new byte[2];
-			int nread = is.read(signature); // read the gzip signature
-			return nread == 2 && signature[0] == (byte) 0x1f && signature[1] == (byte) 0x8b;
-		} catch (IOException e) {
-			return false;
-		}
-	}
 
 	/**
 	 * Can load.

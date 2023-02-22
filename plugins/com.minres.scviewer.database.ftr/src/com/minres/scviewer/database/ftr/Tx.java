@@ -17,7 +17,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.database.tx.ITxRelation;
