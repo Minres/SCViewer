@@ -17,15 +17,13 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
+import org.apache.commons.compress.compressors.lz4.BlockLZ4CompressorInputStream;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +40,6 @@ import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.RelationTypeFactory;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
-import com.minres.scviewer.database.RelationType;
 
 import jacob.CborDecoder;
 import jacob.CborType;
@@ -202,9 +199,17 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		try(FileInputStream fis = new FileInputStream(file)) {
 			FileChannel fc = fis.getChannel();
 			for (Long offset : fileOffsets) {
-				fc.position(offset);
-				CborDecoder parser = new CborDecoder(fis);
-				ret.add(parser.readByteString());
+				if(offset>=0) {
+					fc.position(offset);
+					CborDecoder parser = new CborDecoder(fis);
+					ret.add(parser.readByteString());
+				} else {
+					fc.position(-offset);
+					CborDecoder parser = new CborDecoder(fis);
+					BlockLZ4CompressorInputStream decomp = new BlockLZ4CompressorInputStream(new ByteArrayInputStream(parser.readByteString()));
+					ret.add(decomp.readAllBytes());
+					decomp.close();
+				}
 			}
 		} catch (Exception e) {
 			LOG.error("Error parsing file "+file.getName(), e);
@@ -317,7 +322,11 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				while(next != null && !break_type.isEqualType(next)) {
 					long tag = readTag();
 					switch((int)tag) {
+<<<<<<< HEAD
 					case 6: // info
+=======
+					case 6: { // info
+>>>>>>> refs/heads/release/2.17.1
 						CborDecoder cbd = new CborDecoder(new ByteArrayInputStream(readByteString()));
 						long sz = cbd.readArrayLength();
 						assert(sz==3);
@@ -328,12 +337,27 @@ public class FtrDbLoader implements IWaveformDbLoader {
 						assert(epoch_tag==1);
 						cbd.readInt(); // epoch
 						break;
+					}
 					case 8: { // dictionary uncompressed
 						parseDict(new CborDecoder(new ByteArrayInputStream(readByteString())));
 						break;
 					}
+					case 9: { // dictionary compressed
+						long sz = readArrayLength();
+						assert(sz==2);
+						readInt(); // uncompressed size
+						parseDict(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(readByteString()))));
+						break;
+					}
 					case 10: { // directory uncompressed
 						parseDir(new CborDecoder(new ByteArrayInputStream(readByteString())));
+						break;
+					}
+					case 11: { // directory compressed
+						long sz = readArrayLength();
+						assert(sz==2);
+						readInt(); // uncompressed size
+						parseDir(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(readByteString()))));
 						break;
 					}
 					case 12: { //tx chunk uncompressed
@@ -345,8 +369,27 @@ public class FtrDbLoader implements IWaveformDbLoader {
 						parseTx(txStream, txStream.fileOffsets.size()-1, readByteString());
 						break;
 					}
+					case 13: { //tx chunk compressed
+						long len = readArrayLength(); 
+						assert(len==3);
+						long stream_id = readInt();
+						readInt(); // uncompressed size
+						TxStream txStream = loader.txStreams.get(stream_id);
+						txStream.fileOffsets.add(0-inputStream.getChannel().position());
+						BlockLZ4CompressorInputStream decomp = new BlockLZ4CompressorInputStream(new ByteArrayInputStream(readByteString()));
+						parseTx(txStream, txStream.fileOffsets.size()-1, decomp.readAllBytes());
+						decomp.close();
+						break;
+					}
 					case 14: { // relations uncompressed
 						parseRel(new CborDecoder(new ByteArrayInputStream(readByteString())));
+						break;
+					}
+					case 15: { // relations uncompressed
+						long sz = readArrayLength();
+						assert(sz==2);
+						readInt(); // uncompressed size
+						parseRel(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(readByteString()))));
 						break;
 					}
 					}
