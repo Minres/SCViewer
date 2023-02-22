@@ -1,6 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 IT Just working.
- * Copyright (c) 2020 MINRES Technologies GmbH
+ * Copyright (c) 2023 MINRES Technologies GmbH
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,18 +10,13 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ftr;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.zip.GZIPInputStream;
-
-import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorInputStream;
 
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.IWaveformDbLoaderFactory;
-import com.minres.scviewer.database.ftr.FtrDbLoader.FileType;
 
 /**
  * The Class TextDbLoader.

@@ -14,8 +14,6 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -42,8 +40,6 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 	
 	private ScvSimProps scvSimProps;
 		
-	private static final byte[] x = "SQLite format 3".getBytes();
-
 	/** The pcs. */
 	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
