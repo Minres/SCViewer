@@ -3,7 +3,7 @@
 <target name="com.minres.scviewer.target" sequenceNumber="138">
 <locations>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="http://download.eclipse.org/releases/2021-12/"/>
+		<repository location="http://download.eclipse.org/releases/2022-12/"/>
 		<unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
 		<unit id="org.eclipse.equinox.p2.sdk.feature.jar" version="0.0.0"/> <!-- needed by Linux exectable-->
 		<unit id="org.eclipse.equinox.sdk.feature.group" version="0.0.0"/>
@@ -11,12 +11,11 @@
 		<unit id="org.eclipse.sdk.feature.group" version="0.0.0"/> <!-- org.eclipse.equinox.p2.iu -->
 		<unit id="org.eclipse.rcptt.core.feature.group" version="0.0.0"/><!-- com.google.guave-->
 		<unit id="org.eclipse.pde.feature.group" version="0.0.0"/>	<!-- org.junit for testing -->
-		<unit id="javax.servlet" version="0.0.0"/>
 		<unit id="org.eclipse.equinox.core.feature.feature.group" version="0.0.0"/>
 		<unit id="org.eclipse.equinox.p2.core.feature.feature.group" version="0.0.0"/>
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="https://www.opcoach.com/repository/2021-12/"/>
+		<repository location="https://www.opcoach.com/repository/2022-12/"/>
 		<unit id="com.opcoach.e4.preferences.feature.feature.group" version="0.0.0"/>
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
@@ -31,7 +30,7 @@
 		<unit id="org.eclipse.nebula.widgets.xviewer.feature.feature.group" version="1.1.0.202208171809"/>
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="http://download.eclipse.org/collections/10.4.0/repository"/>
+		<repository location="http://download.eclipse.org/collections/11.1.0/repository"/>
 		<unit id="org.eclipse.collections.feature.feature.group" version="0.0.0"/>
 		<unit id="org.eclipse.collections.feature.source.feature.group" version="0.0.0"/>
 	</location>
@@ -40,13 +39,13 @@
 		<unit id="org.eclipse.justj.openjdk.hotspot.jre.minimal.stripped.feature.group" version="0.0.0"/>
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="https://download.eclipse.org/tools/orbit/downloads/2021-12"/>
-		<unit id="org.apache.commons.compress" version="1.21.0.v20211103-2100"/>
-		<unit id="org.apache.commons.compress.source" version="1.21.0.v20211103-2100"/>
-		<unit id="ch.qos.logback.slf4j" version="1.0.7.v201505121915"/>
-		<unit id="ch.qos.logback.slf4j.source" version="1.0.7.v201505121915"/>
-		<unit id="org.slf4j.api" version="1.7.2.v20121108-1250"/>
-		<unit id="org.slf4j.api.source" version="1.7.2.v20121108-1250"/>
+		<repository location="https://download.eclipse.org/tools/orbit/downloads/2022-12"/>
+		<unit id="org.apache.commons.compress" version="0.0.0"/>
+		<unit id="org.apache.commons.compress.source" version="0.0.0"/>
+		<unit id="ch.qos.logback.slf4j" version="0.0.0"/>
+		<unit id="ch.qos.logback.slf4j.source" version="0.0.0"/>
+		<unit id="org.slf4j.api" version="0.0.0"/>
+		<unit id="org.slf4j.api.source" version="0.0.0"/>
 	</location>
 </locations>
 	<targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-15"/>
