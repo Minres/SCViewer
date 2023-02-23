@@ -435,9 +435,10 @@ public class CborDecoder {
         } else if (breakAllowed && length == BREAK) {
             return -1;
         }
-        if (result < 0) {
-            fail("Not well-formed CBOR integer found, invalid length: %d!", result);
-        }
+// unsigned values larger than long.MAX are shown as negative values
+//        if (result < 0) {
+//            fail("Not well-formed CBOR integer found, invalid length: %d!", result);
+//        }
         return result;
     }
 
