@@ -131,7 +131,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	 * @param txId the tx id
 	 * @return the transaction
 	 */
-	public ITx getTransaction(long txId) {
+	public synchronized ITx getTransaction(long txId) {
 		if (txCache.containsKey(txId))
 			return txCache.get(txId);
 		if(transactions.containsKey(txId)) {
@@ -185,8 +185,10 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		this.file=file;
 		try(FileInputStream fis = new FileInputStream(file)) {
 			new CborDbParser(this, fis);
+		} catch (IOException e) {
+			LOG.warn("Problem parsing file "+file.getName()+": " , e);
 		} catch (Exception e) {
-			LOG.error("Error parsing file "+file.getName(), e);
+			LOG.error("Error parsing file "+file.getName()+ ": ", e);
 			transactions.clear();
 			throw new InputFormatException(e.toString());
 		}
@@ -242,17 +244,15 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					long name_id = cborDecoder.readInt();
 					long type_id = cborDecoder.readInt();
 					String attrName = strDict.get((int)name_id);
-					if(!attributeTypes.containsKey(attrName)) {
-						attributeTypes.put(attrName, new TxAttributeType(attrName, DataType.values()[(int)type_id], AssociationType.values()[(int)tag-7]));
-					} 
-					TxAttributeType attrType = attributeTypes.get(attrName);
+					TxAttributeType attrType = getOrAddAttributeType(tag, type_id, attrName);
 					switch((int)type_id) {
 					case 0: // BOOLEAN
-						ITxAttribute b = new TxAttribute(attrType, cborDecoder.readInt()>0?"True":"False");
+						ITxAttribute b = new TxAttribute(attrType, cborDecoder.readBoolean()?"True":"False");
 						ret.add(b);
 						break;
 					case 2: // INTEGER
 					case 3: // UNSIGNED
+					case 10: // POINTER
 						ITxAttribute a = new TxAttribute(attrType, String.valueOf(cborDecoder.readInt()));
 						ret.add(a);
 						break;
@@ -269,6 +269,8 @@ public class FtrDbLoader implements IWaveformDbLoader {
 						ITxAttribute s = new TxAttribute(attrType, strDict.get((int)cborDecoder.readInt()));
 						ret.add(s);
 						break;
+					default:
+						LOG.warn("Unsupported data type: "+type_id);
 					}
 				}
 				}
@@ -277,6 +279,14 @@ public class FtrDbLoader implements IWaveformDbLoader {
 			LOG.error("Error parsing file "+file.getName(), e);
 		}
 		return ret;
+	}
+
+	private synchronized TxAttributeType getOrAddAttributeType(long tag, long type_id, String attrName) {
+		if(!attributeTypes.containsKey(attrName)) {
+			attributeTypes.put(attrName, new TxAttributeType(attrName, DataType.values()[(int)type_id], AssociationType.values()[(int)tag-7]));
+		} 
+		TxAttributeType attrType = attributeTypes.get(attrName);
+		return attrType;
 	}
 
 	/**
@@ -318,6 +328,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				long array_len = readArrayLength();
 				assert(array_len==-1);
 				CborType next = peekType();
+				int chunk_idx=0;
 				while(next != null && !break_type.isEqualType(next)) {
 					long tag = readTag();
 					switch((int)tag) {
@@ -393,9 +404,12 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					}
 					}
 					next = peekType();
+					chunk_idx++;
 				}
 			} catch(IOException e) {
-				LOG.error("Error parsing file input stream", e);
+				long pos = 0;
+				try {pos=inputStream.getChannel().position(); } catch (Exception ee) {}
+				LOG.error("Error parsing file input stream at position" + pos, e);
 			}
 		}
 
@@ -441,7 +455,8 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				long gen_id = cborDecoder.readInt();
 				long name_id = cborDecoder.readInt();
 				long stream_id = cborDecoder.readInt();
-				add(gen_id, new TxGenerator(loader, gen_id, loader.strDict.get((int)name_id), loader.txStreams.get(stream_id)));
+				if(loader.txStreams.containsKey(stream_id))
+					add(gen_id, new TxGenerator(loader, gen_id, loader.strDict.get((int)name_id), loader.txStreams.get(stream_id)));
 			} else {
 				throw new IOException("Illegal tage ncountered: "+id);
 			}
@@ -455,14 +470,17 @@ public class FtrDbLoader implements IWaveformDbLoader {
 			while(next != null && !break_type.isEqualType(next)) {
 				long blockOffset = cborDecoder.getPos();
 				long tx_size = cborDecoder.readArrayLength();
+				long txId = 0;
+				long genId = 0;
+				long attr_idx=0;
 				for(long i = 0; i<tx_size; ++i) {
 					long tag = cborDecoder.readTag();
 					switch((int)tag) {
 					case 6: // id/generator/start/end
 						long len = cborDecoder.readArrayLength();
 						assert(len==4);
-						long txId = cborDecoder.readInt();
-						long genId = cborDecoder.readInt();
+						txId = cborDecoder.readInt();
+						genId = cborDecoder.readInt();
 						long startTime = cborDecoder.readInt()*loader.time_scale_factor;
 						long endTime = cborDecoder.readInt()*loader.time_scale_factor;
 						TxGenerator gen = loader.txGenerators.get(genId);
@@ -483,8 +501,22 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					default:  { // skip over 7:begin attr, 8:record attr, 9:end attr
 						long sz = cborDecoder.readArrayLength();
 						assert(sz==3);
-						for(long j = 0; j<sz; ++j)
+						long name_id = cborDecoder.readInt();
+						String name = loader.strDict.get((int)name_id);
+						long type_id = cborDecoder.readInt();
+						switch((int)type_id) {
+						case 0: // BOOLEAN
+							cborDecoder.readBoolean();
+							break;
+						case 4: // FLOATING_POINT_NUMBER
+						case 7: // FIXED_POINT_INTEGER
+						case 8: // UNSIGNED_FIXED_POINT_INTEGER
+							cborDecoder.readFloat();
+							break;
+						default:
 							cborDecoder.readInt();
+						}
+						attr_idx++;
 					}
 					}
 				}

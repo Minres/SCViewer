@@ -21,7 +21,7 @@
             class="com.minres.scviewer.ui.TxEditorPart"
             contributorClass="com.minres.scviewer.ui.TxEditorActionBarContributor"
             extensions="txdb"
-            filenames="*.txdb,*.txlog,*.vcd"
+            filenames="*.txdb,*.txlog,*.vcd,*.ftr"
             icon="res/images/scviewer.png"
             id="com.minres.scviewer.ui.TxEditorPart"
             name="Wave Viewer">
