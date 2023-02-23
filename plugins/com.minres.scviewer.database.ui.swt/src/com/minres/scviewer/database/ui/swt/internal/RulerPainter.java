@@ -56,8 +56,9 @@ public class RulerPainter implements IPainter {
         int baselineY=waveCanvas.rulerHeight - 1;
         int bottom=waveCanvas.rulerHeight - 2;
 
+        long safe_scale_factor = scaleFactor!=0?scaleFactor:1;
         long startTickTime = startTime+rulerTickMinor-(startTime % rulerTickMinor);
-        long majorTickDist = rulerTickMajor/scaleFactor;
+        long majorTickDist = rulerTickMajor/safe_scale_factor;
         
         gc.setBackground(waveCanvas.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
         gc.fillRectangle(new Rectangle(area.x, area.y, area.width, waveCanvas.rulerHeight));
@@ -75,7 +76,7 @@ public class RulerPainter implements IPainter {
         boolean drawEvery = majorTickDist>maxTextLength;
         boolean drawText=true;
         for (long tickTime = startTickTime; tickTime < endTime; tickTime+= rulerTickMinor) {
-            int x0Pos = (int) (tickTime/scaleFactor) + proj.getTranslation().x;
+            int x0Pos = (int) (tickTime/safe_scale_factor) + proj.getTranslation().x;
             if ((tickTime % rulerTickMajor) == 0) {
             	if(drawEvery ||  drawText)
             		gc.drawText(waveCanvas.timeToString(tickTime), x0Pos, area.y+textY);

@@ -328,7 +328,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				long array_len = readArrayLength();
 				assert(array_len==-1);
 				CborType next = peekType();
-				int chunk_idx=0;
 				while(next != null && !break_type.isEqualType(next)) {
 					long tag = readTag();
 					switch((int)tag) {
@@ -400,7 +399,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					}
 					}
 					next = peekType();
-					chunk_idx++;
 				}
 			} catch(IOException e) {
 				long pos = 0;
@@ -468,7 +466,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				long tx_size = cborDecoder.readArrayLength();
 				long txId = 0;
 				long genId = 0;
-				long attr_idx=0;
 				for(long i = 0; i<tx_size; ++i) {
 					long tag = cborDecoder.readTag();
 					switch((int)tag) {
@@ -497,10 +494,8 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					default:  { // skip over 7:begin attr, 8:record attr, 9:end attr
 						long sz = cborDecoder.readArrayLength();
 						assert(sz==3);
-						long name_id = cborDecoder.readInt();
-						String name = loader.strDict.get((int)name_id);
-						long type_id = cborDecoder.readInt();
-						switch((int)type_id) {
+						cborDecoder.readInt();
+						switch((int)cborDecoder.readInt()) {
 						case 0: // BOOLEAN
 							cborDecoder.readBoolean();
 							break;
@@ -512,7 +507,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 						default:
 							cborDecoder.readInt();
 						}
-						attr_idx++;
 					}
 					}
 				}
