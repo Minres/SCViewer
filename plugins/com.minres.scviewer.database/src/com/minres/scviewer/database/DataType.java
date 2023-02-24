@@ -14,46 +14,30 @@ package com.minres.scviewer.database;
  * The Enum DataType.
  */
 public enum DataType {
-
 	/** The boolean. */
-	BOOLEAN,
+	BOOLEAN,                      // bool
 	/** The enumeration. */
-	// bool
-	ENUMERATION,
+	ENUMERATION,                  // enum
 	/** The integer. */
-	// enum
-	INTEGER,
+	INTEGER,                      // char, short, int, long, long long, sc_int, sc_bigint
 	/** The unsigned. */
-	// char, short, int, long, long long, sc_int, sc_bigint
-	UNSIGNED, // unsigned { char, short, int, long, long long }, sc_uint,
+	UNSIGNED,                     // unsigned { char, short, int, long, long long }, sc_uint, sc_biguint
 	/** The floating point number. */
-	// sc_biguint
-	FLOATING_POINT_NUMBER,
+	FLOATING_POINT_NUMBER,        // float, double
 	/** The bit vector. */
-	// float, double
-	BIT_VECTOR,
+	BIT_VECTOR,                   // sc_bit, sc_bv
 	/** The logic vector. */
-	// sc_bit, sc_bv
-	LOGIC_VECTOR,
+	LOGIC_VECTOR,                 // sc_logic, sc_lv
 	/** The fixed point integer. */
-	// sc_logic, sc_lv
-	FIXED_POINT_INTEGER,
+	FIXED_POINT_INTEGER,          // sc_fixed
 	/** The unsigned fixed point integer. */
-	// sc_fixed
-	UNSIGNED_FIXED_POINT_INTEGER,
-	/** The record. */
-	// sc_ufixed
-	RECORD,
+	UNSIGNED_FIXED_POINT_INTEGER, // sc_ufixed
 	/** The pointer. */
-	// struct/class
-	POINTER,
-	/** The array. */
-	// T*
-	ARRAY,
+	POINTER,                      // T*
 	/** The string. */
-	// string, std::string
-	STRING, 
+	STRING,                       // string, std::string
 	/** The time. */
-	// sc_time
-	TIME
+	TIME,                         // sc_time
+	/** The void type. */
+	NONE
 }

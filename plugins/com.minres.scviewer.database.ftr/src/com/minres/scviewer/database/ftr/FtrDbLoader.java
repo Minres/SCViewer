@@ -49,7 +49,7 @@ import jacob.CborType;
 public class FtrDbLoader implements IWaveformDbLoader {
 
 	enum FileType { NONE, PLAIN, GZIP, LZ4};
-
+	
 	/** The max time. */
 	private Long maxTime = 0L;
 
@@ -243,29 +243,31 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					assert(sz==3);
 					long name_id = cborDecoder.readInt();
 					long type_id = cborDecoder.readInt();
+					DataType type = DataType.values()[(int)type_id];
 					String attrName = strDict.get((int)name_id);
-					TxAttributeType attrType = getOrAddAttributeType(tag, type_id, attrName);
-					switch((int)type_id) {
-					case 0: // BOOLEAN
+					TxAttributeType attrType = getOrAddAttributeType(tag, type, attrName);
+					switch(type) {
+					case BOOLEAN:
 						ITxAttribute b = new TxAttribute(attrType, cborDecoder.readBoolean()?"True":"False");
 						ret.add(b);
 						break;
-					case 2: // INTEGER
-					case 3: // UNSIGNED
-					case 10: // POINTER
+					case INTEGER:
+					case UNSIGNED:
+					case POINTER:
+					case TIME:
 						ITxAttribute a = new TxAttribute(attrType, String.valueOf(cborDecoder.readInt()));
 						ret.add(a);
 						break;
-					case 4: // FLOATING_POINT_NUMBER
-					case 7: // FIXED_POINT_INTEGER
-					case 8: // UNSIGNED_FIXED_POINT_INTEGER
+					case FLOATING_POINT_NUMBER:
+					case FIXED_POINT_INTEGER:
+					case UNSIGNED_FIXED_POINT_INTEGER:
 						ITxAttribute v = new TxAttribute(attrType, String.valueOf(cborDecoder.readFloat()));
 						ret.add(v);
 						break;
-					case 1: // ENUMERATION
-					case 5: // BIT_VECTOR
-					case 6: // LOGIC_VECTOR
-					case 12: // STRING
+					case ENUMERATION:
+					case BIT_VECTOR:
+					case LOGIC_VECTOR:
+					case STRING:
 						ITxAttribute s = new TxAttribute(attrType, strDict.get((int)cborDecoder.readInt()));
 						ret.add(s);
 						break;
@@ -281,9 +283,9 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		return ret;
 	}
 
-	private synchronized TxAttributeType getOrAddAttributeType(long tag, long type_id, String attrName) {
+	private synchronized TxAttributeType getOrAddAttributeType(long tag, DataType type, String attrName) {
 		if(!attributeTypes.containsKey(attrName)) {
-			attributeTypes.put(attrName, new TxAttributeType(attrName, DataType.values()[(int)type_id], AssociationType.values()[(int)tag-7]));
+			attributeTypes.put(attrName, new TxAttributeType(attrName, type, AssociationType.values()[(int)tag-7]));
 		} 
 		TxAttributeType attrType = attributeTypes.get(attrName);
 		return attrType;
@@ -495,14 +497,18 @@ public class FtrDbLoader implements IWaveformDbLoader {
 						long sz = cborDecoder.readArrayLength();
 						assert(sz==3);
 						cborDecoder.readInt();
-						switch((int)cborDecoder.readInt()) {
-						case 0: // BOOLEAN
+						long type_id = cborDecoder.readInt();
+						switch(DataType.values()[(int)type_id]) {
+						case BOOLEAN:
 							cborDecoder.readBoolean();
 							break;
-						case 4: // FLOATING_POINT_NUMBER
-						case 7: // FIXED_POINT_INTEGER
-						case 8: // UNSIGNED_FIXED_POINT_INTEGER
+						case FLOATING_POINT_NUMBER: // FLOATING_POINT_NUMBER
+						case FIXED_POINT_INTEGER: // FIXED_POINT_INTEGER
+						case UNSIGNED_FIXED_POINT_INTEGER: // UNSIGNED_FIXED_POINT_INTEGER
 							cborDecoder.readFloat();
+							break;
+						case NONE: // UNSIGNED_FIXED_POINT_INTEGER
+							LOG.warn("Unsupported data type: "+type_id);
 							break;
 						default:
 							cborDecoder.readInt();
