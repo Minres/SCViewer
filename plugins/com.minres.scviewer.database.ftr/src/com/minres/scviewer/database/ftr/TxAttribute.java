@@ -81,4 +81,8 @@ public class TxAttribute implements ITxAttribute, Serializable {
 		return value;
 	}
 
+	@Override
+	public String toString() {
+		return "FtxAttr: " + attributeType.toString() + "=" + value;
+	}
 }
