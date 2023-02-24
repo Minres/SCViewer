@@ -32,7 +32,18 @@ public class TxAttribute implements ITxAttribute{
 
 	@Override
 	public DataType getDataType() {
-		return DataType.values()[scvAttribute.getData_type()];
+		int dt = scvAttribute.getData_type();
+		switch(dt) {
+		case 12:
+			return DataType.STRING;
+		case 10:
+			return DataType.POINTER;
+		default: 
+			if(dt<9) 
+				return DataType.values()[dt]; 
+			else
+				return DataType.NONE;
+		}
 	}
 
 	@Override
