@@ -144,6 +144,7 @@ public class DatabaseServicesTest {
 			assertEquals(3, attr.size());
 		});
 	}
+	
 	@Test
 	public void testCFtr() throws Exception {
 		File f = new File("inputs/my_db_c.ftr").getAbsoluteFile();
@@ -177,5 +178,22 @@ public class DatabaseServicesTest {
 			List<ITxAttribute> attr = tx.getAttributes();
 			assertEquals(3, attr.size());
 		});
+	}
+
+	@Test
+	public void testFst() throws Exception {
+		File f = new File("inputs/my_db.fst").getAbsoluteFile();
+		assertTrue(f.exists());
+		waveformDb.load(f);
+		assertNotNull(waveformDb);
+		List<IWaveform> waves= waveformDb.getAllWaves();
+		assertEquals(14,  waves.size());
+		assertEquals(2,  waveformDb.getChildNodes().size());
+		IWaveform bus_data_wave = waves.get(0);
+		EventEntry bus_data_entry = bus_data_wave.getEvents().floorEntry(1400000000L);
+		assertEquals("00001011", bus_data_entry.events[0].toString());
+		IWaveform rw_wave = waves.get(2);
+		EventEntry rw_entry = rw_wave.getEvents().floorEntry(2360000000L);
+		assertEquals("1", rw_entry.events[0].toString());
 	}
 }

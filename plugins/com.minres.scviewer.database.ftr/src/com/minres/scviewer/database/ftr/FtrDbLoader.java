@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,7 +56,10 @@ public class FtrDbLoader implements IWaveformDbLoader {
 
 	ArrayList<String> strDict = new ArrayList<>();
 
-
+	FileInputStream fis = null;
+	
+	FileLock lock = null;
+	
 	/** The attr values. */
 	final List<String> attrValues = new ArrayList<>();
 
@@ -183,7 +187,9 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	public void load(IWaveformDb db, File file) throws InputFormatException {
 		dispose();
 		this.file=file;
-		try(FileInputStream fis = new FileInputStream(file)) {
+		try {
+			fis = new FileInputStream(file);
+			lock=fis.getChannel().lock(0, Long.MAX_VALUE, true);
 			new CborDbParser(this, fis);
 		} catch (IOException e) {
 			LOG.warn("Problem parsing file "+file.getName()+": " , e);
@@ -197,7 +203,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 
 	public List<? extends byte[]> getChunksAtOffsets(ArrayList<Long> fileOffsets) throws InputFormatException {
 		List<byte[]> ret = new ArrayList<>();
-		try(FileInputStream fis = new FileInputStream(file)) {
+		try {
 			FileChannel fc = fis.getChannel();
 			for (Long offset : fileOffsets) {
 				if(offset>=0) {
@@ -296,6 +302,12 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	 */
 	@Override
 	public void dispose() {
+		try {
+			if(lock!=null) lock.close();
+			lock=null;
+			if(fis!=null) fis.close();
+			fis=null;
+		} catch (IOException e) { }
 		attrValues.clear();
 		relationTypes.clear();
 		txStreams.clear();
