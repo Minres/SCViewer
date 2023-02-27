@@ -79,6 +79,7 @@ http://www.eclipse.org/legal/epl-v10.html
 
    <plugin
          id="com.minres.scviewer.database.fst"
+         os="linux,win32"
          download-size="0"
          install-size="0"
          version="0.0.0"
