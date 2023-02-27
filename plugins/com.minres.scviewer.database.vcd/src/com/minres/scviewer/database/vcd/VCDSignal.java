@@ -100,8 +100,12 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public int getRowCount() {
+	public int getWidth() {
 		return width;
+	}
+	@Override
+	public int getRowCount() {
+		return 1;
 	}
 
 	@Override

@@ -78,4 +78,11 @@ public interface IWaveform extends IHierNode {
 	 */
 	public int getRowCount();
 	
+	/**
+	 * Gets the width.
+	 *
+	 * @return the width
+	 */
+	public int getWidth();
+	
 }

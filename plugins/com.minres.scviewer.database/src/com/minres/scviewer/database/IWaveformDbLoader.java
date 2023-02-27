@@ -55,7 +55,7 @@ public interface IWaveformDbLoader {
 	 * @param inputFile the input file
 	 * @throws InputFormatException the input format exception
 	 */
-	public void load(IWaveformDb db, File inputFile) throws InputFormatException;
+	public void load(File inputFile) throws InputFormatException;
 
 	/**
 	 * Gets the max time.

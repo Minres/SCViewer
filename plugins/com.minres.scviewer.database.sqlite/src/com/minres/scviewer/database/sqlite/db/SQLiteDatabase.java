@@ -26,8 +26,6 @@ public class SQLiteDatabase implements IDatabase {
 
 	protected String dbFileName;
 	
-	protected IWaveformDb waveformDb;
-	
 	protected HashMap<String, Object> props;
 	
     static {
@@ -43,10 +41,9 @@ public class SQLiteDatabase implements IDatabase {
 		}
     }
     
-	public SQLiteDatabase(String dbFileName, IWaveformDb waveformDb) {
+	public SQLiteDatabase(String dbFileName) {
 		super();
 		this.dbFileName = dbFileName;
-		this.waveformDb = waveformDb;
 		props = new HashMap<String, Object>();
 	}
 
@@ -96,7 +93,7 @@ public class SQLiteDatabase implements IDatabase {
 
 	@Override
 	public IWaveformDb getWaveformDb() {
-		return waveformDb;
+		return null;
 	}
 
 }

@@ -139,7 +139,7 @@ public class TxDbLabelProvider implements ILabelProvider {
 			case FILTER:
 				break;
 			case SIGNAL:
-				if(((IWaveform) element).getRowCount()==1)
+				if(((IWaveform) element).getWidth()==1)
 					return signal;
 				else 
 					return wave;

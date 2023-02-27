@@ -135,7 +135,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 				IWaveformDbLoader loader = loaderFactory.getLoader();
 				loader.addPropertyChangeListener(this);
 				try {
-					loader.load(this, inp);
+					loader.load(inp);
 				} catch (Exception e) {
 					LOG.error("error loading file "+inp.getName(), e);
 					retval=false;

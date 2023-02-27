@@ -142,6 +142,11 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 		return rowCount;
 	}
 
+	@Override
+	public int getWidth() {
+		return 0;
+	}
+
 	/**
 	 * Calculate concurrency.
 	 */

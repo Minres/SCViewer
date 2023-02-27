@@ -222,7 +222,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public void load(IWaveformDb db, File file) throws InputFormatException {
+	public void load(File file) throws InputFormatException {
 		dispose();
 		FileType fType = getFileType(file);
 		if (file.length() < MEMMAP_LIMIT * (fType!=FileType.PLAIN ? 1 : 10)

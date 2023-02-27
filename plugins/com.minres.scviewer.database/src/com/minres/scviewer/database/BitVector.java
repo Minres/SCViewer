@@ -33,6 +33,37 @@ public class BitVector implements IEvent {
 			packedValues[i] = 0;
 	}
 
+	public static BitVector fromString(int netWidth, String value){
+		BitVector bv = new BitVector(netWidth);
+		int stringIndex = 0;
+		for (int convertedIndex = netWidth -1; convertedIndex >=0; convertedIndex--) {
+			if(convertedIndex<value.length()) {
+				switch (value.charAt(stringIndex++)) {
+				case 'z':
+					bv.setValue(convertedIndex, BitValue.Z);
+					break;
+
+				case '1':
+					bv.setValue(convertedIndex, BitValue.ONE);
+					break;
+
+				case '0':
+					bv.setValue(convertedIndex, BitValue.ZERO);
+					break;
+
+				case 'x':
+					bv.setValue(convertedIndex, BitValue.X);
+					break;
+
+				default:
+					bv.setValue(convertedIndex, BitValue.X);
+				}
+			} else {
+				bv.setValue(convertedIndex, BitValue.ZERO);
+			}
+		}
+		return bv;
+	}
 	/**
 	 * Sets the value.
 	 *
