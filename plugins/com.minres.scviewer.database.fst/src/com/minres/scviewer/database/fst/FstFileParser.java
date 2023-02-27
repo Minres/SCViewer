@@ -78,6 +78,7 @@ class FstFileParser {
 	}
 
 	public void getValueChanges(final int id, final int width, int timeScale, final EventList values) {
+		FstLibrary.fstReaderClrFacProcessMaskAll(fst);
 		FstLibrary.fstReaderSetFacProcessMask(fst, id);
 		FstLibrary.iterateValueChanges(fst, new ValueChangeCallback() {
 			@Override
