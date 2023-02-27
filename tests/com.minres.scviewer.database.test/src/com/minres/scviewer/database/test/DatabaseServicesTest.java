@@ -189,7 +189,7 @@ public class DatabaseServicesTest {
 		List<IWaveform> waves= waveformDb.getAllWaves();
 		assertEquals(14,  waves.size());
 		assertEquals(2,  waveformDb.getChildNodes().size());
-		IWaveform bus_data_wave = waves.get(0);
+		IWaveform bus_data_wave = waves.get(12);
 		EventEntry bus_data_entry = bus_data_wave.getEvents().floorEntry(1400000000L);
 		assertEquals("00001011", bus_data_entry.events[0].toString());
 		IWaveform rw_wave = waves.get(2);

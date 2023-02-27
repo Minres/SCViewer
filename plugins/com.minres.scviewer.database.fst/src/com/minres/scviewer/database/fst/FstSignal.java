@@ -20,25 +20,28 @@ import com.minres.scviewer.database.WaveformType;
 
 public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 
-	private long id;
+	private final FstDbLoader loader;
+	
+	private final int id;
 
-	private String fullName;
+	private final String fullName;
 
 	private final int width;
 
-	private IEventList values;
+	private final IEventList values;
 	
-	public FstSignal(String name) {
-		this(0, name, 1);
+	public FstSignal(FstDbLoader loader, String name) {
+		this(loader, 0, name, 1);
 	}
 
-	public FstSignal(int id, String name) {
-		this(id,name,1);
+	public FstSignal(FstDbLoader loader, int id, String name) {
+		this(loader, id,name,1);
 	}
 
-	public FstSignal(int id, String name, int width) {
+	public FstSignal(FstDbLoader loader, int id, String name, int width) {
 		super(name);
 		fullName=name;
+		this.loader=loader;
 		this.id=id;
 		this.width=width;
 		this.values=new EventList();
@@ -47,6 +50,7 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 	public FstSignal(FstSignal<T> o, int id, String name) {
 		super(name);
 		fullName=name;
+		this.loader=o.loader;
 		this.id=id;
 		this.width=o.width;
 		this.values=o.values;
@@ -57,36 +61,30 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 		return fullName;
 	}
 
-	public void setId(int id) {
-		this.id=id;
-	}
-
 	@Override
 	public long getId() {
 		return id;
 	}
 
-	public void addSignalChange(Long time, T value){
-		values.put(time, value);
-	}
-	
 	@Override
 	public IEventList getEvents() {
+		if(values.size()==0)
+			loader.getEvents(id, width, values);
 		return values;
 	}
 
 	@Override
 	public IEvent[] getEventsAtTime(long time) {
-		return values.get(time);
+		return getEvents().get(time);
 	}
 
     @Override
     public IEvent[] getEventsBeforeTime(long time) {
-    	EventEntry e = values.floorEntry(time);
+    	EventEntry e = getEvents().floorEntry(time);
     	if(e==null)
     		return new IEvent[] {};
     	else
-    		return values.floorEntry(time).events;
+    		return getEvents().floorEntry(time).events;
     }
 
 	@Override
@@ -101,6 +99,11 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	@Override
 	public int getRowCount() {
+		return 1;
+	}
+
+	@Override
+	public int getWidth() {
 		return width;
 	}
 

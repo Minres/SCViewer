@@ -10,8 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database.fst;
 
-import com.minres.scviewer.database.BitVector;
-
 /**
  * The Interface IVCDDatabaseBuilder. It allows to add VCD events into the database
  */
@@ -37,7 +35,7 @@ public interface IFstDatabaseBuilder {
 	 * @param width the width, -1 equals real, 0... is a bit vector
 	 * @return the net id
 	 */
-	public Integer newNet(String netName, int i, int width) ;
+	public void newNet(String netName, int handle, int width, boolean alias) ;
 
 	/**
 	 * Gets the net width.
@@ -47,22 +45,5 @@ public interface IFstDatabaseBuilder {
 	 */
 	public int getNetWidth(int netId);
 
-	/**
-	 * Append transition.
-	 *
-	 * @param netId the int value
-	 * @param currentTime the current time in ps
-	 * @param decodedValues the decoded values
-	 */
-	public void appendTransition(int netId, long currentTime, BitVector decodedValue);
-
-	/**
-	 * Append transition.
-	 *
-	 * @param netId the int value
-	 * @param currentTime the current time in ps
-	 * @param decodedValue the decoded values
-	 */
-	public void appendTransition(int netId, long currentTime, double decodedValue);
-
+	public void setMaxTime(long time, int timeScale);
 }
