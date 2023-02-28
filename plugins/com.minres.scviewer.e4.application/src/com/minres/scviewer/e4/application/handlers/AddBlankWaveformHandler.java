@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
+ * Copyright (c) 2023 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *     MINRES Technologies GmbH - initial API and implementation
  *******************************************************************************/
- 
+
 package com.minres.scviewer.e4.application.handlers;
 
 import javax.inject.Named;
@@ -19,13 +19,15 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
+import com.minres.scviewer.database.BlankWaveform;
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
-public class MoveWaveformHandler {
+public class AddBlankWaveformHandler {
 
-	static final String PARAMETER_ID="com.minres.scviewer.e4.application.command.movewaveformupCommand.parameter.dir"; //$NON-NLS-1$
-
+	public static final String PARAM_WHERE_ID="com.minres.scviewer.e4.application.commandparameter.add_blank"; //$NON-NLS-1$
+	
 	@CanExecute
 	public Boolean canExecute(EPartService partService){
 		MPart part = partService.getActivePart();
@@ -41,15 +43,12 @@ public class MoveWaveformHandler {
 	}
 	
 	@Execute
-	public void execute(@Named(PARAMETER_ID) String param, EPartService partService) {
-		MPart part = partService.getActivePart();
-		Object obj = part.getObject();
+	public void execute(@Named(PARAM_WHERE_ID) String where, EPartService partService) {
+		Object obj = partService.getActivePart().getObject();
 		if(obj instanceof WaveformViewer){
-			if("up".equalsIgnoreCase(param)) //$NON-NLS-1$
-				((WaveformViewer)obj).moveSelected(-1);
-			else if("down".equalsIgnoreCase(param)) //$NON-NLS-1$
-				((WaveformViewer)obj).moveSelected(1);
+			((WaveformViewer)obj).addStreamsToList(
+					new IWaveform[]{new BlankWaveform()}, "before".equalsIgnoreCase(where)); //$NON-NLS-1$
 		}
 	}
-		
+
 }

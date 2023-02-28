@@ -47,7 +47,6 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
@@ -91,6 +90,7 @@ import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.TrackEntryGroup;
 import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
 
 public class WaveformView implements IWaveformView {
@@ -137,7 +137,7 @@ public class WaveformView implements IWaveformView {
 
 	protected TrackEntry lastClickedEntry;
 
-	protected MouseListener nameValueMouseListener = new MouseAdapter() {
+	protected MouseListener nameValueMouseListener = new MouseListener() {
 
 		@Override
 		public void mouseDown(MouseEvent e) {
@@ -172,6 +172,10 @@ public class WaveformView implements IWaveformView {
 					lastClickedEntry = entry.getValue();
 				}
 			}
+		}
+		
+		@Override
+		public void mouseDoubleClick(MouseEvent e) {
 		}
 	};
 
@@ -551,29 +555,30 @@ public class WaveformView implements IWaveformView {
 	public void update() {
 		tracksVerticalHeight = 0;
 		int nameMaxWidth = 0;
-		IWaveformPainter painter = null;
 		trackVerticalOffset.clear();
 		waveformCanvas.clearAllWaveformPainter(false);
 		boolean even = true;
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
 		tl.setFont(styleProvider.getNameFont());
 		for (TrackEntry streamEntry : streams) {
-			streamEntry.height = styleProvider.getTrackHeight();
-			streamEntry.vOffset = tracksVerticalHeight;
-			if (streamEntry.waveform.getType() == WaveformType.TRANSACTION) {
-				streamEntry.currentValue = "";
-				streamEntry.height *= streamEntry.waveform.getRowCount();
-				painter = new StreamPainter(waveformCanvas, even, streamEntry);
-			} else if (streamEntry.waveform.getType() == WaveformType.SIGNAL) {
-				streamEntry.currentValue = "---";
-				painter = new SignalPainter(waveformCanvas, even, streamEntry);
+			if(streamEntry instanceof TrackEntryGroup && ((TrackEntryGroup)streamEntry).is_open) {
+				TrackEntryGroup streamEntryGroup = (TrackEntryGroup)streamEntry;
+				for (TrackEntry trackEntry : streamEntryGroup.waveforms) {
+					addPainter(even, trackEntry);
+					trackVerticalOffset.put(tracksVerticalHeight, trackEntry);
+					tl.setText(trackEntry.waveform.getFullName());
+					nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width);
+					tracksVerticalHeight += trackEntry.height;
+					even = !even;					
+				}
+			} else {
+				addPainter(even, streamEntry);
+				trackVerticalOffset.put(tracksVerticalHeight, streamEntry);
+				tl.setText(streamEntry.waveform.getFullName());
+				nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width);
+				tracksVerticalHeight += streamEntry.height;
+				even = !even;
 			}
-			waveformCanvas.addWaveformPainter(painter, false);
-			trackVerticalOffset.put(tracksVerticalHeight, streamEntry);
-			tl.setText(streamEntry.waveform.getFullName());
-			nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width);
-			tracksVerticalHeight += streamEntry.height;
-			even = !even;
 		}
 		waveformCanvas.syncSb();
 		nameList.setSize(nameMaxWidth + 15, tracksVerticalHeight);
@@ -586,6 +591,23 @@ public class WaveformView implements IWaveformView {
 			waveformCanvas.setOrigin(0, 0);
 		}
 		tl.dispose();
+	}
+
+	private void addPainter(boolean even, TrackEntry streamEntry) {
+		streamEntry.height = styleProvider.getTrackHeight();
+		streamEntry.vOffset = tracksVerticalHeight;
+		if (streamEntry.waveform.getType() == WaveformType.TRANSACTION) {
+			streamEntry.currentValue = "";
+			streamEntry.height *= streamEntry.waveform.getRowCount();
+			IWaveformPainter painter = new StreamPainter(waveformCanvas, even, streamEntry);
+			waveformCanvas.addWaveformPainter(painter, false);
+		} else if (streamEntry.waveform.getType() == WaveformType.SIGNAL) {
+			streamEntry.currentValue = "---";
+			waveformCanvas.addWaveformPainter(new SignalPainter(waveformCanvas, even, streamEntry), false);
+		} else if (streamEntry.waveform.getType() == WaveformType.BLANK) {
+			streamEntry.currentValue = "";
+			waveformCanvas.addWaveformPainter(new BlankPainter(waveformCanvas, even, streamEntry), false);
+		}
 	}
 
 	private int calculateValueWidth() {

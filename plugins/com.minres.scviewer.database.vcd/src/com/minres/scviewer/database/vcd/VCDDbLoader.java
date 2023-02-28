@@ -28,7 +28,6 @@ import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;

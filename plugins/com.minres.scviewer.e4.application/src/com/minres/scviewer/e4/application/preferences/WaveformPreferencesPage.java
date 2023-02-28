@@ -15,6 +15,7 @@ import java.util.HashMap;
 
 import org.eclipse.jface.preference.ColorFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.osgi.util.NLS;
 
 import com.minres.scviewer.database.ui.WaveformColors;
 import com.minres.scviewer.e4.application.Messages;
@@ -48,7 +49,7 @@ public class WaveformPreferencesPage extends FieldEditorPreferencePage {
 		}
 		for (WaveformColors c : WaveformColors.values()) {
 			addField(new ColorFieldEditor(c.name() + "_COLOR", 
-					Messages.WaveformPreferencesPage_1 + staticFields.get(c.name().toLowerCase()), //$NON-NLS-1$
+					NLS.bind(Messages.WaveformPreferencesPage_1, staticFields.get(c.name().toLowerCase())), //$NON-NLS-1$
 					getFieldEditorParent()));
 		}
 	}

@@ -117,6 +117,7 @@
   <handlers xmi:id="_ru2NIEYEEeyPM8G0E2EYww" elementId="com.minres.scviewer.e4.application.handler.help" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpHandler" command="_lqjIYEYEEeyPM8G0E2EYww"/>
   <handlers xmi:id="_TwU0IEYoEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.handler.enabletxdetails" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableTxDetails" command="_Fj1gQEYoEeyKK_icsY7Xjg"/>
   <handlers xmi:id="_htyxgHCOEeyub8CfGE1sGA" elementId="com.minres.scviewer.e4.application.handler.helpContent" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpContentsHandler" command="_RdUMoHCOEeyub8CfGE1sGA"/>
+  <handlers xmi:id="__Ozu4LcxEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handler.add_blank" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.AddBlankWaveformHandler" command="_vYAOQLcxEe294PIiYLxpfA"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
@@ -200,6 +201,13 @@
       <children xsi:type="menu:HandledMenuItem" xmi:id="_4ZeEQHabEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.previouschange" label="Previous Tx" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/reverse_green.png" command="_Gn3lEHXKEeWwZ-9vrAR2UQ">
         <parameters xmi:id="_4ZeEQXabEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.5" name="com.minres.scviewer.e4.application.command.navigateTransCommand.parameter.dir" value="prev"/>
       </children>
+      <children xsi:type="menu:MenuSeparator" xmi:id="_cxgs4Lc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.menuseparator.1"/>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_NFfK0LcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_blank" label="Add blank above" command="_vYAOQLcxEe294PIiYLxpfA">
+        <parameters xmi:id="_or7iYLcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_blank" value="before"/>
+      </children>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_ecbWkLc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_blank" visible="false" label="Add blank below" enabled="false" command="_vYAOQLcxEe294PIiYLxpfA">
+        <parameters xmi:id="_ecbWkbc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_blank" value="after"/>
+      </children>
       <children xsi:type="menu:MenuSeparator" xmi:id="__Ubd4M1eEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.menuseparator.0"/>
       <children xsi:type="menu:Menu" xmi:id="_mAA6sM1bEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.menu.view" label="View">
         <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_psvR0M1gEei6rfTGo88R-w" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.elements.WaveformPopupMenuContribution"/>
@@ -277,6 +285,9 @@
   <commands xmi:id="_2PehEHr9EeWVM_sKoXvptg" elementId="com.minres.scviewer.e4.application.command.addwaveform" commandName="Add Waveform Command">
     <parameters xmi:id="_6KsZcHr9EeWVM_sKoXvptg" elementId="com.minres.scviewer.e4.application.command.addwaveform.where" name="where" optional="false"/>
     <parameters xmi:id="_7T1TcHwIEeWv0Y5uF2QN5w" elementId="com.minres.scviewer.e4.application.command.addwaveform.all" name="all" typeId="" optional="false"/>
+  </commands>
+  <commands xmi:id="_vYAOQLcxEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.command.add_blank" commandName="Add Blank Waveform">
+    <parameters xmi:id="_g_HnsLcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.commandparameter.add_blank" name="where"/>
   </commands>
   <commands xmi:id="_AxH6sIl_EeWxJ_wPkM6yGQ" elementId="org.eclipse.ui.window.preferences" commandName="Preferences"/>
   <commands xmi:id="_KlGlsIoNEeWxJ_wPkM6yGQ" elementId="com.minres.scviewer.e4.application.command.set_them" commandName="Set Theme Command">

@@ -14,50 +14,15 @@ import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.resource.StringConverter;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.wb.swt.SWTResourceManager;
 import org.osgi.framework.FrameworkUtil;
 
 import com.minres.scviewer.database.ui.WaveformColors;
+import com.minres.scviewer.database.ui.swt.DefaultWaveformStyleProvider;
 
 /**
  * The Class DefaultValuesInitializer.
  */
 public class DefaultValuesInitializer extends AbstractPreferenceInitializer {
-
-    /** The default colors. */
-    public static final Color[] colors = new Color[WaveformColors.values().length];
-
-	/**
-	 * Instantiates a new default values initializer.
-	 */
-	public DefaultValuesInitializer() {
-        colors[WaveformColors.LINE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-        colors[WaveformColors.LINE_HIGHLITE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_CYAN);
-        colors[WaveformColors.TRACK_BG_EVEN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_BLACK);
-        colors[WaveformColors.TRACK_BG_ODD.ordinal()] = SWTResourceManager.getColor(40, 40, 40);
-        colors[WaveformColors.TRACK_BG_HIGHLITE.ordinal()] = SWTResourceManager.getColor(40, 40, 80);
-        colors[WaveformColors.TX_BG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
-        colors[WaveformColors.TX_BG_HIGHLITE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GREEN);
-        colors[WaveformColors.TX_BORDER.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-        colors[WaveformColors.SIGNAL0.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
-        colors[WaveformColors.SIGNAL1.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
-        colors[WaveformColors.SIGNALZ.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
-        colors[WaveformColors.SIGNALX.ordinal()] = SWTResourceManager.getColor(255,  51,  51);
-        colors[WaveformColors.SIGNALU.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_YELLOW);
-        colors[WaveformColors.SIGNAL_REAL.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
-        colors[WaveformColors.SIGNAL_NAN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-        colors[WaveformColors.SIGNAL_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
-        colors[WaveformColors.SIGNAL_REAL.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
-        colors[WaveformColors.CURSOR.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
-        colors[WaveformColors.CURSOR_DRAG.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GRAY);
-        colors[WaveformColors.CURSOR_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
-        colors[WaveformColors.MARKER.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_GRAY);
-        colors[WaveformColors.MARKER_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
-        colors[WaveformColors.REL_ARROW.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_MAGENTA);
-        colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()] = SWTResourceManager.getColor(255, 128, 255);
-	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer#initializeDefaultPreferences()
@@ -65,13 +30,14 @@ public class DefaultValuesInitializer extends AbstractPreferenceInitializer {
 	@Override
 	public void initializeDefaultPreferences() {
 		IEclipsePreferences store = DefaultScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
+		DefaultWaveformStyleProvider styleProvider = new DefaultWaveformStyleProvider();
 		
 		store.putBoolean(PreferenceConstants.DATABASE_RELOAD, true);
 		store.putBoolean(PreferenceConstants.SHOW_HOVER, true);
 		store.putBoolean(PreferenceConstants.SHOW_TX_DETAILS, false);
 		store.putInt(PreferenceConstants.TRACK_HEIGHT, 30);
         for (WaveformColors c : WaveformColors.values()) {
-        	 store.put(c.name()+"_COLOR", StringConverter.asString(colors[c.ordinal()].getRGB())); //$NON-NLS-1$
+        	 store.put(c.name()+"_COLOR", StringConverter.asString(styleProvider.getColor(c).getRGB())); //$NON-NLS-1$
         }
 	}
 
