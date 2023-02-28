@@ -617,6 +617,9 @@ public class WaveformView implements IWaveformView {
 						case UNSIGNED:
 							entry.currentValue = Long.toString(bv.toUnsignedValue());
 							break;
+						case BINARY:
+							entry.currentValue=bv.toString();
+							break;
 						default:
 							entry.currentValue = "h'" + bv.toHexString();
 						}

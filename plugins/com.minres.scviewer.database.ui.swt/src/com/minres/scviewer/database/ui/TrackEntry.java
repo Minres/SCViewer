@@ -18,7 +18,7 @@ public class TrackEntry {
 	IWaveformStyleProvider styleProvider;
 	
 	public enum ValueDisplay {
-		DEFAULT, SIGNED, UNSIGNED
+		DEFAULT, BINARY, SIGNED, UNSIGNED
 
 	}
 

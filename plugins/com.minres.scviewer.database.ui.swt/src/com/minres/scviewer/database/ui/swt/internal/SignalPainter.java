@@ -219,6 +219,9 @@ public class SignalPainter extends TrackPainter {
 				case UNSIGNED:
 					label=Long.toString(last.toUnsignedValue());
 					break;
+				case BINARY:
+					label=last.toString();
+					break;
 				default:
 					label="h'"+last.toHexString();
 				}

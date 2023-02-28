@@ -43,6 +43,17 @@ public class Messages extends NLS {
 	public static String TransactionDetails_21;
 	public static String TransactionDetails_3;
 	public static String TransactionDetails_4;
+	public static String WaveformPopupMenuContribution_0;
+	public static String WaveformPopupMenuContribution_1;
+	public static String WaveformPopupMenuContribution_10;
+	public static String WaveformPopupMenuContribution_12;
+	public static String WaveformPopupMenuContribution_15;
+	public static String WaveformPopupMenuContribution_2;
+	public static String WaveformPopupMenuContribution_3;
+	public static String WaveformPopupMenuContribution_4;
+	public static String WaveformPopupMenuContribution_5;
+	public static String WaveformPopupMenuContribution_6;
+	public static String WaveformPopupMenuContribution_7;
 	public static String WaveformPreferencesPage_description;
 	public static String WaveformPreferencesPage_1;
 	public static String WaveformViewer_13;
