@@ -201,6 +201,13 @@
       <children xsi:type="menu:HandledMenuItem" xmi:id="_4ZeEQHabEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.previouschange" label="Previous Tx" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/reverse_green.png" command="_Gn3lEHXKEeWwZ-9vrAR2UQ">
         <parameters xmi:id="_4ZeEQXabEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.5" name="com.minres.scviewer.e4.application.command.navigateTransCommand.parameter.dir" value="prev"/>
       </children>
+      <children xsi:type="menu:MenuSeparator" xmi:id="_cxgs4Lc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.menuseparator.1"/>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_NFfK0LcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_blank" label="Add blank above" command="_vYAOQLcxEe294PIiYLxpfA">
+        <parameters xmi:id="_or7iYLcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_blank" value="before"/>
+      </children>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_ecbWkLc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_blank" visible="false" label="Add blank below" enabled="false" command="_vYAOQLcxEe294PIiYLxpfA">
+        <parameters xmi:id="_ecbWkbc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_blank" value="after"/>
+      </children>
       <children xsi:type="menu:MenuSeparator" xmi:id="__Ubd4M1eEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.menuseparator.0"/>
       <children xsi:type="menu:Menu" xmi:id="_mAA6sM1bEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.menu.view" label="View">
         <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_psvR0M1gEei6rfTGo88R-w" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.elements.WaveformPopupMenuContribution"/>

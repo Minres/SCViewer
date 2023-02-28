@@ -84,6 +84,11 @@ public class Messages extends NLS {
 	public static String cursor;
 	public static String cursor_drag;
 	public static String cursor_text;
+	public static String marker;
+	public static String marker_text;
+	public static String rel_arrow;
+	public static String rel_arrow_highlite;
+	public static String blank;
 	public static String HelpBrowser_0;
 	public static String HelpBrowser_1;
 	public static String HelpBrowser_2;
@@ -92,10 +97,6 @@ public class Messages extends NLS {
 	public static String HelpBrowser_5;
 	public static String HelpBrowser_7;
 	public static String HelpBrowser_8;
-	public static String marker;
-	public static String marker_text;
-	public static String rel_arrow;
-	public static String rel_arrow_highlite;
 	public static String UpdateHandler_URI;
 	public static String UpdateHandler_10;
 	public static String UpdateHandler_11;
