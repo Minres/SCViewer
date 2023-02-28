@@ -78,6 +78,7 @@ public class Messages extends NLS {
 	public static String signalz;
 	public static String signalx;
 	public static String signalu;
+	public static String signal_change;
 	public static String signal_text;
 	public static String signal_real;
 	public static String signal_nan;

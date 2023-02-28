@@ -191,7 +191,7 @@ public class SignalPainter extends TrackPainter {
 		}
 
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
-			Color colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL0);
+			Color colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL_CHANGE);
 			BitVector last = (BitVector) left;
 			if (Arrays.toString(last.getValue()).contains("X")) {
 				colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNALX);
@@ -340,8 +340,11 @@ public class SignalPainter extends TrackPainter {
 						break;
 					default:
 					}
-					if (yOffset != yNext)
+					if (yOffset != yNext) {
+						Color transition_color = waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL_CHANGE);
+						proj.setForeground(transition_color);
 						proj.drawLine(xEnd, yOffset, xEnd, yNext);
+					}
 				}
 			}
 		}
