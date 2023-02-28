@@ -19,7 +19,7 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
-import com.minres.scviewer.database.BlankWaveform;
+import com.minres.scviewer.database.EmptyWaveform;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
@@ -47,7 +47,7 @@ public class AddSeparatorHandler {
 		Object obj = partService.getActivePart().getObject();
 		if(obj instanceof WaveformViewer){
 			((WaveformViewer)obj).addStreamsToList(
-					new IWaveform[]{new BlankWaveform()}, "before".equalsIgnoreCase(where)); //$NON-NLS-1$
+					new IWaveform[]{new EmptyWaveform()}, "before".equalsIgnoreCase(where)); //$NON-NLS-1$
 		}
 	}
 

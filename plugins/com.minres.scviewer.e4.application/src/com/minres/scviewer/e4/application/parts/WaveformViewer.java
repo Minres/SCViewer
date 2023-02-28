@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -31,6 +32,8 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.eclipse.core.commands.Command;
+import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -40,6 +43,8 @@ import org.eclipse.core.runtime.jobs.JobGroup;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.e4.core.commands.ECommandService;
+import org.eclipse.e4.core.commands.EHandlerService;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
@@ -93,6 +98,7 @@ import com.minres.scviewer.database.tx.ITxRelation;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.IWaveformView;
+import com.minres.scviewer.database.ui.IWaveformviewEventListener;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
@@ -101,6 +107,7 @@ import com.minres.scviewer.database.ui.swt.Constants;
 import com.minres.scviewer.database.ui.swt.IToolTipContentProvider;
 import com.minres.scviewer.database.ui.swt.IToolTipHelpTextProvider;
 import com.minres.scviewer.database.ui.swt.WaveformViewFactory;
+import com.minres.scviewer.e4.application.AppModelId;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl;
 import com.minres.scviewer.e4.application.internal.util.FileMonitor;
@@ -238,6 +245,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	@Inject Composite parent;
 
+	@Inject	ECommandService commandService;
+
+	@Inject	EHandlerService handlerService;
+	
 	private boolean showHover;
 	
 	private SashForm topSash = null;
@@ -402,6 +413,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		});
 		waveformPane.addDisposeListener(this);
 
+		waveformPane.addEventListner(new IWaveformviewEventListener() {
+			@Override
+			public void onTrackEntryDoubleClickEvent(TrackEntry trackEntry) {
+				ParameterizedCommand command = commandService.createCommand(AppModelId.COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SET_LABEL_TEXT);
+				handlerService.executeHandler(command);
+			}
+		});
 		waveformPane.getWaveformControl().setData(Constants.HELP_PROVIDER_TAG, new IToolTipHelpTextProvider() {
 			@Override
 			public String getHelpText(Widget widget) {

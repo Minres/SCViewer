@@ -11,22 +11,6 @@
 
 package com.minres.scviewer.database.ui;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.minres.scviewer.database.EmptyWaveform;
-
-public class TrackEntryGroup extends TrackEntry {
-
-	public List<TrackEntry> waveforms = new ArrayList<>();
-	
-	public Boolean is_open = true;
-	
-	public TrackEntryGroup(TrackEntry[] waveform, IWaveformStyleProvider styleProvider) {
-		super(new EmptyWaveform(), styleProvider);
-		for (TrackEntry iWaveform : waveform) {
-			waveforms.add(iWaveform);
-		}
-	}
-
+public interface IWaveformviewEventListener {
+	 void onTrackEntryDoubleClickEvent (TrackEntry trackEntry);
 }

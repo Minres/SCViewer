@@ -118,6 +118,7 @@
   <handlers xmi:id="_TwU0IEYoEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.handler.enabletxdetails" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableTxDetails" command="_Fj1gQEYoEeyKK_icsY7Xjg"/>
   <handlers xmi:id="_htyxgHCOEeyub8CfGE1sGA" elementId="com.minres.scviewer.e4.application.handler.helpContent" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpContentsHandler" command="_RdUMoHCOEeyub8CfGE1sGA"/>
   <handlers xmi:id="__Ozu4LcxEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handler.add_separator" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.AddSeparatorHandler" command="_vYAOQLcxEe294PIiYLxpfA"/>
+  <handlers xmi:id="_zpAa4LepEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handler.set_label_text" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SetLabelTextHandler" command="_wcqasLepEe294PIiYLxpfA"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
@@ -215,6 +216,9 @@
       </children>
       <children xsi:type="menu:HandledMenuItem" xmi:id="_NnJA4BlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handledmenuitem.search" label="Search Tx..." iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/find.png" command="_XDxTYBlEEeuiP60JNw0iiA">
         <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_Se1voBlEEeuiP60JNw0iiA" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler"/>
+      </children>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_Wblk0LexEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.edit_text" label="Edit Text" command="_wcqasLepEe294PIiYLxpfA">
+        <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_fH08MLexEe294PIiYLxpfA" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SetLabelTextHandler"/>
       </children>
     </menus>
     <toolbar xmi:id="_ReeeAE-DEeyuGJbYVZjX8w" elementId="com.minres.scviewer.e4.application.toolbar.3">
@@ -315,6 +319,7 @@
     <parameters xmi:id="_y2BUsU-HEeyuGJbYVZjX8w" elementId="com.minres.scviewer.e4.application.command.pancommand.parameter.direction" name="direction" optional="false"/>
   </commands>
   <commands xmi:id="_RdUMoHCOEeyub8CfGE1sGA" elementId="org.eclipse.ui.help.helpContentCommand" commandName="Help Content Command" description=""/>
+  <commands xmi:id="_wcqasLepEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.command.set_label_text" commandName="Set Label Text"/>
   <addons xmi:id="_95PfsnNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_95Pfs3NmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_95PftHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>

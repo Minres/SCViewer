@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2023 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -89,6 +89,7 @@ import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
+import com.minres.scviewer.database.ui.IWaveformviewEventListener;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntryGroup;
 import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
@@ -98,6 +99,8 @@ public class WaveformView implements IWaveformView {
 	private ListenerList<ISelectionChangedListener> selectionChangedListeners = new ListenerList<>();
 
 	private PropertyChangeSupport pcs;
+	
+	private List<IWaveformviewEventListener> eventListener = new ArrayList<>();
 
 	private ITx currentTxSelection;
 
@@ -176,6 +179,12 @@ public class WaveformView implements IWaveformView {
 		
 		@Override
 		public void mouseDoubleClick(MouseEvent e) {
+			Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
+			if(entry != null)
+				setSelection(new StructuredSelection(entry.getValue()), false, false);
+				for (IWaveformviewEventListener listner : eventListener) {
+					listner.onTrackEntryDoubleClickEvent(entry.getValue());
+				}
 		}
 	};
 
@@ -1535,6 +1544,20 @@ public class WaveformView implements IWaveformView {
 	@Override
 	public void addDisposeListener(DisposeListener listener) {
 		waveformCanvas.addDisposeListener(listener);
+	}
+
+	@Override
+	public void addEventListner(IWaveformviewEventListener listener) {
+		if(!eventListener.contains(listener)) {
+			eventListener.add(listener);
+		}
+	}
+	
+	@Override
+	public void removeEventListner(IWaveformviewEventListener listener) {
+		if(eventListener.contains(listener)) {
+			eventListener.remove(listener);
+		}
 	}
 
 	@Override
