@@ -24,9 +24,9 @@ import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
-public class AddBlankWaveformHandler {
+public class AddSeparatorHandler {
 
-	public static final String PARAM_WHERE_ID="com.minres.scviewer.e4.application.commandparameter.add_blank"; //$NON-NLS-1$
+	public static final String PARAM_WHERE_ID="com.minres.scviewer.e4.application.commandparameter.add_separator"; //$NON-NLS-1$
 	
 	@CanExecute
 	public Boolean canExecute(EPartService partService){
