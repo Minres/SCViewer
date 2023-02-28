@@ -46,7 +46,6 @@ import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
