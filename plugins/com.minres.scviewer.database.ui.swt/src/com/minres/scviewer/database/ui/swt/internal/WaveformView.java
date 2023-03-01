@@ -149,6 +149,24 @@ public class WaveformView implements IWaveformView {
 				if (entry != null)
 					entry.getValue().selected = true;
 			} else if (e.button == 3) {
+				ISelection sel = getSelection();
+				if(sel instanceof StructuredSelection) {
+					if(((StructuredSelection)sel).isEmpty()) {
+						Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
+						setSelection(new StructuredSelection(entry.getValue()), false, false);
+						lastClickedEntry = entry.getValue();
+					} else {
+						StructuredSelection structuredSelection = (StructuredSelection) sel;
+						if(structuredSelection.size()== 1 && structuredSelection.getFirstElement() instanceof TrackEntry) {
+							Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
+							TrackEntry selEntry = (TrackEntry) structuredSelection.getFirstElement();
+							if(!entry.getValue().equals(selEntry)) {
+								setSelection(new StructuredSelection(entry.getValue()), false, false);
+								lastClickedEntry = entry.getValue();
+							}
+						}
+					}
+				}
 				Menu topMenu = top.getMenu();
 				if (topMenu != null)
 					topMenu.setVisible(true);
@@ -182,6 +200,7 @@ public class WaveformView implements IWaveformView {
 			Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
 			if(entry != null)
 				setSelection(new StructuredSelection(entry.getValue()), false, false);
+				lastClickedEntry = entry.getValue();
 				for (IWaveformviewEventListener listner : eventListener) {
 					listner.onTrackEntryDoubleClickEvent(entry.getValue());
 				}
@@ -613,9 +632,9 @@ public class WaveformView implements IWaveformView {
 		} else if (streamEntry.waveform.getType() == WaveformType.SIGNAL) {
 			streamEntry.currentValue = "---";
 			waveformCanvas.addWaveformPainter(new SignalPainter(waveformCanvas, even, streamEntry), false);
-		} else if (streamEntry.waveform.getType() == WaveformType.BLANK) {
+		} else if (streamEntry.waveform.getType() == WaveformType.EMPTY) {
 			streamEntry.currentValue = "";
-			waveformCanvas.addWaveformPainter(new BlankPainter(waveformCanvas, even, streamEntry), false);
+			waveformCanvas.addWaveformPainter(new EmptyPainter(waveformCanvas, even, streamEntry), false);
 		}
 	}
 

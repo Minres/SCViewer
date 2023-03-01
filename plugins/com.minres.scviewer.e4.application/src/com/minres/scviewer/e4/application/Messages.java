@@ -89,7 +89,7 @@ public class Messages extends NLS {
 	public static String marker_text;
 	public static String rel_arrow;
 	public static String rel_arrow_highlite;
-	public static String blank;
+	public static String separator;
 	public static String HelpBrowser_0;
 	public static String HelpBrowser_1;
 	public static String HelpBrowser_2;

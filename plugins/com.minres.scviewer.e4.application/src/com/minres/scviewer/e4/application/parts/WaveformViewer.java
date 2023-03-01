@@ -84,6 +84,7 @@ import org.eclipse.wb.swt.SWTResourceManager;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.database.EmptyWaveform;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
@@ -131,6 +132,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	/** The Constant SHOWN_WAVEFORM. */
 	protected static final String SHOWN_WAVEFORM = "SHOWN_WAVEFORM"; //$NON-NLS-1$
+
+	protected static final String WAVEFORM_TYPE = ".WAVEFORM_TYPE"; //$NON-NLS-1$
 
 	protected static final String VALUE_DISPLAY = ".VALUE_DISPLAY"; //$NON-NLS-1$
 
@@ -749,9 +752,12 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		Integer index = 0;
 		for (TrackEntry trackEntry : waveformPane.getStreamList()) {
 			persistingState.put(SHOWN_WAVEFORM + index, trackEntry.waveform.getFullName());
-			persistingState.put(SHOWN_WAVEFORM + index + VALUE_DISPLAY, trackEntry.valueDisplay.toString());
-			persistingState.put(SHOWN_WAVEFORM + index + WAVE_DISPLAY, trackEntry.waveDisplay.toString());
+			persistingState.put(SHOWN_WAVEFORM + index + WAVEFORM_TYPE, trackEntry.waveform.getType().toString());
 			persistingState.put(SHOWN_WAVEFORM + index + WAVEFORM_SELECTED, String.valueOf(trackEntry.selected).toUpperCase());
+			if (trackEntry.waveform.getType()!=WaveformType.EMPTY) {
+				persistingState.put(SHOWN_WAVEFORM + index + VALUE_DISPLAY, trackEntry.valueDisplay.toString());
+				persistingState.put(SHOWN_WAVEFORM + index + WAVE_DISPLAY, trackEntry.waveDisplay.toString());
+			}
 			index++;
 		}
 		List<ICursor> cursors = waveformPane.getCursorList();
@@ -807,19 +813,28 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		List<TrackEntry> trackEntries = new LinkedList<>();
 		List<TrackEntry> selectedTrackEntries = new LinkedList<>();
 		for (int i = 0; i < waves; i++) {
-			IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
-			if (waveform != null) {
-				TrackEntry trackEntry = waveformPane.addWaveform(waveform, -1);
+			String wtString  = state.get(SHOWN_WAVEFORM + i + WAVEFORM_TYPE);
+			if(wtString!=null && WaveformType.valueOf(wtString)==WaveformType.EMPTY) {
+				TrackEntry trackEntry = waveformPane.addWaveform(new EmptyWaveform(state.get(SHOWN_WAVEFORM + i)), -1);
 				//check if t is selected
 				trackEntries.add(trackEntry);
 				if(Boolean.parseBoolean(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED)))
 					selectedTrackEntries.add(trackEntry);
-				String v = state.get(SHOWN_WAVEFORM + i + VALUE_DISPLAY);
-				if(v!=null)
-					trackEntry.valueDisplay=ValueDisplay.valueOf(v);
-				String s = state.get(SHOWN_WAVEFORM + i + WAVE_DISPLAY);
-				if(s!=null)
-					trackEntry.waveDisplay=WaveDisplay.valueOf(s);
+			} else {
+				IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
+				if (waveform != null) {
+					TrackEntry trackEntry = waveformPane.addWaveform(waveform, -1);
+					//check if t is selected
+					trackEntries.add(trackEntry);
+					if(Boolean.parseBoolean(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED)))
+						selectedTrackEntries.add(trackEntry);
+					String v = state.get(SHOWN_WAVEFORM + i + VALUE_DISPLAY);
+					if(v!=null)
+						trackEntry.valueDisplay=ValueDisplay.valueOf(v);
+					String s = state.get(SHOWN_WAVEFORM + i + WAVE_DISPLAY);
+					if(s!=null)
+						trackEntry.waveDisplay=WaveDisplay.valueOf(s);
+				}
 			}
 		}
 		Integer cursorLength = state.containsKey(SHOWN_CURSOR+"S")?Integer.parseInt(state.get(SHOWN_CURSOR + "S")):0; //$NON-NLS-1$ //$NON-NLS-2$

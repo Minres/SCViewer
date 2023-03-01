@@ -66,7 +66,7 @@
       <children xsi:type="menu:ToolBar" xmi:id="_95QGzHNmEeWBq8z1Dv39LA" elementId="toolbar:org.eclipse.ui.main.toolbar">
         <children xsi:type="menu:HandledToolItem" xmi:id="_ZSajwBkZEeudD5MqrWoETQ" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" tooltip="Open new database" command="_95PfwHNmEeWBq8z1Dv39LA"/>
         <children xsi:type="menu:HandledToolItem" xmi:id="_95QGzXNmEeWBq8z1Dv39LA" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/database_refresh.png" tooltip="Re-load database" command="_srACsBkREeudD5MqrWoETQ"/>
-        <children xsi:type="menu:HandledToolItem" xmi:id="_o9UBUJeiEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handledtoolitem.loadsettings" label="Load settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_page.png" command="_7-AIMJebEeW09eyIbHsdvg">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_o9UBUJeiEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handledtoolitem.loadsettings" label="Load settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_page.png" tooltip="Load settings" command="_7-AIMJebEeW09eyIbHsdvg">
           <parameters xmi:id="_tQZAEJeiEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.parameter.32" name="com.minres.scviewer.e4.application.commandparameter.loadStore" value="load"/>
         </children>
         <children xsi:type="menu:HandledToolItem" xmi:id="_95QGznNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handledtoolitem.savesettings" toBeRendered="false" visible="false" label="Save settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/save_edit.png" command="_7-AIMJebEeW09eyIbHsdvg">

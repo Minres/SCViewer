@@ -50,7 +50,7 @@ public class DefaultWaveformStyleProvider implements IWaveformStyleProvider {
         colors[WaveformColors.MARKER_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
         colors[WaveformColors.REL_ARROW.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_MAGENTA);
         colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()] = SWTResourceManager.getColor(255, 128, 255);
-        colors[WaveformColors.BLANK.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_RED);
+        colors[WaveformColors.SEPARATOR.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_RED);
 	}
 	/** 
 	 * needs redraw() afterwards

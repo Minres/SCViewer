@@ -18,6 +18,15 @@ import java.util.List;
 public class EmptyWaveform implements IWaveform {
 
 	private String label = "";
+
+	
+	public EmptyWaveform() {
+	}
+
+	public EmptyWaveform(String label) {
+		this.label = label;
+	}
+
 	@Override
 	public void addPropertyChangeListener(PropertyChangeListener l) {
 	}
@@ -96,12 +105,12 @@ public class EmptyWaveform implements IWaveform {
 
 	@Override
 	public WaveformType getType() {
-		return WaveformType.BLANK;
+		return WaveformType.EMPTY;
 	}
 
 	@Override
 	public String getKind() {
-		return "BLANK";
+		return "separator";
 	}
 
 	@Override

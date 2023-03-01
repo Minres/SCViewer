@@ -22,5 +22,5 @@ public enum WaveformType {
 	/** The filter. */
 	FILTER,
 	/** The blank line. */
-	BLANK
+	EMPTY
 }
