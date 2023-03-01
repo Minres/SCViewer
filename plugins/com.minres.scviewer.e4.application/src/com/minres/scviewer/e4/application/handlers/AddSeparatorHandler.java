@@ -19,14 +19,14 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
-import com.minres.scviewer.database.BlankWaveform;
+import com.minres.scviewer.database.EmptyWaveform;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
-public class AddBlankWaveformHandler {
+public class AddSeparatorHandler {
 
-	public static final String PARAM_WHERE_ID="com.minres.scviewer.e4.application.commandparameter.add_blank"; //$NON-NLS-1$
+	public static final String PARAM_WHERE_ID="com.minres.scviewer.e4.application.commandparameter.add_separator"; //$NON-NLS-1$
 	
 	@CanExecute
 	public Boolean canExecute(EPartService partService){
@@ -35,8 +35,12 @@ public class AddBlankWaveformHandler {
 			Object sel = ((WaveformViewer)part.getObject()).getSelection();
 			if( sel instanceof IStructuredSelection) {
 				if(((IStructuredSelection)sel).isEmpty()) return false;
-				Object o= ((IStructuredSelection)sel).getFirstElement();
-				return o instanceof TrackEntry;
+				IStructuredSelection isel = (IStructuredSelection) sel;
+				if(isel.size()==1)
+					return isel.getFirstElement() instanceof TrackEntry;
+				else if(isel.size()==2) {
+					return isel.toArray()[1] instanceof TrackEntry;
+				}
 			}
 		}
 		return false;
@@ -47,7 +51,7 @@ public class AddBlankWaveformHandler {
 		Object obj = partService.getActivePart().getObject();
 		if(obj instanceof WaveformViewer){
 			((WaveformViewer)obj).addStreamsToList(
-					new IWaveform[]{new BlankWaveform()}, "before".equalsIgnoreCase(where)); //$NON-NLS-1$
+					new IWaveform[]{new EmptyWaveform()}, "before".equalsIgnoreCase(where)); //$NON-NLS-1$
 		}
 	}
 

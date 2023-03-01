@@ -39,6 +39,7 @@ public class DefaultWaveformStyleProvider implements IWaveformStyleProvider {
         colors[WaveformColors.SIGNALZ.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_YELLOW);
         colors[WaveformColors.SIGNALX.ordinal()] = SWTResourceManager.getColor(255,  51,  51);
         colors[WaveformColors.SIGNALU.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
+        colors[WaveformColors.SIGNAL_CHANGE.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_GREEN);
         colors[WaveformColors.SIGNAL_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
         colors[WaveformColors.SIGNAL_REAL.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_YELLOW);
         colors[WaveformColors.SIGNAL_NAN.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_RED);
@@ -49,7 +50,7 @@ public class DefaultWaveformStyleProvider implements IWaveformStyleProvider {
         colors[WaveformColors.MARKER_TEXT.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_WHITE);
         colors[WaveformColors.REL_ARROW.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_MAGENTA);
         colors[WaveformColors.REL_ARROW_HIGHLITE.ordinal()] = SWTResourceManager.getColor(255, 128, 255);
-        colors[WaveformColors.BLANK.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_RED);
+        colors[WaveformColors.SEPARATOR.ordinal()] = SWTResourceManager.getColor(SWT.COLOR_DARK_RED);
 	}
 	/** 
 	 * needs redraw() afterwards

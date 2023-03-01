@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015-2021 MINRES Technologies GmbH and others.
+ * Copyright (c) 2015-2023 MINRES Technologies GmbH and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,82 +35,86 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	
 	static final int MARKER_POS = 1;
 
-	public static final RelationType NEXT_PREV_IN_STREAM = RelationTypeFactory.create("Prev/Next in stream"); 
+	static final RelationType NEXT_PREV_IN_STREAM = RelationTypeFactory.create("Prev/Next in stream"); 
 
-	public void addSelectionChangedListener(ISelectionChangedListener listener);
+	void addSelectionChangedListener(ISelectionChangedListener listener);
 
-	public void removeSelectionChangedListener(ISelectionChangedListener listener);
+	void removeSelectionChangedListener(ISelectionChangedListener listener);
 	
-	public void setStyleProvider(IWaveformStyleProvider styleProvider);
+	void setStyleProvider(IWaveformStyleProvider styleProvider);
 	
-	public void update();
+	void update();
 
-	public Control getControl();
+	Control getControl();
 
-	public Control getNameControl();
+	Control getNameControl();
 
-	public Control getValueControl();
+	Control getValueControl();
 
-	public Control getWaveformControl();
+	Control getWaveformControl();
 
-	public ISelection getSelection();
+	ISelection getSelection();
 
-	public void setSelection(ISelection selection);
+	void setSelection(ISelection selection);
 
-	public void setSelection(ISelection selection, boolean showIfNeeded);
+	void setSelection(ISelection selection, boolean showIfNeeded);
 
-	public void addToSelection(ISelection selection, boolean showIfNeeded);
+	void addToSelection(ISelection selection, boolean showIfNeeded);
 
-	public void moveSelection(GotoDirection direction);
+	void moveSelection(GotoDirection direction);
 
-	public void moveSelection(GotoDirection direction, RelationType relationType);
+	void moveSelection(GotoDirection direction, RelationType relationType);
 
-	public void moveCursor(GotoDirection direction);
+	void moveCursor(GotoDirection direction);
 
-	public List<TrackEntry> getStreamList();
+	List<TrackEntry> getStreamList();
 
-	public TrackEntry getEntryFor(ITx source);
+	TrackEntry getEntryFor(ITx source);
 	
-	public TrackEntry getEntryFor(IWaveform source);
+	TrackEntry getEntryFor(IWaveform source);
 	
-	public List<Object> getElementsAt(Point pt);
+	List<Object> getElementsAt(Point pt);
 	
-	public void moveSelectedTrack(int i);
+	void moveSelectedTrack(int i);
 	
-    public void setHighliteRelation(RelationType relationType);
+    void setHighliteRelation(RelationType relationType);
 
-	public void setMaxTime(long maxTime);
+	void setMaxTime(long maxTime);
 
-	public void setCursorTime(long time);
+	void setCursorTime(long time);
 
-	public void setMarkerTime(int marker, long time);
+	void setMarkerTime(int marker, long time);
 
-	public long getCursorTime();
+	long getCursorTime();
 
-	public int getSelectedMarker();
+	int getSelectedMarker();
 
-	public long getMarkerTime(int marker);
+	long getMarkerTime(int marker);
 
-	public void addPropertyChangeListener(PropertyChangeListener listener);
+	void addPropertyChangeListener(PropertyChangeListener listener);
 
-	public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener);
+	void addPropertyChangeListener(String propertyName, PropertyChangeListener listener);
 
-	public void removePropertyChangeListener(PropertyChangeListener listener);
+	void removePropertyChangeListener(PropertyChangeListener listener);
 
-	public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener);
+	void removePropertyChangeListener(String propertyName, PropertyChangeListener listener);
 
-	public List<ICursor> getCursorList();
+	List<ICursor> getCursorList();
 
-	public void scrollHorizontal(int percent);
+	void scrollHorizontal(int percent);
 	
-	public void scrollTo(int pos);
+	void scrollTo(int pos);
 	
-	public void addDisposeListener( DisposeListener listener );
+	void addDisposeListener( DisposeListener listener );
 
-	public void deleteSelectedTracks();
+	void addEventListner(IWaveformviewEventListener listener);
+	
+	void removeEventListner(IWaveformviewEventListener listener);
+	
+	void deleteSelectedTracks();
 
-	public TrackEntry addWaveform(IWaveform waveform, int pos);
+	TrackEntry addWaveform(IWaveform waveform, int pos);
 
-	public IWaveformZoom getWaveformZoom();
+	IWaveformZoom getWaveformZoom();
 	
 }

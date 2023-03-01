@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -28,9 +29,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.eclipse.core.commands.Command;
+import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -40,6 +44,8 @@ import org.eclipse.core.runtime.jobs.JobGroup;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.e4.core.commands.ECommandService;
+import org.eclipse.e4.core.commands.EHandlerService;
 import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Optional;
@@ -79,6 +85,7 @@ import org.eclipse.wb.swt.SWTResourceManager;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.minres.scviewer.database.DataType;
+import com.minres.scviewer.database.EmptyWaveform;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
@@ -93,6 +100,7 @@ import com.minres.scviewer.database.tx.ITxRelation;
 import com.minres.scviewer.database.ui.GotoDirection;
 import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.IWaveformView;
+import com.minres.scviewer.database.ui.IWaveformviewEventListener;
 import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
@@ -101,6 +109,7 @@ import com.minres.scviewer.database.ui.swt.Constants;
 import com.minres.scviewer.database.ui.swt.IToolTipContentProvider;
 import com.minres.scviewer.database.ui.swt.IToolTipHelpTextProvider;
 import com.minres.scviewer.database.ui.swt.WaveformViewFactory;
+import com.minres.scviewer.e4.application.AppModelId;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl;
 import com.minres.scviewer.e4.application.internal.util.FileMonitor;
@@ -124,6 +133,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	/** The Constant SHOWN_WAVEFORM. */
 	protected static final String SHOWN_WAVEFORM = "SHOWN_WAVEFORM"; //$NON-NLS-1$
+
+	protected static final String WAVEFORM_TYPE = ".WAVEFORM_TYPE"; //$NON-NLS-1$
 
 	protected static final String VALUE_DISPLAY = ".VALUE_DISPLAY"; //$NON-NLS-1$
 
@@ -238,6 +249,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	@Inject Composite parent;
 
+	@Inject	ECommandService commandService;
+
+	@Inject	EHandlerService handlerService;
+	
 	private boolean showHover;
 	
 	private SashForm topSash = null;
@@ -402,6 +417,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		});
 		waveformPane.addDisposeListener(this);
 
+		waveformPane.addEventListner(new IWaveformviewEventListener() {
+			@Override
+			public void onTrackEntryDoubleClickEvent(TrackEntry trackEntry) {
+				ParameterizedCommand command = commandService.createCommand(AppModelId.COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SET_LABEL_TEXT);
+				handlerService.executeHandler(command);
+			}
+		});
 		waveformPane.getWaveformControl().setData(Constants.HELP_PROVIDER_TAG, new IToolTipHelpTextProvider() {
 			@Override
 			public String getHelpText(Widget widget) {
@@ -491,6 +513,12 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		showTxDetails(false);
 	}
 
+	@PreDestroy
+	public void closeDatabase() {
+		if(database.isLoaded())
+			database.close();
+	}
+	
 	@Inject
 	@Optional
 	public void reactOnPrefsChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE) IEclipsePreferences prefs) {
@@ -731,9 +759,12 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		Integer index = 0;
 		for (TrackEntry trackEntry : waveformPane.getStreamList()) {
 			persistingState.put(SHOWN_WAVEFORM + index, trackEntry.waveform.getFullName());
-			persistingState.put(SHOWN_WAVEFORM + index + VALUE_DISPLAY, trackEntry.valueDisplay.toString());
-			persistingState.put(SHOWN_WAVEFORM + index + WAVE_DISPLAY, trackEntry.waveDisplay.toString());
+			persistingState.put(SHOWN_WAVEFORM + index + WAVEFORM_TYPE, trackEntry.waveform.getType().toString());
 			persistingState.put(SHOWN_WAVEFORM + index + WAVEFORM_SELECTED, String.valueOf(trackEntry.selected).toUpperCase());
+			if (trackEntry.waveform.getType()!=WaveformType.EMPTY) {
+				persistingState.put(SHOWN_WAVEFORM + index + VALUE_DISPLAY, trackEntry.valueDisplay.toString());
+				persistingState.put(SHOWN_WAVEFORM + index + WAVE_DISPLAY, trackEntry.waveDisplay.toString());
+			}
 			index++;
 		}
 		List<ICursor> cursors = waveformPane.getCursorList();
@@ -789,19 +820,28 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		List<TrackEntry> trackEntries = new LinkedList<>();
 		List<TrackEntry> selectedTrackEntries = new LinkedList<>();
 		for (int i = 0; i < waves; i++) {
-			IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
-			if (waveform != null) {
-				TrackEntry trackEntry = waveformPane.addWaveform(waveform, -1);
+			String wtString  = state.get(SHOWN_WAVEFORM + i + WAVEFORM_TYPE);
+			if(wtString!=null && WaveformType.valueOf(wtString)==WaveformType.EMPTY) {
+				TrackEntry trackEntry = waveformPane.addWaveform(new EmptyWaveform(state.get(SHOWN_WAVEFORM + i)), -1);
 				//check if t is selected
 				trackEntries.add(trackEntry);
 				if(Boolean.parseBoolean(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED)))
 					selectedTrackEntries.add(trackEntry);
-				String v = state.get(SHOWN_WAVEFORM + i + VALUE_DISPLAY);
-				if(v!=null)
-					trackEntry.valueDisplay=ValueDisplay.valueOf(v);
-				String s = state.get(SHOWN_WAVEFORM + i + WAVE_DISPLAY);
-				if(s!=null)
-					trackEntry.waveDisplay=WaveDisplay.valueOf(s);
+			} else {
+				IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
+				if (waveform != null) {
+					TrackEntry trackEntry = waveformPane.addWaveform(waveform, -1);
+					//check if t is selected
+					trackEntries.add(trackEntry);
+					if(Boolean.parseBoolean(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED)))
+						selectedTrackEntries.add(trackEntry);
+					String v = state.get(SHOWN_WAVEFORM + i + VALUE_DISPLAY);
+					if(v!=null)
+						trackEntry.valueDisplay=ValueDisplay.valueOf(v);
+					String s = state.get(SHOWN_WAVEFORM + i + WAVE_DISPLAY);
+					if(s!=null)
+						trackEntry.waveDisplay=WaveDisplay.valueOf(s);
+				}
 			}
 		}
 		Integer cursorLength = state.containsKey(SHOWN_CURSOR+"S")?Integer.parseInt(state.get(SHOWN_CURSOR + "S")):0; //$NON-NLS-1$ //$NON-NLS-2$

@@ -1,10 +1,31 @@
+/*******************************************************************************
+ * Copyright (c) 2015-2023 MINRES Technologies GmbH and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     MINRES Technologies GmbH - initial API and implementation
+ *******************************************************************************/
+
 package com.minres.scviewer.database;
 
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlankWaveform implements IWaveform {
+public class EmptyWaveform implements IWaveform {
+
+	private String label = "";
+
+	
+	public EmptyWaveform() {
+	}
+
+	public EmptyWaveform(String label) {
+		this.label = label;
+	}
 
 	@Override
 	public void addPropertyChangeListener(PropertyChangeListener l) {
@@ -16,16 +37,17 @@ public class BlankWaveform implements IWaveform {
 
 	@Override
 	public String getFullName() {
-		return "";
+		return label;
 	}
 
 	@Override
 	public String getName() {
-		return "";
+		return label;
 	}
 
 	@Override
 	public void setName(String name) {
+		label=name;
 	}
 
 	@Override
@@ -83,12 +105,12 @@ public class BlankWaveform implements IWaveform {
 
 	@Override
 	public WaveformType getType() {
-		return WaveformType.BLANK;
+		return WaveformType.EMPTY;
 	}
 
 	@Override
 	public String getKind() {
-		return "BLANK";
+		return "separator";
 	}
 
 	@Override
