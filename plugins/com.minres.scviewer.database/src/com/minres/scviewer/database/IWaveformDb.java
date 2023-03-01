@@ -62,4 +62,13 @@ public interface IWaveformDb extends IHierNode {
 	 */
 	public boolean isLoaded();
 
+	/**
+	 * close an open database.
+	 *
+	 * @param inp the inp
+	 * @return true, if successful
+	 */
+	public void close();
+
+
 }

@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -512,6 +513,12 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		showTxDetails(false);
 	}
 
+	@PreDestroy
+	public void closeDatabase() {
+		if(database.isLoaded())
+			database.close();
+	}
+	
 	@Inject
 	@Optional
 	public void reactOnPrefsChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE) IEclipsePreferences prefs) {

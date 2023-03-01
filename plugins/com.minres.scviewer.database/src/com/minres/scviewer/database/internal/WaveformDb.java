@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	/** The loaders. */
 	private static List<IWaveformDbLoaderFactory> loaderFactories = new LinkedList<>();
 
+	private List<IWaveformDbLoader> activeLoader = new ArrayList<>();
 	/** The loaded. */
 	private boolean loaded;
 
@@ -136,6 +138,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 				loader.addPropertyChangeListener(this);
 				try {
 					loader.load(inp);
+					activeLoader.add(loader);
 				} catch (Exception e) {
 					LOG.error("error loading file "+inp.getName(), e);
 					retval=false;
@@ -158,6 +161,12 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 		return retval;
 	}
 
+	@Override
+	public void close() {
+		for (IWaveformDbLoader entry : activeLoader) {
+			entry.dispose();
+		}
+	}
 	/**
 	 * Gets the file basename.
 	 *

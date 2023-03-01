@@ -35,8 +35,12 @@ public class AddSeparatorHandler {
 			Object sel = ((WaveformViewer)part.getObject()).getSelection();
 			if( sel instanceof IStructuredSelection) {
 				if(((IStructuredSelection)sel).isEmpty()) return false;
-				Object o= ((IStructuredSelection)sel).getFirstElement();
-				return o instanceof TrackEntry;
+				IStructuredSelection isel = (IStructuredSelection) sel;
+				if(isel.size()==1)
+					return isel.getFirstElement() instanceof TrackEntry;
+				else if(isel.size()==2) {
+					return isel.toArray()[1] instanceof TrackEntry;
+				}
 			}
 		}
 		return false;
