@@ -49,15 +49,19 @@ public class DatabaseServicesTest {
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
-		List<IWaveform> waves= waveformDb.getAllWaves();
-		assertEquals(14,  waves.size());
+		List<IWaveform> waveforms= waveformDb.getAllWaves();
+		assertEquals(14,  waveforms.size());
 		assertEquals(2,  waveformDb.getChildNodes().size());
-		IWaveform bus_data_wave = waves.get(0);
-		EventEntry bus_data_entry = bus_data_wave.getEvents().floorEntry(1400000000L);
-		assertEquals("00001011", bus_data_entry.events[0].toString());
-		IWaveform rw_wave = waves.get(2);
-		EventEntry rw_entry = rw_wave.getEvents().floorEntry(2360000000L);
-		assertEquals("1", rw_entry.events[0].toString());
+		waveforms.stream().filter(s -> s.getName().equals("bus_addr[7:0]")).forEach(s -> {
+			EventEntry bus_data_entry = s.getEvents().floorEntry(1400000000L);
+			assertEquals("01001111", bus_data_entry.events[0].toString());
+		});
+
+		waveforms.stream().filter(s -> s.getName().equals("rw")).forEach(s -> {
+			EventEntry rw_entry = s.getEvents().floorEntry(2360000000L);
+			assertEquals("1", rw_entry.events[0].toString());
+		});
+
 	}
 
 	@Test
@@ -128,7 +132,6 @@ public class DatabaseServicesTest {
 				assertEquals(1, w.getRowCount());
 			}
 		}
-		//waveforms.stream().filter(s -> s.getId()==1).collect(Collectors.toList());
 		waveforms.stream().filter(s -> s.getId()==1).forEach(s -> {
 			assertEquals(27, s.getEvents().size());
 		});
@@ -163,7 +166,6 @@ public class DatabaseServicesTest {
 				assertEquals(1, w.getRowCount());
 			}
 		}
-		//waveforms.stream().filter(s -> s.getId()==1).collect(Collectors.toList());
 		waveforms.stream().filter(s -> s.getId()==1).forEach(s -> {
 			assertEquals(27, s.getEvents().size());
 		});
@@ -186,14 +188,17 @@ public class DatabaseServicesTest {
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
-		List<IWaveform> waves= waveformDb.getAllWaves();
-		assertEquals(14,  waves.size());
+		List<IWaveform> waveforms= waveformDb.getAllWaves();
+		assertEquals(14,  waveforms.size());
 		assertEquals(2,  waveformDb.getChildNodes().size());
-		IWaveform bus_data_wave = waves.get(12);
-		EventEntry bus_data_entry = bus_data_wave.getEvents().floorEntry(1400000000L);
-		assertEquals("00001011", bus_data_entry.events[0].toString());
-		IWaveform rw_wave = waves.get(2);
-		EventEntry rw_entry = rw_wave.getEvents().floorEntry(2360000000L);
-		assertEquals("1", rw_entry.events[0].toString());
+		waveforms.stream().filter(s -> s.getName().equals("bus_addr[7:0]")).forEach(s -> {
+			EventEntry bus_data_entry = s.getEvents().floorEntry(1400000000L);
+			assertEquals("01001111", bus_data_entry.events[0].toString());
+		});
+
+		waveforms.stream().filter(s -> s.getName().equals("rw")).forEach(s -> {
+			EventEntry rw_entry = s.getEvents().floorEntry(2360000000L);
+			assertEquals("1", rw_entry.events[0].toString());
+		});
 	}
 }
