@@ -49,17 +49,17 @@ import jacob.CborType;
  */
 public class FtrDbLoader implements IWaveformDbLoader {
 
-	enum FileType { NONE, PLAIN, GZIP, LZ4};
-	
+	static final private CborType break_type = CborType.valueOf(0xff);
+
 	/** The max time. */
-	private Long maxTime = 0L;
+	private long maxTime = 0L;
 
 	ArrayList<String> strDict = new ArrayList<>();
 
 	FileInputStream fis = null;
-	
+
 	FileLock lock = null;
-	
+
 	/** The attr values. */
 	final List<String> attrValues = new ArrayList<>();
 
@@ -91,14 +91,13 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	List<Thread> threads = new ArrayList<>();
 
 	File file;
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(FtrDbLoader.class);
-	
+
 	/** The pcs. */
 	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
 	long time_scale_factor = 1000l;
-	
 	/**
 	 * Adds the property change listener.
 	 *
@@ -108,7 +107,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	public void addPropertyChangeListener(PropertyChangeListener l) {
 		pcs.addPropertyChangeListener(l);
 	}
-
 	/**
 	 * Removes the property change listener.
 	 *
@@ -118,7 +116,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	public void removePropertyChangeListener(PropertyChangeListener l) {
 		pcs.removePropertyChangeListener(l);
 	}
-
 	/**
 	 * Gets the max time.
 	 *
@@ -128,7 +125,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	public long getMaxTime() {
 		return maxTime;
 	}
-
 	/**
 	 * Gets the transaction.
 	 *
@@ -153,7 +149,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		else
 			throw new IllegalArgumentException();
 	}
-
 	/**
 	 * Gets the all waves.
 	 *
@@ -165,7 +160,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		ret.addAll(txGenerators.values());
 		return ret;
 	}
-
 	/**
 	 * Gets the all relation types.
 	 *
@@ -174,7 +168,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	public Collection<RelationType> getAllRelationTypes() {
 		return relationTypes.values();
 	}
-
 	/**
 	 * Load.
 	 *
@@ -189,8 +182,9 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		this.file=file;
 		try {
 			fis = new FileInputStream(file);
-			lock=fis.getChannel().lock(0, Long.MAX_VALUE, true);
-			new CborDbParser(this, fis);
+			FileChannel channel = fis.getChannel();
+			lock=channel.lock(0, Long.MAX_VALUE, true);
+			parseInput(new CborDecoder(fis), channel);
 		} catch (IOException e) {
 			LOG.warn("Problem parsing file "+file.getName()+": " , e);
 		} catch (Exception e) {
@@ -198,10 +192,9 @@ public class FtrDbLoader implements IWaveformDbLoader {
 			transactions.clear();
 			throw new InputFormatException(e.toString());
 		}
-		txStreams.values().parallelStream().forEach(TxStream::calculateConcurrency);
 	}
 
-	public List<? extends byte[]> getChunksAtOffsets(ArrayList<Long> fileOffsets) throws InputFormatException {
+	public synchronized List<? extends byte[]> getChunksAtOffsets(ArrayList<Long> fileOffsets) throws InputFormatException {
 		List<byte[]> ret = new ArrayList<>();
 		try {
 			FileChannel fc = fis.getChannel();
@@ -224,6 +217,72 @@ public class FtrDbLoader implements IWaveformDbLoader {
 			throw new InputFormatException(e.toString());
 		}
 		return ret;
+	}
+
+	void parseTx(TxStream txStream, long blockId, byte[] chunk) throws IOException {
+		CborDecoder cborDecoder = new CborDecoder(new ByteArrayInputStream(chunk));
+		long size = cborDecoder.readArrayLength();
+		assert(size==-1);
+		CborType next = cborDecoder.peekType();
+		while(next != null && !break_type.isEqualType(next)) {
+			long blockOffset = cborDecoder.getPos();
+			long tx_size = cborDecoder.readArrayLength();
+			long txId = 0;
+			long genId = 0;
+			for(long i = 0; i<tx_size; ++i) {
+				long tag = cborDecoder.readTag();
+				switch((int)tag) {
+				case 6: // id/generator/start/end
+					long len = cborDecoder.readArrayLength();
+					assert(len==4);
+					txId = cborDecoder.readInt();
+					genId = cborDecoder.readInt();
+					long startTime = cborDecoder.readInt()*time_scale_factor;
+					long endTime = cborDecoder.readInt()*time_scale_factor;
+					TxGenerator gen = txGenerators.get(genId);
+					FtrTx scvTx = new FtrTx(txId, gen.stream.getId(), genId, startTime, endTime, blockId, blockOffset);
+					updateTransactions(txId, scvTx);
+					TxStream stream = txStreams.get(gen.stream.getId());
+					if (scvTx.beginTime == scvTx.endTime) {
+						stream.addEvent(new TxEvent(this, EventKind.SINGLE, txId, scvTx.beginTime));
+						gen.addEvent(new TxEvent(this, EventKind.SINGLE, txId, scvTx.beginTime));
+					} else {
+						stream.addEvent(new TxEvent(this, EventKind.BEGIN, txId, scvTx.beginTime));
+						gen.addEvent(new TxEvent(this, EventKind.BEGIN, txId, scvTx.beginTime));
+						stream.addEvent(new TxEvent(this, EventKind.END, txId, scvTx.endTime));
+						gen.addEvent(new TxEvent(this, EventKind.END, txId, scvTx.endTime));
+					}
+					break;
+				default:  { // skip over 7:begin attr, 8:record attr, 9:end attr
+					long sz = cborDecoder.readArrayLength();
+					assert(sz==3);
+					cborDecoder.readInt();
+					long type_id = cborDecoder.readInt();
+					switch(DataType.values()[(int)type_id]) {
+					case BOOLEAN:
+						cborDecoder.readBoolean();
+						break;
+					case FLOATING_POINT_NUMBER: // FLOATING_POINT_NUMBER
+					case FIXED_POINT_INTEGER: // FIXED_POINT_INTEGER
+					case UNSIGNED_FIXED_POINT_INTEGER: // UNSIGNED_FIXED_POINT_INTEGER
+						cborDecoder.readFloat();
+						break;
+					case NONE: // UNSIGNED_FIXED_POINT_INTEGER
+						LOG.warn("Unsupported data type: "+type_id);
+						break;
+					default:
+						cborDecoder.readInt();
+					}
+				}
+				}
+			}
+			next = cborDecoder.peekType();
+		}							
+	}
+
+	private synchronized void updateTransactions(long txId, FtrTx scvTx) {
+		maxTime = maxTime > scvTx.endTime ? maxTime : scvTx.endTime;
+		transactions.put(txId, scvTx);
 	}
 
 	public List<? extends ITxAttribute> parseAtrributes(byte[] chunk, long blockOffset) {
@@ -296,7 +355,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		TxAttributeType attrType = attributeTypes.get(attrName);
 		return attrType;
 	}
-
 	/**
 	 * Dispose.
 	 */
@@ -318,259 +376,177 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		relationsOut.clear();
 	}
 
-	/**
-	 * The Class TextDbParser.
-	 */
-	static class CborDbParser extends CborDecoder {
-
-		static final private CborType break_type = CborType.valueOf(0xff);
-
-		/** The loader. */
-		final FtrDbLoader loader;
-
-	    static long calculateTimescaleMultipierPower(long power){
-	    	long answer = 1;
-	        if(power<=0){
-	            return answer;
-	        } else{
-	            for(int i = 1; i<= power; i++)
-	                answer *= 10;
-	            return answer;
-	        }
-	    }
-
-		/**
-		 * Instantiates a new text db parser.
-		 *
-		 * @param loader the loader
-		 */
-		public CborDbParser(FtrDbLoader loader, FileInputStream inputStream) {
-			super(inputStream);
-			this.loader = loader;
-			try {
-				long cbor_tag = readTag();
-				assert(cbor_tag == 55799);
-				long array_len = readArrayLength();
-				assert(array_len==-1);
-				CborType next = peekType();
-				while(next != null && !break_type.isEqualType(next)) {
-					long tag = readTag();
-					switch((int)tag) {
-					case 6: { // info
-						CborDecoder cbd = new CborDecoder(new ByteArrayInputStream(readByteString()));
-						long sz = cbd.readArrayLength();
-						assert(sz==2);
-						long time_scale=cbd.readInt();
-						long eff_time_scale=time_scale-IWaveformDb.databaseTimeScale;
-						loader.time_scale_factor = calculateTimescaleMultipierPower(eff_time_scale);
-						long epoch_tag = cbd.readTag();
-						assert(epoch_tag==1);
-						cbd.readInt(); // epoch
-						break;
-					}
-					case 8: { // dictionary uncompressed
-						parseDict(new CborDecoder(new ByteArrayInputStream(readByteString())));
-						break;
-					}
-					case 9: { // dictionary compressed
-						long sz = readArrayLength();
-						assert(sz==2);
-						readInt(); // uncompressed size
-						parseDict(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(readByteString()))));
-						break;
-					}
-					case 10: { // directory uncompressed
-						parseDir(new CborDecoder(new ByteArrayInputStream(readByteString())));
-						break;
-					}
-					case 11: { // directory compressed
-						long sz = readArrayLength();
-						assert(sz==2);
-						readInt(); // uncompressed size
-						parseDir(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(readByteString()))));
-						break;
-					}
-					case 12: { //tx chunk uncompressed
-						long len = readArrayLength(); 
-						assert(len==2);
-						long stream_id = readInt();
-						TxStream txStream = loader.txStreams.get(stream_id);
-						txStream.fileOffsets.add(inputStream.getChannel().position());
-						parseTx(txStream, txStream.fileOffsets.size()-1, readByteString());
-						break;
-					}
-					case 13: { //tx chunk compressed
-						long len = readArrayLength(); 
-						assert(len==3);
-						long stream_id = readInt();
-						readInt(); // uncompressed size
-						TxStream txStream = loader.txStreams.get(stream_id);
-						txStream.fileOffsets.add(0-inputStream.getChannel().position());
-						BlockLZ4CompressorInputStream decomp = new BlockLZ4CompressorInputStream(new ByteArrayInputStream(readByteString()));
-						parseTx(txStream, txStream.fileOffsets.size()-1, decomp.readAllBytes());
-						decomp.close();
-						break;
-					}
-					case 14: { // relations uncompressed
-						parseRel(new CborDecoder(new ByteArrayInputStream(readByteString())));
-						break;
-					}
-					case 15: { // relations uncompressed
-						long sz = readArrayLength();
-						assert(sz==2);
-						readInt(); // uncompressed size
-						parseRel(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(readByteString()))));
-						break;
-					}
-					}
-					next = peekType();
-				}
-			} catch(IOException e) {
-				long pos = 0;
-				try {pos=inputStream.getChannel().position(); } catch (Exception ee) {}
-				LOG.error("Error parsing file input stream at position" + pos, e);
-			}
-		}
-
-
-		private void parseDict(CborDecoder cborDecoder) throws IOException {
-			long size = cborDecoder.readMapLength();
-			ArrayList<String> lst = new ArrayList<>((int)size);
-			for(long i = 0; i<size; ++i) {
-				long idx = cborDecoder.readInt();
-				assert(idx==loader.strDict.size()+lst.size());
-				lst.add(cborDecoder.readTextString());
-			}
-			loader.strDict.addAll(lst);
-		}
-
-		private void parseDir(CborDecoder cborDecoder) throws IOException {
-			long size = cborDecoder.readArrayLength();
-			if(size<0) {
-				CborType next = cborDecoder.peekType();
-				while(next != null && !break_type.isEqualType(next)) {
-					parseDictEntry(cborDecoder);
-					next = cborDecoder.peekType();
-				}				
-			} else 
-				for(long i = 0; i<size; ++i) {
-					parseDictEntry(cborDecoder);
-				}
-		}
-
-
-		private void parseDictEntry(CborDecoder cborDecoder) throws IOException {
-			long id = cborDecoder.readTag();
-			if(id==16) { // a stream
-				long len = cborDecoder.readArrayLength();
-				assert(len==3);
-				long stream_id = cborDecoder.readInt();
-				long name_id = cborDecoder.readInt();
-				long kind_id = cborDecoder.readInt();
-				add(stream_id, new TxStream(loader, stream_id, loader.strDict.get((int)name_id), loader.strDict.get((int)kind_id)));
-			} else if(id==17) { // a generator
-				long len = cborDecoder.readArrayLength();
-				assert(len==3);
-				long gen_id = cborDecoder.readInt();
-				long name_id = cborDecoder.readInt();
-				long stream_id = cborDecoder.readInt();
-				if(loader.txStreams.containsKey(stream_id))
-					add(gen_id, new TxGenerator(loader, gen_id, loader.strDict.get((int)name_id), loader.txStreams.get(stream_id)));
-			} else {
-				throw new IOException("Illegal tage ncountered: "+id);
-			}
-		}
-
-		private void parseTx(TxStream txStream, long blockId, byte[] chunk) throws IOException {
-			CborDecoder cborDecoder = new CborDecoder(new ByteArrayInputStream(chunk));
-			long size = cborDecoder.readArrayLength();
-			assert(size==-1);
-			CborType next = cborDecoder.peekType();
-			while(next != null && !break_type.isEqualType(next)) {
-				long blockOffset = cborDecoder.getPos();
-				long tx_size = cborDecoder.readArrayLength();
-				long txId = 0;
-				long genId = 0;
-				for(long i = 0; i<tx_size; ++i) {
-					long tag = cborDecoder.readTag();
-					switch((int)tag) {
-					case 6: // id/generator/start/end
-						long len = cborDecoder.readArrayLength();
-						assert(len==4);
-						txId = cborDecoder.readInt();
-						genId = cborDecoder.readInt();
-						long startTime = cborDecoder.readInt()*loader.time_scale_factor;
-						long endTime = cborDecoder.readInt()*loader.time_scale_factor;
-						TxGenerator gen = loader.txGenerators.get(genId);
-						FtrTx scvTx = new FtrTx(txId, gen.stream.getId(), genId, startTime, endTime, blockId, blockOffset);
-						loader.maxTime = loader.maxTime > scvTx.endTime ? loader.maxTime : scvTx.endTime;
-						loader.transactions.put(txId, scvTx);
-						TxStream stream = loader.txStreams.get(gen.stream.getId());
-						if (scvTx.beginTime == scvTx.endTime) {
-							stream.addEvent(new TxEvent(loader, EventKind.SINGLE, txId, scvTx.beginTime));
-							gen.addEvent(new TxEvent(loader, EventKind.SINGLE, txId, scvTx.beginTime));
-						} else {
-							stream.addEvent(new TxEvent(loader, EventKind.BEGIN, txId, scvTx.beginTime));
-							gen.addEvent(new TxEvent(loader, EventKind.BEGIN, txId, scvTx.beginTime));
-							stream.addEvent(new TxEvent(loader, EventKind.END, txId, scvTx.endTime));
-							gen.addEvent(new TxEvent(loader, EventKind.END, txId, scvTx.endTime));
-						}
-						break;
-					default:  { // skip over 7:begin attr, 8:record attr, 9:end attr
-						long sz = cborDecoder.readArrayLength();
-						assert(sz==3);
-						cborDecoder.readInt();
-						long type_id = cborDecoder.readInt();
-						switch(DataType.values()[(int)type_id]) {
-						case BOOLEAN:
-							cborDecoder.readBoolean();
-							break;
-						case FLOATING_POINT_NUMBER: // FLOATING_POINT_NUMBER
-						case FIXED_POINT_INTEGER: // FIXED_POINT_INTEGER
-						case UNSIGNED_FIXED_POINT_INTEGER: // UNSIGNED_FIXED_POINT_INTEGER
-							cborDecoder.readFloat();
-							break;
-						case NONE: // UNSIGNED_FIXED_POINT_INTEGER
-							LOG.warn("Unsupported data type: "+type_id);
-							break;
-						default:
-							cborDecoder.readInt();
-						}
-					}
-					}
-				}
-				next = cborDecoder.peekType();
-			}							
-		}
-
-		private void parseRel(CborDecoder cborDecoder) throws IOException {
-			long size = cborDecoder.readArrayLength();
-			assert(size==-1);
-			CborType next = cborDecoder.peekType();
-			while(next != null && !break_type.isEqualType(next)) {
-				long sz = cborDecoder.readArrayLength();
-				assert(sz==3);
-				long type_id = cborDecoder.readInt();
-				long from_id = cborDecoder.readInt();
-				long to_id = cborDecoder.readInt();
-				String rel_name = loader.strDict.get((int)type_id);
-				FtrRelation ftrRel = new FtrRelation(loader.relationTypes.getOrDefault(rel_name, RelationTypeFactory.create(rel_name)), from_id, to_id);
-				loader.relationsOut.put(from_id, ftrRel);
-				loader.relationsIn.put(to_id, ftrRel);
-				next = cborDecoder.peekType();
-			}							
-			
-		}
-		
-		private void add(Long id, TxStream stream) {
-			loader.txStreams.put(id, stream);
-			loader.pcs.firePropertyChange(IWaveformDbLoader.STREAM_ADDED, null, stream);
-		}
-
-		private void add(Long id, TxGenerator generator) {
-			loader.txGenerators.put(id, generator);
-			loader.pcs.firePropertyChange(IWaveformDbLoader.GENERATOR_ADDED, null, generator);
+	static long calculateTimescaleMultipierPower(long power){
+		long answer = 1;
+		if(power<=0){
+			return answer;
+		} else{
+			for(int i = 1; i<= power; i++)
+				answer *= 10;
+			return answer;
 		}
 	}
 
+	public void parseInput(CborDecoder cborDecoder, FileChannel channel) {
+		try {
+			long cbor_tag = cborDecoder.readTag();
+			assert(cbor_tag == 55799);
+			long array_len = cborDecoder.readArrayLength();
+			assert(array_len==-1);
+			CborType next = cborDecoder.peekType();
+			while(next != null && !break_type.isEqualType(next)) {
+				long tag = cborDecoder.readTag();
+				switch((int)tag) {
+				case 6: { // info
+					CborDecoder cbd = new CborDecoder(new ByteArrayInputStream(cborDecoder.readByteString()));
+					long sz = cbd.readArrayLength();
+					assert(sz==2);
+					long time_scale=cbd.readInt();
+					long eff_time_scale=time_scale-IWaveformDb.databaseTimeScale;
+					time_scale_factor = calculateTimescaleMultipierPower(eff_time_scale);
+					long epoch_tag = cbd.readTag();
+					assert(epoch_tag==1);
+					cbd.readInt(); // epoch
+					break;
+				}
+				case 8: { // dictionary uncompressed
+					parseDict(new CborDecoder(new ByteArrayInputStream(cborDecoder.readByteString())));
+					break;
+				}
+				case 9: { // dictionary compressed
+					long sz = cborDecoder.readArrayLength();
+					assert(sz==2);
+					cborDecoder.readInt(); // uncompressed size
+					parseDict(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(cborDecoder.readByteString()))));
+					break;
+				}
+				case 10: { // directory uncompressed
+					parseDir(new CborDecoder(new ByteArrayInputStream(cborDecoder.readByteString())));
+					break;
+				}
+				case 11: { // directory compressed
+					long sz = cborDecoder.readArrayLength();
+					assert(sz==2);
+					cborDecoder.readInt(); // uncompressed size
+					parseDir(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(cborDecoder.readByteString()))));
+					break;
+				}
+				case 12: { //tx chunk uncompressed
+					long len = cborDecoder.readArrayLength(); 
+					assert(len==4);
+					long stream_id = cborDecoder.readInt();
+					cborDecoder.readInt(); // start time of block
+					long end_time = cborDecoder.readInt()*time_scale_factor;
+					maxTime = end_time>maxTime?end_time:maxTime;
+					txStreams.get(stream_id).fileOffsets.add(channel.position());
+					cborDecoder.readByteString();
+					break;
+				}
+				case 13: { //tx chunk compressed
+					long len = cborDecoder.readArrayLength(); 
+					assert(len==5);
+					long stream_id = cborDecoder.readInt();
+					cborDecoder.readInt(); // start time of block
+					long end_time = cborDecoder.readInt()*time_scale_factor;
+					cborDecoder.readInt(); // uncompressed size
+					maxTime = end_time>maxTime?end_time:maxTime;
+					txStreams.get(stream_id).fileOffsets.add(0-channel.position());
+					cborDecoder.readByteString();
+					break;
+				}
+				case 14: { // relations uncompressed
+					parseRel(new CborDecoder(new ByteArrayInputStream(cborDecoder.readByteString())));
+					break;
+				}
+				case 15: { // relations uncompressed
+					long sz = cborDecoder.readArrayLength();
+					assert(sz==2);
+					cborDecoder.readInt(); // uncompressed size
+					parseRel(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(cborDecoder.readByteString()))));
+					break;
+				}
+				}
+				next = cborDecoder.peekType();
+			}
+		} catch(IOException e) {
+			long pos = 0;
+			try {pos=channel.position(); } catch (Exception ee) {}
+			LOG.error("Error parsing file input stream at position" + pos, e);
+		}
+	}
+
+	private void parseDict(CborDecoder cborDecoder) throws IOException {
+		long size = cborDecoder.readMapLength();
+		ArrayList<String> lst = new ArrayList<>((int)size);
+		for(long i = 0; i<size; ++i) {
+			long idx = cborDecoder.readInt();
+			assert(idx==strDict.size()+lst.size());
+			lst.add(cborDecoder.readTextString());
+		}
+		strDict.addAll(lst);
+	}
+
+	private void parseDir(CborDecoder cborDecoder) throws IOException {
+		long size = cborDecoder.readArrayLength();
+		if(size<0) {
+			CborType next = cborDecoder.peekType();
+			while(next != null && !break_type.isEqualType(next)) {
+				parseDictEntry(cborDecoder);
+				next = cborDecoder.peekType();
+			}				
+		} else 
+			for(long i = 0; i<size; ++i) {
+				parseDictEntry(cborDecoder);
+			}
+	}
+
+	private void parseDictEntry(CborDecoder cborDecoder) throws IOException {
+		long id = cborDecoder.readTag();
+		if(id==16) { // a stream
+			long len = cborDecoder.readArrayLength();
+			assert(len==3);
+			long stream_id = cborDecoder.readInt();
+			long name_id = cborDecoder.readInt();
+			long kind_id = cborDecoder.readInt();
+			add(stream_id, new TxStream(this, stream_id, strDict.get((int)name_id), strDict.get((int)kind_id)));
+		} else if(id==17) { // a generator
+			long len = cborDecoder.readArrayLength();
+			assert(len==3);
+			long gen_id = cborDecoder.readInt();
+			long name_id = cborDecoder.readInt();
+			long stream_id = cborDecoder.readInt();
+			if(txStreams.containsKey(stream_id))
+				add(gen_id, new TxGenerator(this, gen_id, strDict.get((int)name_id), txStreams.get(stream_id)));
+		} else {
+			throw new IOException("Illegal tage ncountered: "+id);
+		}
+	}
+
+	private void parseRel(CborDecoder cborDecoder) throws IOException {
+		long size = cborDecoder.readArrayLength();
+		assert(size==-1);
+		CborType next = cborDecoder.peekType();
+		while(next != null && !break_type.isEqualType(next)) {
+			long sz = cborDecoder.readArrayLength();
+			assert(sz==3);
+			long type_id = cborDecoder.readInt();
+			long from_id = cborDecoder.readInt();
+			long to_id = cborDecoder.readInt();
+			String rel_name = strDict.get((int)type_id);
+			FtrRelation ftrRel = new FtrRelation(relationTypes.getOrDefault(rel_name, RelationTypeFactory.create(rel_name)), from_id, to_id);
+			relationsOut.put(from_id, ftrRel);
+			relationsIn.put(to_id, ftrRel);
+			next = cborDecoder.peekType();
+		}							
+	}
+
+	private void add(Long id, TxStream stream) {
+		txStreams.put(id, stream);
+		pcs.firePropertyChange(IWaveformDbLoader.STREAM_ADDED, null, stream);
+	}
+
+	private void add(Long id, TxGenerator generator) {
+		txGenerators.put(id, generator);
+		pcs.firePropertyChange(IWaveformDbLoader.GENERATOR_ADDED, null, generator);
+	}
 }

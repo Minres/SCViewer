@@ -33,8 +33,7 @@ class FstFileParser {
 	public boolean open(IFstDatabaseBuilder builder) {
 	    fst = FstLibrary.fstReaderOpen(file.getAbsolutePath());
 	    if(!fst.equals(Pointer.NULL)) {
-	    	String version = FstLibrary.fstReaderGetVersionString(fst);
-	    	System.out.println(version);
+	    	// String version = FstLibrary.fstReaderGetVersionString(fst);
 	    	long endTime = FstLibrary.fstReaderGetEndTime(fst);
 	    	byte timeScale = FstLibrary.fstReaderGetTimescale(fst);
 	    	builder.setMaxTime(endTime, -timeScale);

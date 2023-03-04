@@ -80,6 +80,7 @@ public class DatabaseServicesTest {
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
+		assertEquals(3400000000l, waveformDb.getMaxTime());
 		List<IWaveform> waveforms =  waveformDb.getAllWaves();
 		assertEquals(8,  waveforms.size());
 		assertEquals(1,  waveformDb.getChildNodes().size());
@@ -120,6 +121,7 @@ public class DatabaseServicesTest {
 		assertTrue(f.exists());
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
+		assertEquals(3400000000l, waveformDb.getMaxTime());
 		List<IWaveform> waveforms =  waveformDb.getAllWaves();
 		assertEquals(8,  waveforms.size());
 		assertEquals(1,  waveformDb.getChildNodes().size());
@@ -155,6 +157,7 @@ public class DatabaseServicesTest {
 		waveformDb.load(f);
 		assertNotNull(waveformDb);
 		List<IWaveform> waveforms =  waveformDb.getAllWaves();
+		assertEquals(3400000000l, waveformDb.getMaxTime());
 		assertEquals(8,  waveforms.size());
 		assertEquals(1,  waveformDb.getChildNodes().size());
 		for(IWaveform w:waveforms) {

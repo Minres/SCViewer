@@ -1,7 +1,5 @@
 package com.minres.scviewer.e4.application.parts;
 
-import java.util.HashMap;
-
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.resource.StringConverter;

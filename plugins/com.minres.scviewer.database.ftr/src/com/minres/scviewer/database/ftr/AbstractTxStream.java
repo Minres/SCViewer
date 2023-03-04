@@ -37,7 +37,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	protected FtrDbLoader loader;
 
 	/** The events. */
-	IEventList events = new EventList();
+	protected IEventList events = new EventList();
 
 	/** The max concurrency. */
 	private int rowCount = -1;
@@ -72,16 +72,6 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 */
 	public void addEvent(ITxEvent evt) {
 		events.put(evt.getTime(), evt);
-	}
-
-	/**
-	 * Gets the events.
-	 *
-	 * @return the events
-	 */
-	@Override
-	public IEventList getEvents() {
-		return events;
 	}
 
 	/**
@@ -155,7 +145,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 			return;
 		ArrayList<Long> rowEndTime = new ArrayList<>();
 		HashMap<Long, Integer> rowByTxId = new HashMap<>();
-		for(EventEntry entry: events) {
+		for(EventEntry entry: getEvents()) {
 			for(IEvent evt:entry.events) {
 				TxEvent txEvt = (TxEvent) evt;
 				ITx tx = txEvt.getTransaction();
@@ -189,5 +179,4 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 		rowCount=rowEndTime.size()>0?rowEndTime.size():1;
 		getChildNodes().parallelStream().forEach(c -> ((TxGenerator)c).calculateConcurrency());
 	}
-
 }

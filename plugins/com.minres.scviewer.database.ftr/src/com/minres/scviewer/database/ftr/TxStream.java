@@ -10,9 +10,11 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ftr;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.InputFormatException;
 
@@ -69,4 +71,24 @@ class TxStream extends AbstractTxStream {
 		return chunks;
 	}
 
+	/**
+	 * Gets the events.
+	 *
+	 * @return the events
+	 */
+	@Override
+	public IEventList getEvents() {
+		if(events.size()==0) {
+			try {
+				List<byte[]> chunks = getChunks();
+				int blockid = 0;
+				for (byte[] bs : chunks) {
+					loader.parseTx(this, blockid, bs);
+				}
+			} catch (InputFormatException e) {
+			} catch (IOException e) {
+			}
+		}
+		return events;
+	}
 }
