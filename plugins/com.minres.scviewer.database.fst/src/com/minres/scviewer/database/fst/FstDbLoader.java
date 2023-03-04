@@ -25,6 +25,7 @@ import com.minres.scviewer.database.DoubleVal;
 import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
@@ -45,17 +46,17 @@ public class FstDbLoader implements IWaveformDbLoader, IFstDatabaseBuilder {
 	/** The max time. */
 	private long maxTime;
 
-	private int timeScale;
+	private long timeScaleFactor;
 	
 	/** The pcs. */
 	protected PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-    static int calculateTimescaleMultipierPower(int power){
-    	int answer = 1;
-        if(power<=0){
+    static long calculateTimescaleMultipierPower(long time_scale){
+    	long answer = 1;
+        if(time_scale<=0){
             return answer;
         } else{
-            for(int i = 1; i<= power; i++)
+            for(int i = 1; i<= time_scale; i++)
                 answer *= 10;
             return answer;
         }
@@ -94,7 +95,7 @@ public class FstDbLoader implements IWaveformDbLoader, IFstDatabaseBuilder {
 	 */
 	@Override
 	public long getMaxTime() {
-		return maxTime*calculateTimescaleMultipierPower(15+timeScale); // timescape is 1e(timeScale), we calculate in fs
+		return maxTime;
 	}
 
 	/* (non-Javadoc)
@@ -149,8 +150,9 @@ public class FstDbLoader implements IWaveformDbLoader, IFstDatabaseBuilder {
 	}
 
 	public void setMaxTime(long maxTime, int timeScale) {
-		this.maxTime = maxTime;
-		this.timeScale=timeScale;	
+		long eff_time_scale=timeScale-IWaveformDb.databaseTimeScale;
+		this.timeScaleFactor = calculateTimescaleMultipierPower(eff_time_scale);
+		this.maxTime = maxTime*timeScaleFactor;
 	}	
 	/* (non-Javadoc)
 	 * @see com.minres.scviewer.database.IWaveformDbLoader#getAllRelationTypes()
@@ -182,6 +184,6 @@ public class FstDbLoader implements IWaveformDbLoader, IFstDatabaseBuilder {
 
 	public void getEvents(int id, int width, IEventList values) {
 		if(values instanceof EventList)
-			parser.getValueChanges(id, width, calculateTimescaleMultipierPower(15+timeScale), (EventList) values);
+			parser.getValueChanges(id, width, timeScaleFactor, (EventList) values);
 	}
 }

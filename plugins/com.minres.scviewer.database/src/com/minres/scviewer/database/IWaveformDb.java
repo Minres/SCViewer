@@ -19,6 +19,11 @@ import java.util.List;
 public interface IWaveformDb extends IHierNode {
 
 	/**
+	 * the time scale of the database. This is the exponent of the value i.e. -12 is ps
+	 */
+	public static final int databaseTimeScale = -15;
+	
+	/**
 	 * Gets the max time.
 	 *
 	 * @return the max time

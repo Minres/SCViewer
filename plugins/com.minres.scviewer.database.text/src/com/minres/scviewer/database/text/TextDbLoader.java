@@ -519,6 +519,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 		 * @return the long
 		 */
 		private long stringToScale(String scale) {
+			// TODO: scale to IWaveformDb.databaseTimeScale
 			String cmp = scale.trim();
 			if ("fs".equals(cmp))
 				return 1L;

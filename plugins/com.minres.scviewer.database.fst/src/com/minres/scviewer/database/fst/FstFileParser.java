@@ -37,7 +37,7 @@ class FstFileParser {
 	    	System.out.println(version);
 	    	long endTime = FstLibrary.fstReaderGetEndTime(fst);
 	    	byte timeScale = FstLibrary.fstReaderGetTimescale(fst);
-	    	builder.setMaxTime(endTime, timeScale);
+	    	builder.setMaxTime(endTime, -timeScale);
 	    	FstLibrary.fstReaderIterateHierRewind(fst);
 	    	Pointer p = FstLibrary.fstReaderIterateHier(fst);
 	    	while(p!=null && !p.equals(Pointer.NULL)) {
@@ -77,7 +77,7 @@ class FstFileParser {
 	    	return false;
 	}
 
-	public void getValueChanges(final int id, final int width, int timeScale, final EventList values) {
+	public void getValueChanges(final int id, final int width, long timeScale, final EventList values) {
 		FstLibrary.fstReaderClrFacProcessMaskAll(fst);
 		FstLibrary.fstReaderSetFacProcessMask(fst, id);
 		FstLibrary.iterateValueChanges(fst, new ValueChangeCallback() {

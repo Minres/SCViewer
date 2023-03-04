@@ -33,6 +33,7 @@ import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
@@ -327,6 +328,17 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		/** The loader. */
 		final FtrDbLoader loader;
 
+	    static long calculateTimescaleMultipierPower(long power){
+	    	long answer = 1;
+	        if(power<=0){
+	            return answer;
+	        } else{
+	            for(int i = 1; i<= power; i++)
+	                answer *= 10;
+	            return answer;
+	        }
+	    }
+
 		/**
 		 * Instantiates a new text db parser.
 		 *
@@ -347,10 +359,10 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					case 6: { // info
 						CborDecoder cbd = new CborDecoder(new ByteArrayInputStream(readByteString()));
 						long sz = cbd.readArrayLength();
-						assert(sz==3);
-						long time_numerator=cbd.readInt();
-						long time_denominator=cbd.readInt();
-						loader.time_scale_factor = 1000000000000000l*time_numerator/time_denominator;
+						assert(sz==2);
+						long time_scale=cbd.readInt();
+						long eff_time_scale=time_scale-IWaveformDb.databaseTimeScale;
+						loader.time_scale_factor = calculateTimescaleMultipierPower(eff_time_scale);
 						long epoch_tag = cbd.readTag();
 						assert(epoch_tag==1);
 						cbd.readInt(); // epoch
@@ -426,7 +438,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 			ArrayList<String> lst = new ArrayList<>((int)size);
 			for(long i = 0; i<size; ++i) {
 				long idx = cborDecoder.readInt();
-				assert(idx==loader.strDict.size()+1);
+				assert(idx==loader.strDict.size()+lst.size());
 				lst.add(cborDecoder.readTextString());
 			}
 			loader.strDict.addAll(lst);
