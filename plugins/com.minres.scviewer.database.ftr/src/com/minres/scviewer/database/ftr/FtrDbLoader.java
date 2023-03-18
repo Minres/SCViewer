@@ -528,7 +528,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		CborType next = cborDecoder.peekType();
 		while(next != null && !break_type.isEqualType(next)) {
 			long sz = cborDecoder.readArrayLength();
-			assert(sz==5);
+			assert(sz==5 || sz==3);
 			long type_id = cborDecoder.readInt();
 			long from_id = cborDecoder.readInt();
 			long to_id = cborDecoder.readInt();

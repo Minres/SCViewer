@@ -36,7 +36,7 @@ class FstFileParser {
 	    	// String version = FstLibrary.fstReaderGetVersionString(fst);
 	    	long endTime = FstLibrary.fstReaderGetEndTime(fst);
 	    	byte timeScale = FstLibrary.fstReaderGetTimescale(fst);
-	    	builder.setMaxTime(endTime, timeScale);
+	    	builder.setMaxTime(endTime, -timeScale);
 	    	FstLibrary.fstReaderIterateHierRewind(fst);
 	    	Pointer p = FstLibrary.fstReaderIterateHier(fst);
 	    	while(p!=null && !p.equals(Pointer.NULL)) {
