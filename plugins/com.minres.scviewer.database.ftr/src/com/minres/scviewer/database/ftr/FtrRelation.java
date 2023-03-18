@@ -28,6 +28,12 @@ class FtrRelation implements Serializable {
 	/** The target. */
 	final long target;
 
+	/** The source. */
+	final long source_fiber;
+
+	/** The target. */
+	final long target_fiber;
+
 	/** The relation type. */
 	final RelationType relationType;
 
@@ -38,9 +44,11 @@ class FtrRelation implements Serializable {
 	 * @param source       the source
 	 * @param target       the target
 	 */
-	public FtrRelation(RelationType relationType, long source, long target) {
+	public FtrRelation(RelationType relationType, long source, long target, long source_fiber, long target_fiber) {
 		this.source = source;
 		this.target = target;
+		this.source_fiber = source_fiber;
+		this.target_fiber = target_fiber;
 		this.relationType = relationType;
 	}
 
