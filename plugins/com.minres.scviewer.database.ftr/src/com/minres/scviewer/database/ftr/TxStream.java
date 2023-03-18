@@ -84,6 +84,7 @@ class TxStream extends AbstractTxStream {
 				int blockid = 0;
 				for (byte[] bs : chunks) {
 					loader.parseTx(this, blockid, bs);
+					blockid++;
 				}
 			} catch (InputFormatException e) {
 			} catch (IOException e) {
