@@ -10,6 +10,8 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
+import java.math.BigInteger;
+
 /**
  * The Class BitVector.
  */
@@ -174,8 +176,8 @@ public class BitVector implements IEvent {
 	 *
 	 * @return the long
 	 */
-	public long toUnsignedValue() {
-		long res = 0;
+	public BigInteger toUnsignedValue() {
+		BigInteger res = BigInteger.ZERO;
 		int bitOffset = 0;
 		int wordOffset = 0;
 		int currentWord = 0;
@@ -185,11 +187,11 @@ public class BitVector implements IEvent {
 				currentWord = packedValues[wordOffset];
 			switch (currentWord & 3) {
 			case 1:
-				res |= 1 << i;
+				res=res.add(BigInteger.ONE.shiftLeft(i));
 				break;
 			case 2:
 			case 3:
-				return 0;
+				return BigInteger.ZERO;
 			default:
 				break;
 			}
@@ -209,38 +211,14 @@ public class BitVector implements IEvent {
 	 *
 	 * @return the long
 	 */
-	public long toSignedValue() {
-		long res = 0;
-		int bitOffset = 0;
-		int wordOffset = 0;
-		int currentWord = 0;
-		int lastVal = 0;
-		// Copy values out of packed array
-		for (int i = 0; i < width; i++) {
-			if (bitOffset == 0)
-				currentWord = packedValues[wordOffset];
-			lastVal = 0;
-			switch (currentWord & 3) {
-			case 1:
-				res |= 1 << i;
-				lastVal = 1;
-				break;
-			case 2:
-			case 3:
-				return 0;
-			default:
-			}
-			bitOffset += 2;
-			if (bitOffset == 32) {
-				wordOffset++;
-				bitOffset = 0;
-			} else {
-				currentWord >>= 2;
-			}
+	public BigInteger toSignedValue() {
+		BigInteger res = toUnsignedValue();
+		BigInteger pos_max = BigInteger.ONE.shiftLeft(width-1);
+		if(res.compareTo(pos_max)<0)
+			return res;
+		else {
+			return res.subtract(BigInteger.ONE.shiftLeft(width));
 		}
-		if (lastVal != 0)
-			res |= -1l << width;
-		return res;
 	}
 
 	/**

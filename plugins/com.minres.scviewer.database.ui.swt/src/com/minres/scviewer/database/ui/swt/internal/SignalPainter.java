@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -214,10 +215,10 @@ public class SignalPainter extends TrackPainter {
 				String label = null;
 				switch(trackEntry.valueDisplay) {
 				case SIGNED:
-					label=Long.toString(last.toSignedValue());
+					label=last.toSignedValue().toString();
 					break;
 				case UNSIGNED:
-					label=Long.toString(last.toUnsignedValue());
+					label=last.toUnsignedValue().toString();
 					break;
 				case BINARY:
 					label=last.toString();
@@ -248,9 +249,9 @@ public class SignalPainter extends TrackPainter {
 
 		final boolean continous;
 		final boolean signed;
-		private long maxVal;
-		private long minVal;
-		double yRange = (yOffsetB-yOffsetT);
+		private BigInteger maxVal;
+		private BigInteger minVal;
+		int yRange = (yOffsetB-yOffsetT);
 		public MultiBitStencilAnalog(IEventList entries, Object left, boolean continous, boolean signed) {
 			this.continous=continous;
 			this.signed=signed;
@@ -260,28 +261,30 @@ public class SignalPainter extends TrackPainter {
 				maxVal=minVal;
 				for (EventEntry tp : ievents)
 					for(IEvent e: tp.events) {
-						long v = signed?((BitVector)e).toSignedValue():((BitVector)e).toUnsignedValue();
-						maxVal=Math.max(maxVal, v);
-						minVal=Math.min(minVal, v);
+						BigInteger v = signed?((BitVector)e).toSignedValue():((BitVector)e).toUnsignedValue();
+						maxVal=maxVal.max(v);
+						minVal=minVal.min(v);
 					}
 				if(maxVal==minVal) {
-					maxVal--;
-					minVal++;
+					maxVal=maxVal.subtract(BigInteger.ONE);
+					minVal=minVal.add(BigInteger.ONE);
 				}
 			} else {
-				minVal--;
-				maxVal=minVal+2;
+				minVal=minVal.subtract(BigInteger.ONE);
+				maxVal=minVal.multiply(BigInteger.valueOf(2));
 			}
 			
 		}
 
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
-			long leftVal = signed?((BitVector)left).toSignedValue():((BitVector)left).toUnsignedValue();
-			long rightVal= signed?((BitVector)right).toSignedValue():((BitVector)right).toUnsignedValue();
+			BigInteger leftVal = signed?((BitVector)left).toSignedValue():((BitVector)left).toUnsignedValue();
+			BigInteger rightVal= signed?((BitVector)right).toSignedValue():((BitVector)right).toUnsignedValue();
 			proj.setForeground(waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL_REAL));
-			long range = maxVal-minVal;
-			int yOffsetLeft = (int) ((leftVal-minVal) * yRange / range);
-			int yOffsetRight = (int) ((rightVal-minVal) * yRange / range);
+			BigInteger range = maxVal.subtract(minVal);
+			// ((leftVal-minVal) * yRange / range);
+			int yOffsetLeft = leftVal.subtract(minVal).multiply(BigInteger.valueOf(yRange)).divide(range).intValue();
+			// ((rightVal-minVal) * yRange / range);
+			int yOffsetRight = rightVal.subtract(minVal).multiply(BigInteger.valueOf(yRange)).divide(range).intValue();
 			if(continous) {
 				if (xEnd > maxPosX) {
 					proj.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);

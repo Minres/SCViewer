@@ -662,10 +662,10 @@ public class WaveformView implements IWaveformView {
 					else {
 						switch (entry.valueDisplay) {
 						case SIGNED:
-							entry.currentValue = Long.toString(bv.toSignedValue());
+							entry.currentValue = bv.toSignedValue().toString();
 							break;
 						case UNSIGNED:
-							entry.currentValue = Long.toString(bv.toUnsignedValue());
+							entry.currentValue = bv.toUnsignedValue().toString();
 							break;
 						case BINARY:
 							entry.currentValue=bv.toString();
