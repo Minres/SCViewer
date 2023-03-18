@@ -129,7 +129,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	 * Gets the transaction.
 	 *
 	 * @param txId the tx id
-	 * @return the transaction
+	 * @return the transaction or null if the transaction is not available
 	 */
 	public synchronized ITx getTransaction(long txId) {
 		if (txCache.containsKey(txId))
@@ -139,7 +139,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 			txCache.put(txId, tx);
 			return tx;
 		} else {
-			throw new IllegalArgumentException();
+			return null;
 		}
 	}
 
@@ -528,12 +528,14 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		CborType next = cborDecoder.peekType();
 		while(next != null && !break_type.isEqualType(next)) {
 			long sz = cborDecoder.readArrayLength();
-			assert(sz==3);
+			assert(sz==5);
 			long type_id = cborDecoder.readInt();
 			long from_id = cborDecoder.readInt();
 			long to_id = cborDecoder.readInt();
+			long from_fiber = sz>3?cborDecoder.readInt():-1;
+			long to_fiber = sz>3?cborDecoder.readInt():-1;
 			String rel_name = strDict.get((int)type_id);
-			FtrRelation ftrRel = new FtrRelation(relationTypes.getOrDefault(rel_name, RelationTypeFactory.create(rel_name)), from_id, to_id);
+			FtrRelation ftrRel = new FtrRelation(relationTypes.getOrDefault(rel_name, RelationTypeFactory.create(rel_name)), from_id, to_id, from_fiber, to_fiber);
 			relationsOut.put(from_id, ftrRel);
 			relationsIn.put(to_id, ftrRel);
 			next = cborDecoder.peekType();

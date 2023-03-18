@@ -71,6 +71,18 @@ class TxStream extends AbstractTxStream {
 		return chunks;
 	}
 
+	public void loadStream() {
+		try {
+			List<byte[]> chunks = getChunks();
+			int blockid = 0;
+			for (byte[] bs : chunks) {
+				loader.parseTx(this, blockid, bs);
+				blockid++;
+			}
+		} catch (InputFormatException e) {
+		} catch (IOException e) {
+		}
+	}
 	/**
 	 * Gets the events.
 	 *
@@ -79,17 +91,9 @@ class TxStream extends AbstractTxStream {
 	@Override
 	public IEventList getEvents() {
 		if(events.size()==0) {
-			try {
-				List<byte[]> chunks = getChunks();
-				int blockid = 0;
-				for (byte[] bs : chunks) {
-					loader.parseTx(this, blockid, bs);
-					blockid++;
-				}
-			} catch (InputFormatException e) {
-			} catch (IOException e) {
-			}
+			loadStream();
 		}
 		return events;
 	}
+
 }
