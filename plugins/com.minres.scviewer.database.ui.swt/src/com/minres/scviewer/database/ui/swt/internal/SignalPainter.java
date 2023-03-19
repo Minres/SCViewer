@@ -200,7 +200,8 @@ public class SignalPainter extends TrackPainter {
 				colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNALZ);
 			}
 			int width = xEnd - xBegin;
-			if (width > 1) {
+			switch(width) {
+			default: {
 				int[] points = { 
 						xBegin,     yOffsetM, 
 						xBegin + 1, yOffsetT, 
@@ -243,9 +244,17 @@ public class SignalPainter extends TrackPainter {
 					proj.drawText(label+ext, xBegin + 3, yOffsetM - bb.y / 2 - 1);
 					proj.setClipping(old);
 				}
-			} else {
+				break;
+			}
+			case 2:
+			case 1:
 				proj.setForeground(colorBorder);
-				proj.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
+				proj.drawPolygon(new int[]{/*tl*/xBegin, yOffsetT,/*tr*/xEnd, yOffsetT,/*br*/xEnd, yOffsetB,/*bl*/xBegin, yOffsetB});
+				break;
+			case 0:
+				proj.setForeground(colorBorder);
+				proj.drawLine(xBegin, yOffsetT, xBegin, yOffsetB);
+				break;
 			}
 		}
 
