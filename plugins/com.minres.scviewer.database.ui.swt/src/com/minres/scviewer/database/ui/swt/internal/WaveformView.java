@@ -91,7 +91,6 @@ import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.IWaveformviewEventListener;
 import com.minres.scviewer.database.ui.TrackEntry;
-import com.minres.scviewer.database.ui.TrackEntryGroup;
 import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
 
 public class WaveformView implements IWaveformView {
@@ -589,9 +588,8 @@ public class WaveformView implements IWaveformView {
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
 		tl.setFont(styleProvider.getNameFont());
 		for (TrackEntry streamEntry : streams) {
-			if(streamEntry instanceof TrackEntryGroup && ((TrackEntryGroup)streamEntry).is_open) {
-				TrackEntryGroup streamEntryGroup = (TrackEntryGroup)streamEntry;
-				for (TrackEntry trackEntry : streamEntryGroup.waveforms) {
+			if(streamEntry.hierState == TrackEntry.HierState.OPENED) {
+				for (TrackEntry trackEntry : streamEntry.waveforms) {
 					addPainter(even, trackEntry);
 					trackVerticalOffset.put(tracksVerticalHeight, trackEntry);
 					tl.setText(trackEntry.waveform.getFullName());
@@ -1140,19 +1138,11 @@ public class WaveformView implements IWaveformView {
 				Integer lastKey = trackVerticalOffset.floorKey(rect.y + rect.height);
 				Rectangle subArea = new Rectangle(rect.x, 0, rect.width, styleProvider.getTrackHeight());
 				if (lastKey.equals(firstKey)) {
-					TrackEntry trackEntry = trackVerticalOffset.get(firstKey);
-					IWaveform w = trackEntry.waveform;
-					if (w.getType() == WaveformType.TRANSACTION)
-						subArea.height *= w.getRowCount();
-					drawTextFormat(gc, subArea, firstKey, w.getFullName(), trackEntry.selected);
+					drawName(gc, subArea, firstKey, trackVerticalOffset.get(firstKey));
 				} else {
 					for (Entry<Integer, TrackEntry> entry : trackVerticalOffset.subMap(firstKey, true, lastKey, true)
 							.entrySet()) {
-						IWaveform w = entry.getValue().waveform;
-						subArea.height = styleProvider.getTrackHeight();
-						if (w.getType() == WaveformType.TRANSACTION)
-							subArea.height *= w.getRowCount();
-						drawTextFormat(gc, subArea, entry.getKey(), w.getFullName(), entry.getValue().selected);
+						drawName(gc, subArea, entry.getKey(), entry.getValue());
 					}
 				}
 			} catch (NoSuchElementException e) {
@@ -1190,6 +1180,13 @@ public class WaveformView implements IWaveformView {
 		}
 	}
 
+	private void drawName(GC gc, Rectangle subArea, Integer firstKey, TrackEntry entry) {
+		IWaveform w = entry.waveform;
+		if (w.getType() == WaveformType.TRANSACTION)
+			subArea.height *= w.getRowCount();
+		drawTextFormat(gc, subArea, firstKey, w.getFullName(), entry.selected, entry.hierState);
+	}
+
 	protected void drawValue(GC gc, Rectangle subArea, Integer yOffset, String value, boolean highlite) {
 		int beginIndex = 0;
 		for (int offset = 0; offset < subArea.height; offset += styleProvider.getTrackHeight()) {
@@ -1202,7 +1199,12 @@ public class WaveformView implements IWaveformView {
 	}
 
 	protected void drawTextFormat(GC gc, Rectangle subArea, int yOffset, String value, boolean highlite) {
+		drawTextFormat(gc, subArea, yOffset, value, highlite, TrackEntry.HierState.NONE);
+	}
+	
+	protected void drawTextFormat(GC gc, Rectangle subArea, int yOffset, String value, boolean highlite, TrackEntry.HierState state) {
 		Point size = gc.textExtent(value);
+		int height = styleProvider.getTrackHeight();
 		if (highlite) {
 			gc.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_SELECTION));
 			gc.setForeground(SWTResourceManager.getColor(SWT.COLOR_LIST_SELECTION_TEXT));
@@ -1213,7 +1215,14 @@ public class WaveformView implements IWaveformView {
 			gc.setForeground(namePaneHeader.getForeground());
 			gc.setFont(styleProvider.getNameFont());
 		}
-		gc.drawText(value, subArea.x + 5, subArea.y + yOffset + (styleProvider.getTrackHeight() - size.y) / 2, true);
+		if(state==TrackEntry.HierState.NONE) {
+			gc.drawText(value, subArea.x + 5, subArea.y + yOffset + (height - size.y) / 2, true);
+		} else {
+			gc.setBackground(highlite?SWTResourceManager.getColor(SWT.COLOR_LIST_SELECTION_TEXT):namePaneHeader.getForeground());
+			gc.fillPolygon(new int[]{3, yOffset+(height-10)/2, 10, yOffset+height/2, 3, yOffset+(height+10)/2});
+			Rectangle textArea = new Rectangle(subArea.x+12,  subArea.y, subArea.width-12, subArea.height);
+			gc.drawText(value, textArea.x + 5, subArea.y + yOffset + (height - size.y) / 2, true);
+		}
 	}
 
 	public void setHighliteRelation(RelationType relationType) {
