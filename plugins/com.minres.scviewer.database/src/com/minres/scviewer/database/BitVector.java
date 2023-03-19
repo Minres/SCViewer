@@ -11,6 +11,7 @@
 package com.minres.scviewer.database;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * The Class BitVector.
@@ -168,7 +169,9 @@ public class BitVector implements IEvent {
 			}
 			res[i] = Character.forDigit(digit, 16); // ((digit < 10) ? '0' + digit : 'a' + digit -10)
 		}
-		return new String(res);
+		int idx=0;
+		while(res[idx]=='0' && idx<(res.length-1)) idx++;
+		return new String( Arrays.copyOfRange(res, idx, res.length));
 	}
 
 	/**

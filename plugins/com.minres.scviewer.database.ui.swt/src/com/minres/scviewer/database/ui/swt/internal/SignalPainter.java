@@ -224,17 +224,23 @@ public class SignalPainter extends TrackPainter {
 					label=last.toString();
 					break;
 				default:
-					label="h'"+last.toHexString();
+					label=/*"h'"+*/last.toHexString();
 				}
-				Point bb = new Point(DUMMY_PANEL.getFontMetrics(tmpAwtFont).stringWidth(label), height);
 				if (xBegin < area.x) {
 					xBegin = area.x;
 					width = xEnd - xBegin;
 				}
+				Point bb = new Point(DUMMY_PANEL.getFontMetrics(tmpAwtFont).stringWidth(label), height);
+				String ext = "";
+				while(width<bb.x && label.length()>1) {
+					label = label.substring(0, label.length()-1);
+					ext="+";
+					bb = new Point(DUMMY_PANEL.getFontMetrics(tmpAwtFont).stringWidth(label +ext), height);
+				}
 				if (width > (bb.x+1)) {
 					Rectangle old = proj.getClipping();
 					proj.setClipping(xBegin + 3, yOffsetT, xEnd - xBegin - 5, yOffsetB - yOffsetT);
-					proj.drawText(label, xBegin + 3, yOffsetM - bb.y / 2 - 1);
+					proj.drawText(label+ext, xBegin + 3, yOffsetM - bb.y / 2 - 1);
 					proj.setClipping(old);
 				}
 			} else {
