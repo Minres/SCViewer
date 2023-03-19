@@ -11,6 +11,8 @@
  
 package com.minres.scviewer.e4.application.handlers;
 
+import java.util.Optional;
+
 import org.eclipse.e4.core.di.annotations.CanExecute;
 import org.eclipse.e4.core.di.annotations.Evaluate;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -22,10 +24,11 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.minres.scviewer.database.EmptyWaveform;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.TrackEntry.HierState;
 import com.minres.scviewer.e4.application.parts.TextInputDialog;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
-public class SetLabelTextHandler {
+public class WaveformDoubleClickTextHandler {
 
 	@Execute
 	public void execute(Shell shell, EPartService partService) {
@@ -33,9 +36,10 @@ public class SetLabelTextHandler {
 		if(part!=null && part.getObject() instanceof WaveformViewer){
 			Object sel = ((WaveformViewer)part.getObject()).getSelection();
 			if( sel instanceof IStructuredSelection) {
-				Object o= ((IStructuredSelection)sel).getFirstElement();
-				if(o instanceof TrackEntry) {
-					TrackEntry te = (TrackEntry)o;
+				@SuppressWarnings("unchecked")
+				Optional<TrackEntry> o = ((IStructuredSelection)sel).toList().stream().filter(e -> e instanceof TrackEntry).findFirst();
+				if(o.isPresent()) {
+					TrackEntry te = o.get();
 					if(te.waveform instanceof EmptyWaveform) {
 						EmptyWaveform waveform= (EmptyWaveform)te.waveform;
 						TextInputDialog dialog = new TextInputDialog(shell);
@@ -45,6 +49,10 @@ public class SetLabelTextHandler {
 						if (dialog.open() == Window.OK) {
 							waveform.setName(dialog.getText());
 						}
+					} else if(te.hierState==HierState.CLOSED) {
+						te.hierState=HierState.OPENED;
+					} else if(te.hierState==HierState.OPENED) {
+						te.hierState=HierState.CLOSED;
 					}
 				}
 			}
@@ -59,10 +67,11 @@ public class SetLabelTextHandler {
 			Object sel = ((WaveformViewer)activePart.getObject()).getSelection();
 			if( sel instanceof IStructuredSelection) {
 				if(((IStructuredSelection)sel).isEmpty()) return false;
-				Object o= ((IStructuredSelection)sel).getFirstElement();
-				if(o instanceof TrackEntry) {
-					TrackEntry te = (TrackEntry)o;
-					return te.waveform instanceof EmptyWaveform;
+				@SuppressWarnings("unchecked")
+				Optional<TrackEntry> o = ((IStructuredSelection)sel).toList().stream().filter(e -> e instanceof TrackEntry).findFirst();
+				if(o.isPresent()) {
+					TrackEntry te = o.get();
+					return te.waveform instanceof EmptyWaveform || te.hierState!=HierState.NONE;
 				}
 			}
 		}

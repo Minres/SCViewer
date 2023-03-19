@@ -11,6 +11,8 @@
  
 package com.minres.scviewer.e4.application.handlers;
 
+import java.util.Optional;
+
 import org.eclipse.e4.core.di.annotations.CanExecute;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
@@ -25,13 +27,11 @@ public class DeleteWaveformHandler {
 	@SuppressWarnings("unchecked")
 	@CanExecute
 	public Boolean canExecute(ESelectionService selectionService){
-		Object o = selectionService.getSelection();
-		if(o instanceof IStructuredSelection) {
-			IStructuredSelection sel = (IStructuredSelection) o;
-			if(sel.size()>0)
-				return sel.toList().stream().allMatch(e-> e instanceof TrackEntry);
-			else
-				return false;
+		Object sel = selectionService.getSelection();
+		if(sel instanceof IStructuredSelection) {
+			if(((IStructuredSelection)sel).isEmpty()) return false;
+			Optional<TrackEntry> o= ((IStructuredSelection)sel).toList().stream().filter(e -> e instanceof TrackEntry).findFirst();
+			return o.isPresent();
 		} else
 			return false;
 	}

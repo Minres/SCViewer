@@ -418,7 +418,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		waveformPane.addEventListner(new IWaveformviewEventListener() {
 			@Override
 			public void onTrackEntryDoubleClickEvent(TrackEntry trackEntry) {
-				ParameterizedCommand command = commandService.createCommand(AppModelId.COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SET_LABEL_TEXT);
+				ParameterizedCommand command = commandService.createCommand(AppModelId.COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_WAVE_DOUBLE_CLICK);
 				handlerService.executeHandler(command);
 			}
 		});
@@ -1000,9 +1000,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 			for (IWaveform waveform : iWaveforms)
 				waveformPane.addWaveform(waveform, -1);
 		} else {
-			Object first = selection.getFirstElement();
-			if(first instanceof ITx) {
-				TrackEntry trackEntry = waveformPane.getEntryFor((ITx) first);
+			@SuppressWarnings("unchecked")
+			java.util.Optional<TrackEntry> o = selection.toList().stream().filter(e -> e instanceof TrackEntry).findFirst();
+			if(o.isPresent()) {
+				TrackEntry trackEntry = o.get();
 				if (insert) {
 					int index = waveformPane.getStreamList().indexOf(trackEntry);
 					for (IWaveform waveform : iWaveforms)
@@ -1011,18 +1012,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 					for (IWaveform waveform : iWaveforms)
 						waveformPane.addWaveform(waveform, -1);
 				}
-			} else if(first instanceof TrackEntry) {
-				TrackEntry trackEntry = (TrackEntry) first;
-				if (insert) {
-					int index = waveformPane.getStreamList().indexOf(trackEntry);
-					for (IWaveform waveform : iWaveforms)
-						waveformPane.addWaveform(waveform, index++);
-				} else {
-					for (IWaveform waveform : iWaveforms)
-						waveformPane.addWaveform(waveform, -1);
-				}
-			}
 
+			}
 		}
 		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent());		
 		setFocus();
@@ -1033,10 +1024,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent());		
 	}
 
-	public void removeSelectedStreamFromList() {
-		waveformPane.deleteSelectedTracks();
-		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent());		
-	}
 	/**
 	 * Move selected.
 	 *

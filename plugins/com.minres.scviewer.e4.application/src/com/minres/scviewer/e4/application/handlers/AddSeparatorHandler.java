@@ -11,6 +11,8 @@
 
 package com.minres.scviewer.e4.application.handlers;
 
+import java.util.Optional;
+
 import javax.inject.Named;
 
 import org.eclipse.e4.core.di.annotations.CanExecute;
@@ -34,12 +36,11 @@ public class AddSeparatorHandler {
 		if(part!=null && part.getObject() instanceof WaveformViewer){
 			Object sel = ((WaveformViewer)part.getObject()).getSelection();
 			if( sel instanceof IStructuredSelection) {
-				if(((IStructuredSelection)sel).isEmpty()) return false;
-				IStructuredSelection isel = (IStructuredSelection) sel;
-				if(isel.size()==1)
-					return isel.getFirstElement() instanceof TrackEntry;
-				else if(isel.size()==2) {
-					return isel.toArray()[1] instanceof TrackEntry;
+				if( sel instanceof IStructuredSelection) {
+					if(((IStructuredSelection)sel).isEmpty()) return false;
+					@SuppressWarnings("unchecked")
+					Optional<TrackEntry> o= ((IStructuredSelection)sel).toList().stream().filter(e -> e instanceof TrackEntry).findFirst();
+					return o.isPresent();
 				}
 			}
 		}

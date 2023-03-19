@@ -41,7 +41,7 @@ public class AppModelId {
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_PANCOMMAND = "com.minres.scviewer.e4.application.command.pancommand";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SELECTALLCOMMAND = "com.minres.scviewer.e4.application.command.selectallCommand";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SETRELATIONTYPE = "com.minres.scviewer.e4.application.command.setrelationtype";
-	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SET_LABEL_TEXT = "com.minres.scviewer.e4.application.command.set_label_text";
+	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_WAVE_DOUBLE_CLICK = "com.minres.scviewer.e4.application.command.wave_double_click";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SET_THEM = "com.minres.scviewer.e4.application.command.set_them";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_UPDATE = "com.minres.scviewer.e4.application.command.update";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_ZOOMCOMMAND = "com.minres.scviewer.e4.application.command.zoomcommand";

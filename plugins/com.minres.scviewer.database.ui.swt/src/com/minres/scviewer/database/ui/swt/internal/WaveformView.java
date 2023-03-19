@@ -91,6 +91,7 @@ import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.IWaveformviewEventListener;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.TrackEntry.HierState;
 import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
 
 public class WaveformView implements IWaveformView {
@@ -155,11 +156,13 @@ public class WaveformView implements IWaveformView {
 						setSelection(new StructuredSelection(entry.getValue()), false, false);
 						lastClickedEntry = entry.getValue();
 					} else {
-						StructuredSelection structuredSelection = (StructuredSelection) sel;
-						if(structuredSelection.size()== 1 && structuredSelection.getFirstElement() instanceof TrackEntry) {
+						@SuppressWarnings("unchecked")
+						long c = ((IStructuredSelection)sel).toList().stream().filter(x -> x instanceof TrackEntry).count();
+						if(c==1) {
 							Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
-							TrackEntry selEntry = (TrackEntry) structuredSelection.getFirstElement();
-							if(!entry.getValue().equals(selEntry)) {
+							@SuppressWarnings("unchecked")
+							Optional<TrackEntry> o = ((IStructuredSelection)sel).toList().stream().filter(x -> x instanceof TrackEntry).findFirst();
+							if(!entry.getValue().equals(o.get())) {
 								setSelection(new StructuredSelection(entry.getValue()), false, false);
 								lastClickedEntry = entry.getValue();
 							}
@@ -347,9 +350,7 @@ public class WaveformView implements IWaveformView {
 			default:
 				break;
 			}
-
 		}
-
 	}
 
 	protected WaveformMouseListener waveformMouseListener = new WaveformMouseListener();
@@ -588,7 +589,7 @@ public class WaveformView implements IWaveformView {
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
 		tl.setFont(styleProvider.getNameFont());
 		for (TrackEntry streamEntry : streams) {
-			if(streamEntry.hierState == TrackEntry.HierState.OPENED) {
+			if(streamEntry.hierState == HierState.OPENED) {
 				for (TrackEntry trackEntry : streamEntry.waveforms) {
 					addPainter(even, trackEntry);
 					trackVerticalOffset.put(tracksVerticalHeight, trackEntry);
@@ -1161,16 +1162,13 @@ public class WaveformView implements IWaveformView {
 				if (lastKey.equals(firstKey)) {
 					TrackEntry trackEntry = trackVerticalOffset.get(firstKey);
 					IWaveform w = trackEntry.waveform;
-					if (w.getType() == WaveformType.TRANSACTION)
-						subArea.height *= w.getRowCount();
+					subArea.height = w.getRowCount() * styleProvider.getTrackHeight();
 					drawValue(gc, subArea, firstKey, trackEntry.currentValue, trackEntry.selected);
 				} else {
 					for (Entry<Integer, TrackEntry> entry : trackVerticalOffset.subMap(firstKey, true, lastKey, true)
 							.entrySet()) {
 						IWaveform w = entry.getValue().waveform;
-						subArea.height = styleProvider.getTrackHeight();
-						if (w.getType() == WaveformType.TRANSACTION)
-							subArea.height *= w.getRowCount();
+						subArea.height = w.getRowCount() * styleProvider.getTrackHeight();
 						drawValue(gc, subArea, entry.getKey(), entry.getValue().currentValue,
 								entry.getValue().selected);
 					}
@@ -1180,10 +1178,9 @@ public class WaveformView implements IWaveformView {
 		}
 	}
 
-	private void drawName(GC gc, Rectangle subArea, Integer firstKey, TrackEntry entry) {
+	protected void drawName(GC gc, Rectangle subArea, Integer firstKey, TrackEntry entry) {
 		IWaveform w = entry.waveform;
-		if (w.getType() == WaveformType.TRANSACTION)
-			subArea.height *= w.getRowCount();
+		subArea.height = w.getRowCount() * styleProvider.getTrackHeight();
 		drawTextFormat(gc, subArea, firstKey, w.getFullName(), entry.selected, entry.hierState);
 	}
 
@@ -1199,10 +1196,10 @@ public class WaveformView implements IWaveformView {
 	}
 
 	protected void drawTextFormat(GC gc, Rectangle subArea, int yOffset, String value, boolean highlite) {
-		drawTextFormat(gc, subArea, yOffset, value, highlite, TrackEntry.HierState.NONE);
+		drawTextFormat(gc, subArea, yOffset, value, highlite, HierState.NONE);
 	}
 	
-	protected void drawTextFormat(GC gc, Rectangle subArea, int yOffset, String value, boolean highlite, TrackEntry.HierState state) {
+	protected void drawTextFormat(GC gc, Rectangle subArea, int yOffset, String value, boolean highlite, HierState state) {
 		Point size = gc.textExtent(value);
 		int height = styleProvider.getTrackHeight();
 		if (highlite) {
@@ -1215,14 +1212,28 @@ public class WaveformView implements IWaveformView {
 			gc.setForeground(namePaneHeader.getForeground());
 			gc.setFont(styleProvider.getNameFont());
 		}
-		if(state==TrackEntry.HierState.NONE) {
+		gc.drawText(value, subArea.x + 5, subArea.y + yOffset + (height - size.y) / 2, true);
+/*		if(state==HierState.NONE) {
 			gc.drawText(value, subArea.x + 5, subArea.y + yOffset + (height - size.y) / 2, true);
 		} else {
 			gc.setBackground(highlite?SWTResourceManager.getColor(SWT.COLOR_LIST_SELECTION_TEXT):namePaneHeader.getForeground());
-			gc.fillPolygon(new int[]{3, yOffset+(height-10)/2, 10, yOffset+height/2, 3, yOffset+(height+10)/2});
+			int o = yOffset + (height-12)/2;
+			if(state==HierState.OPENED) {
+				Point tl = new Point(1,o+2);
+				Point tr = new Point(10,o+2);
+				Point br = new Point(6,o+9);
+				Point bl = new Point(5,o+9);
+				gc.fillPolygon(new int[] {tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y});
+			} else {
+				Point tl = new Point(2,o+1);
+				Point tr = new Point(9,o+5);
+				Point br = new Point(9,o+6);
+				Point bl = new Point(2,o+10);
+				gc.fillPolygon(new int[] {tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y});
+			}
 			Rectangle textArea = new Rectangle(subArea.x+12,  subArea.y, subArea.width-12, subArea.height);
 			gc.drawText(value, textArea.x + 5, subArea.y + yOffset + (height - size.y) / 2, true);
-		}
+		}*/
 	}
 
 	public void setHighliteRelation(RelationType relationType) {
