@@ -11,8 +11,6 @@
 
 package com.minres.scviewer.e4.application.handlers;
 
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 

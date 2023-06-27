@@ -31,7 +31,7 @@
 	</modules>
 
 	<properties>
-		<tycho-version>2.3.0</tycho-version>
+		<tycho-version>3.0.5</tycho-version>
 		<software.download.area>${project.basedir}/../../..</software.download.area>
 	</properties>
 
@@ -74,8 +74,10 @@
 							<version>2.18.0</version>
 						</artifact>
 					</target>
-              		<executionEnvironment>org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironment>
-		            <executionEnvironmentDefault>org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironmentDefault>
+					<executionEnvironment>
+						org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironment>
+					<executionEnvironmentDefault>
+						org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironmentDefault>
 					<includePackedArtifacts>true</includePackedArtifacts>
 					<environments>
 						<environment>
@@ -119,13 +121,13 @@
 					<excludes>
 						<plugin id="com.google.guava" />
 						<plugin id="org.hamcrest.core" />
-						<plugin id="org.junit" />						
+						<plugin id="org.junit" />
 						<plugin id="com.minres.scviewer.e4.product" />
 						<plugin id="org.eclipse.core.filesystem.linux.x86_64" />
 						<plugin id="org.eclipse.core.filesystem.win32.x86_64" />
 						<plugin id="com.opcoach.e4.preferences" />
 						<plugin id="javax.servlet" />
-						<feature id="com.minres.scviewer.e4.help.feature"/>
+						<feature id="com.minres.scviewer.e4.help.feature" />
 					</excludes>
 				</configuration>
 			</plugin>
@@ -146,5 +148,40 @@
 			</plugin>
 
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>${tycho-groupid}</groupId>
+					<artifactId>tycho-maven-plugin</artifactId>
+					<version>${tycho-version}</version>
+					<extensions>true</extensions>
+				</plugin>
+				<plugin>
+					<groupId>${tycho-groupid}</groupId>
+					<artifactId>target-platform-configuration</artifactId>
+					<version>${tycho-version}</version>
+					<configuration>
+						<resolver>p2</resolver>
+						<environments>
+							<environment>
+								<os>win32</os>
+								<ws>win32</ws>
+								<arch>x86</arch>
+							</environment>
+							<environment>
+								<os>macosx</os>
+								<ws>cocoa</ws>
+								<arch>x86_64</arch>
+							</environment>
+							<environment>
+								<os>linux</os>
+								<ws>gtk</ws>
+								<arch>x86_64</arch>
+							</environment>
+						</environments>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 </project>
