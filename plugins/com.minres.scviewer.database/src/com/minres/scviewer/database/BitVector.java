@@ -149,25 +149,28 @@ public class BitVector implements IEvent {
 		int resWidth = (width - 1) / 4 + 1;
 		char[] value = getValue();
 		char[] res = new char[resWidth];
+		int start_idx = (value.length-1)%4;
 		for (int i = resWidth - 1; i >= 0; i--) {
 			int digit = 0;
-			for (int j = 3; j >= 0; j--) {
+			for (int j = start_idx, jj=0; j >= 0; j--, jj++) {
 				if ((4 * i + j) < value.length) {
-					BitValue val = BitValue.fromChar(value[4 * i + j]);
+					BitValue val = BitValue.fromChar(value[4 * i + jj]);
 					switch (val) {
 					case X:
 					case Z:
 						res[i] = val.toChar();
 						continue;
 					case ONE:
-						digit += 1 << (3 - j);
+						digit += 1 << j;
 						break;
 					default:
 						break;
 					}
 				}
 			}
-			res[i] = Character.forDigit(digit, 16); // ((digit < 10) ? '0' + digit : 'a' + digit -10)
+			if(res[i]==0)
+				res[i] = Character.forDigit(digit, 16); // ((digit < 10) ? '0' + digit : 'a' + digit -10)
+			start_idx=3;
 		}
 		int idx=0;
 		while(res[idx]=='0' && idx<(res.length-1)) idx++;
