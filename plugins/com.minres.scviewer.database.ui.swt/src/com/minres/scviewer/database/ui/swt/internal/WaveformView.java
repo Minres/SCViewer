@@ -651,7 +651,7 @@ public class WaveformView implements IWaveformView {
 
 	private void updateValueList() {
 		final Long time = getCursorTime();
-		for (TrackEntry entry : streams) {
+		streams.stream()/*.parallel()*/.forEach(entry -> {
 			if (entry.waveform.getType() == WaveformType.SIGNAL) {
 				IEvent[] value = entry.waveform.getEventsBeforeTime(time);
 				if (value[0] instanceof BitVector) {
@@ -710,7 +710,7 @@ public class WaveformView implements IWaveformView {
 
 				}
 			}
-		}
+		});
 		int width = calculateValueWidth();
 		valueList.setSize(width, tracksVerticalHeight);
 		valueListScrolled.setMinSize(width, tracksVerticalHeight);

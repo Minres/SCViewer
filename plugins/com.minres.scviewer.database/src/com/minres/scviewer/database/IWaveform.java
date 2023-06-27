@@ -11,7 +11,7 @@
 package com.minres.scviewer.database;
 
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The Interface IWaveform.
  *
@@ -19,6 +19,7 @@ package com.minres.scviewer.database;
  */
 public interface IWaveform extends IHierNode {
 
+	public DirectionType getDirection();
 	/**
 	 * Gets the id.
 	 *

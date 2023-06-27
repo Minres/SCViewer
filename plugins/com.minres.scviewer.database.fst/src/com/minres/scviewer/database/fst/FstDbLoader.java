@@ -131,11 +131,11 @@ public class FstDbLoader implements IWaveformDbLoader, IFstDatabaseBuilder {
 	 * @see com.minres.scviewer.database.vcd.ITraceBuilder#newNet(java.lang.String, int, int)
 	 */
 	@Override
-	public void newNet(String name, int handle, int width, boolean alias) {
+	public void newNet(String name, int handle, int width, int direction, boolean alias) {
 		String netName = moduleStack.isEmpty()? name: moduleStack.peek()+"."+name;
 		IWaveform signal = width==0?
-				new FstSignal<DoubleVal>(this, handle, netName, width):
-					new FstSignal<BitVector>(this, handle, netName, width);
+				new FstSignal<DoubleVal>(this, handle, netName, width, direction):
+					new FstSignal<BitVector>(this, handle, netName, direction, width);
 		signals.add(signal);
 		pcs.firePropertyChange(IWaveformDbLoader.SIGNAL_ADDED, null, Iterables.getLast(signals));
 	}
@@ -150,6 +150,7 @@ public class FstDbLoader implements IWaveformDbLoader, IFstDatabaseBuilder {
 	}
 
 	public void setMaxTime(long maxTime, int timeScale) {
+		if(timeScale>0) timeScale=-timeScale;
 		long eff_time_scale=timeScale-IWaveformDb.databaseTimeScale;
 		this.timeScaleFactor = calculateTimescaleMultipierPower(eff_time_scale);
 		this.maxTime = maxTime*timeScaleFactor;

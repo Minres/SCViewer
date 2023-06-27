@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
@@ -76,4 +77,8 @@ public class TxGenerator extends AbstractTxStream {
 		return transactions;
 	}
 
+	@Override
+	public DirectionType getDirection() {
+		return DirectionType.IMPLICIT;
+	}
 }

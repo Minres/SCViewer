@@ -14,6 +14,7 @@ package com.minres.scviewer.database.text;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IWaveform;
 
 /**
@@ -93,4 +94,8 @@ class TxGenerator extends AbstractTxStream {
 		return  ((AbstractTxStream)parent).getFullName()+"."+name;
 	}
 
+	@Override
+	public DirectionType getDirection() {
+		return DirectionType.IMPLICIT;
+	}
 }

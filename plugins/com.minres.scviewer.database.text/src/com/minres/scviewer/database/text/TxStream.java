@@ -11,6 +11,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.text;
 
+import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IWaveform;
 
 /**
@@ -55,4 +56,8 @@ class TxStream extends AbstractTxStream {
 		return kind;
 	}
 
+	@Override
+	public DirectionType getDirection() {
+		return DirectionType.IMPLICIT;
+	}
 }

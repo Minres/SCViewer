@@ -206,6 +206,9 @@
       <children xsi:type="menu:HandledMenuItem" xmi:id="_NFfK0LcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" label="Add separator above" command="_vYAOQLcxEe294PIiYLxpfA">
         <parameters xmi:id="_or7iYLcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="before"/>
       </children>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_Dj-FUBTJEe6ZlJc8qY5-Zw" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" label="Add separator below" command="_vYAOQLcxEe294PIiYLxpfA">
+        <parameters xmi:id="_Dj-FURTJEe6ZlJc8qY5-Zw" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="after"/>
+      </children>
       <children xsi:type="menu:HandledMenuItem" xmi:id="_ecbWkLc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" visible="false" label="Add blank below" enabled="false" command="_vYAOQLcxEe294PIiYLxpfA">
         <parameters xmi:id="_ecbWkbc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="after"/>
       </children>

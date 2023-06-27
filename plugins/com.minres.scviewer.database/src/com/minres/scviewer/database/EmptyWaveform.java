@@ -123,4 +123,9 @@ public class EmptyWaveform implements IWaveform {
 		return 0;
 	}
 
+	@Override
+	public DirectionType getDirection() {
+		return DirectionType.IMPLICIT;
+	}
+
 }

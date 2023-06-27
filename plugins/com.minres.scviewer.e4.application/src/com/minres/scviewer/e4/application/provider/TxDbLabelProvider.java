@@ -13,11 +13,16 @@ package com.minres.scviewer.e4.application.provider;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.DecorationOverlayIcon;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.wb.swt.ResourceManager;
 
+import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
@@ -49,6 +54,32 @@ public class TxDbLabelProvider implements ILabelProvider {
 	/** The wave. */
 	private Image wave;
 	
+	/** The wave. */
+	private Image input;
+	
+	/** The wave. */
+	private Image output;
+	
+	/** The wave. */
+	private Image inout;
+	
+	/** The signal. */
+	private Image signal_in;
+	
+	/** The wave. */
+	private Image wave_in;
+	
+	/** The signal. */
+	private Image signal_out;
+	
+	/** The wave. */
+	private Image wave_out;
+	
+	/** The signal. */
+	private Image signal_inout;
+	
+	/** The wave. */
+	private Image wave_inout;
 	/**
 	 * Instantiates a new tx db label provider.
 	 */
@@ -64,7 +95,16 @@ public class TxDbLabelProvider implements ILabelProvider {
 			
 		}
 		signal=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/signal.png"); //$NON-NLS-1$ //$NON-NLS-2$
-		wave=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/wave.png"); //$NON-NLS-1$ //$NON-NLS-2$
+		wave=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/wave.png"); //$NON-NLS-1$ //$NON-NLS-2$s
+		input=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/arrow_in.png"); //$NON-NLS-1$ //$NON-NLS-2$s
+		output=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/arrow_out.png"); //$NON-NLS-1$ //$NON-NLS-2$s
+		inout=ResourceManager.getPluginImage(Constants.PLUGIN_ID, "icons/arrow_inout.png"); //$NON-NLS-1$ //$NON-NLS-2$s
+		signal_in = new DecorationOverlayIcon(signal, new ImageDescriptor[]{ImageDescriptor.createFromImage(input)}).createImage();		
+		wave_in = new DecorationOverlayIcon(wave, new ImageDescriptor[]{ImageDescriptor.createFromImage(input)}).createImage();		
+		signal_out = new DecorationOverlayIcon(signal, new ImageDescriptor[]{ImageDescriptor.createFromImage(output)}).createImage();		
+		wave_out = new DecorationOverlayIcon(wave, new ImageDescriptor[]{ImageDescriptor.createFromImage(output)}).createImage();		
+		signal_inout = new DecorationOverlayIcon(signal, new ImageDescriptor[]{ImageDescriptor.createFromImage(inout)}).createImage();		
+		wave_inout = new DecorationOverlayIcon(wave, new ImageDescriptor[]{ImageDescriptor.createFromImage(inout)}).createImage();		
 	}
 
 	/**
@@ -88,7 +128,12 @@ public class TxDbLabelProvider implements ILabelProvider {
 	 */
 	@Override
 	public void dispose() {
-		// no resources to dispose
+		signal_in.dispose();
+		wave_in.dispose();
+		signal_out.dispose();	
+		wave_out.dispose();		
+		signal_inout.dispose();		
+		wave_inout.dispose();		
 	}
 
 	/**
@@ -139,10 +184,29 @@ public class TxDbLabelProvider implements ILabelProvider {
 			case FILTER:
 				break;
 			case SIGNAL:
-				if(((IWaveform) element).getWidth()==1)
-					return signal;
-				else 
-					return wave;
+				IWaveform wf = (IWaveform) element;
+				switch(wf.getDirection()) {
+				default:
+					if(((IWaveform) element).getWidth()==1)
+						return signal;
+					else 
+						return wave;
+				case INPUT:
+					if(((IWaveform) element).getWidth()==1)
+						return signal_in;
+					else 
+						return wave_in;
+				case OUTPUT:
+					if(((IWaveform) element).getWidth()==1)
+						return signal_out;
+					else 
+						return wave_out;
+				case INOUT:
+					if(((IWaveform) element).getWidth()==1)
+						return signal_inout;
+					else 
+						return wave_inout;
+				}
 			default:
 				break;
 			}

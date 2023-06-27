@@ -54,7 +54,7 @@ class FstFileParser {
 	    		case HT_VAR:
 	    			HierVar v =  new HierVar();
 	    			FstLibrary.getHierVar(p, v);
-	    			builder.newNet(v.name,  v.handle,  v.length, v.is_alias!=0);
+	    			builder.newNet(v.name,  v.handle,  v.length, v.direction, v.is_alias!=0);
 	    			break;
 	    		case HT_ATTRBEGIN:
 	    			HierAttr attr =  new HierAttr();

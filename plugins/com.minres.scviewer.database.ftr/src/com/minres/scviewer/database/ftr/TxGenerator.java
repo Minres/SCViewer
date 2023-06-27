@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.InputFormatException;
@@ -119,4 +120,8 @@ class TxGenerator extends AbstractTxStream {
 		return  ((AbstractTxStream)parent).getFullName()+"."+name;
 	}
 
+	@Override
+	public DirectionType getDirection() {
+		return DirectionType.IMPLICIT;
+	}
 }

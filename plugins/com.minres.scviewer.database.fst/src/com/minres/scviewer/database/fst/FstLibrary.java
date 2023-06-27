@@ -95,6 +95,19 @@ public class FstLibrary {
 	        this.varType = varType;
 	    }
 	};
+	
+	public static enum VarDir {
+	    FST_VD_IMPLICIT    (0),
+	    FST_VD_INPUT       (1),
+	    FST_VD_OUTPUT      (2),
+	    FST_VD_INOUT       (3),
+	    FST_VD_BUFFER      (4),
+	    FST_VD_LINKAGE     (5);
+	    public final int varDir;
+	    private VarDir(int varDir) {
+	        this.varDir = varDir;
+	    }
+	};
 
 	public static enum AttrType {
 	    FST_AT_MISC        ( 0),     /* self-contained: does not need matching FST_HT_ATTREND */

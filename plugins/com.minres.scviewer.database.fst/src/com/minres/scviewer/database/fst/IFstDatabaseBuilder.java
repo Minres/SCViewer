@@ -35,7 +35,7 @@ public interface IFstDatabaseBuilder {
 	 * @param width the width, -1 equals real, 0... is a bit vector
 	 * @return the net id
 	 */
-	public void newNet(String netName, int handle, int width, boolean alias) ;
+	public void newNet(String netName, int handle, int width, int direction, boolean alias) ;
 
 	/**
 	 * Gets the net width.

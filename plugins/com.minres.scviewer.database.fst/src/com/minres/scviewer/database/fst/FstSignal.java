@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.fst;
 
+import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.HierNode;
@@ -21,7 +22,9 @@ import com.minres.scviewer.database.WaveformType;
 public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	private final FstDbLoader loader;
-	
+
+	private final int direction;
+
 	private final int id;
 
 	private final String fullName;
@@ -29,20 +32,21 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 	private final int width;
 
 	private final IEventList values;
-	
+
 	public FstSignal(FstDbLoader loader, String name) {
-		this(loader, 0, name, 1);
+		this(loader, 0, name, 0, 1);
 	}
 
 	public FstSignal(FstDbLoader loader, int id, String name) {
-		this(loader, id,name,1);
+		this(loader, id,name, 0,1);
 	}
 
-	public FstSignal(FstDbLoader loader, int id, String name, int width) {
+	public FstSignal(FstDbLoader loader, int id, String name, int direction, int width) {
 		super(name);
 		fullName=name;
 		this.loader=loader;
 		this.id=id;
+		this.direction = direction;
 		this.width=width;
 		this.values=new EventList();
 	}
@@ -52,6 +56,7 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 		fullName=name;
 		this.loader=o.loader;
 		this.id=id;
+		this.direction = 0;
 		this.width=o.width;
 		this.values=o.values;
 	}
@@ -78,14 +83,14 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 		return getEvents().get(time);
 	}
 
-    @Override
-    public IEvent[] getEventsBeforeTime(long time) {
-    	EventEntry e = getEvents().floorEntry(time);
-    	if(e==null)
-    		return new IEvent[] {};
-    	else
-    		return getEvents().floorEntry(time).events;
-    }
+	@Override
+	public IEvent[] getEventsBeforeTime(long time) {
+		EventEntry e = getEvents().floorEntry(time);
+		if(e==null)
+			return new IEvent[] {};
+		else
+			return getEvents().floorEntry(time).events;
+	}
 
 	@Override
 	public boolean isSame(IWaveform other) {
@@ -112,4 +117,15 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 		return "signal";
 	}
 
+	@Override
+	public DirectionType getDirection() {
+		switch(direction) {
+		case 1: return DirectionType.INPUT;
+		case 2: return DirectionType.OUTPUT;
+		case 3: return DirectionType.INOUT;
+		case 4: return DirectionType.BUFFER;
+		case 5: return DirectionType.LINKAGE;
+		}
+		return DirectionType.IMPLICIT;
+	}
 }
