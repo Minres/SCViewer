@@ -8,6 +8,7 @@ import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.help.internal.base.BaseHelpSystem;
 import org.eclipse.help.internal.server.WebappManager;
 
+@SuppressWarnings("restriction")
 public class HelpContentsHandler {
 
 	static final String WINDOW_ID="com.minres.scviewer.e4.application.window.help_content"; //$NON-NLS-1$

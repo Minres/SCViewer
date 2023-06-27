@@ -43,6 +43,7 @@ import com.minres.scviewer.e4.application.options.Options.Separator;
  * <em>org.eclipse.core.runtime.products' extension point</em>) that references
  * this class.
  **/
+@SuppressWarnings("restriction")
 public class E4LifeCycle {
 
 	@Inject private Logger logger;
