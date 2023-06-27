@@ -1,12 +1,8 @@
 SCViewer
 ========
 
-SCViewer is composed of a set of eclipse plugins to display VCD and transaction streams 
-created by the SystemC VCD trace implementation and the SystemC Verification Library (SCV).
-For further description of the SCV please refer to 
-http://www.accellera.org/activities/committees/systemc-verification.
-
-> If you encounter issue when running on Linux please try running as `SWT_GTK3=0 scviewer` as there exist issues wiht GTK3.
+SCViewer is composed of a set of eclipse plugins to display VCD (e.g. created by SystemC VCD trace) and transaction streams. Those streams can be 
+created by the SystemC Verification Library (SCV, For further description of the SCV please refer to https://www.accellera.org/activities/working-groups/systemc-verification) or by the **L**ight**w**eight **T**ranasaction **R**ecording for SystemC ( [LWTR4SC](https://github.com/Minres/LWTR4SC) ).
 
 The viewer has the following features
 - support of VCD files (compressed and uncompressed)
@@ -17,6 +13,8 @@ The viewer has the following features
  - text log files (compressed and uncompressed)
  - sqlite based 
  - visualization of transaction relations
+
+> If you encounter issue when running on Linux please try running as `SWT_GTK3=0 scviewer` as there exist issues wiht GTK3.
 
 To build the plugins the Eclipse SDK or PDE can be used.
 
