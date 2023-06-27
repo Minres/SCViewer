@@ -18,10 +18,12 @@ import javax.swing.JPanel;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Display;
 
 import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
@@ -86,7 +88,7 @@ public class SignalPainter extends TrackPainter {
 		long ltmp = time / this.waveCanvas.getScale();
 		return ltmp > maxPosX ? maxPosX : (int) ltmp;
 	}
-	
+
 	public void paintArea(Projection proj, Rectangle area) {
 		IWaveform signal = trackEntry.waveform;
 		if (trackEntry.selected)
@@ -99,8 +101,8 @@ public class SignalPainter extends TrackPainter {
 		long scaleFactor = this.waveCanvas.getScale();
 		long beginPos = area.x;
 		long beginTime = beginPos*scaleFactor;
-        long endTime = beginTime + area.width*scaleFactor;
-		
+		long endTime = beginTime + area.width*scaleFactor;
+
 		EventEntry first = signal.getEvents().floorEntry(beginTime);
 		if (first == null)
 			first = signal.getEvents().firstEntry();
@@ -118,7 +120,7 @@ public class SignalPainter extends TrackPainter {
 		int xSigChangeBeginVal = Math.max(area.x, (int) (left.time / this.waveCanvas.getScale()));
 		int xSigChangeBeginPos = area.x;
 		int xSigChangeEndPos = Math.max(area.x, getXPosEnd(right.time));
-		
+
 		boolean multiple = false;
 		if (xSigChangeEndPos == xSigChangeBeginPos) {
 			// this can trigger if
@@ -135,26 +137,29 @@ public class SignalPainter extends TrackPainter {
 			xSigChangeEndPos = getXPosEnd(right.time);
 		}
 
-		
+
 		SignalStencil stencil = getStencil(proj.getGC(), left, entries);
-		if(stencil!=null) do {
-			stencil.draw(proj, area, left.value, right.value, xSigChangeBeginPos, xSigChangeEndPos, multiple);
-			if (right.time >= endTime)
-				break;
-			left.assign(right);
-			xSigChangeBeginPos = xSigChangeEndPos;
-			right.set(entries.higherEntry(left.time), endTime);
-			xSigChangeEndPos = getXPosEnd(right.time);
-			multiple = false;
-			if (xSigChangeEndPos == xSigChangeBeginPos) {
-				multiple = true;
-				long eTime = (xSigChangeBeginPos + 1) * this.waveCanvas.getScale();
-				EventEntry entry = entries.floorEntry(eTime);
-				if(entry!=null && entry.timestamp> right.time)
-					right.set(entry, endTime);
-				xSigChangeEndPos = getXPosEnd(eTime);
-			}
-		} while (left.time < endTime);
+		if(stencil!=null) { 
+			do {
+				stencil.draw(proj, area, left.value, right.value, xSigChangeBeginPos, xSigChangeEndPos, multiple);
+				if (right.time >= endTime)
+					break;
+				left.assign(right);
+				xSigChangeBeginPos = xSigChangeEndPos;
+				right.set(entries.higherEntry(left.time), endTime);
+				xSigChangeEndPos = getXPosEnd(right.time);
+				multiple = false;
+				if (xSigChangeEndPos == xSigChangeBeginPos) {
+					multiple = true;
+					long eTime = (xSigChangeBeginPos + 1) * this.waveCanvas.getScale();
+					EventEntry entry = entries.floorEntry(eTime);
+					if(entry!=null && entry.timestamp> right.time)
+						right.set(entry, endTime);
+					xSigChangeEndPos = getXPosEnd(eTime);
+				}
+			} while (left.time < endTime);
+			stencil.dispose();
+		}
 	}
 
 	private SignalStencil getStencil(GC gc, SignalChange left, IEventList entries) {
@@ -178,17 +183,24 @@ public class SignalPainter extends TrackPainter {
 	private interface SignalStencil {
 
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple);
+
+		public void dispose();
 	}
 
 	private class MultiBitStencil implements SignalStencil {
 
 		private java.awt.Font tmpAwtFont;
 		private int height;
+		private Font font;
 
 		public MultiBitStencil(GC gc) {
 			FontData fd = gc.getFont().getFontData()[0];
 			height = gc.getDevice().getDPI().y * fd.getHeight() / 72;
-			tmpAwtFont = new java.awt.Font(fd.getName(), fd.getStyle(), height);
+			tmpAwtFont = new java.awt.Font(fd.getName(), fd.getStyle(), (height+1)*3/4); // determines the length of the box
+			font = new Font(Display.getCurrent(), "monospace", (height+1)/2, 0); // determines the size of the labels
+		}
+		public void dispose() {
+			font.dispose();
 		}
 
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
@@ -241,8 +253,11 @@ public class SignalPainter extends TrackPainter {
 				if (width > (bb.x+1)) {
 					Rectangle old = proj.getClipping();
 					proj.setClipping(xBegin + 3, yOffsetT, xEnd - xBegin - 5, yOffsetB - yOffsetT);
+					Font old_font = proj.getGC().getFont();
+					proj.getGC().setFont(font);
 					proj.drawText(label+ext, xBegin + 3, yOffsetM - bb.y / 2 - 1);
 					proj.setClipping(old);
+					proj.getGC().setFont(old_font);
 				}
 				break;
 			}
@@ -288,8 +303,10 @@ public class SignalPainter extends TrackPainter {
 				minVal=minVal.subtract(BigInteger.ONE);
 				maxVal=minVal.multiply(BigInteger.valueOf(2));
 			}
-			
+
 		}
+
+		public void dispose() {	}
 
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
 			BigInteger leftVal = signed?((BitVector)left).toSignedValue():((BitVector)left).toUnsignedValue();
@@ -320,6 +337,8 @@ public class SignalPainter extends TrackPainter {
 	}
 
 	private class SingleBitStencil implements SignalStencil {
+		public void dispose() {	}
+
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
 			if (multiple) {
 				proj.setForeground(waveCanvas.styleProvider.getColor(WaveformColors.SIGNALU));
@@ -372,11 +391,11 @@ public class SignalPainter extends TrackPainter {
 
 		double minVal;
 		double range;
-		
+
 		final double scaleFactor = 1.05;
-		
+
 		boolean continous=true;
-		
+
 		public RealStencil(IEventList entries, Object left, boolean continous) {
 			this.continous=continous;
 			Collection<EventEntry> values = entries.entrySet();
@@ -404,6 +423,8 @@ public class SignalPainter extends TrackPainter {
 				minVal=avg-(avg-minVal)*scaleFactor;
 			}
 		}
+
+		public void dispose() {	}
 
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
 			double leftVal = ((DoubleVal) left).value;
