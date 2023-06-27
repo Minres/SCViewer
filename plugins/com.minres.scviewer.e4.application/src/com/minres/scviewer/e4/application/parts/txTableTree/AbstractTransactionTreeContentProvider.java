@@ -73,9 +73,10 @@ public abstract class AbstractTransactionTreeContentProvider implements ITreeCon
 			case OUT_REL:
 				Vector<Object[] > res_out = new Vector<>();
 				for(ITxRelation rel:node.element.getOutgoingRelations()){
+					ITx tgt = rel.getTarget();
 					res_out.add(new Object[]{
 							rel.getRelationType(), 
-							rel.getTarget().getGenerator().getName(), 
+							tgt.getBeginTime()<0?"":tgt.getGenerator().getName(), 
 							rel.getTarget()});
 				}
 				return res_out.toArray();

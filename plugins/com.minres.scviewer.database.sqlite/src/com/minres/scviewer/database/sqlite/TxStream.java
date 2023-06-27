@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
@@ -101,5 +102,10 @@ public class TxStream extends AbstractTxStream {
 	@Override
 	public String getKind() {
 		return scvStream.getKind();
+	}
+
+	@Override
+	public DirectionType getDirection() {
+		return DirectionType.IMPLICIT;
 	}
 }

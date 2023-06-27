@@ -10,8 +10,14 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ftr;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.database.tx.ITxRelation;
 
 /**
@@ -53,7 +59,9 @@ class TxRelation implements ITxRelation {
 	 */
 	@Override
 	public ITx getSource() {
-		return loader.getTransaction(scvRelation.source);
+		ITx tx = loader.getTransaction(scvRelation.source);
+		if(tx!=null) return tx;
+		return new TxFacade(scvRelation.source_fiber, scvRelation.source);
 	}
 
 	/**
@@ -63,7 +71,82 @@ class TxRelation implements ITxRelation {
 	 */
 	@Override
 	public ITx getTarget() {
-		return loader.getTransaction(scvRelation.target);
+		ITx tx = loader.getTransaction(scvRelation.target);
+		if(tx!=null) return tx;
+		return new TxFacade(scvRelation.target_fiber, scvRelation.target);
 	}
 
+	private class TxFacade implements ITx {
+
+		final long fiberId;
+		
+		final long txId;
+		
+		ITx tx = null;
+		
+		public TxFacade(long fiberId, long txId) {
+			this.fiberId = fiberId;
+			this.txId=txId;
+		}
+
+		@Override
+		public int compareTo(ITx o) {
+			return tx==null?-1:tx.compareTo(o);
+		}
+
+		@Override
+		public long getId() {
+			return txId;
+		}
+
+		@Override
+		public IWaveform getStream() {
+			if(tx==null) {
+				TxStream fiber = loader.txStreams.get(fiberId);
+				fiber.loadStream();
+				tx = loader.getTransaction(txId);
+				return loader.txStreams.get(fiberId);
+			} else
+				return tx.getStream();
+		}
+
+		@Override
+		public IWaveform getGenerator() {
+			if(tx==null) {
+				loader.txStreams.get(fiberId).loadStream();
+				tx = loader.getTransaction(txId);
+			}
+			return tx.getGenerator();
+		}
+
+		@Override
+		public long getBeginTime() {
+			return tx==null?-1:tx.getBeginTime();
+		}
+
+		@Override
+		public long getEndTime() {
+			return tx==null?-1:tx.getBeginTime();
+		}
+
+		@Override
+		public List<ITxAttribute> getAttributes() {
+			return tx==null?new ArrayList<>():tx.getAttributes();
+		}
+
+		@Override
+		public Collection<ITxRelation> getIncomingRelations() {
+			return tx==null?new ArrayList<>():tx.getIncomingRelations();
+		}
+
+		@Override
+		public Collection<ITxRelation> getOutgoingRelations() {
+			return tx==null?new ArrayList<>():tx.getOutgoingRelations();
+		}
+
+		@Override
+		public String toString() {
+			return tx==null?("tx#" + getId() + "[not available]"):tx.toString();
+		}
+	}
 }

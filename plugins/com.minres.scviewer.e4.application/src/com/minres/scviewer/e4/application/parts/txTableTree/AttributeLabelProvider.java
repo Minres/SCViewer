@@ -40,7 +40,7 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 	public static final int TX_TIME=3;
 
 	String showProp;
-	
+
 	public String getShowProp() {
 		return showProp;
 	}
@@ -140,7 +140,10 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 					Object o = elements[field];
 					if(o instanceof ITx) {
 						ITx tx = (ITx)o;
-						return new StyledString(this.txToString(tx)+" ("+tx.getStream().getFullName()+")");
+						if(tx.getBeginTime()<0)
+							return new StyledString(this.txToString(tx));
+						else
+							return new StyledString(this.txToString(tx)+" ("+tx.getStream().getFullName()+")");
 					} else
 						return new StyledString(o.toString());
 				} else if(element instanceof ITx){
@@ -168,8 +171,13 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 	 */
 	String txToString(ITx tx){
 		StringBuilder sb = new StringBuilder();
-		sb.append("tx#").append(tx.getId()).append("[").append(timeToString(tx.getBeginTime())); //$NON-NLS-1$ //$NON-NLS-2$
-		sb.append(" - ").append(timeToString(tx.getEndTime())).append("]"); //$NON-NLS-1$ //$NON-NLS-2$
+		sb.append("tx#").append(tx.getId());
+		if(tx.getBeginTime()>=0 && tx.getEndTime()>=0) {
+			sb.append("[").append(timeToString(tx.getBeginTime())); //$NON-NLS-1$ //$NON-NLS-2$
+			sb.append(" - ").append(timeToString(tx.getEndTime())).append("]"); //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			sb.append("[not visible]");
+		}
 		return sb.toString();
 	}
 

@@ -13,10 +13,10 @@ public class Constants {
 	public static final String CONTENT_PROVIDER_TAG = "TOOLTIP_CONTENT_PROVIDER";
 	public static final String HELP_PROVIDER_TAG = "TOOLTIP_HELP_PROVIDER";
 	
-	public static final DecimalFormat TIME_FORMAT_FS  = new DecimalFormat("#"); 
-	public static final DecimalFormat TIME_FORMAT_PS  = new DecimalFormat("#"); 
-	public static final DecimalFormat TIME_FORMAT_NS  = new DecimalFormat("#.0##"); 
-	public static final DecimalFormat TIME_FORMAT_UMS = new DecimalFormat("#.0#####"); 
+	public static final DecimalFormat TIME_FORMAT_FS  = new DecimalFormat("#0"); 
+	public static final DecimalFormat TIME_FORMAT_PS  = new DecimalFormat("#0"); 
+	public static final DecimalFormat TIME_FORMAT_NS  = new DecimalFormat("#0.0##"); 
+	public static final DecimalFormat TIME_FORMAT_UMS = new DecimalFormat("#0.0#####"); 
 	public static final long[] POWERS_OF_TEN = {
 			1L,
 			10L,

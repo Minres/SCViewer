@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -191,7 +192,7 @@ public class SignalPainter extends TrackPainter {
 		}
 
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
-			Color colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL0);
+			Color colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL_CHANGE);
 			BitVector last = (BitVector) left;
 			if (Arrays.toString(last.getValue()).contains("X")) {
 				colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNALX);
@@ -199,7 +200,8 @@ public class SignalPainter extends TrackPainter {
 				colorBorder = waveCanvas.styleProvider.getColor(WaveformColors.SIGNALZ);
 			}
 			int width = xEnd - xBegin;
-			if (width > 1) {
+			switch(width) {
+			default: {
 				int[] points = { 
 						xBegin,     yOffsetM, 
 						xBegin + 1, yOffsetT, 
@@ -214,28 +216,45 @@ public class SignalPainter extends TrackPainter {
 				String label = null;
 				switch(trackEntry.valueDisplay) {
 				case SIGNED:
-					label=Long.toString(last.toSignedValue());
+					label=last.toSignedValue().toString();
 					break;
 				case UNSIGNED:
-					label=Long.toString(last.toUnsignedValue());
+					label=last.toUnsignedValue().toString();
+					break;
+				case BINARY:
+					label=last.toString();
 					break;
 				default:
-					label="h'"+last.toHexString();
+					label=/*"h'"+*/last.toHexString();
 				}
-				Point bb = new Point(DUMMY_PANEL.getFontMetrics(tmpAwtFont).stringWidth(label), height);
 				if (xBegin < area.x) {
 					xBegin = area.x;
 					width = xEnd - xBegin;
 				}
+				Point bb = new Point(DUMMY_PANEL.getFontMetrics(tmpAwtFont).stringWidth(label), height);
+				String ext = "";
+				while(width<bb.x && label.length()>1) {
+					label = label.substring(0, label.length()-1);
+					ext="+";
+					bb = new Point(DUMMY_PANEL.getFontMetrics(tmpAwtFont).stringWidth(label +ext), height);
+				}
 				if (width > (bb.x+1)) {
 					Rectangle old = proj.getClipping();
 					proj.setClipping(xBegin + 3, yOffsetT, xEnd - xBegin - 5, yOffsetB - yOffsetT);
-					proj.drawText(label, xBegin + 3, yOffsetM - bb.y / 2 - 1);
+					proj.drawText(label+ext, xBegin + 3, yOffsetM - bb.y / 2 - 1);
 					proj.setClipping(old);
 				}
-			} else {
+				break;
+			}
+			case 2:
+			case 1:
 				proj.setForeground(colorBorder);
-				proj.drawLine(xEnd, yOffsetT, xEnd, yOffsetB);
+				proj.drawPolygon(new int[]{/*tl*/xBegin, yOffsetT,/*tr*/xEnd, yOffsetT,/*br*/xEnd, yOffsetB,/*bl*/xBegin, yOffsetB});
+				break;
+			case 0:
+				proj.setForeground(colorBorder);
+				proj.drawLine(xBegin, yOffsetT, xBegin, yOffsetB);
+				break;
 			}
 		}
 
@@ -245,9 +264,9 @@ public class SignalPainter extends TrackPainter {
 
 		final boolean continous;
 		final boolean signed;
-		private long maxVal;
-		private long minVal;
-		double yRange = (yOffsetB-yOffsetT);
+		private BigInteger maxVal;
+		private BigInteger minVal;
+		int yRange = (yOffsetB-yOffsetT);
 		public MultiBitStencilAnalog(IEventList entries, Object left, boolean continous, boolean signed) {
 			this.continous=continous;
 			this.signed=signed;
@@ -257,28 +276,30 @@ public class SignalPainter extends TrackPainter {
 				maxVal=minVal;
 				for (EventEntry tp : ievents)
 					for(IEvent e: tp.events) {
-						long v = signed?((BitVector)e).toSignedValue():((BitVector)e).toUnsignedValue();
-						maxVal=Math.max(maxVal, v);
-						minVal=Math.min(minVal, v);
+						BigInteger v = signed?((BitVector)e).toSignedValue():((BitVector)e).toUnsignedValue();
+						maxVal=maxVal.max(v);
+						minVal=minVal.min(v);
 					}
 				if(maxVal==minVal) {
-					maxVal--;
-					minVal++;
+					maxVal=maxVal.subtract(BigInteger.ONE);
+					minVal=minVal.add(BigInteger.ONE);
 				}
 			} else {
-				minVal--;
-				maxVal=minVal+2;
+				minVal=minVal.subtract(BigInteger.ONE);
+				maxVal=minVal.multiply(BigInteger.valueOf(2));
 			}
 			
 		}
 
 		public void draw(Projection proj, Rectangle area, IEvent left, IEvent right, int xBegin, int xEnd, boolean multiple) {
-			long leftVal = signed?((BitVector)left).toSignedValue():((BitVector)left).toUnsignedValue();
-			long rightVal= signed?((BitVector)right).toSignedValue():((BitVector)right).toUnsignedValue();
+			BigInteger leftVal = signed?((BitVector)left).toSignedValue():((BitVector)left).toUnsignedValue();
+			BigInteger rightVal= signed?((BitVector)right).toSignedValue():((BitVector)right).toUnsignedValue();
 			proj.setForeground(waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL_REAL));
-			long range = maxVal-minVal;
-			int yOffsetLeft = (int) ((leftVal-minVal) * yRange / range);
-			int yOffsetRight = (int) ((rightVal-minVal) * yRange / range);
+			BigInteger range = maxVal.subtract(minVal);
+			// ((leftVal-minVal) * yRange / range);
+			int yOffsetLeft = leftVal.subtract(minVal).multiply(BigInteger.valueOf(yRange)).divide(range).intValue();
+			// ((rightVal-minVal) * yRange / range);
+			int yOffsetRight = rightVal.subtract(minVal).multiply(BigInteger.valueOf(yRange)).divide(range).intValue();
 			if(continous) {
 				if (xEnd > maxPosX) {
 					proj.drawLine(xBegin, yOffsetB-yOffsetLeft, maxPosX, yOffsetB-yOffsetRight);
@@ -337,8 +358,11 @@ public class SignalPainter extends TrackPainter {
 						break;
 					default:
 					}
-					if (yOffset != yNext)
+					if (yOffset != yNext) {
+						Color transition_color = waveCanvas.styleProvider.getColor(WaveformColors.SIGNAL_CHANGE);
+						proj.setForeground(transition_color);
 						proj.drawLine(xEnd, yOffset, xEnd, yNext);
+					}
 				}
 			}
 		}

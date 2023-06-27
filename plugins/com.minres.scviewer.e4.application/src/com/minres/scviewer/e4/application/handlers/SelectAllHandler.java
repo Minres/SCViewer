@@ -23,13 +23,13 @@ public class SelectAllHandler {
     @CanExecute
     public boolean canExecute(EPartService partService) {
     	MPart part = partService.getActivePart();
-    	return part.getObject() instanceof WaveformViewer;
+    	return part!=null && part.getObject() instanceof WaveformViewer;
     }
 
 	@Execute
 	public void execute(EPartService partService) {
 		MPart part = partService.getActivePart();
-		if(part.getObject() instanceof WaveformViewer)
+		if(part!=null && part.getObject() instanceof WaveformViewer)
 			((WaveformViewer) part.getObject()).selectAll();
 	}
 

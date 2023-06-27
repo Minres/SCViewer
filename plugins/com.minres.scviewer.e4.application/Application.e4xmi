@@ -66,7 +66,7 @@
       <children xsi:type="menu:ToolBar" xmi:id="_95QGzHNmEeWBq8z1Dv39LA" elementId="toolbar:org.eclipse.ui.main.toolbar">
         <children xsi:type="menu:HandledToolItem" xmi:id="_ZSajwBkZEeudD5MqrWoETQ" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_database.png" tooltip="Open new database" command="_95PfwHNmEeWBq8z1Dv39LA"/>
         <children xsi:type="menu:HandledToolItem" xmi:id="_95QGzXNmEeWBq8z1Dv39LA" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/database_refresh.png" tooltip="Re-load database" command="_srACsBkREeudD5MqrWoETQ"/>
-        <children xsi:type="menu:HandledToolItem" xmi:id="_o9UBUJeiEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handledtoolitem.loadsettings" label="Load settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_page.png" command="_7-AIMJebEeW09eyIbHsdvg">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_o9UBUJeiEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handledtoolitem.loadsettings" label="Load settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/folder_page.png" tooltip="Load settings" command="_7-AIMJebEeW09eyIbHsdvg">
           <parameters xmi:id="_tQZAEJeiEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.parameter.32" name="com.minres.scviewer.e4.application.commandparameter.loadStore" value="load"/>
         </children>
         <children xsi:type="menu:HandledToolItem" xmi:id="_95QGznNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handledtoolitem.savesettings" toBeRendered="false" visible="false" label="Save settings" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/save_edit.png" command="_7-AIMJebEeW09eyIbHsdvg">
@@ -117,6 +117,8 @@
   <handlers xmi:id="_ru2NIEYEEeyPM8G0E2EYww" elementId="com.minres.scviewer.e4.application.handler.help" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpHandler" command="_lqjIYEYEEeyPM8G0E2EYww"/>
   <handlers xmi:id="_TwU0IEYoEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.handler.enabletxdetails" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableTxDetails" command="_Fj1gQEYoEeyKK_icsY7Xjg"/>
   <handlers xmi:id="_htyxgHCOEeyub8CfGE1sGA" elementId="com.minres.scviewer.e4.application.handler.helpContent" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpContentsHandler" command="_RdUMoHCOEeyub8CfGE1sGA"/>
+  <handlers xmi:id="__Ozu4LcxEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handler.add_separator" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.AddSeparatorHandler" command="_vYAOQLcxEe294PIiYLxpfA"/>
+  <handlers xmi:id="_zpAa4LepEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handler.wave_double_click" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.WaveformDoubleClickTextHandler" command="_wcqasLepEe294PIiYLxpfA"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
       <tags>type:user</tags>
@@ -200,6 +202,16 @@
       <children xsi:type="menu:HandledMenuItem" xmi:id="_4ZeEQHabEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.previouschange" label="Previous Tx" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/reverse_green.png" command="_Gn3lEHXKEeWwZ-9vrAR2UQ">
         <parameters xmi:id="_4ZeEQXabEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.5" name="com.minres.scviewer.e4.application.command.navigateTransCommand.parameter.dir" value="prev"/>
       </children>
+      <children xsi:type="menu:MenuSeparator" xmi:id="_cxgs4Lc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.menuseparator.1"/>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_NFfK0LcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" label="Add separator above" command="_vYAOQLcxEe294PIiYLxpfA">
+        <parameters xmi:id="_or7iYLcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="before"/>
+      </children>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_Dj-FUBTJEe6ZlJc8qY5-Zw" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" label="Add separator below" command="_vYAOQLcxEe294PIiYLxpfA">
+        <parameters xmi:id="_Dj-FURTJEe6ZlJc8qY5-Zw" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="after"/>
+      </children>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_ecbWkLc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" visible="false" label="Add blank below" enabled="false" command="_vYAOQLcxEe294PIiYLxpfA">
+        <parameters xmi:id="_ecbWkbc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="after"/>
+      </children>
       <children xsi:type="menu:MenuSeparator" xmi:id="__Ubd4M1eEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.menuseparator.0"/>
       <children xsi:type="menu:Menu" xmi:id="_mAA6sM1bEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.menu.view" label="View">
         <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_psvR0M1gEei6rfTGo88R-w" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.elements.WaveformPopupMenuContribution"/>
@@ -207,6 +219,9 @@
       </children>
       <children xsi:type="menu:HandledMenuItem" xmi:id="_NnJA4BlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handledmenuitem.search" label="Search Tx..." iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/find.png" command="_XDxTYBlEEeuiP60JNw0iiA">
         <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_Se1voBlEEeuiP60JNw0iiA" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler"/>
+      </children>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_Wblk0LexEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.edit_text" label="Edit Text" command="_wcqasLepEe294PIiYLxpfA">
+        <visibleWhen xsi:type="ui:ImperativeExpression" xmi:id="_fH08MLexEe294PIiYLxpfA" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.WaveformDoubleClickTextHandler"/>
       </children>
     </menus>
     <toolbar xmi:id="_ReeeAE-DEeyuGJbYVZjX8w" elementId="com.minres.scviewer.e4.application.toolbar.3">
@@ -278,6 +293,9 @@
     <parameters xmi:id="_6KsZcHr9EeWVM_sKoXvptg" elementId="com.minres.scviewer.e4.application.command.addwaveform.where" name="where" optional="false"/>
     <parameters xmi:id="_7T1TcHwIEeWv0Y5uF2QN5w" elementId="com.minres.scviewer.e4.application.command.addwaveform.all" name="all" typeId="" optional="false"/>
   </commands>
+  <commands xmi:id="_vYAOQLcxEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.command.add_separator" commandName="Add Separator">
+    <parameters xmi:id="_g_HnsLcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.commandparameter.add_separator" name="where"/>
+  </commands>
   <commands xmi:id="_AxH6sIl_EeWxJ_wPkM6yGQ" elementId="org.eclipse.ui.window.preferences" commandName="Preferences"/>
   <commands xmi:id="_KlGlsIoNEeWxJ_wPkM6yGQ" elementId="com.minres.scviewer.e4.application.command.set_them" commandName="Set Theme Command">
     <parameters xmi:id="_O8Z9IIoNEeWxJ_wPkM6yGQ" elementId="com.minres.scviewer.e4.application.command.theme.parameter.id" name="themeId" optional="false"/>
@@ -304,6 +322,7 @@
     <parameters xmi:id="_y2BUsU-HEeyuGJbYVZjX8w" elementId="com.minres.scviewer.e4.application.command.pancommand.parameter.direction" name="direction" optional="false"/>
   </commands>
   <commands xmi:id="_RdUMoHCOEeyub8CfGE1sGA" elementId="org.eclipse.ui.help.helpContentCommand" commandName="Help Content Command" description=""/>
+  <commands xmi:id="_wcqasLepEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.command.wave_double_click" commandName="Waveform Double Click"/>
   <addons xmi:id="_95PfsnNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_95Pfs3NmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_95PftHNmEeWBq8z1Dv39LA" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>

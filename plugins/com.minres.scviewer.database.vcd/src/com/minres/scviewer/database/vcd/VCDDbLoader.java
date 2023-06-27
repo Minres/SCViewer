@@ -28,7 +28,6 @@ import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.DoubleVal;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
@@ -71,7 +70,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public void load(IWaveformDb db, File file) throws InputFormatException {
+	public void load(File file) throws InputFormatException {
 		dispose();
 		this.maxTime=0;
 		boolean res = false;
@@ -176,7 +175,7 @@ public class VCDDbLoader implements IWaveformDbLoader, IVCDDatabaseBuilder {
 	@Override
 	public int getNetWidth(int intValue) {
 		VCDSignal<?> signal = (VCDSignal<?>) signals.get(intValue);
-		return signal.getRowCount();
+		return signal.getWidth();
 	}
 
 	/* (non-Javadoc)

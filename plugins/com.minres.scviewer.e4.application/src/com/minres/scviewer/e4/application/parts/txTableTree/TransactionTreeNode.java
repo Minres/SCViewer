@@ -1,11 +1,13 @@
 package com.minres.scviewer.e4.application.parts.txTableTree;
 
 import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.e4.application.Messages;
 
 /**
@@ -59,19 +61,21 @@ public class TransactionTreeNode implements Comparable<TransactionTreeNode>{
 	public Object[] getAttributeListForHier() {
 		if(childs==null) {
 			Map<String, Object> res = element.getAttributes().stream()
-			.filter(txAttr -> txAttr.getName().startsWith(hier_path))
-			.map(txAttr -> {
-				String target = hier_path.length()==0?txAttr.getName():txAttr.getName().replace(hier_path+'.', "");
-				String[] tokens = target.split("\\.");
-				if(tokens.length==1)
-					return new AbstractMap.SimpleEntry<>(tokens[0], txAttr);
-				else 
-					return new AbstractMap.SimpleEntry<>(tokens[0], new TransactionTreeNode(element, hier_path.length()>0?hier_path+"."+tokens[0]:tokens[0]));
-			})
+			.filter(txAttr -> hier_path.length()== 0 || txAttr.getName().startsWith(hier_path+'.'))
+			.map(txAttr -> mapElemet(txAttr))
 			.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue(), (first, second) -> first));
 			childs = new TreeMap<String, Object>(res).values().toArray();
 		}
 		return childs;
+	}
+
+	private SimpleEntry<String, ? extends Object> mapElemet(ITxAttribute txAttr) {
+		String target = hier_path.length()==0?txAttr.getName():txAttr.getName().replace(hier_path+'.', "");
+		String[] tokens = target.split("\\.");
+		if(tokens.length==1)
+			return new AbstractMap.SimpleEntry<>(tokens[0], txAttr);
+		else 
+			return new AbstractMap.SimpleEntry<>(tokens[0], new TransactionTreeNode(element, hier_path.length()>0?hier_path+"."+tokens[0]:tokens[0]));
 	}
 	
 	private Object[] childs=null;

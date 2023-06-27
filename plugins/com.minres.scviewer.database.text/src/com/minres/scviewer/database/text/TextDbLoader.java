@@ -46,7 +46,6 @@ import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
@@ -222,7 +221,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public void load(IWaveformDb db, File file) throws InputFormatException {
+	public void load(File file) throws InputFormatException {
 		dispose();
 		FileType fType = getFileType(file);
 		if (file.length() < MEMMAP_LIMIT * (fType!=FileType.PLAIN ? 1 : 10)
@@ -520,6 +519,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 		 * @return the long
 		 */
 		private long stringToScale(String scale) {
+			// TODO: scale to IWaveformDb.databaseTimeScale
 			String cmp = scale.trim();
 			if ("fs".equals(cmp))
 				return 1L;

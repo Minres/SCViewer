@@ -20,5 +20,7 @@ public enum WaveformType {
 	/** The transaction. */
 	TRANSACTION,
 	/** The filter. */
-	FILTER
+	FILTER,
+	/** The blank line. */
+	EMPTY
 }

@@ -109,20 +109,21 @@ public class ArrowPainter implements IPainter {
 	protected void deriveGeom(Collection<ITxRelation> relations, List<LinkEntry> res, boolean useTarget) {
 		for (ITxRelation iTxRelation : relations) {
 			ITx otherTx = useTarget ? iTxRelation.getTarget() : iTxRelation.getSource();
-			for(IWaveform iWaveform: new IWaveform[]{otherTx.getStream(), otherTx.getGenerator()}) {
-				if (waveCanvas.wave2painterMap.containsKey(iWaveform)) {
-					IWaveformPainter painter = waveCanvas.wave2painterMap.get(iWaveform);
-					if(painter!=null) {
-						int height = waveCanvas.styleProvider.getTrackHeight();
-						Rectangle bb = new Rectangle(
-								(int) (otherTx.getBeginTime() / scaleFactor),
-								waveCanvas.rulerHeight + painter.getVerticalOffset() + height * getConcurrencyIndex(otherTx),
-								(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
-								height);
-						res.add(new LinkEntry(bb, iTxRelation.getRelationType()));				
+			if(otherTx!=null && otherTx.getBeginTime()>=0) 
+				for(IWaveform iWaveform: new IWaveform[]{otherTx.getStream(), otherTx.getGenerator()}) {
+					if (waveCanvas.wave2painterMap.containsKey(iWaveform)) {
+						IWaveformPainter painter = waveCanvas.wave2painterMap.get(iWaveform);
+						if(painter!=null) {
+							int height = waveCanvas.styleProvider.getTrackHeight();
+							Rectangle bb = new Rectangle(
+									(int) (otherTx.getBeginTime() / scaleFactor),
+									waveCanvas.rulerHeight + painter.getVerticalOffset() + height * getConcurrencyIndex(otherTx),
+									(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
+									height);
+							res.add(new LinkEntry(bb, iTxRelation.getRelationType()));				
+						}
 					}
 				}
-			}
 		}
 	}
 

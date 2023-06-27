@@ -16,12 +16,13 @@ import java.util.*;
 
 import com.minres.scviewer.database.BitValue;
 import com.minres.scviewer.database.BitVector;
+import com.minres.scviewer.database.IWaveformDb;
 
 class VCDFileParser {
 	private StreamTokenizer tokenizer;
 	private IVCDDatabaseBuilder traceBuilder;
 	private HashMap<String, Integer> nameToNetMap = new HashMap<>();
-	private long picoSecondsPerIncrement;
+	private long timeScaleFactor;
 	private boolean stripNetWidth;
 	private boolean replaceColon;
 	long currentTime;
@@ -121,29 +122,37 @@ class VCDFileParser {
 			nextToken();
 		}
 		String s = sb.toString();
+		int fac =1;
 		switch (s.charAt(s.length() - 2)){
+		case 'f': // Nano-seconds
+			fac = -15;
+			s = s.substring(0, s.length() - 2).trim();
+			break;
 		case 'p': // Nano-seconds
-			picoSecondsPerIncrement = 1;
+			fac = -12;
 			s = s.substring(0, s.length() - 2).trim();
 			break;
 		case 'n': // Nano-seconds
-			picoSecondsPerIncrement = 1000;
+			fac = -9;
 			s = s.substring(0, s.length() - 2).trim();
 			break;
 		case 'u': // Microseconds
-			picoSecondsPerIncrement = 1000000;
+			fac = -6;
 			s = s.substring(0, s.length() - 2).trim();
 			break;
 		case 'm': // Microseconds
-			picoSecondsPerIncrement = 1000000000;
+			fac = -3;
 			s = s.substring(0, s.length() - 2).trim();
 			break;
 		default: // Seconds
-			picoSecondsPerIncrement = 1000000000000L;
+			fac = 1;
 			s = s.substring(0, s.length() - 1);
 			break;
 		}
-		picoSecondsPerIncrement *= Long.parseLong(s);
+    	timeScaleFactor = 1;
+    	for(int i = 1; i<= fac-IWaveformDb.databaseTimeScale; i++)
+    		timeScaleFactor *= 10;
+		timeScaleFactor = Long.parseLong(s);
 	}
 
 	private boolean parseDefinition() throws IOException, ParseException {
@@ -171,7 +180,7 @@ class VCDFileParser {
 	private boolean parseTransition() throws IOException {
 		if (!nextToken()) return false;
 		if (tokenizer.sval.charAt(0) == '#') {	// If the line begins with a #, this is a timestamp.
-			currentTime = Long.parseLong(tokenizer.sval.substring(1)) * picoSecondsPerIncrement;
+			currentTime = Long.parseLong(tokenizer.sval.substring(1)) * timeScaleFactor;
 		} else {
 			if(tokenizer.sval.equals("$comment")){
 				do {
@@ -205,41 +214,17 @@ class VCDFileParser {
 				else
 					traceBuilder.appendTransition(net, currentTime, Double.parseDouble(value));
 			} else {
-				BitVector decodedValues = new BitVector(netWidth);
+				BitVector decodedValues;
 				if (value.equals("z") && netWidth > 1) {
+					decodedValues = new BitVector(netWidth);
 					for (int i = 0; i < netWidth; i++)
 						decodedValues.setValue(i, BitValue.Z);
 				} else if (value.equals("x") && netWidth > 1) {
+					decodedValues = new BitVector(netWidth);
 					for (int i = 0; i < netWidth; i++)
 						decodedValues.setValue(i, BitValue.X);
 				} else {
-					int stringIndex = 0;
-					for (int convertedIndex = netWidth -1; convertedIndex >=0; convertedIndex--) {
-						if(convertedIndex<value.length()) {
-							switch (value.charAt(stringIndex++)) {
-							case 'z':
-								decodedValues.setValue(convertedIndex, BitValue.Z);
-								break;
-
-							case '1':
-								decodedValues.setValue(convertedIndex, BitValue.ONE);
-								break;
-
-							case '0':
-								decodedValues.setValue(convertedIndex, BitValue.ZERO);
-								break;
-
-							case 'x':
-								decodedValues.setValue(convertedIndex, BitValue.X);
-								break;
-
-							default:
-								decodedValues.setValue(convertedIndex, BitValue.X);
-							}
-						} else {
-							decodedValues.setValue(convertedIndex, BitValue.ZERO);
-						}
-					}
+					decodedValues = BitVector.fromString(netWidth, value);
 				}
 				traceBuilder.appendTransition(net, currentTime, decodedValues);
 			}

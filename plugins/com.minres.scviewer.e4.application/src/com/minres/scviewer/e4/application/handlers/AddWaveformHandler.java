@@ -11,8 +11,6 @@
 
 package com.minres.scviewer.e4.application.handlers;
 
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -61,9 +59,9 @@ public class AddWaveformHandler {
 			@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection) {
 		if(designBrowser==null) designBrowser = getListPart( partService);
 		if(designBrowser!=null && selection.size()>0){
-			List<?> sel=selection.toList();
-			designBrowser.getActiveWaveformViewerPart().addStreamsToList(sel.toArray(new IWaveform[]{}),
-					"before".equalsIgnoreCase(where)); //$NON-NLS-1$
+			@SuppressWarnings("unchecked")
+			IWaveform[] sel=(IWaveform[]) selection.toList().stream().filter(t -> t instanceof IWaveform).toArray(IWaveform[]::new);
+			designBrowser.getActiveWaveformViewerPart().addStreamsToList(sel, "before".equalsIgnoreCase(where)); //$NON-NLS-1$
 		}
 	}
 

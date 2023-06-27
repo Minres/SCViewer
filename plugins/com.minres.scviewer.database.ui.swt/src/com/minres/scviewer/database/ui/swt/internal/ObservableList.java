@@ -115,7 +115,7 @@ public class ObservableList<E> implements List<E> {
 
 	public boolean addAll(int index, Collection<? extends E> c) {
 		int oldSize = size();
-		boolean success = this.delegate.addAll(index, c);
+		boolean success = this.delegate.addAll(index<0?0:index, c);
 
 		if ((success) && (c != null)) {
 			List<E> values = new ArrayList<>();

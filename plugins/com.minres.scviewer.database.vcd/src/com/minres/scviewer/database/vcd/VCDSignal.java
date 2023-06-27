@@ -10,6 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database.vcd;
 
+import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.HierNode;
@@ -100,8 +101,12 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public int getRowCount() {
+	public int getWidth() {
 		return width;
+	}
+	@Override
+	public int getRowCount() {
+		return 1;
 	}
 
 	@Override
@@ -109,4 +114,8 @@ public class VCDSignal<T extends IEvent> extends HierNode implements IWaveform {
 		return "signal";
 	}
 
+	@Override
+	public DirectionType getDirection() {
+		return DirectionType.IMPLICIT;
+	}
 }

@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.List;
 
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.InputFormatException;
 import com.minres.scviewer.database.RelationType;
@@ -94,8 +93,8 @@ public class SQLiteDbLoader implements IWaveformDbLoader {
 //	}
 
 	@Override
-	public void load(IWaveformDb db, File file) throws InputFormatException {
-		database=new SQLiteDatabase(file.getAbsolutePath(), db);
+	public void load(File file) throws InputFormatException {
+		database=new SQLiteDatabase(file.getAbsolutePath());
 		database.setData("TIMERESOLUTION", 1L);
 		SQLiteDatabaseSelectHandler<ScvSimProps> handler = new SQLiteDatabaseSelectHandler<>(ScvSimProps.class, database);
 		try {

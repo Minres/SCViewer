@@ -363,6 +363,9 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		} else { /* image is less higher than client area */
 			vertical.setMaximum(clientHeight);
 			vertical.setEnabled(false);
+			if ( -origin.y > vertical.getMaximum() - height) {
+				origin.y = -vertical.getMaximum() + height;
+			}
 		}
 		vertical.setThumb(clientHeight);
 		vertical.setSelection(-origin.y);
