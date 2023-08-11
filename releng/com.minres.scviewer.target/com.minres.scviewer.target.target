@@ -3,7 +3,7 @@
 <target name="com.minres.scviewer.target" sequenceNumber="138">
 <locations>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="http://download.eclipse.org/releases/2021-12/"/>
+		<repository location="http://download.eclipse.org/releases/2022-12/"/>
 		<unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
 		<unit id="org.eclipse.equinox.p2.sdk.feature.jar" version="0.0.0"/> <!-- needed by Linux exectable-->
 		<unit id="org.eclipse.equinox.sdk.feature.group" version="0.0.0"/>
@@ -11,12 +11,12 @@
 		<unit id="org.eclipse.sdk.feature.group" version="0.0.0"/> <!-- org.eclipse.equinox.p2.iu -->
 		<unit id="org.eclipse.rcptt.core.feature.group" version="0.0.0"/><!-- com.google.guave-->
 		<unit id="org.eclipse.pde.feature.group" version="0.0.0"/>	<!-- org.junit for testing -->
-		<unit id="javax.servlet" version="0.0.0"/>
+		<unit id="jakarta.servlet" version="0.0.0"/>
 		<unit id="org.eclipse.equinox.core.feature.feature.group" version="0.0.0"/>
 		<unit id="org.eclipse.equinox.p2.core.feature.feature.group" version="0.0.0"/>
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="https://www.opcoach.com/repository/2021-12/"/>
+		<repository location="https://www.opcoach.com/repository/2022-12/"/>
 		<unit id="com.opcoach.e4.preferences.feature.feature.group" version="0.0.0"/>
 	</location>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">

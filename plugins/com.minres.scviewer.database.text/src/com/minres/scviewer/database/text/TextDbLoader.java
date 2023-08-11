@@ -246,7 +246,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 			parser.txSink = mapDb.hashMap("transactions", Serializer.LONG, Serializer.JAVA).create();
 			InputStream is = new BufferedInputStream(new FileInputStream(file));
 			parser.parseInput(fType==FileType.GZIP ? new GZIPInputStream(is) : fType==FileType.LZ4? new FramedLZ4CompressorInputStream(is) : is);
-		} catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
+		} catch (IllegalArgumentException | IndexOutOfBoundsException e) {
 		} catch (Exception e) {
 			throw new InputFormatException(e.toString());
 		} finally {
@@ -381,7 +381,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 			if(curLine.charAt(0)=='t') {
 				String[] tokens = curLine.split(" ");
 				//if ("tx_record_attribute".equals(tokens[0]) && tokens.length>4) {
-				if (curLine.charAt(5)=='c' && tokens.length>4) {
+				if (curLine.length()>5 && curLine.charAt(5)=='c' && tokens.length>4) {
 					Long id = Long.parseLong(tokens[1]);
 					String name = tokens[2].substring(1, tokens[2].length()-1);
 					DataType type = DataType.valueOf(tokens[3]);

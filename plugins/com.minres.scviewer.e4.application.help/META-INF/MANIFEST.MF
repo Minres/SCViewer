@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: SCViewer Help
 Bundle-SymbolicName: com.minres.scviewer.e4.application.help;singleton:=true
-Bundle-Version: 2.18.0
+Bundle-Version: 2.19
 Bundle-Vendor: MINRES Technologies GmbH
 Automatic-Module-Name: com.minres.scviewer.e4.application.help
 Bundle-RequiredExecutionEnvironment: JavaSE-11

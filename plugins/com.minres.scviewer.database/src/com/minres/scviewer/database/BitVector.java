@@ -168,8 +168,9 @@ public class BitVector implements IEvent {
 					}
 				}
 			}
-			if(res[i]==0)
-				res[i] = Character.forDigit(digit, 16); // ((digit < 10) ? '0' + digit : 'a' + digit -10)
+			if(res[i]==0) {
+				res[i] = (digit < 10) ? (char)('0' + digit) : (char)('A' - 10 + digit);
+			}
 			start_idx=3;
 		}
 		int idx=0;
