@@ -10,3 +10,4 @@ copyrightLog.txt
 /workspace
 ?*.launch
 /.settings/
+.tycho-consumer-pom.xml
