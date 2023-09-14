@@ -75,9 +75,9 @@
 						</artifact>
 					</target>
 					<executionEnvironment>
-						org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironment>
+						org.eclipse.justj.openjdk.hotspot.jre.minimal-17</executionEnvironment>
 					<executionEnvironmentDefault>
-						org.eclipse.justj.openjdk.hotspot.jre.minimal-15</executionEnvironmentDefault>
+						org.eclipse.justj.openjdk.hotspot.jre.minimal-17</executionEnvironmentDefault>
 					<includePackedArtifacts>true</includePackedArtifacts>
 					<environments>
 						<environment>

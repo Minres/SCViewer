@@ -143,15 +143,15 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 					retval=false;
 				}
 				loader.removePropertyChangeListener(this);
-				for (IWaveform w : loader.getAllWaves()) {
-					waveforms.put(w.getFullName(), w);
-				}
+//				for (IWaveform w : loader.getAllWaves()) {
+//					waveforms.put(w.getFullName(), w);
+//				}
 				if (loader.getMaxTime() > maxTime) {
 					maxTime = loader.getMaxTime();
 				}
 				if (name == null)
 					name = getFileBasename(inp.getName());
-				buildHierarchyNodes();
+				//buildHierarchyNodes();
 				relationTypes.addAll(loader.getAllRelationTypes());
 			}
 		}
