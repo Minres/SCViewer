@@ -5,7 +5,7 @@
   <parent>
   	<groupId>com.minres.scviewer</groupId>
   	<artifactId>com.minres.scviewer.parent</artifactId>
-  	<version>2.19.0</version>
+  	<version>2.19.1</version>
 	<relativePath>../..</relativePath>
   </parent>
   <version>1.0.0-SNAPSHOT</version>
