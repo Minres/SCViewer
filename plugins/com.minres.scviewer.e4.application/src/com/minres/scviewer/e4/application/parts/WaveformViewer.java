@@ -176,7 +176,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	/** The factory. */
 	WaveformViewFactory factory = new WaveformViewFactory();
 
-	DesignBrowser browser = null;
+	DesignBrowser designBrowser = null;
 
 	TransactionDetails detailsView = null;
 
@@ -205,8 +205,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	EPartService ePartService;
 
 	IEclipsePreferences store = null;
-
-	@Inject @Optional DesignBrowser designBrowser;
 
 	/** The database. */
 	private IWaveformDb database;
@@ -295,7 +293,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		middleSash.setWeights(new int[] {75, 25});
 
 		ctx.set(Composite.class, left);
-		browser = ContextInjectionFactory.make(DesignBrowser.class, ctx);
+		designBrowser = ContextInjectionFactory.make(DesignBrowser.class, ctx);
 
 		ctx.set(Composite.class, right);
 		detailsView = ContextInjectionFactory.make(TransactionDetails.class, ctx);
@@ -623,6 +621,8 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 							loadState(partConfig);
 						if (state != null && !state.isEmpty())
 							restoreWaveformViewerState(state);
+						if(designBrowser!=null)
+							designBrowser.setWaveformDb(database); 
 						fileChecker = null;
 						if (checkForUpdates)
 							fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
@@ -654,9 +654,11 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		Map<String, String> state = new HashMap<>();
 		saveWaveformViewerState(state);
 		waveformPane.getStreamList().clear();
+		if(database.isLoaded())
+			database.close();
 		database =  dbFactory.getDatabase();
 		database.addPropertyChangeListener(evt -> {
-			if (IHierNode.WAVEFORMS.equals(evt.getPropertyName())) { //$NON-NLS-1$
+			if (IHierNode.WAVEFORMS.equals(evt.getPropertyName()) || IHierNode.LOADING_FINISHED.equals(evt.getPropertyName())) { //$NON-NLS-1$
 				myParent.getDisplay().syncExec(() -> waveformPane.setMaxTime(database.getMaxTime()));
 			}
 		});

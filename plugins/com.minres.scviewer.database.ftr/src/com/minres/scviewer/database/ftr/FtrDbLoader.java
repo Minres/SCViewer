@@ -178,7 +178,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	 */
 	@Override
 	public void load(File file) throws InputFormatException {
-		dispose();
 		this.file=file;
 		try {
 			fis = new FileInputStream(file);

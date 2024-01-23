@@ -366,10 +366,14 @@ public class DesignBrowser {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public void setWaveformViewer(WaveformViewer waveformViewerPart) {
 		this.waveformViewerPart=waveformViewerPart;
 		IWaveformDb database = waveformViewerPart.getDatabase();
+		setWaveformDb(database);
+	}
+
+	@SuppressWarnings("unchecked")
+	public void setWaveformDb(IWaveformDb database) {
 		Object input = treeViewer.getInput();
 		if(input instanceof List<?>){
 			IWaveformDb db = ((List<IWaveformDb>)input).get(0);
