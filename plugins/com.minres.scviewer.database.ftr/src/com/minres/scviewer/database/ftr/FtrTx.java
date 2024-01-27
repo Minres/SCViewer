@@ -77,8 +77,8 @@ class FtrTx implements Serializable {
 	public List<ITxAttribute> getAttributes(FtrDbLoader loader) {
 		if(attributes.size()==0)
 			try {
-				TxStream stream = loader.txStreams.get(streamId);
-				byte[] chunk = stream.getChunks().get((int)blockId);
+				final TxStream stream = loader.txStreams.get(streamId);
+				final byte[] chunk = stream.getChunks().get((int)blockId);
 				attributes.addAll(loader.parseAtrributes(chunk, blockOffset));
 			} catch (InputFormatException e) {
 				// TODO Auto-generated catch block
