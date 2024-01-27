@@ -267,6 +267,7 @@ public class TransactionList extends Composite {
 						.map(e -> new AttributeNameBean(e.getKey(), e.getValue()))
 						.collect(Collectors.toList());
 				getDisplay().asyncExec(() -> {
+					if(tableViewer.getControl().isDisposed()) return;
 					tableViewer.setInput(txList);
 					attrNames.clear();
 					attrNames.addAll(newAttrNames);

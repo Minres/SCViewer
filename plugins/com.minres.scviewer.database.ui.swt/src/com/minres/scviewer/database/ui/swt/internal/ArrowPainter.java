@@ -84,7 +84,10 @@ public class ArrowPainter implements IPainter {
 	private int getConcurrencyIndex(ITx tx) {
 		IEvent[] eventList = tx.getStream().getEventsBeforeTime(tx.getBeginTime());
 		Optional<Integer> res = Arrays.stream(eventList).map(e -> ((ITxEvent)e).getRowIndex()).findFirst();
-		return res.isPresent()? res.get():0;
+		if(res.isPresent() && res.get()>0) {
+			return res.get();
+		} else 			
+			return 0;
 	}
 	
 	protected boolean calculateGeometries() {
@@ -98,8 +101,10 @@ public class ArrowPainter implements IPainter {
 			return true;
 		}
 		int laneHeight = painter.getHeight() / tx.getStream().getRowCount();
+		int laneOffset = laneHeight * getConcurrencyIndex(tx);
+		int rulerHeight = waveCanvas.rulerHeight;
 		txRectangle = new Rectangle((int) (tx.getBeginTime() / scaleFactor),
-				waveCanvas.rulerHeight + painter.getVerticalOffset() + laneHeight * getConcurrencyIndex(tx),
+				rulerHeight + painter.getVerticalOffset() + laneOffset,
 				(int) ((tx.getEndTime() - tx.getBeginTime()) / scaleFactor), laneHeight);
 		deriveGeom(tx.getIncomingRelations(), iRect, false);
 		deriveGeom(tx.getOutgoingRelations(), oRect, true);
@@ -114,12 +119,13 @@ public class ArrowPainter implements IPainter {
 					if (waveCanvas.wave2painterMap.containsKey(iWaveform)) {
 						IWaveformPainter painter = waveCanvas.wave2painterMap.get(iWaveform);
 						if(painter!=null) {
-							int height = waveCanvas.styleProvider.getTrackHeight();
+							int laneHeight = waveCanvas.styleProvider.getTrackHeight();
+							int laneOffset = laneHeight * getConcurrencyIndex(tx);
 							Rectangle bb = new Rectangle(
 									(int) (otherTx.getBeginTime() / scaleFactor),
-									waveCanvas.rulerHeight + painter.getVerticalOffset() + height * getConcurrencyIndex(otherTx),
+									waveCanvas.rulerHeight + painter.getVerticalOffset() + laneOffset,
 									(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
-									height);
+									laneHeight);
 							res.add(new LinkEntry(bb, iTxRelation.getRelationType()));				
 						}
 					}
