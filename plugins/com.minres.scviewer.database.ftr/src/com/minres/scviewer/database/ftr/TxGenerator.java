@@ -70,7 +70,7 @@ class TxGenerator extends AbstractTxStream {
 				List<byte[]> chunks = stream.getChunks();
 				int blockid = 0;
 				for (byte[] bs : chunks) {
-					loader.parseTx(stream, blockid, bs);
+					loader.parseTx(stream, blockid++, bs);
 				}
 			} catch (InputFormatException e) {
 				// TODO Auto-generated catch block

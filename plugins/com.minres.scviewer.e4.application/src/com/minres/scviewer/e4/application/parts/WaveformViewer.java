@@ -828,7 +828,18 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 				if(Boolean.parseBoolean(state.get(SHOWN_WAVEFORM + i + WAVEFORM_SELECTED)))
 					selectedTrackEntries.add(trackEntry);
 			} else {
-				IWaveform waveform = database.getStreamByName(state.get(SHOWN_WAVEFORM + i));
+				String name = state.get(SHOWN_WAVEFORM + i);
+				IWaveform waveform = database.getStreamByName(name);
+				if (waveform == null) {
+					int pos = name.lastIndexOf('.');
+					waveform = database.getStreamByName(name.substring(0, pos));
+					if(waveform!=null) {
+						List<IHierNode> childs = waveform.getChildNodes();
+						waveform = (IWaveform) childs.stream().filter(node -> name.substring(pos+1).equals(node.getName()))
+						  .findAny()
+						  .orElse(null);
+					}
+				}
 				if (waveform != null) {
 					TrackEntry trackEntry = waveformPane.addWaveform(waveform, -1);
 					//check if t is selected

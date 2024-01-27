@@ -297,10 +297,10 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				case 6: // id/generator/start/end
 					long len = cborDecoder.readArrayLength();
 					assert(len==4);
-					cborDecoder.readInt();
-					cborDecoder.readInt();
-					cborDecoder.readInt();
-					cborDecoder.readInt();
+					cborDecoder.readInt(); //txid
+					cborDecoder.readInt(); // genId
+					cborDecoder.readInt(); // startTime
+					cborDecoder.readInt(); // endTime
 					break;
 				default:  { // skip over 7:begin attr, 8:record attr, 9:end attr
 					long sz = cborDecoder.readArrayLength();

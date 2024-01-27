@@ -15,10 +15,10 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +44,13 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	private boolean loaded;
 
 	/** The relation types. */
-	private List<RelationType> relationTypes;
+	private List<RelationType> relationTypes = new ArrayList<>();;
 
 	/** The waveforms. */
-	private Map<String, IWaveform> waveforms;
+	private Map<String, IWaveform> waveforms = Collections.synchronizedMap(new HashMap<>()) ;;
 
 	/** The max time. */
-	private long maxTime = -1;
+	private long maxTime = 0L;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(WaveformDb.class);
 	
@@ -79,16 +79,6 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 */
 	public static List<IWaveformDbLoaderFactory> getLoaders() {
 		return Collections.unmodifiableList(loaderFactories);
-	}
-
-	/**
-	 * Instantiates a new waveform db.
-	 */
-	public WaveformDb() {
-		super();
-		waveforms = new ConcurrentHashMap<>();
-		relationTypes = new ArrayList<>();
-		maxTime = 0L;
 	}
 
 	/**
