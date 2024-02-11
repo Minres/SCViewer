@@ -20,10 +20,11 @@
       <editor
             class="com.minres.scviewer.ui.TxEditorPart"
             contributorClass="com.minres.scviewer.ui.TxEditorActionBarContributor"
-            extensions="txdb"
-            filenames="*.txdb,*.txlog,*.vcd,*.ftr"
+            default="true"
+            filenames="*.txlog,*.vcd,*.ftr,*.fst,*.txlog.gz,*.txdb"
             icon="res/images/scviewer.png"
             id="com.minres.scviewer.ui.TxEditorPart"
+            matchingStrategy="SCViewerMatchingStrategy"
             name="Wave Viewer">
       </editor>
    </extension>
@@ -371,6 +372,15 @@
             commandId="com.minres.scviewer.ui.removeWave"
             icon="res/images/cross.png">
       </image>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="com.minres.scviewer.ui.perspectives.WaveformPerspective"
+            icon="res/images/scviewer.png"
+            id="com.minres.scviewer.ui.perspectives.WaveformPerspective"
+            name="Waveform">
+      </perspective>
    </extension>
 
 </plugin>

@@ -26,23 +26,13 @@ public class TxDbTreeLabelProvider implements ILabelProvider {
 
 	private List<ILabelProviderListener> listeners = new ArrayList<ILabelProviderListener>();
 
-	private Image database;
-	private Image stream;
-	private Image signal;
-	private Image folder;
-	private Image wave;
+	private static Image database=TxEditorPlugin.createImage("database");
+	private static Image stream=TxEditorPlugin.createImage("stream");
+	private static Image signal=TxEditorPlugin.createImage("signal");
+	private static Image folder=TxEditorPlugin.createImage("folder");
+	private static Image wave=TxEditorPlugin.createImage("wave");
 
 	
-	public TxDbTreeLabelProvider() {
-		super();
-		database=TxEditorPlugin.createImage("database");
-		stream=TxEditorPlugin.createImage("stream");
-		folder=TxEditorPlugin.createImage("folder");
-		signal=TxEditorPlugin.createImage("signal");
-		wave=TxEditorPlugin.createImage("wave");
-
-	}
-
 	@Override
 	public void addListener(ILabelProviderListener listener) {
 		  listeners.add(listener);

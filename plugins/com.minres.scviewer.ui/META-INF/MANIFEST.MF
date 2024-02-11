@@ -17,7 +17,9 @@ Require-Bundle: com.minres.scviewer.database;bundle-version="1.0.0",
  org.eclipse.swt,
  org.eclipse.osgi,
  org.eclipse.core.expressions;bundle-version="3.4.600",
- org.eclipse.jface
+ org.eclipse.jface,
+ org.eclipse.ui.console,
+ org.eclipse.jdt.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Import-Package: com.google.common.collect
