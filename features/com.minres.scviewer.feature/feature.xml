@@ -2,7 +2,7 @@
 <feature
       id="com.minres.scviewer.feature"
       label="%featureName"
-      version="1.1.0.qualifier"
+      version="2.19.4"
       provider-name="%providerName">
 
    <description>
@@ -46,22 +46,14 @@ http://www.eclipse.org/legal/epl-v10.html
 
    <plugin
          id="org.junit"
-         download-size="0"
-         install-size="0"
          version="0.0.0"/>
 
    <plugin
          id="org.hamcrest.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.minres.scviewer.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
 </feature>
