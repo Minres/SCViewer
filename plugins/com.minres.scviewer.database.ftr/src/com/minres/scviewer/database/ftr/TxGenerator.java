@@ -65,7 +65,7 @@ class TxGenerator extends AbstractTxStream {
 	 */
 	@Override
 	public IEventList getEvents() {
-		if(events.size()==0) {
+		if(stream.events.size()==0) {
 			try {
 				List<byte[]> chunks = stream.getChunks();
 				int blockid = 0;
