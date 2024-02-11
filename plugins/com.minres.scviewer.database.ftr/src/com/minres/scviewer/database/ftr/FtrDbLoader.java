@@ -239,9 +239,9 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					long startTime = cborDecoder.readInt()*time_scale_factor;
 					long endTime = cborDecoder.readInt()*time_scale_factor;
 					TxGenerator gen = txGenerators.get(genId);
-					FtrTx scvTx = new FtrTx(txId, gen.stream.getId(), genId, startTime, endTime, blockId, blockOffset);
+					TxStream stream = gen.stream;
+					FtrTx scvTx = new FtrTx(txId, stream.getId(), genId, startTime, endTime, blockId, blockOffset);
 					updateTransactions(txId, scvTx);
-					TxStream stream = txStreams.get(gen.stream.getId());
 					if (scvTx.beginTime == scvTx.endTime) {
 						stream.addEvent(new TxEvent(this, EventKind.SINGLE, txId, scvTx.beginTime));
 						gen.addEvent(new TxEvent(this, EventKind.SINGLE, txId, scvTx.beginTime));
