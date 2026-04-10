@@ -105,7 +105,7 @@ class TxRelation implements ITxRelation {
 				TxStream fiber = loader.txStreams.get(fiberId);
 				fiber.loadStream();
 				tx = loader.getTransaction(txId);
-				return loader.txStreams.get(fiberId);
+				return fiber;
 			} else
 				return tx.getStream();
 		}
@@ -116,7 +116,7 @@ class TxRelation implements ITxRelation {
 				loader.txStreams.get(fiberId).loadStream();
 				tx = loader.getTransaction(txId);
 			}
-			return tx.getGenerator();
+			return tx!=null?tx.getGenerator():null;
 		}
 
 		@Override

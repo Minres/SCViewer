@@ -73,6 +73,7 @@ class TxStream extends AbstractTxStream {
 	}
 
 	public void loadStream() {
+		if(chunks.size()>0) return;
 		try {
 			List<byte[]> chunks = getChunks();
 			int blockid = 0;
