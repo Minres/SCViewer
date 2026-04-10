@@ -16,12 +16,12 @@ import com.minres.scviewer.e4.application.Messages;
 public class TransactionTreeNode implements Comparable<TransactionTreeNode>{
 
 	/** The type. */
-	public TransactionTreeNodeType type;
+	public final TransactionTreeNodeType type;
 
 	/** The element. */
-	public ITx element;
+	public final ITx element;
 
-	private String hier_path;
+	private final String hier_path;
 	/**
 	 * Instantiates a new tree node.
 	 *

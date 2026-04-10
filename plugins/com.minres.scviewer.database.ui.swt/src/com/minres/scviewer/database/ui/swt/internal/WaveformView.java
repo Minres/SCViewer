@@ -842,7 +842,7 @@ public class WaveformView implements IWaveformView {
 
 	public void setSelection(ISelection selection, boolean add, boolean addIfNeeded) {
 		boolean selectionChanged = false;
-		currentWaveformSelection.forEach(e -> e.selected = false);
+		currentWaveformSelection.forEach(e -> {if(e!=null) e.selected = false;});
 		if (selection instanceof IStructuredSelection) {
 			IStructuredSelection sel = (IStructuredSelection) selection;
 			if (sel.size() == 0) {
@@ -862,8 +862,12 @@ public class WaveformView implements IWaveformView {
 						if (trackEntry == null) {
 							trackEntry = getEntryFor(txSel);
 							if (trackEntry == null && addIfNeeded) {
-								trackEntry = new TrackEntry(txSel.getStream(), styleProvider);
-								streams.add(trackEntry);
+								IWaveform stream = txSel.getStream();
+								Optional<TrackEntry> te = streams.stream().filter(e -> stream.equals(e.waveform)).findFirst();
+								if (te.isEmpty()) { // add stream only if really needed
+									trackEntry = new TrackEntry(txSel.getStream(), styleProvider);
+									streams.add(trackEntry);
+								}
 							}
 						}
 						currentTxSelection = txSel;
@@ -885,7 +889,7 @@ public class WaveformView implements IWaveformView {
 			currentTxSelection = null;
 			currentWaveformSelection.clear();
 		}
-		currentWaveformSelection.forEach(e -> e.selected = true);
+		currentWaveformSelection.forEach(e -> {if(e!=null)e.selected = true;});
 		if (selectionChanged) {
 			currentWaveformSelection.forEach(e -> waveformCanvas.reveal(e.waveform));
 			waveformCanvas.setSelected(currentTxSelection);
@@ -1376,10 +1380,13 @@ public class WaveformView implements IWaveformView {
 	}
 
 	public TrackEntry getEntryFor(ITx source) {
-		Optional<TrackEntry> optGen = streams.stream().filter(e -> source.getGenerator().equals(e.waveform))
+		if(source.getGenerator()==null) return null; 
+		Optional<TrackEntry> optGen = streams.stream()
+				.filter(e -> source.getGenerator().equals(e.waveform))
 				.findFirst();
 		if (optGen.isPresent())
 			return optGen.get();
+		if(source.getStream()==null) return null; 
 		Optional<TrackEntry> optStr = streams.stream().filter(e -> source.getStream().equals(e.waveform)).findFirst();
 		if (optStr.isPresent())
 			return optStr.get();

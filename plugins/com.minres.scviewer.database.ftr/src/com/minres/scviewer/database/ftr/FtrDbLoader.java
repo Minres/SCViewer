@@ -238,6 +238,8 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					genId = cborDecoder.readInt();
 					long startTime = cborDecoder.readInt()*time_scale_factor;
 					long endTime = cborDecoder.readInt()*time_scale_factor;
+					if(endTime<startTime) // fix buggy recording, end time needs to be later or equal start time
+						endTime=startTime;
 					TxGenerator gen = txGenerators.get(genId);
 					TxStream stream = gen.stream;
 					FtrTx scvTx = new FtrTx(txId, stream.getId(), genId, startTime, endTime, blockId, blockOffset);
