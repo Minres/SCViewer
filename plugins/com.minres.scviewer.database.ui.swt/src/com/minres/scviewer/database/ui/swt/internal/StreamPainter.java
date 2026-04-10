@@ -124,7 +124,8 @@ public class StreamPainter extends TrackPainter{
 
 	protected void drawTx(Projection proj, Rectangle area, ITx tx, int concurrencyIndex, boolean highlighted ) {
 		// compute colors
-		Color[] transColor = waveCanvas.styleProvider.computeColor( tx.getGenerator().getName());
+		IWaveform generator = tx.getGenerator();
+		Color[] transColor = waveCanvas.styleProvider.computeColor( generator!=null?generator.getName():"unknown");
 
 		proj.setBackground(transColor[highlighted?1:0]);
 

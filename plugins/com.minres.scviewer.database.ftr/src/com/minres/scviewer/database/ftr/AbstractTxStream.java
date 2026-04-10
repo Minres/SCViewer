@@ -153,8 +153,11 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 				switch(evt.getKind()) {
 				case END: //TODO: might throw NPE in concurrent execution
 					Long txId = txEvt.getTransaction().getId();
-					txEvt.setConcurrencyIndex(rowByTxId.get(txId));
-					rowByTxId.remove(txId);
+					Integer row = rowByTxId.get(txId);
+					if(row!=null) {
+						txEvt.setConcurrencyIndex(row);
+						rowByTxId.remove(txId);
+					}
 					break;
 				case SINGLE:
 					for (; rowIdx < rowEndTime.size() && rowEndTime.get(rowIdx)>tx.getBeginTime(); rowIdx++);

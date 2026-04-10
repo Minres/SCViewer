@@ -653,7 +653,9 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	public void reloadDatabase() {
 		Map<String, String> state = new HashMap<>();
 		saveWaveformViewerState(state);
+		setSelection(null);
 		waveformPane.getStreamList().clear();
+		waveformPane.update();
 		if(database.isLoaded())
 			database.close();
 		database =  dbFactory.getDatabase();

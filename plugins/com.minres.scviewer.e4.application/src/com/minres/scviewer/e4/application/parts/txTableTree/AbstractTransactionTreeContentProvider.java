@@ -5,6 +5,7 @@ import java.util.Vector;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
+import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxRelation;
 import com.minres.scviewer.e4.application.Messages;
@@ -51,9 +52,11 @@ public abstract class AbstractTransactionTreeContentProvider implements ITreeCon
 			TransactionTreeNode node=(TransactionTreeNode) element;
 			switch(node.type) {
 			case PROPS:
+				IWaveform stream = node.element.getStream();
+				IWaveform generator = node.element.getGenerator();
 				return new Object[][]{
-					{Messages.TransactionDetails_1, Messages.TransactionDetails_16, node.element.getStream().getFullName()},
-					{Messages.TransactionDetails_2, Messages.TransactionDetails_16, node.element.getGenerator().getName()},
+					{Messages.TransactionDetails_1, Messages.TransactionDetails_16, stream!=null?stream.getFullName():"[unknown]"},
+					{Messages.TransactionDetails_2, Messages.TransactionDetails_16, generator!=null?generator.getName():"[unknown]"},
 					{Messages.TransactionDetails_19, Messages.TransactionDetails_20, waveformViewerPart.getScaledTime(node.element.getBeginTime())},
 					{Messages.TransactionDetails_21, Messages.TransactionDetails_20, waveformViewerPart.getScaledTime(node.element.getEndTime())}
 				};
