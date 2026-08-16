@@ -2,7 +2,7 @@
 <feature
       id="com.minres.scviewer.feature"
       label="%featureName"
-      version="2.19.5"
+      version="2.19.6"
       provider-name="%providerName">
 
    <description>
