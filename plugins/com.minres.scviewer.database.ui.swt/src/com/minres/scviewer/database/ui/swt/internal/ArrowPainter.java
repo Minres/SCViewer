@@ -90,6 +90,16 @@ public class ArrowPainter implements IPainter {
 			return 0;
 	}
 	
+	private Rectangle getBoundingBox(IWaveformPainter painter, ITx itx) {
+		int laneHeight = painter.getHeight() / itx.getStream().getRowCount();
+		int laneOffset = laneHeight * getConcurrencyIndex(itx);
+		int rulerHeight = waveCanvas.rulerHeight;
+		Rectangle bb = new Rectangle((int) (itx.getBeginTime() / scaleFactor),
+				rulerHeight + painter.getVerticalOffset() + laneOffset,
+				(int) ((itx.getEndTime() - itx.getBeginTime()) / scaleFactor), laneHeight);
+		return bb;
+	}
+
 	protected boolean calculateGeometries() {
 		iRect.clear();
 		oRect.clear();
@@ -100,12 +110,8 @@ public class ArrowPainter implements IPainter {
 								// created
 			return true;
 		}
-		int laneHeight = painter.getHeight() / tx.getStream().getRowCount();
-		int laneOffset = laneHeight * getConcurrencyIndex(tx);
-		int rulerHeight = waveCanvas.rulerHeight;
-		txRectangle = new Rectangle((int) (tx.getBeginTime() / scaleFactor),
-				rulerHeight + painter.getVerticalOffset() + laneOffset,
-				(int) ((tx.getEndTime() - tx.getBeginTime()) / scaleFactor), laneHeight);
+		Rectangle bb = getBoundingBox(painter, tx);
+		txRectangle = bb;
 		deriveGeom(tx.getIncomingRelations(), iRect, false);
 		deriveGeom(tx.getOutgoingRelations(), oRect, true);
 		return false;
@@ -119,13 +125,7 @@ public class ArrowPainter implements IPainter {
 					if (waveCanvas.wave2painterMap.containsKey(iWaveform)) {
 						IWaveformPainter painter = waveCanvas.wave2painterMap.get(iWaveform);
 						if(painter!=null) {
-							int laneHeight = waveCanvas.styleProvider.getTrackHeight();
-							int laneOffset = laneHeight * getConcurrencyIndex(tx);
-							Rectangle bb = new Rectangle(
-									(int) (otherTx.getBeginTime() / scaleFactor),
-									waveCanvas.rulerHeight + painter.getVerticalOffset() + laneOffset,
-									(int) ((otherTx.getEndTime() - otherTx.getBeginTime()) / scaleFactor),
-									laneHeight);
+							Rectangle bb = getBoundingBox(painter, otherTx);
 							res.add(new LinkEntry(bb, iTxRelation.getRelationType()));				
 						}
 					}
