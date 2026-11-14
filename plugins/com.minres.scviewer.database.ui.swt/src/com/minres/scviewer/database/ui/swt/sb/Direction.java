@@ -21,7 +21,7 @@ enum Direction {
     }
 
     private ComponentDistribution calculateComponentDistribution( FlatScrollBar scrollBar, int buttonLength  ) {
-      return calculateComponentDistribution( scrollBar, buttonLength, getControlBounds( scrollBar ).width );
+      return Direction.calculateComponentDistribution( scrollBar, buttonLength, getControlBounds( scrollBar ).width );
     }
 
     private Rectangle[] calculateComponentBounds( ComponentDistribution distribution, FlatScrollBar scrollBar ) {
@@ -61,7 +61,7 @@ enum Direction {
     @Override
     protected void expand( Control control, int maxExpansion ) {
       Rectangle bounds = control.getBounds();
-      int expand = expand( bounds.height, maxExpansion );
+      int expand = super.expand( bounds.height, maxExpansion );
       control.setBounds( bounds.x, bounds.y - expand, bounds.width, bounds.height + expand );
     }
   },
@@ -75,7 +75,7 @@ enum Direction {
     }
 
     private ComponentDistribution calculateComponentDistribution( FlatScrollBar scrollBar, int buttonLength ) {
-      return calculateComponentDistribution( scrollBar, buttonLength, getControlBounds( scrollBar ).height );
+      return Direction.calculateComponentDistribution( scrollBar, buttonLength, getControlBounds( scrollBar ).height );
     }
 
     private Rectangle[] calculateComponentBounds( ComponentDistribution distribution, FlatScrollBar scrollBar ) {
@@ -115,7 +115,7 @@ enum Direction {
     @Override
     protected void expand( Control control, int maxExpansion ) {
       Rectangle bounds = control.getBounds();
-      int expand = expand( bounds.width, maxExpansion );
+      int expand = super.expand( bounds.width, maxExpansion );
       control.setBounds( bounds.x - expand, bounds.y, bounds.width + expand, bounds.height );
     }
   };

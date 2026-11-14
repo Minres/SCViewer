@@ -531,6 +531,16 @@ public class WaveformView implements IWaveformView {
 	            }
 	        }
 	    });
+	    getControl().addListener(SWT.Resize, (evt) -> {
+			int y = waveformCanvas.getVerticalBar().getSelection();
+			nameListScrolled.setOrigin(nameListScrolled.getOrigin().x, y);
+			valueListScrolled.setOrigin(valueListScrolled.getOrigin().x, y);	    	
+	    });
+	    getControl().addListener(SWT.Move, (evt) -> {
+			int y = waveformCanvas.getVerticalBar().getSelection();
+			nameListScrolled.setOrigin(nameListScrolled.getOrigin().x, y);
+			valueListScrolled.setOrigin(valueListScrolled.getOrigin().x, y);	    	
+	    });
 	}
 
 	private Control createFill(Composite pane) {

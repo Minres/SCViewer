@@ -456,7 +456,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		if (currentSelection != null)
 			reveal(currentSelection);
 		arrowPainter.setTx(currentSelection);
-		redraw();
+		if(!isDisposed())
+			redraw();
 	}
 
 	public void reveal(ITx tx) {
@@ -601,7 +602,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	public void setStyleProvider(IWaveformStyleProvider styleProvider) {
 		this.styleProvider=styleProvider;
-		redraw();
+		if(!isDisposed())
+			redraw();
 	}
 
 	public int getScaleMagnitude() {
