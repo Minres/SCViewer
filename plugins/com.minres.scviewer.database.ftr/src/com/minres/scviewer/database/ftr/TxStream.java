@@ -17,6 +17,7 @@ import java.util.List;
 import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.LazyValue;
 import com.minres.scviewer.database.InputFormatException;
 
 /**
@@ -29,7 +30,8 @@ class TxStream extends AbstractTxStream {
 
 	final ArrayList<Long> fileOffsets = new ArrayList<>();
 	
-	final ArrayList<byte[]> chunks = new ArrayList<>();
+	private final LazyValue<List<byte[]>> chunks = new LazyValue<>();
+	private final LazyValue<Boolean> parsed = new LazyValue<>();
 
 	/**
 	 * Instantiates a new tx stream.
@@ -66,37 +68,32 @@ class TxStream extends AbstractTxStream {
 	}
 
 	public List<byte[]> getChunks() throws InputFormatException {
-		if(chunks.size()==0) {
-			chunks.addAll(loader.getChunksAtOffsets(fileOffsets));
-		}
-		return chunks;
-	}
+        return chunks.get(() -> {
+            try {
+                return List.copyOf(loader.getChunksAtOffsets(fileOffsets));
+            } catch (InputFormatException e) {
+                throw new IllegalStateException("Cannot read stream " + getFullName(), e);
+            }
+        });
+    }
 
-	public void loadStream() {
-		if(chunks.size()>0) return;
-		try {
-			List<byte[]> chunks = getChunks();
-			int blockid = 0;
-			for (byte[] bs : chunks) {
-				loader.parseTx(this, blockid, bs);
-				blockid++;
-			}
-		} catch (InputFormatException e) {
-		} catch (IOException e) {
-		}
-	}
-	/**
-	 * Gets the events.
-	 *
-	 * @return the events
-	 */
-	@Override
-	public IEventList getEvents() {
-		if(events.size()==0) {
-			loadStream();
-		}
-		return events;
-	}
+    public void loadStream() {
+        parsed.get(() -> {
+            try {
+                int blockId = 0;
+                for (byte[] chunk : getChunks()) loader.parseTx(this, blockId++, chunk);
+                return Boolean.TRUE;
+            } catch (InputFormatException | IOException e) {
+                throw new IllegalStateException("Cannot parse stream " + getFullName(), e);
+            }
+        });
+    }
+
+    @Override
+    public IEventList getEvents() {
+        loadStream();
+        return events;
+    }
 
 	@Override
 	public DirectionType getDirection() {

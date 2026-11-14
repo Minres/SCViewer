@@ -13,6 +13,11 @@ import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.tx.ITxRelation;
 
 final class TxTestSupport {
+    static java.io.File input(String name) {
+        java.io.File local = new java.io.File("inputs/" + name);
+        return local.exists() ? local : new java.io.File("tests/com.minres.scviewer.database.test/inputs/" + name);
+    }
+
     static class Tx implements ITx {
         final long id, begin, end;
         Tx(long id, long begin, long end) { this.id = id; this.begin = begin; this.end = end; }

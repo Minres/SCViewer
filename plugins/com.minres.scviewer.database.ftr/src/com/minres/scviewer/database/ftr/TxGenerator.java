@@ -10,14 +10,12 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ftr;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.InputFormatException;
 
 /**
  * The Class TxGenerator.
@@ -65,21 +63,7 @@ class TxGenerator extends AbstractTxStream {
 	 */
 	@Override
 	public IEventList getEvents() {
-		if(stream.events.size()==0) {
-			try {
-				List<byte[]> chunks = stream.getChunks();
-				int blockid = 0;
-				for (byte[] bs : chunks) {
-					loader.parseTx(stream, blockid++, bs);
-				}
-			} catch (InputFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+		stream.loadStream();
 		return events;
 	}
 	/**

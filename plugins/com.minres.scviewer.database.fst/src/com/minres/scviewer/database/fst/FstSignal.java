@@ -17,6 +17,7 @@ import com.minres.scviewer.database.HierNode;
 import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.LazyValue;
 import com.minres.scviewer.database.WaveformType;
 
 public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
@@ -31,7 +32,7 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	private final int width;
 
-	private final IEventList values;
+	private final LazyValue<IEventList> values;
 
 	public FstSignal(FstDbLoader loader, String name) {
 		this(loader, 0, name, 0, 1);
@@ -48,7 +49,7 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 		this.id=id;
 		this.direction = direction;
 		this.width=width;
-		this.values=new EventList();
+		this.values=new LazyValue<>();
 	}
 
 	public FstSignal(FstSignal<T> o, int id, String name) {
@@ -73,9 +74,11 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 
 	@Override
 	public IEventList getEvents() {
-		if(values.size()==0)
-			loader.getEvents(id, width, values);
-		return values;
+        return values.get(() -> {
+            EventList loaded = new EventList();
+            loader.getEvents(id, width, loaded);
+            return loaded;
+        });
 	}
 
 	@Override
@@ -89,7 +92,7 @@ public class FstSignal<T extends IEvent> extends HierNode implements IWaveform {
 		if(e==null)
 			return new IEvent[] {};
 		else
-			return getEvents().floorEntry(time).events;
+			return e.events;
 	}
 
 	@Override

@@ -16,3 +16,4 @@ Service-Component: OSGI-INF/component.xml
 Bundle-ActivationPolicy: lazy
 Automatic-Module-Name: com.minres.scviewer.database.ftr
 Bundle-ClassPath: .
+Export-Package: com.minres.scviewer.database.ftr;x-friends:="com.minres.scviewer.database.test"

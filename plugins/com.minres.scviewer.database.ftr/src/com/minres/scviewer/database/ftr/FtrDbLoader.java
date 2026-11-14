@@ -344,7 +344,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				}
 			}
 		} catch (IOException e) {
-			LOG.error("Error parsing file "+file.getName(), e);
+			throw new IllegalStateException("Cannot parse attributes in " + file.getName(), e);
 		}
 		return ret;
 	}

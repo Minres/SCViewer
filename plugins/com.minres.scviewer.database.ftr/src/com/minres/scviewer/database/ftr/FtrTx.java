@@ -11,10 +11,10 @@
 package com.minres.scviewer.database.ftr;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.minres.scviewer.database.InputFormatException;
+import com.minres.scviewer.database.LazyValue;
 import com.minres.scviewer.database.tx.ITxAttribute;
 
 /**
@@ -41,7 +41,7 @@ class FtrTx implements Serializable {
 	long endTime;
 
 	/** The attributes. */
-	final List<ITxAttribute> attributes = new ArrayList<>();
+	private final LazyValue<List<ITxAttribute>> attributes = new LazyValue<>();
 
 	final long blockId;
 
@@ -75,15 +75,14 @@ class FtrTx implements Serializable {
 	}
 
 	public List<ITxAttribute> getAttributes(FtrDbLoader loader) {
-		if(attributes.size()==0)
-			try {
-				final TxStream stream = loader.txStreams.get(streamId);
-				final byte[] chunk = stream.getChunks().get((int)blockId);
-				attributes.addAll(loader.parseAtrributes(chunk, blockOffset));
-			} catch (InputFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		return attributes;
-	}
+		return attributes.get(() -> {
+            try {
+                TxStream stream = loader.txStreams.get(streamId);
+                byte[] chunk = stream.getChunks().get((int) blockId);
+                return List.copyOf(loader.parseAtrributes(chunk, blockOffset));
+            } catch (InputFormatException e) {
+                throw new IllegalStateException("Cannot read attributes for transaction " + id, e);
+            }
+        });
+    }
 }
