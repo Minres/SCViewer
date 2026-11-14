@@ -178,21 +178,19 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	 * @throws InputFormatException the input format exception
 	 */
 	@Override
-	public void load(File file) throws InputFormatException {
-		this.file=file;
-		try {
-			fis = new FileInputStream(file);
-			FileChannel channel = fis.getChannel();
-			lock=channel.lock(0, Long.MAX_VALUE, true);
-			parseInput(new CborDecoder(fis), channel);
-		} catch (IOException e) {
-			LOG.warn("Problem parsing file "+file.getName()+": " , e);
-		} catch (Exception e) {
-			LOG.error("Error parsing file "+file.getName()+ ": ", e);
-			transactions.clear();
-			throw new InputFormatException(e.toString());
-		}
-	}
+	public synchronized void load(File file) throws InputFormatException {
+        dispose();
+        this.file = file;
+        try {
+            fis = new FileInputStream(file);
+            FileChannel channel = fis.getChannel();
+            lock = channel.lock(0, Long.MAX_VALUE, true);
+            parseInput(new CborDecoder(fis), channel);
+        } catch (Exception e) {
+            dispose();
+            throw new InputFormatException("Cannot parse " + file.getName(), e);
+        }
+    }
 
 	public synchronized List<? extends byte[]> getChunksAtOffsets(ArrayList<Long> fileOffsets) throws InputFormatException {
 		List<byte[]> ret = new ArrayList<>();
@@ -213,8 +211,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 			}
 		} catch (Exception e) {
 			LOG.error("Error parsing file "+file.getName(), e);
-			transactions.clear();
-			throw new InputFormatException(e.toString());
+            throw new InputFormatException("Cannot read FTR chunks", e);
 		}
 		return ret;
 	}
@@ -222,7 +219,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	void parseTx(TxStream txStream, long blockId, byte[] chunk) throws IOException {
 		CborDecoder cborDecoder = new CborDecoder(new ByteArrayInputStream(chunk));
 		long size = cborDecoder.readArrayLength();
-		assert(size==-1);
+		if (!(size==-1)) throw new IOException("Invalid FTR structure: size==-1");
 		CborType next = cborDecoder.peekType();
 		while(next != null && !break_type.isEqualType(next)) {
 			long blockOffset = cborDecoder.getPos();
@@ -234,7 +231,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				switch((int)tag) {
 				case 6: // id/generator/start/end
 					long len = cborDecoder.readArrayLength();
-					assert(len==4);
+					if (!(len==4)) throw new IOException("Invalid FTR structure: len==4");
 					txId = cborDecoder.readInt();
 					genId = cborDecoder.readInt();
 					long startTime = cborDecoder.readInt()*time_scale_factor;
@@ -257,7 +254,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					break;
 				default:  { // skip over 7:begin attr, 8:record attr, 9:end attr
 					long sz = cborDecoder.readArrayLength();
-					assert(sz==3);
+					if (!(sz==3)) throw new IOException("Invalid FTR structure: sz==3");
 					cborDecoder.readInt();
 					long type_id = cborDecoder.readInt();
 					switch(DataType.values()[(int)type_id]) {
@@ -299,7 +296,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				switch((int)tag) {
 				case 6: // id/generator/start/end
 					long len = cborDecoder.readArrayLength();
-					assert(len==4);
+					if (!(len==4)) throw new IOException("Invalid FTR structure: len==4");
 					cborDecoder.readInt(); //txid
 					cborDecoder.readInt(); // genId
 					cborDecoder.readInt(); // startTime
@@ -307,7 +304,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					break;
 				default:  { // skip over 7:begin attr, 8:record attr, 9:end attr
 					long sz = cborDecoder.readArrayLength();
-					assert(sz==3);
+					if (!(sz==3)) throw new IOException("Invalid FTR structure: sz==3");
 					long name_id = cborDecoder.readInt();
 					long type_id = cborDecoder.readInt();
 					DataType type = DataType.values()[(int)type_id];
@@ -359,22 +356,28 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	 * Dispose.
 	 */
 	@Override
-	public void dispose() {
-		try {
-			if(lock!=null) lock.close();
-			lock=null;
-			if(fis!=null) fis.close();
-			fis=null;
-		} catch (IOException e) { }
-		attrValues.clear();
-		relationTypes.clear();
-		txStreams.clear();
-		txGenerators.clear();
-		transactions.clear();
-		attributeTypes.clear();
-		relationsIn.clear();
-		relationsOut.clear();
-	}
+	public synchronized void dispose() {
+        try { if (lock != null) lock.close(); }
+        catch (IOException e) { LOG.warn("Cannot release FTR lock", e); }
+        finally { lock = null; }
+        try { if (fis != null) fis.close(); }
+        catch (IOException e) { LOG.warn("Cannot close FTR file", e); }
+        finally { fis = null; }
+        attrValues.clear();
+        relationTypes.clear();
+        txStreams.clear();
+        txGenerators.clear();
+        transactions.clear();
+        txCache.clear();
+        strDict.clear();
+        attributeTypes.clear();
+        relationsIn.clear();
+        relationsOut.clear();
+        threads.clear();
+        maxTime = 0;
+        time_scale_factor = 1000L;
+        file = null;
+    }
 
 	static long calculateTimescaleMultipierPower(long power){
 		long answer = 1;
@@ -387,12 +390,11 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		}
 	}
 
-	public void parseInput(CborDecoder cborDecoder, FileChannel channel) {
-		try {
+	public void parseInput(CborDecoder cborDecoder, FileChannel channel) throws IOException {
 			long cbor_tag = cborDecoder.readTag();
-			assert(cbor_tag == 55799);
+			if (!(cbor_tag == 55799)) throw new IOException("Invalid FTR structure: cbor_tag == 55799");
 			long array_len = cborDecoder.readArrayLength();
-			assert(array_len==-1);
+			if (!(array_len==-1)) throw new IOException("Invalid FTR structure: array_len==-1");
 			CborType next = cborDecoder.peekType();
 			while(next != null && !break_type.isEqualType(next)) {
 				long tag = cborDecoder.readTag();
@@ -400,12 +402,12 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				case 6: { // info
 					CborDecoder cbd = new CborDecoder(new ByteArrayInputStream(cborDecoder.readByteString()));
 					long sz = cbd.readArrayLength();
-					assert(sz==2);
+					if (!(sz==2)) throw new IOException("Invalid FTR structure: sz==2");
 					long time_scale=cbd.readInt();
 					long eff_time_scale=time_scale-IWaveformDb.databaseTimeScale;
 					time_scale_factor = calculateTimescaleMultipierPower(eff_time_scale);
 					long epoch_tag = cbd.readTag();
-					assert(epoch_tag==1);
+					if (!(epoch_tag==1)) throw new IOException("Invalid FTR structure: epoch_tag==1");
 					cbd.readInt(); // epoch
 					break;
 				}
@@ -415,7 +417,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				}
 				case 9: { // dictionary compressed
 					long sz = cborDecoder.readArrayLength();
-					assert(sz==2);
+					if (!(sz==2)) throw new IOException("Invalid FTR structure: sz==2");
 					cborDecoder.readInt(); // uncompressed size
 					parseDict(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(cborDecoder.readByteString()))));
 					break;
@@ -426,14 +428,14 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				}
 				case 11: { // directory compressed
 					long sz = cborDecoder.readArrayLength();
-					assert(sz==2);
+					if (!(sz==2)) throw new IOException("Invalid FTR structure: sz==2");
 					cborDecoder.readInt(); // uncompressed size
 					parseDir(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(cborDecoder.readByteString()))));
 					break;
 				}
 				case 12: { //tx chunk uncompressed
 					long len = cborDecoder.readArrayLength(); 
-					assert(len==4);
+					if (!(len==4)) throw new IOException("Invalid FTR structure: len==4");
 					long stream_id = cborDecoder.readInt();
 					cborDecoder.readInt(); // start time of block
 					long end_time = cborDecoder.readInt()*time_scale_factor;
@@ -444,7 +446,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				}
 				case 13: { //tx chunk compressed
 					long len = cborDecoder.readArrayLength(); 
-					assert(len==5);
+					if (!(len==5)) throw new IOException("Invalid FTR structure: len==5");
 					long stream_id = cborDecoder.readInt();
 					cborDecoder.readInt(); // start time of block
 					long end_time = cborDecoder.readInt()*time_scale_factor;
@@ -460,7 +462,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				}
 				case 15: { // relations uncompressed
 					long sz = cborDecoder.readArrayLength();
-					assert(sz==2);
+					if (!(sz==2)) throw new IOException("Invalid FTR structure: sz==2");
 					cborDecoder.readInt(); // uncompressed size
 					parseRel(new CborDecoder(new BlockLZ4CompressorInputStream(new ByteArrayInputStream(cborDecoder.readByteString()))));
 					break;
@@ -468,11 +470,6 @@ public class FtrDbLoader implements IWaveformDbLoader {
 				}
 				next = cborDecoder.peekType();
 			}
-		} catch(IOException e) {
-			long pos = 0;
-			try {pos=channel.position(); } catch (Exception ee) {}
-			LOG.error("Error parsing file input stream at position" + pos, e);
-		}
 	}
 
 	private void parseDict(CborDecoder cborDecoder) throws IOException {
@@ -480,7 +477,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		ArrayList<String> lst = new ArrayList<>((int)size);
 		for(long i = 0; i<size; ++i) {
 			long idx = cborDecoder.readInt();
-			assert(idx==strDict.size()+lst.size());
+			if (!(idx==strDict.size()+lst.size())) throw new IOException("Invalid FTR structure: idx==strDict.size()+lst.size()");
 			lst.add(cborDecoder.readTextString());
 		}
 		strDict.addAll(lst);
@@ -504,14 +501,14 @@ public class FtrDbLoader implements IWaveformDbLoader {
 		long id = cborDecoder.readTag();
 		if(id==16) { // a stream
 			long len = cborDecoder.readArrayLength();
-			assert(len==3);
+			if (!(len==3)) throw new IOException("Invalid FTR structure: len==3");
 			long stream_id = cborDecoder.readInt();
 			long name_id = cborDecoder.readInt();
 			long kind_id = cborDecoder.readInt();
 			add(stream_id, new TxStream(this, stream_id, strDict.get((int)name_id), strDict.get((int)kind_id)));
 		} else if(id==17) { // a generator
 			long len = cborDecoder.readArrayLength();
-			assert(len==3);
+			if (!(len==3)) throw new IOException("Invalid FTR structure: len==3");
 			long gen_id = cborDecoder.readInt();
 			long name_id = cborDecoder.readInt();
 			long stream_id = cborDecoder.readInt();
@@ -524,11 +521,11 @@ public class FtrDbLoader implements IWaveformDbLoader {
 
 	private void parseRel(CborDecoder cborDecoder) throws IOException {
 		long size = cborDecoder.readArrayLength();
-		assert(size==-1);
+		if (!(size==-1)) throw new IOException("Invalid FTR structure: size==-1");
 		CborType next = cborDecoder.peekType();
 		while(next != null && !break_type.isEqualType(next)) {
 			long sz = cborDecoder.readArrayLength();
-			assert(sz==5 || sz==3);
+			if (!(sz==5 || sz==3)) throw new IOException("Invalid FTR structure: sz==5 || sz==3");
 			long type_id = cborDecoder.readInt();
 			long from_id = cborDecoder.readInt();
 			long to_id = cborDecoder.readInt();

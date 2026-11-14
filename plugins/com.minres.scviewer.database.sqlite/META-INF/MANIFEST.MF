@@ -13,3 +13,6 @@ Embed-Dependency: sqlite-jdbc
 Embedded-Artifacts: sqlite-jdbc-3.8.7.jar;g="org.xerial";
  a="sqlite-jdbc";v="3.8.7"
 Automatic-Module-Name: com.minres.scviewer.database.sqlite
+Export-Package: com.minres.scviewer.database.sqlite;x-friends:="com.minres.scviewer.database.test",
+ com.minres.scviewer.database.sqlite.db;x-friends:="com.minres.scviewer.database.test",
+ com.minres.scviewer.database.sqlite.tables;x-friends:="com.minres.scviewer.database.test"

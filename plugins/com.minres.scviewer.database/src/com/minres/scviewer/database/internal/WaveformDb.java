@@ -16,7 +16,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -37,11 +37,11 @@ import com.minres.scviewer.database.RelationType;
 public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeListener {
 
 	/** The loaders. */
-	private static List<IWaveformDbLoaderFactory> loaderFactories = new LinkedList<>();
+	private static final CopyOnWriteArrayList<IWaveformDbLoaderFactory> loaderFactories = new CopyOnWriteArrayList<>();
 
 	private List<IWaveformDbLoader> activeLoader = new ArrayList<>();
 	/** The loaded. */
-	private boolean loaded;
+	private volatile boolean loaded;
 
 	/** The relation types. */
 	private List<RelationType> relationTypes = new ArrayList<>();;
@@ -50,7 +50,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	private Map<String, IWaveform> waveforms = Collections.synchronizedMap(new HashMap<>()) ;;
 
 	/** The max time. */
-	private long maxTime = 0L;
+	private volatile long maxTime = 0L;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(WaveformDb.class);
 	
@@ -60,7 +60,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 * @param loader the loader
 	 */
 	public synchronized void bind(IWaveformDbLoaderFactory loader) {
-		loaderFactories.add(loader);
+		loaderFactories.addIfAbsent(loader);
 	}
 
 	/**
@@ -78,7 +78,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 * @return the loaders
 	 */
 	public static List<IWaveformDbLoaderFactory> getLoaders() {
-		return Collections.unmodifiableList(loaderFactories);
+		return List.copyOf(loaderFactories);
 	}
 
 	/**
@@ -109,7 +109,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 */
 	@Override
 	public List<IWaveform> getAllWaves() {
-		return new ArrayList<>(waveforms.values());
+		synchronized (waveforms) { return new ArrayList<>(waveforms.values()); }
 	}
 
 	/**
@@ -119,43 +119,58 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 * @return true, if successful
 	 */
 	@Override
-	public boolean load(File inp) {
-		boolean retval = true;
-		for (IWaveformDbLoaderFactory loaderFactory : loaderFactories) {
-			if (loaderFactory.canLoad(inp)) {
-				IWaveformDbLoader loader = loaderFactory.getLoader();
-				loader.addPropertyChangeListener(this);
-				try {
-					loader.load(inp);
-					activeLoader.add(loader);
-				} catch (Exception e) {
-					LOG.error("error loading file "+inp.getName(), e);
-					retval=false;
-				}
-				loader.removePropertyChangeListener(this);
-//				for (IWaveform w : loader.getAllWaves()) {
-//					waveforms.put(w.getFullName(), w);
-//				}
-				if (loader.getMaxTime() > maxTime) {
-					maxTime = loader.getMaxTime();
-				}
-				if (name == null)
-					name = getFileBasename(inp.getName());
-				//buildHierarchyNodes();
-				relationTypes.addAll(loader.getAllRelationTypes());
-			}
-		}
-		pcs.firePropertyChange(IHierNode.LOADING_FINISHED, null, null);
-		loaded = true;
-		return retval;
-	}
+	public synchronized boolean load(File inp) {
+        for (IWaveformDbLoaderFactory factory : getLoaders()) {
+            if (!factory.canLoad(inp)) continue;
+            IWaveformDbLoader loader = factory.getLoader();
+            List<PropertyChangeEvent> pending = Collections.synchronizedList(new ArrayList<>());
+            PropertyChangeListener collector = pending::add;
+            long endTime;
+            List<RelationType> types;
+            loader.addPropertyChangeListener(collector);
+            try {
+                loader.load(inp);
+                endTime = loader.getMaxTime();
+                types = new ArrayList<>(loader.getAllRelationTypes());
+            } catch (Exception e) {
+                LOG.error("Error loading file " + inp.getName(), e);
+                try { loader.dispose(); }
+                catch (RuntimeException cleanup) { LOG.warn("Cannot dispose failed loader", cleanup); }
+                continue;
+            } finally {
+                loader.removePropertyChangeListener(collector);
+            }
+            // Commit only completed loads; failed loaders never publish partial hierarchies.
+            activeLoader.add(loader);
+            maxTime = Math.max(maxTime, endTime);
+            if (name == null) name = getFileBasename(inp.getName());
+            for (RelationType type : types) if (!relationTypes.contains(type)) relationTypes.add(type);
+            synchronized (pending) {
+                for (PropertyChangeEvent event : pending) propertyChange(event);
+            }
+            loaded = true;
+            pcs.firePropertyChange(IHierNode.LOADING_FINISHED, null, Boolean.TRUE);
+            return true;
+        }
+        pcs.firePropertyChange(IHierNode.LOADING_FINISHED, null, Boolean.FALSE);
+        return false;
+    }
 
-	@Override
-	public void close() {
-		for (IWaveformDbLoader entry : activeLoader) {
-			entry.dispose();
-		}
-	}
+    @Override
+    public synchronized void close() {
+        for (IWaveformDbLoader loader : activeLoader) {
+            try { loader.dispose(); }
+            catch (RuntimeException e) { LOG.warn("Cannot dispose database loader", e); }
+        }
+        activeLoader.clear();
+        waveforms.clear();
+        childNodes.clear();
+        relationTypes.clear();
+        maxTime = 0;
+        loaded = false;
+        name = null;
+    }
+
 	/**
 	 * Gets the file basename.
 	 *
@@ -163,7 +178,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 * @return the file basename
 	 */
 	protected static String getFileBasename(String f) {
-		String ext = "";
+		String ext = f;
 		int i = f.lastIndexOf('.');
 		if (i > 0 && i < f.length() - 1) {
 			ext = f.substring(0, i);
@@ -190,6 +205,9 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 			pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
 			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
 		} else if (IWaveformDbLoader.GENERATOR_ADDED.equals(evt.getPropertyName())) {
+            IWaveform generator = (IWaveform) evt.getNewValue();
+            waveforms.put(generator.getFullName(), generator);
+            pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
 			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
 		}
 	}

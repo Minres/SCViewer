@@ -6,7 +6,8 @@ Bundle-Version: 4.0.0.qualifier
 Bundle-Vendor: MINRES Technologies GmbH
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Export-Package: com.minres.scviewer.database,
- com.minres.scviewer.database.tx
+ com.minres.scviewer.database.tx,
+ com.minres.scviewer.database.internal;x-friends:="com.minres.scviewer.database.test"
 Import-Package: org.slf4j
 Require-Bundle: javax.inject;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy

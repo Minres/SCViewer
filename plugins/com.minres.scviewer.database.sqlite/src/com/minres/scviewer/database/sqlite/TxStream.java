@@ -42,7 +42,7 @@ public class TxStream extends AbstractTxStream {
 
 	private TreeMap<Integer, TxGenerator> generators;
 
-	private TreeMap<Integer, ITx> transactions;
+	private final LazyValue<Map<Integer, ITx>> transactions = new LazyValue<>();
     private final LazyValue<Map<Integer, long[]>> transactionTimes = new LazyValue<>();
 
     long[] getTransactionTimes(int id) {
@@ -92,40 +92,39 @@ public class TxStream extends AbstractTxStream {
 		return (long) scvStream.getId();
 	}
 
-	public List<IWaveform> getGenerators() {
+	public synchronized List<IWaveform> getGenerators() {
 		if(generators==null){
 			SQLiteDatabaseSelectHandler<ScvGenerator> handler = new SQLiteDatabaseSelectHandler<>(
 					ScvGenerator.class, database, "stream="+scvStream.getId());
-			generators=new TreeMap<>();
+			TreeMap<Integer, TxGenerator> loaded = new TreeMap<>();
 			try {
 				for(ScvGenerator scvGenerator:handler.selectObjects()){
-					generators.put(scvGenerator.getId(), new TxGenerator(database, this, scvGenerator));
+					loaded.put(scvGenerator.getId(), new TxGenerator(database, this, scvGenerator));
 				}
+                generators = loaded;
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
 					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
-				e.printStackTrace();
+				throw new IllegalStateException("Cannot load generators for " + getFullName(), e);
 			}
 		}
 		return new ArrayList<>(generators.values());
 	}
 
 	protected synchronized Map<Integer, ITx> getTransactions() {
-		if(transactions==null){
-			if(generators==null) getGenerators();
-			transactions = new TreeMap<>();
-			SQLiteDatabaseSelectHandler<ScvTx> handler = new SQLiteDatabaseSelectHandler<>(ScvTx.class, database,
-					"stream="+scvStream.getId());
-			try {
-				for(ScvTx scvTx:handler.selectObjects()){
-					transactions.put(scvTx.getId(), new Tx(database, this, generators.get(scvTx.getGenerator()), scvTx));
-				}
-			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
-				e.printStackTrace();
-			}
-		}
-		return transactions;
-	}
+        return transactions.get(() -> {
+            if (generators == null) getGenerators();
+            TreeMap<Integer, ITx> loaded = new TreeMap<>();
+            SQLiteDatabaseSelectHandler<ScvTx> handler = new SQLiteDatabaseSelectHandler<>(ScvTx.class,
+                    database, "stream=" + scvStream.getId());
+            try {
+                for (ScvTx row : handler.selectObjects())
+                    loaded.put(row.getId(), new Tx(database, this, generators.get(row.getGenerator()), row));
+            } catch (ReflectiveOperationException | SQLException | IntrospectionException e) {
+                throw new IllegalStateException("Cannot load transactions for " + getFullName(), e);
+            }
+            return loaded;
+        });
+    }
 
 	@Override
 	public IEvent[] getEventsAtTime(long time) {

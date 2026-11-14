@@ -24,8 +24,14 @@ public class InputFormatException extends Exception {
 	 * @param string the string
 	 */
 	public InputFormatException(String string) {
-		message=string;
+        super(string);
+        message=string;
 	}
+
+    public InputFormatException(String message, Throwable cause) {
+        super(message, cause);
+        this.message = message;
+    }
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 8676129878197783368L;

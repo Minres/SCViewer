@@ -19,3 +19,4 @@ Bundle-ClassPath: .,
  lib/kotlin-stdlib-1.2.42.jar,
  lib/lz4-1.3.0.jar,
  lib/elsa-3.0.0-M5.jar
+Export-Package: com.minres.scviewer.database.text;x-friends:="com.minres.scviewer.database.test"
