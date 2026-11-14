@@ -26,6 +26,8 @@ class TxEvent implements ITxEvent {
 	/** The kind. */
 	final EventKind kind;
 
+    private final WaveformType waveformType;
+
 	/** The transaction. */
 	final long transaction;
 
@@ -40,12 +42,14 @@ class TxEvent implements ITxEvent {
 	 * @param kind        the kind
 	 * @param transaction the transaction
 	 * @param time        the time
+     * @param waveformType the type of the owning waveform
 	 */
-	TxEvent(FtrDbLoader loader, EventKind kind, Long transaction, Long time) {
+	TxEvent(FtrDbLoader loader, EventKind kind, Long transaction, Long time, WaveformType waveformType) {
 		this.loader = loader;
 		this.kind = kind;
 		this.transaction = transaction;
 		this.time = time;
+        this.waveformType = waveformType;
 	}
 
 	/**
@@ -56,7 +60,7 @@ class TxEvent implements ITxEvent {
 	 */
 	@Override
 	public ITxEvent duplicate() throws CloneNotSupportedException {
-		return new TxEvent(loader, kind, transaction, time);
+		return new TxEvent(loader, kind, transaction, time, waveformType);
 	}
 
 	/**
@@ -67,16 +71,6 @@ class TxEvent implements ITxEvent {
 	@Override
 	public String toString() {
 		return kind.toString() + "@" + time + " of tx #" + transaction;
-	}
-
-	/**
-	 * Gets the type.
-	 *
-	 * @return the type
-	 */
-	@Override
-	public WaveformType getType() {
-		return WaveformType.STREAM;
 	}
 
 	/**

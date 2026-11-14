@@ -19,10 +19,15 @@ public enum WaveformType {
 	SIGNAL,
 	/** The transaction stream. */
 	STREAM,
-	/** The transaction stream. */
+	/** The transaction generator. */
 	GENERATOR,
 	/** The filter. */
 	FILTER,
 	/** The blank line. */
-	EMPTY
+	EMPTY;
+
+    /** Whether this waveform contains transactions, in a stream or a generator. */
+    public boolean isTransaction() {
+        return this == STREAM || this == GENERATOR;
+    }
 }

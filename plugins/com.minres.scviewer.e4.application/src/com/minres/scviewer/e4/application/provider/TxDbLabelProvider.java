@@ -177,6 +177,7 @@ public class TxDbLabelProvider implements ILabelProvider {
 		}else if(element instanceof IWaveform){
 			switch(((IWaveform) element).getType()) {
 			case STREAM:
+			case GENERATOR:
 				return stream;
 			case FILTER:
 				break;

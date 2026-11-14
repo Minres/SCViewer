@@ -18,6 +18,7 @@ import java.util.TreeMap;
 
 import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvGenerator;
@@ -38,6 +39,11 @@ public class TxGenerator extends AbstractTxStream {
 		this.scvGenerator=scvGenerator;
 		stream.addChild(this);
 	}
+
+    @Override
+    public WaveformType getType() {
+        return WaveformType.GENERATOR;
+    }
 
 	@Override
 	public long getId() {

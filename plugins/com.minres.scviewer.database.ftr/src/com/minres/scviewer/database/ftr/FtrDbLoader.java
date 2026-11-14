@@ -243,13 +243,13 @@ public class FtrDbLoader implements IWaveformDbLoader {
 					FtrTx scvTx = new FtrTx(txId, stream.getId(), genId, startTime, endTime, blockId, blockOffset);
 					updateTransactions(txId, scvTx);
 					if (scvTx.beginTime == scvTx.endTime) {
-						stream.addEvent(new TxEvent(this, EventKind.SINGLE, txId, scvTx.beginTime));
-						gen.addEvent(new TxEvent(this, EventKind.SINGLE, txId, scvTx.beginTime));
+						stream.addEvent(new TxEvent(this, EventKind.SINGLE, txId, scvTx.beginTime, stream.getType()));
+						gen.addEvent(new TxEvent(this, EventKind.SINGLE, txId, scvTx.beginTime, gen.getType()));
 					} else {
-						stream.addEvent(new TxEvent(this, EventKind.BEGIN, txId, scvTx.beginTime));
-						gen.addEvent(new TxEvent(this, EventKind.BEGIN, txId, scvTx.beginTime));
-						stream.addEvent(new TxEvent(this, EventKind.END, txId, scvTx.endTime));
-						gen.addEvent(new TxEvent(this, EventKind.END, txId, scvTx.endTime));
+						stream.addEvent(new TxEvent(this, EventKind.BEGIN, txId, scvTx.beginTime, stream.getType()));
+						gen.addEvent(new TxEvent(this, EventKind.BEGIN, txId, scvTx.beginTime, gen.getType()));
+						stream.addEvent(new TxEvent(this, EventKind.END, txId, scvTx.endTime, stream.getType()));
+						gen.addEvent(new TxEvent(this, EventKind.END, txId, scvTx.endTime, gen.getType()));
 					}
 					break;
 				default:  { // skip over 7:begin attr, 8:record attr, 9:end attr

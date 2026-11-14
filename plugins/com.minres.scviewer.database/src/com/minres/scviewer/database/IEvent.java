@@ -30,11 +30,4 @@ public interface IEvent {
 	 */
 	public EventKind getKind();
 
-	/**
-	 * Gets the type.
-	 *
-	 * @return the type
-	 */
-	public WaveformType getType();
-
 }

@@ -35,7 +35,6 @@ import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.ui.TrackEntry;
@@ -237,7 +236,7 @@ public class TransactionList extends Composite {
 	}
 
 	public void setInput(TrackEntry trackEntry) {
-		if(trackEntry==null || trackEntry.waveform.getType()!=WaveformType.STREAM) {
+		if(trackEntry==null || !trackEntry.waveform.getType().isTransaction()) {
 			attrNames.clear();
 			tableViewer.setInput(emptyList);
 		} else if(stream != trackEntry.waveform) { 

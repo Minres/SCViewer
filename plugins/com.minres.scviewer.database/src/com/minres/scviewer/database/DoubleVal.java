@@ -38,16 +38,6 @@ public class DoubleVal implements IEvent {
 	}
 
 	/**
-	 * Gets the type.
-	 *
-	 * @return the type
-	 */
-	@Override
-	public WaveformType getType() {
-		return WaveformType.SIGNAL;
-	}
-
-	/**
 	 * Duplicate.
 	 *
 	 * @return the i event

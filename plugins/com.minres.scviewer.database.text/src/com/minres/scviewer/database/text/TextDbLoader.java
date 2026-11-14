@@ -421,13 +421,13 @@ public class TextDbLoader implements IWaveformDbLoader {
 					TxGenerator gen = loader.txGenerators.get(scvTx.generatorId);
 					TxStream stream = loader.txStreams.get(gen.stream.getId());
 					if (scvTx.beginTime == scvTx.endTime) {
-						stream.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
-						gen.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime));
+						stream.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime, stream.getType()));
+						gen.addEvent(new TxEvent(loader, EventKind.SINGLE, id, scvTx.beginTime, gen.getType()));
 					} else {
-						stream.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
-						gen.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime));
-						stream.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
-						gen.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime));
+						stream.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime, stream.getType()));
+						gen.addEvent(new TxEvent(loader, EventKind.BEGIN, id, scvTx.beginTime, gen.getType()));
+						stream.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime, stream.getType()));
+						gen.addEvent(new TxEvent(loader, EventKind.END, id, scvTx.endTime, gen.getType()));
 					}
 					if (nextLine != null && nextLine.charAt(0) == 'a') {
 						int idx = 0;

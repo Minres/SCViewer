@@ -16,6 +16,7 @@ import java.util.List;
 import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.WaveformType;
 
 /**
  * The Class TxGenerator.
@@ -44,6 +45,11 @@ class TxGenerator extends AbstractTxStream {
 		this.stream = stream;
 		stream.addChild(this);
 	}
+
+    @Override
+    public WaveformType getType() {
+        return WaveformType.GENERATOR;
+    }
 
 	/**
 	 * Checks if is same.
