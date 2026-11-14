@@ -111,11 +111,11 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 
 	@Override
 	public IEvent[] getEventsBeforeTime(long time) {
-		EventEntry e = events.floorEntry(time);
+		EventEntry e = getEvents().floorEntry(time);
 		if(e==null)
 			return new IEvent[]{};
 		else
-			return  events.floorEntry(time).events;
+			return e.events;
 	}
 
 	@Override

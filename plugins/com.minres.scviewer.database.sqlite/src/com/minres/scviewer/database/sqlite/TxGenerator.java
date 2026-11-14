@@ -60,20 +60,13 @@ public class TxGenerator extends AbstractTxStream {
 	}
 
 	@Override
-	protected Map<Integer, ITx> getTransactions() {
-		if(transactions==null){
-			transactions = new TreeMap<>();
-			SQLiteDatabaseSelectHandler<ScvTx> handler = new SQLiteDatabaseSelectHandler<>(ScvTx.class, database,
-					"stream="+stream.getId()+" and generator="+scvGenerator.getId());
-			try {
-				for(ScvTx scvTx:handler.selectObjects()){
-					transactions.put(scvTx.getId(), new Tx(database, (TxStream) stream, this, scvTx));
-				}
-			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
-				e.printStackTrace();
-			}
-		}
+	protected synchronized Map<Integer, ITx> getTransactions() {
+		if (transactions == null) {
+            TreeMap<Integer, ITx> loaded = new TreeMap<>();
+            for (Map.Entry<Integer, ITx> entry : stream.getTransactions().entrySet())
+                if (entry.getValue().getGenerator() == this) loaded.put(entry.getKey(), entry.getValue());
+            transactions = loaded;
+        }
 		return transactions;
 	}
 

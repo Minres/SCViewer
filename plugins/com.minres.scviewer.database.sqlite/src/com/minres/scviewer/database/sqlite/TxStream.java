@@ -17,6 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.HashMap;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import com.minres.scviewer.database.AssociationType;
+import com.minres.scviewer.database.LazyValue;
 
 import com.minres.scviewer.database.DirectionType;
 import com.minres.scviewer.database.IEvent;
@@ -37,6 +43,38 @@ public class TxStream extends AbstractTxStream {
 	private TreeMap<Integer, TxGenerator> generators;
 
 	private TreeMap<Integer, ITx> transactions;
+    private final LazyValue<Map<Integer, long[]>> transactionTimes = new LazyValue<>();
+
+    long[] getTransactionTimes(int id) {
+        Map<Integer, long[]> times = transactionTimes.get(() -> {
+            String sql = "SELECT e.tx, MIN(CASE WHEN e.type=? THEN e.time END) AS beginTime, "
+                    + "MAX(CASE WHEN e.type=? THEN e.time END) AS endTime "
+                    + "FROM ScvTxEvent e JOIN ScvTx t ON t.id=e.tx WHERE t.stream=? GROUP BY e.tx";
+            Map<Integer, long[]> loaded = new HashMap<>();
+            long scale = ((Number) database.getData("TIMERESOLUTION")).longValue();
+            try (Connection connection = database.createConnection();
+                    PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, AssociationType.BEGIN.ordinal());
+                statement.setInt(2, AssociationType.END.ordinal());
+                statement.setLong(3, getId());
+                try (ResultSet rows = statement.executeQuery()) {
+                    while (rows.next()) {
+                        if (rows.getObject("beginTime") == null || rows.getObject("endTime") == null)
+                            throw new SQLException("Missing timestamps for transaction " + rows.getInt("tx"));
+                        loaded.put(rows.getInt("tx"), new long[] {
+                                Math.multiplyExact(rows.getLong("beginTime"), scale),
+                                Math.multiplyExact(rows.getLong("endTime"), scale)});
+                    }
+                }
+            } catch (SQLException e) {
+                throw new IllegalStateException("Cannot load timestamps for stream " + getFullName(), e);
+            }
+            return loaded;
+        });
+        long[] result = times.get(id);
+        if (result == null) throw new IllegalStateException("Missing timestamps for transaction " + id);
+        return result;
+    }
 
 	public TxStream(IDatabase database, ScvStream scvStream) {
 		super(database, scvStream.getName(), scvStream.getId());
@@ -71,7 +109,7 @@ public class TxStream extends AbstractTxStream {
 		return new ArrayList<>(generators.values());
 	}
 
-	protected Map<Integer, ITx> getTransactions() {
+	protected synchronized Map<Integer, ITx> getTransactions() {
 		if(transactions==null){
 			if(generators==null) getGenerators();
 			transactions = new TreeMap<>();

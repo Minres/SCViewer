@@ -17,14 +17,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.minres.scviewer.database.AssociationType;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.sqlite.db.SQLiteDatabaseSelectHandler;
 import com.minres.scviewer.database.sqlite.tables.ScvStream;
 import com.minres.scviewer.database.sqlite.tables.ScvTx;
 import com.minres.scviewer.database.sqlite.tables.ScvTxAttribute;
-import com.minres.scviewer.database.sqlite.tables.ScvTxEvent;
 import com.minres.scviewer.database.sqlite.tables.ScvTxRelation;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
@@ -37,8 +35,8 @@ public class Tx implements ITx {
 	private TxGenerator trGenerator;
 	private ScvTx scvTx;
 	private List<ITxAttribute> attributes;
-	private long begin=-1;
-	private long end=-1;
+	private final long begin;
+	private final long end;
 	private List<ITxRelation> incoming;
 	private List<ITxRelation> outgoing;
 	
@@ -47,6 +45,9 @@ public class Tx implements ITx {
 		this.trStream=trStream;
 		this.trGenerator=trGenerator;
 		this.scvTx=scvTx;
+        long[] times = trStream.getTransactionTimes(scvTx.getId());
+        begin = times[0];
+        end = times[1];
 	}
 
 	@Override
@@ -69,36 +70,10 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public long getBeginTime() {
-		if(begin<0){
-		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
-				database, "tx="+scvTx.getId()+" AND type="+ AssociationType.BEGIN.ordinal());
-		try {
-			for(ScvTxEvent scvEvent:handler.selectObjects()){
-				begin= scvEvent.getTime()*(Long)database.getData("TIMERESOLUTION");
-			}
-		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
-		}
-		}
-		return begin;
-	}
+    public long getBeginTime() { return begin; }
 
-	@Override
-	public long getEndTime() {
-		if(end<0){
-		SQLiteDatabaseSelectHandler<ScvTxEvent> handler = new SQLiteDatabaseSelectHandler<>(ScvTxEvent.class,
-				database, "tx="+scvTx.getId()+" AND type="+ AssociationType.END.ordinal());
-		try {
-			for(ScvTxEvent scvEvent:handler.selectObjects()){
-				end = scvEvent.getTime()*(Long)database.getData("TIMERESOLUTION");
-			}
-		} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
-				| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
-		}
-		}
-		return end;
-	}
+    @Override
+    public long getEndTime() { return end; }
 
 	@Override
 	public List<ITxAttribute> getAttributes() {
