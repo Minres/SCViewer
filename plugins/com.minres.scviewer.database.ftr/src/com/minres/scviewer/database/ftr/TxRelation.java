@@ -10,11 +10,11 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ftr;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.LazyValue;
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxAttribute;
@@ -82,8 +82,30 @@ class TxRelation implements ITxRelation {
 		
 		final long txId;
 		
-		ITx tx = null;
-		
+		private final LazyValue<ITx> resolved = new LazyValue<>();
+
+        private ITx resolve() {
+            return resolved.get(() -> {
+                ITx transaction = loader.getTransaction(txId);
+                if (transaction != null) return transaction;
+                TxStream stream = loader.txStreams.get(fiberId);
+                if (stream != null) {
+                    stream.loadStream();
+                    transaction = loader.getTransaction(txId);
+                } else if (fiberId < 0) {
+                    // Older FTR relations do not record the endpoint stream.
+                    for (TxStream candidate : loader.txStreams.values()) {
+                        candidate.loadStream();
+                        transaction = loader.getTransaction(txId);
+                        if (transaction != null) break;
+                    }
+                }
+                if (transaction == null)
+                    throw new IllegalStateException("Missing related transaction " + txId + " in stream " + fiberId);
+                return transaction;
+            });
+        }
+
 		public TxFacade(long fiberId, long txId) {
 			this.fiberId = fiberId;
 			this.txId=txId;
@@ -91,7 +113,9 @@ class TxRelation implements ITxRelation {
 
 		@Override
 		public int compareTo(ITx o) {
-			return tx==null?-1:tx.compareTo(o);
+			if (this == o) return 0;
+            int cmp = Long.compare(getBeginTime(), o.getBeginTime());
+            return cmp != 0 ? cmp : Long.compare(getId(), o.getId());
 		}
 
 		@Override
@@ -101,52 +125,42 @@ class TxRelation implements ITxRelation {
 
 		@Override
 		public IWaveform getStream() {
-			if(tx==null) {
-				TxStream fiber = loader.txStreams.get(fiberId);
-				fiber.loadStream();
-				tx = loader.getTransaction(txId);
-				return fiber;
-			} else
-				return tx.getStream();
-		}
+            return resolve().getStream();
+        }
 
-		@Override
-		public IWaveform getGenerator() {
-			if(tx==null) {
-				loader.txStreams.get(fiberId).loadStream();
-				tx = loader.getTransaction(txId);
-			}
-			return tx!=null?tx.getGenerator():null;
-		}
+        @Override
+        public IWaveform getGenerator() {
+            return resolve().getGenerator();
+        }
 
 		@Override
 		public long getBeginTime() {
-			return tx==null?-1:tx.getBeginTime();
+			return resolve().getBeginTime();
 		}
 
 		@Override
 		public long getEndTime() {
-			return tx==null?-1:tx.getBeginTime();
+			return resolve().getEndTime();
 		}
 
 		@Override
 		public List<ITxAttribute> getAttributes() {
-			return tx==null?new ArrayList<>():tx.getAttributes();
+			return resolve().getAttributes();
 		}
 
 		@Override
 		public Collection<ITxRelation> getIncomingRelations() {
-			return tx==null?new ArrayList<>():tx.getIncomingRelations();
+			return resolve().getIncomingRelations();
 		}
 
 		@Override
 		public Collection<ITxRelation> getOutgoingRelations() {
-			return tx==null?new ArrayList<>():tx.getOutgoingRelations();
+			return resolve().getOutgoingRelations();
 		}
 
 		@Override
 		public String toString() {
-			return tx==null?("tx#" + getId() + "[not available]"):tx.toString();
+			return "tx#" + txId + "[related transaction]";
 		}
 	}
 }
