@@ -26,6 +26,7 @@ import com.minres.scviewer.database.RelationTypeFactory;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.TxRowAllocator;
 
 abstract class AbstractTxStream extends HierNode implements IWaveform {
 
@@ -46,7 +47,11 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public int getRowCount() {
+	public synchronized int getRowCount() {
+        if (this instanceof TxGenerator) {
+            getEvents();
+            return maxConcurrency;
+        }
 		if(maxConcurrency==null){
 			StringBuilder sb = new StringBuilder();
 			sb.append("SELECT MAX(concurrencyLevel) as concurrencyLevel FROM ScvTx where stream=");
@@ -81,16 +86,20 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
             EventList.Builder builder = new EventList.Builder();
             for (ITx tx : getTransactions().values()) {
                 if (tx.getBeginTime() == tx.getEndTime()) {
-                    TxEvent single = new TxEvent(EventKind.SINGLE, tx);
+                    TxEvent single = new TxEvent(EventKind.SINGLE, tx, this instanceof TxGenerator);
                     builder.add(single.getTime(), single);
                 } else {
-                    TxEvent begin = new TxEvent(EventKind.BEGIN, tx);
-                    TxEvent end = new TxEvent(EventKind.END, tx);
+                    TxEvent begin = new TxEvent(EventKind.BEGIN, tx, this instanceof TxGenerator);
+                    TxEvent end = new TxEvent(EventKind.END, tx, this instanceof TxGenerator);
                     builder.add(begin.getTime(), begin);
                     builder.add(end.getTime(), end);
                 }
             }
-            events = builder.build();
+            IEventList loaded = builder.build();
+            if (this instanceof TxGenerator)
+                maxConcurrency = TxRowAllocator.assign(loaded,
+                        (event, row) -> ((Tx) event.getTransaction()).setConcurrencyIdxInGen(row));
+            events = loaded;
         }
         return events;
     }

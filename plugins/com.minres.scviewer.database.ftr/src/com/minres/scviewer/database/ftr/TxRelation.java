@@ -133,6 +133,16 @@ class TxRelation implements ITxRelation {
             return resolve().getGenerator();
         }
 
+        @Override
+        public int getConcurrencyIndxInStream() {
+            return resolve().getConcurrencyIndxInStream();
+        }
+
+        @Override
+        public int getConcurrencyIdxInGen() {
+            return resolve().getConcurrencyIdxInGen();
+        }
+
 		@Override
 		public long getBeginTime() {
 			return resolve().getBeginTime();

@@ -41,6 +41,22 @@ public interface ITx extends Comparable<ITx> {
 	 */
 	public IWaveform getGenerator();
 
+    /**
+     * Gets the zero-based row index within the transaction's stream.
+     * The stream layout is calculated on demand.
+     *
+     * @return the concurrency index in the stream
+     */
+    public int getConcurrencyIndxInStream();
+
+    /**
+     * Gets the zero-based row index within the transaction's generator.
+     * The generator layout is calculated on demand, independently of the stream layout.
+     *
+     * @return the concurrency index in the generator
+     */
+    public int getConcurrencyIdxInGen();
+
 	/**
 	 * Gets the begin time.
 	 *

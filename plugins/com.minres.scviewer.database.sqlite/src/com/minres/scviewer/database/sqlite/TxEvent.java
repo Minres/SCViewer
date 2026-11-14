@@ -19,12 +19,17 @@ import com.minres.scviewer.database.tx.ITxEvent;
 public class TxEvent implements ITxEvent {
 
 	private final EventKind type;
+    private final boolean inGenerator;
 	private ITx tx;
 	
 	public TxEvent(EventKind type, ITx tx) {
-		super();
-		this.type = type;
-		this.tx = tx;
+        this(type, tx, false);
+    }
+
+    TxEvent(EventKind type, ITx tx, boolean inGenerator) {
+        this.type = type;
+        this.tx = tx;
+        this.inGenerator = inGenerator;
 	}
 
 	@Override
@@ -34,7 +39,7 @@ public class TxEvent implements ITxEvent {
 
 	@Override
 	public IEvent duplicate() throws CloneNotSupportedException {
-		return new TxEvent(type, tx);
+		return new TxEvent(type, tx, inGenerator);
 	}
 
 	@Override
@@ -59,7 +64,7 @@ public class TxEvent implements ITxEvent {
 
 	@Override
 	public int getRowIndex() {
-		return ((Tx)tx).getConcurrencyIndex();
+		return inGenerator ? tx.getConcurrencyIdxInGen() : tx.getConcurrencyIndxInStream();
 	}
 
 }

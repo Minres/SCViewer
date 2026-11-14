@@ -20,8 +20,11 @@ final class TxTestSupport {
 
     static class Tx implements ITx {
         final long id, begin, end;
+        int streamRow, generatorRow;
         Tx(long id, long begin, long end) { this.id = id; this.begin = begin; this.end = end; }
         public long getId() { return id; }
+        public int getConcurrencyIndxInStream() { return streamRow; }
+        public int getConcurrencyIdxInGen() { return generatorRow; }
         public long getBeginTime() { return begin; }
         public long getEndTime() { return end; }
         public IWaveform getStream() { return null; }

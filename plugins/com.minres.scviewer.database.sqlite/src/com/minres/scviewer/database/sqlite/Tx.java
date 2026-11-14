@@ -34,6 +34,7 @@ public class Tx implements ITx {
 	private TxStream trStream;
 	private TxGenerator trGenerator;
 	private ScvTx scvTx;
+    private volatile int concurrencyIdxInGen = -1;
 	private List<ITxAttribute> attributes;
 	private final long begin;
 	private final long end;
@@ -65,9 +66,20 @@ public class Tx implements ITx {
 		return trGenerator;
 	}
 
-	int getConcurrencyIndex() {
-		return scvTx.getConcurrencyLevel();
-	}
+    @Override
+    public int getConcurrencyIndxInStream() {
+        return scvTx.getConcurrencyLevel();
+    }
+
+    @Override
+    public int getConcurrencyIdxInGen() {
+        if (concurrencyIdxInGen < 0) trGenerator.getRowCount();
+        return concurrencyIdxInGen;
+    }
+
+    void setConcurrencyIdxInGen(int index) {
+        concurrencyIdxInGen = index;
+    }
 
 	@Override
     public long getBeginTime() { return begin; }

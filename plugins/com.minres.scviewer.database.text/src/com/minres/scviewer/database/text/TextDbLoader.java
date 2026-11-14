@@ -144,7 +144,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 	 * @param txId the tx id
 	 * @return the transaction
 	 */
-	public ITx getTransaction(long txId) {
+	public synchronized ITx getTransaction(long txId) {
 		if (txCache.containsKey(txId))
 			return txCache.get(txId);
 		if(transactions.containsKey(txId)) {
@@ -267,6 +267,7 @@ public class TextDbLoader implements IWaveformDbLoader {
 		txStreams.clear();
 		txGenerators.clear();
 		transactions = null;
+        txCache.clear();
 		attributeTypes.clear();
 		relationsIn.clear();
 		relationsOut.clear();

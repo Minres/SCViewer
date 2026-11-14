@@ -32,8 +32,12 @@ public class FtrRelationTest {
         Loader loader = new Loader();
         ITx proxy = proxy(loader);
         TxTestSupport.Tx real = new TxTestSupport.Tx(1, 10, 50);
+        real.streamRow = 2;
+        real.generatorRow = 1;
         loader.available = real;
         assertEquals(50, proxy.getEndTime());
+        assertEquals(2, proxy.getConcurrencyIndxInStream());
+        assertEquals(1, proxy.getConcurrencyIdxInGen());
         assertEquals(10, proxy.getBeginTime());
         assertSame(real.getAttributes(), proxy.getAttributes());
         assertEquals(0, proxy.compareTo(proxy));
@@ -41,6 +45,18 @@ public class FtrRelationTest {
         assertEquals(0, real.compareTo(proxy));
         TxTestSupport.Tx later = new TxTestSupport.Tx(2, 20, 60);
         assertEquals(-Integer.signum(later.compareTo(proxy)), Integer.signum(proxy.compareTo(later)));
+    }
+
+    @Test
+    public void resolvesFromConcurrencyGetter() throws Exception {
+        Loader loader = new Loader();
+        ITx proxy = proxy(loader);
+        TxTestSupport.Tx real = new TxTestSupport.Tx(1, 10, 50);
+        real.streamRow = 3;
+        real.generatorRow = 1;
+        loader.available = real;
+        assertEquals(1, proxy.getConcurrencyIdxInGen());
+        assertEquals(3, proxy.getConcurrencyIndxInStream());
     }
 
     @Test

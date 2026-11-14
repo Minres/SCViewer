@@ -148,7 +148,12 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 */
 	synchronized void calculateConcurrency() {
         if (rowCount >= 0) return;
-        int count = TxRowAllocator.assign(getEvents(), (event, row) -> ((TxEvent) event).setConcurrencyIndex(row));
+        int count = TxRowAllocator.assign(getEvents(), (event, row) -> {
+            ((TxEvent) event).setConcurrencyIndex(row);
+            Tx tx = (Tx) event.getTransaction();
+            if (this instanceof TxGenerator) tx.setConcurrencyIdxInGen(row);
+            else tx.setConcurrencyIndxInStream(row);
+        });
         for (com.minres.scviewer.database.IHierNode child : getChildNodes())
             ((TxGenerator) child).calculateConcurrency();
         rowCount = count;

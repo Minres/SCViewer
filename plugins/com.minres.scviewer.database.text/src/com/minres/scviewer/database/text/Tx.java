@@ -38,6 +38,9 @@ class Tx implements ITx {
 
 	private final long streamId;
 
+    private volatile int concurrencyIndxInStream = -1;
+    private volatile int concurrencyIdxInGen = -1;
+
 	/** The begin time. */
 	long beginTime = -1;
 
@@ -173,6 +176,26 @@ class Tx implements ITx {
 	public IWaveform getGenerator() {
 		return loader.txGenerators.get(generatorId);
 	}
+
+    @Override
+    public int getConcurrencyIndxInStream() {
+        if (concurrencyIndxInStream < 0) getStream().getRowCount();
+        return concurrencyIndxInStream;
+    }
+
+    @Override
+    public int getConcurrencyIdxInGen() {
+        if (concurrencyIdxInGen < 0) getGenerator().getRowCount();
+        return concurrencyIdxInGen;
+    }
+
+    void setConcurrencyIndxInStream(int index) {
+        concurrencyIndxInStream = index;
+    }
+
+    void setConcurrencyIdxInGen(int index) {
+        concurrencyIdxInGen = index;
+    }
 
 	/**
 	 * Gets the begin time.
