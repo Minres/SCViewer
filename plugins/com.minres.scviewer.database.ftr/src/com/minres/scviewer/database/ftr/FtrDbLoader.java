@@ -76,7 +76,8 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	final Map<Long, FtrTx> transactions = UnifiedMap.newMap();
 
 	/** The attribute types. */
-	final Map<String, TxAttributeType> attributeTypes = UnifiedMap.newMap();
+	private record AttributeKey(String name, DataType type, AssociationType association) { }
+    final Map<AttributeKey, TxAttributeType> attributeTypes = UnifiedMap.newMap();
 
 	/** The relations in. */
 	final HashMultimap<Long, FtrRelation> relationsIn = HashMultimap.create();
@@ -350,11 +351,9 @@ public class FtrDbLoader implements IWaveformDbLoader {
 	}
 
 	private synchronized TxAttributeType getOrAddAttributeType(long tag, DataType type, String attrName) {
-		if(!attributeTypes.containsKey(attrName)) {
-			attributeTypes.put(attrName, new TxAttributeType(attrName, type, AssociationType.values()[(int)tag-7]));
-		} 
-		TxAttributeType attrType = attributeTypes.get(attrName);
-		return attrType;
+        AssociationType association = AssociationType.values()[(int) tag - 7];
+        AttributeKey key = new AttributeKey(attrName, type, association);
+        return attributeTypes.computeIfAbsent(key, k -> new TxAttributeType(k.name(), k.type(), k.association()));
 	}
 	/**
 	 * Dispose.
@@ -536,7 +535,7 @@ public class FtrDbLoader implements IWaveformDbLoader {
 			long from_fiber = sz>3?cborDecoder.readInt():-1;
 			long to_fiber = sz>3?cborDecoder.readInt():-1;
 			String rel_name = strDict.get((int)type_id);
-			FtrRelation ftrRel = new FtrRelation(relationTypes.getOrDefault(rel_name, RelationTypeFactory.create(rel_name)), from_id, to_id, from_fiber, to_fiber);
+			FtrRelation ftrRel = new FtrRelation(relationTypes.computeIfAbsent(rel_name, RelationTypeFactory::create), from_id, to_id, from_fiber, to_fiber);
 			relationsOut.put(from_id, ftrRel);
 			relationsIn.put(to_id, ftrRel);
 			next = cborDecoder.peekType();
