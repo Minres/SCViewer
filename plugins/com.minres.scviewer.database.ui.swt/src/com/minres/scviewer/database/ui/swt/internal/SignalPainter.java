@@ -106,7 +106,7 @@ public class SignalPainter extends TrackPainter {
 		EventEntry first = signal.getEvents().floorEntry(beginTime);
 		if (first == null)
 			first = signal.getEvents().firstEntry();
-		if (first == null) return;
+		if (first == null || Long.compareUnsigned(first.timestamp, endTime) > 0) return;
 		beginTime = first.timestamp;
 		proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 		proj.setLineStyle(SWT.LINE_SOLID);

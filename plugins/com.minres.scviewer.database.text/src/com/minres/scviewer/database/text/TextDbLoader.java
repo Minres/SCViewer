@@ -252,7 +252,9 @@ public class TextDbLoader implements IWaveformDbLoader {
 		} finally {
 			transactions = parser.txSink;			
 		}
-		txStreams.values().parallelStream().forEach(TxStream::calculateConcurrency);
+		txStreams.values().forEach(TxStream::finishEvents);
+        txGenerators.values().forEach(TxGenerator::finishEvents);
+        txStreams.values().parallelStream().forEach(TxStream::calculateConcurrency);
 	}
 
 	/**

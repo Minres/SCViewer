@@ -13,7 +13,6 @@ package com.minres.scviewer.database.sqlite;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventKind;
@@ -77,20 +76,24 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	}
 
 	@Override
-	public  IEventList getEvents(){
-		if(events==null){
-			events=new EventList();
-			for(Entry<Integer, ITx> entry:getTransactions().entrySet()){
-				putEvent(new TxEvent(EventKind.BEGIN, entry.getValue()));
-				putEvent(new TxEvent(EventKind.END, entry.getValue()));
-			}	
-		}
-		return events;
-	}
-
-	private void putEvent(TxEvent ev){
-		events.put(ev.getTime(), ev);
-	}
+	public synchronized IEventList getEvents() {
+        if (events == null) {
+            EventList.Builder builder = new EventList.Builder();
+            for (ITx tx : getTransactions().values()) {
+                if (tx.getBeginTime() == tx.getEndTime()) {
+                    TxEvent single = new TxEvent(EventKind.SINGLE, tx);
+                    builder.add(single.getTime(), single);
+                } else {
+                    TxEvent begin = new TxEvent(EventKind.BEGIN, tx);
+                    TxEvent end = new TxEvent(EventKind.END, tx);
+                    builder.add(begin.getTime(), begin);
+                    builder.add(end.getTime(), end);
+                }
+            }
+            events = builder.build();
+        }
+        return events;
+    }
 
 	protected abstract Map<Integer, ITx> getTransactions();
 

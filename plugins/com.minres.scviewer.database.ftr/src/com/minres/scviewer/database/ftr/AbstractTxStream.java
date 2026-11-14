@@ -36,6 +36,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 
 	/** The events. */
 	protected IEventList events = new EventList();
+    private EventList.Builder eventBuilder = new EventList.Builder();
 
 	/** The max concurrency. */
 	private int rowCount = -1;
@@ -69,8 +70,15 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @param evt the evt
 	 */
 	public void addEvent(ITxEvent evt) {
-		events.put(evt.getTime(), evt);
+		eventBuilder.add(evt.getTime(), evt);
 	}
+
+    void finishEvents() {
+        if (eventBuilder != null) {
+            events = eventBuilder.build();
+            eventBuilder = null;
+        }
+    }
 
 	/**
 	 * Gets the events at time.

@@ -7,6 +7,36 @@ import java.util.NoSuchElementException;
 
 /** Sorted timestamp buckets. Range views are read-only and bounded by their parent. */
 public class EventList implements IEventList {
+    /** Accumulates unsorted events and freezes timestamp buckets with one sort and one allocation per bucket. */
+    public static final class Builder {
+        private record TimedEvent(long time, IEvent event) { }
+        private final ArrayList<TimedEvent> pending = new ArrayList<>();
+        private boolean built;
+
+        public void add(long time, IEvent event) {
+            if (built) throw new IllegalStateException("Event list has already been built");
+            pending.add(new TimedEvent(time, event));
+        }
+
+        public EventList build() {
+            if (built) throw new IllegalStateException("Event list has already been built");
+            pending.sort((a, b) -> Long.compareUnsigned(a.time(), b.time()));
+            ArrayList<EventEntry> entries = new ArrayList<>();
+            for (int first = 0; first < pending.size();) {
+                long time = pending.get(first).time();
+                int next = first + 1;
+                while (next < pending.size() && pending.get(next).time() == time) next++;
+                IEvent[] events = new IEvent[next - first];
+                for (int i = first; i < next; ++i) events[i - first] = pending.get(i).event();
+                entries.add(new EventEntry(time, events));
+                first = next;
+            }
+            built = true;
+            pending.clear();
+            return new EventList(entries, 0, entries.size(), true);
+        }
+    }
+
     private final ArrayList<EventEntry> store;
     private final int start;
     private int end;

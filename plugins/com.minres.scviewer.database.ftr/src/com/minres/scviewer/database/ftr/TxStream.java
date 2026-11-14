@@ -82,6 +82,9 @@ class TxStream extends AbstractTxStream {
             try {
                 int blockId = 0;
                 for (byte[] chunk : getChunks()) loader.parseTx(this, blockId++, chunk);
+                finishEvents();
+                for (com.minres.scviewer.database.IHierNode child : getChildNodes())
+                    ((TxGenerator) child).finishEvents();
                 return Boolean.TRUE;
             } catch (InputFormatException | IOException e) {
                 throw new IllegalStateException("Cannot parse stream " + getFullName(), e);

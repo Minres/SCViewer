@@ -70,9 +70,9 @@ public interface IEventList extends Iterable<EventEntry> {
      * {@code fromKey} to {@code toKey}.  If {@code fromKey} and
      * {@code toKey} are equal, the returned map is empty unless
      * {@code fromInclusive} is true.  The
-     * returned map is backed by this map, so changes in the returned map are
-     * reflected in this map, and vice-versa.  The returned map supports all
-     * optional map operations that this map supports.
+     * returned view is read-only. Do not structurally modify a mutable source
+     * while a view is in use. EventList.Builder produces frozen sources suitable
+     * for sharing range views.
      *
      * @param fromKey low endpoint of the keys in the returned map
      * @param fromInclusive {@code true} if the low endpoint
