@@ -10,8 +10,6 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ftr;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventList;
@@ -20,7 +18,7 @@ import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.WaveformType;
-import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.TxRowAllocator;
 import com.minres.scviewer.database.tx.ITxEvent;
 
 /**
@@ -126,7 +124,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 * @return the width
 	 */
 	@Override
-	public int getRowCount() {
+	public synchronized int getRowCount() {
 		if (rowCount<0)
 			calculateConcurrency();
 		return rowCount;
@@ -140,46 +138,11 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	/**
 	 * Calculate concurrency.
 	 */
-	void calculateConcurrency() {
-		if (rowCount>=0)
-			return;
-		ArrayList<Long> rowEndTime = new ArrayList<>();
-		HashMap<Long, Integer> rowByTxId = new HashMap<>();
-		for(EventEntry entry: getEvents()) {
-			for(IEvent evt:entry.events) {
-				TxEvent txEvt = (TxEvent) evt;
-				ITx tx = txEvt.getTransaction();
-				int rowIdx = 0;
-				switch(evt.getKind()) {
-				case END: //TODO: might throw NPE in concurrent execution
-					Long txId = txEvt.getTransaction().getId();
-					Integer row = rowByTxId.get(txId);
-					if(row!=null) {
-						txEvt.setConcurrencyIndex(row);
-						rowByTxId.remove(txId);
-					}
-					break;
-				case SINGLE:
-					for (; rowIdx < rowEndTime.size() && rowEndTime.get(rowIdx)>tx.getBeginTime(); rowIdx++);
-					if (rowEndTime.size() <= rowIdx)
-						rowEndTime.add(tx.getEndTime());
-					else
-						rowEndTime.set(rowIdx, tx.getEndTime());
-					((TxEvent) evt).setConcurrencyIndex(rowIdx);
-					break;
-				case BEGIN:
-					for (; rowIdx < rowEndTime.size() && rowEndTime.get(rowIdx)>tx.getBeginTime(); rowIdx++);
-					if (rowEndTime.size() <= rowIdx)
-						rowEndTime.add(tx.getEndTime());
-					else
-						rowEndTime.set(rowIdx, tx.getEndTime());
-					((TxEvent) evt).setConcurrencyIndex(rowIdx);
-					rowByTxId.put(tx.getId(), rowIdx);
-					break;
-				}
-			}
-		}
-		rowCount=rowEndTime.size()>0?rowEndTime.size():1;
-		getChildNodes().parallelStream().forEach(c -> ((TxGenerator)c).calculateConcurrency());
-	}
+	synchronized void calculateConcurrency() {
+        if (rowCount >= 0) return;
+        int count = TxRowAllocator.assign(getEvents(), (event, row) -> ((TxEvent) event).setConcurrencyIndex(row));
+        for (com.minres.scviewer.database.IHierNode child : getChildNodes())
+            ((TxGenerator) child).calculateConcurrency();
+        rowCount = count;
+    }
 }
