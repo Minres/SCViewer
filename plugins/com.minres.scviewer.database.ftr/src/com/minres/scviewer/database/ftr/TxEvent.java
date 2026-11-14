@@ -76,7 +76,7 @@ class TxEvent implements ITxEvent {
 	 */
 	@Override
 	public WaveformType getType() {
-		return WaveformType.TRANSACTION;
+		return WaveformType.STREAM;
 	}
 
 	/**

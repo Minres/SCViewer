@@ -62,7 +62,7 @@ public class TxDbTreeLabelProvider implements ILabelProvider {
 			return database;
 		}else if(element instanceof IWaveform){
 			switch(((IWaveform) element).getType()) {
-			case TRANSACTION:
+			case STREAM:
 				return stream;
 			case FILTER:
 				break;

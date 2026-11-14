@@ -32,7 +32,7 @@ public class SearchHandler {
 				Object[] elem = ((StructuredSelection)sel).toArray();
 				if(elem.length ==0) return false;
 				TrackEntry e = findTrackEntry(elem);
-				return e!=null && e.waveform.getType()==WaveformType.TRANSACTION;
+				return e!=null && e.waveform.getType()==WaveformType.STREAM;
 			}
 		}
 		return false;

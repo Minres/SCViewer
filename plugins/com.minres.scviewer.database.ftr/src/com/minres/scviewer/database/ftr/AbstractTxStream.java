@@ -113,7 +113,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform {
 	 */
 	@Override
 	public WaveformType getType() {
-		return WaveformType.TRANSACTION;
+		return WaveformType.STREAM;
 	}
 
 	/**

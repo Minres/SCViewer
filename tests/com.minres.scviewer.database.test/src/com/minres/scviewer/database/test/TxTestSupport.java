@@ -47,7 +47,7 @@ final class TxTestSupport {
         public ITx getTransaction() { return tx; }
         public EventKind getKind() { return kind; }
         public int getRowIndex() { return row; }
-        public WaveformType getType() { return WaveformType.TRANSACTION; }
+        public WaveformType getType() { return WaveformType.STREAM; }
         public ITxEvent duplicate() { return new Event(tx, kind); }
     }
 }

@@ -17,8 +17,10 @@ public enum WaveformType {
 
 	/** The signal. */
 	SIGNAL,
-	/** The transaction. */
-	TRANSACTION,
+	/** The transaction stream. */
+	STREAM,
+	/** The transaction stream. */
+	GENERATOR,
 	/** The filter. */
 	FILTER,
 	/** The blank line. */

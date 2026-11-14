@@ -633,7 +633,7 @@ public class WaveformView implements IWaveformView {
 	private void addPainter(boolean even, TrackEntry streamEntry) {
 		streamEntry.height = styleProvider.getTrackHeight();
 		streamEntry.vOffset = tracksVerticalHeight;
-		if (streamEntry.waveform.getType() == WaveformType.TRANSACTION) {
+		if (streamEntry.waveform.getType() == WaveformType.STREAM) {
 			streamEntry.currentValue = "";
 			streamEntry.height *= streamEntry.waveform.getRowCount();
 			IWaveformPainter painter = new StreamPainter(waveformCanvas, even, streamEntry);
@@ -690,7 +690,7 @@ public class WaveformView implements IWaveformView {
 					else
 						entry.currentValue = Double.toString(val);
 				}
-			} else if (entry.waveform.getType() == WaveformType.TRANSACTION) {
+			} else if (entry.waveform.getType() == WaveformType.STREAM) {
 				ITx[] resultsList = new ITx[entry.waveform.getRowCount()];
 				EventEntry firstTx = entry.waveform.getEvents().floorEntry(time);
 				if (firstTx != null) {
@@ -956,7 +956,7 @@ public class WaveformView implements IWaveformView {
 			return;
 		TrackEntry selectedWaveform = currentWaveformSelection.size() == 1 ? currentWaveformSelection.get(0)
 				: getEntryFor(currentTxSelection);
-		if (selectedWaveform.waveform.getType() == WaveformType.TRANSACTION && currentTxSelection != null) {
+		if (selectedWaveform.waveform.getType() == WaveformType.STREAM && currentTxSelection != null) {
 			if (relationType.equals(IWaveformView.NEXT_PREV_IN_STREAM)) {
 				ITx transaction = null;
 				if (direction == GotoDirection.NEXT) {
@@ -1078,7 +1078,7 @@ public class WaveformView implements IWaveformView {
 		TrackEntry sel = currentWaveformSelection.get(0);
 		long time = getCursorTime();
 		IEventList map = null;
-		if (sel.waveform.getType() == WaveformType.TRANSACTION || sel.waveform.getType() == WaveformType.SIGNAL) {
+		if (sel.waveform.getType() == WaveformType.STREAM || sel.waveform.getType() == WaveformType.SIGNAL) {
 			map = sel.waveform.getEvents();
 		}
 		if (map != null) {
@@ -1634,7 +1634,7 @@ public class WaveformView implements IWaveformView {
 	}
 	
 	public boolean waveformsContainsTx() {
-		return  streams.stream().filter(e -> e.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent();
+		return  streams.stream().filter(e -> e.waveform.getType() == WaveformType.STREAM).findFirst().isPresent();
 	}
 
 	@Override

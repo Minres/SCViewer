@@ -1030,13 +1030,13 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 			}
 		}
-		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent());		
+		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.STREAM).findFirst().isPresent());		
 		setFocus();
 	}
 
 	public void removeSelectedStreamsFromList() {
 		waveformPane.deleteSelectedTracks();
-		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.TRANSACTION).findFirst().isPresent());		
+		showTxDetails(waveformPane.getStreamList().stream().filter(t -> t.waveform.getType() == WaveformType.STREAM).findFirst().isPresent());		
 	}
 
 	/**

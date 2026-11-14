@@ -237,7 +237,7 @@ public class TransactionList extends Composite {
 	}
 
 	public void setInput(TrackEntry trackEntry) {
-		if(trackEntry==null || trackEntry.waveform.getType()!=WaveformType.TRANSACTION) {
+		if(trackEntry==null || trackEntry.waveform.getType()!=WaveformType.STREAM) {
 			attrNames.clear();
 			tableViewer.setInput(emptyList);
 		} else if(stream != trackEntry.waveform) { 

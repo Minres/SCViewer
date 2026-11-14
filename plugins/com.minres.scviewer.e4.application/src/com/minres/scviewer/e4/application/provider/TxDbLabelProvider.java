@@ -176,7 +176,7 @@ public class TxDbLabelProvider implements ILabelProvider {
 			return ((IWaveformDb)element).isLoaded()?database:loadinDatabase;
 		}else if(element instanceof IWaveform){
 			switch(((IWaveform) element).getType()) {
-			case TRANSACTION:
+			case STREAM:
 				return stream;
 			case FILTER:
 				break;
