@@ -3,193 +3,112 @@ package com.minres.scviewer.database;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.NoSuchElementException;
 
-public class EventList  implements IEventList {
+/** Sorted timestamp buckets. Range views are read-only and bounded by their parent. */
+public class EventList implements IEventList {
+    private final ArrayList<EventEntry> store;
+    private final int start;
+    private int end;
+    private final boolean unmodifiable;
 
-	ArrayList<EventEntry> store = new ArrayList<>();
-	int start = 0;
-	int end = store.size();
-	boolean unmodifiable = false;
-			
-	public class Iterator implements java.util.Iterator<EventEntry> {
-		
-		EventList list;
-		
-		private int pos;
-		
-		public Iterator(EventList list) {
-			this.list=list;
-			this.pos=-1;
-		}
+    public EventList() {
+        this(new ArrayList<>(), 0, 0, false);
+    }
 
-		@Override
-		public boolean hasNext() {
-			return pos<(list.end-1);
-		}
+    private EventList(ArrayList<EventEntry> store, int start, int end, boolean unmodifiable) {
+        this.store = store;
+        this.start = start;
+        this.end = end;
+        this.unmodifiable = unmodifiable;
+    }
 
-		@Override
-		public EventEntry next() {
-			if(hasNext()) {
-				pos++;
-				return list.store.get(pos);
-			} else
-				return null;
-		}
-
-		@Override
-		public void remove() {
-			list.store.remove(pos);
-		}
-		
-	}
-	
-	public EventList() {
-	}
-
-	private EventList(ArrayList<EventEntry> store , int start, int end) {
-		this.store=store;
-		this.start=start;
-		this.end=end;
-		this.unmodifiable=true;
-	}
-
-	@Override
-	public IEventList subMap(long from, boolean includeFrom, long to) {
-		//the index of the first element greater than the key, or list.size()
-		int beginIndex = Collections.binarySearch(store, new EventEntry(from));
-		int startIndex = beginIndex < 0? -(beginIndex + 1): beginIndex;
-		int endIndex = Collections.binarySearch(store, new EventEntry(to));
-		endIndex = endIndex < 0? -(endIndex + 1): endIndex+1;
-		if(beginIndex>0 && !includeFrom)
-			return new EventList(store, startIndex+1, endIndex);
-		else
-			return new EventList(store, startIndex, endIndex);
-	}
-	
-	@Override
-	public int size() {
-		return end-start;
-	}
-
-	@Override
-	public boolean containsKey(long key) {
-		int index = Collections.binarySearch(store, new EventEntry(key));
-		return index>=0 && index>=start && index<end;
-	}
-
-	@Override
-	public IEvent[] get(long key) {
-		int index = Collections.binarySearch(store, new EventEntry(key));
-		if(index<0) return null;
-		return index>=start && index<end? store.get(index).events: null;
-	}
-
-	@Override
-	public void put(long key, IEvent value) {
-		if(unmodifiable) throw new UnsupportedOperationException();
-		if(store.size()==0 || store.get(store.size()-1).timestamp < key) {
-			store.add(new EventEntry(key, new IEvent[] {value}));
-		} else {
-			int index = Collections.binarySearch(store, new EventEntry(key));
-	        // < 0 if element is not in the list, see Collections.binarySearch
-	        if (index < 0) {
-	    		EventEntry e = new EventEntry(key, new IEvent[] {value});
-	        	index = -(index + 1);
-		        store.add(index, e);
-	        } else { 
-	            // Insertion index is index of existing element, to add new element behind it increase index
-	        	store.get(index).append(value);
-	        }
-		}
-		end=store.size();
-	}
-
-	@Override
-	public Collection<EventEntry> entrySet() {
-		if(start != 0 || end != store.size())
-			return Collections.unmodifiableList(store.subList(start, end));
-		else
-			return Collections.unmodifiableList(store);
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return start==end || store.isEmpty();
-	}
-
-	@Override
-	public long firstKey() {
-		return store.get(start).timestamp;
-	}
-
-	@Override
-	public long lastKey() {
-		return store.get(end-1).timestamp;
-	}
-
-	// Navigable map functions
-	@Override
-	public EventEntry firstEntry() {
-		return  store.get(start);
-	}
-
-	@Override
-	public EventEntry lastEntry() {
-		return store.get(end-1);
-	}
-
-	@Override
-	public EventEntry floorEntry(long key) {
-		int index = Collections.binarySearch(store, new EventEntry(key));
-    	if(index==-1) return null;
-        // < 0 if element is not in the list, see Collections.binarySearch
-        if (index < 0) {
-        	index = -(index + 2);
+    /** Index of the first timestamp >= key (or > key when exclusive). */
+    private int bound(long key, boolean exclusive) {
+        int low = start, high = end;
+        while (low < high) {
+            int mid = (low + high) >>> 1;
+            int cmp = Long.compareUnsigned(store.get(mid).timestamp, key);
+            if (cmp < 0 || (exclusive && cmp == 0)) low = mid + 1;
+            else high = mid;
         }
-        if(index>=end)
-        	return store.get(end-1);
-		return index<start? null: store.get(index);
-	}
+        return low;
+    }
 
-	@Override
-	public EventEntry ceilingEntry(long key) {
-		int index = Collections.binarySearch(store, new EventEntry(key));
-        // < 0 if element is not in the list, see Collections.binarySearch
-        if (index < 0) 
-        	index = -(index + 1);
-        if(index<start)
-        	return store.get(start);
-		return index>=end? null: store.get(index);
-	}
+    private EventEntry entry(int index) {
+        return index < start || index >= end ? null : store.get(index);
+    }
 
-	@Override
-	public EventEntry lowerEntry(long key) {
-		int index = Collections.binarySearch(store, new EventEntry(key));
-        // < 0 if element is not in the list, see Collections.binarySearch
-        if (index < 0) 
-        	index = -(index + 1);
-    	index--;
-        if(index>=end)
-        	return store.get(end-1);
-		return index>=end || index<start ?null:store.get(index);
-	}
+    @Override
+    public IEventList subMap(long from, boolean includeFrom, long to) {
+        if (Long.compareUnsigned(from, to) > 0) throw new IllegalArgumentException("Reversed time range");
+        int first = bound(from, !includeFrom);
+        return new EventList(store, first, Math.max(first, bound(to, true)), true);
+    }
 
-	@Override
-	public EventEntry higherEntry(long key) {
-		int index = Collections.binarySearch(store, new EventEntry(key));
-        // < 0 if element is not in the list, see Collections.binarySearch
-        if (index < 0) 
-        	index = -(index + 1);
-        else
-        	index++;
-        if(index<start)
-        	return store.get(start);
-		return index>=end || index<start ?null:store.get(index);
-	}
+    @Override
+    public int size() { return end - start; }
 
-	@Override
-	public java.util.Iterator<EventEntry> iterator() {
-		return new Iterator(this);
-	}
+    @Override
+    public boolean containsKey(long key) {
+        EventEntry e = entry(bound(key, false));
+        return e != null && e.timestamp == key;
+    }
 
+    @Override
+    public IEvent[] get(long key) {
+        EventEntry e = entry(bound(key, false));
+        return e != null && e.timestamp == key ? e.events : null;
+    }
+
+    @Override
+    public void put(long key, IEvent value) {
+        if (unmodifiable) throw new UnsupportedOperationException();
+        int index = store.isEmpty() || Long.compareUnsigned(store.get(end - 1).timestamp, key) < 0
+                ? end : bound(key, false);
+        if (index < end && store.get(index).timestamp == key) store.get(index).append(value);
+        else store.add(index, new EventEntry(key, new IEvent[] {value}));
+        end = store.size();
+    }
+
+    @Override
+    public Collection<EventEntry> entrySet() {
+        return Collections.unmodifiableList(store.subList(start, end));
+    }
+
+    @Override
+    public boolean isEmpty() { return start == end; }
+
+    @Override
+    public long firstKey() {
+        if (isEmpty()) throw new NoSuchElementException();
+        return store.get(start).timestamp;
+    }
+
+    @Override
+    public long lastKey() {
+        if (isEmpty()) throw new NoSuchElementException();
+        return store.get(end - 1).timestamp;
+    }
+
+    @Override
+    public EventEntry firstEntry() { return entry(start); }
+
+    @Override
+    public EventEntry lastEntry() { return entry(end - 1); }
+
+    @Override
+    public EventEntry floorEntry(long key) { return entry(bound(key, true) - 1); }
+
+    @Override
+    public EventEntry ceilingEntry(long key) { return entry(bound(key, false)); }
+
+    @Override
+    public EventEntry lowerEntry(long key) { return entry(bound(key, false) - 1); }
+
+    @Override
+    public EventEntry higherEntry(long key) { return entry(bound(key, true)); }
+
+    @Override
+    public java.util.Iterator<EventEntry> iterator() { return entrySet().iterator(); }
 }

@@ -194,4 +194,39 @@ public class EventListTest {
 		assertNotNull(populatedList.get(5));
 		assertNull(populatedList.get(7));
 	}
+
+    @Test
+    public void testRangeIterationAndBounds() {
+        IEventList list = createList(new int[] {2, 5, 8, 11});
+        IEventList view = list.subMap(5, true, 8);
+        java.util.List<Long> times = new java.util.ArrayList<>();
+        for (com.minres.scviewer.database.EventEntry e : view) times.add(e.timestamp);
+        assertArrayEquals(new Long[] {5L, 8L}, times.toArray(new Long[0]));
+        assertArrayEquals(new Long[] {5L}, getTimestamps(list.subMap(2, false, 5)));
+        assertArrayEquals(new Long[] {5L, 8L}, getTimestamps(view.subMap(2, true, 11)));
+        assertTrue(list.subMap(2, false, 2).isEmpty());
+        java.util.Iterator<?> iterator = view.iterator();
+        iterator.next();
+        try { iterator.remove(); org.junit.Assert.fail("Read-only iterator"); }
+        catch (UnsupportedOperationException expected) { }
+        assertEquals(4, list.size());
+    }
+
+    @Test
+    public void testEmptyNavigationAndUnsignedOrder() {
+        IEventList empty = new EventList();
+        assertNull(empty.firstEntry());
+        assertNull(empty.lastEntry());
+        assertNull(empty.floorEntry(5));
+        assertNull(empty.ceilingEntry(5));
+        assertNull(empty.lowerEntry(5));
+        assertNull(empty.higherEntry(5));
+        EventList list = new EventList();
+        list.put(Long.MIN_VALUE, null);
+        list.put(Long.MAX_VALUE, null);
+        assertEquals(Long.MAX_VALUE, list.firstKey());
+        assertNotNull(list.get(Long.MIN_VALUE));
+        assertNotNull(list.get(Long.MAX_VALUE));
+        assertNull(list.subMap(0, true, 1).floorEntry(20));
+    }
 }
