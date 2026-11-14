@@ -106,11 +106,13 @@ public class SignalPainter extends TrackPainter {
 		EventEntry first = signal.getEvents().floorEntry(beginTime);
 		if (first == null)
 			first = signal.getEvents().firstEntry();
+		if (first == null) return;
 		beginTime = first.timestamp;
 		proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 		proj.setLineStyle(SWT.LINE_SOLID);
 		proj.setLineWidth(1);
 		IEventList entries = signal.getEvents().subMap(beginTime, true, endTime);
+		if (entries.isEmpty()) return;
 		SignalChange left = new SignalChange(entries.firstEntry());
 		SignalChange right = new SignalChange(entries.size() > 1 ? entries.higherEntry(left.time) : entries.firstEntry());
 		maxPosX = area.x + area.width;
