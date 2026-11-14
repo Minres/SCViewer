@@ -41,9 +41,9 @@ public class ArrowPainter implements IPainter {
 
 	private ITx tx;
 
-	private List<LinkEntry> iRect;
+	private List<LinkEntry> iRect = new LinkedList<>();
 
-	private List<LinkEntry> oRect;
+	private List<LinkEntry> oRect = new LinkedList<>();
 
 	private Rectangle txRectangle;
 
@@ -56,7 +56,7 @@ public class ArrowPainter implements IPainter {
 	public ArrowPainter(WaveformCanvas waveCanvas, RelationType relationType) {
 		this.waveCanvas = waveCanvas;
 		highlightType=relationType;
-		setTx(null);
+		updateSelection();
 	}
 
 	public RelationType getHighlightType() {
@@ -71,10 +71,8 @@ public class ArrowPainter implements IPainter {
 		return tx;
 	}
 
-	public void setTx(ITx newTx) {
-		this.tx = newTx;
-		iRect = new LinkedList<>();
-		oRect = new LinkedList<>();
+	public void updateSelection() {
+		tx = waveCanvas.currentSelectedTx;
 		scaleFactor = waveCanvas.getScale();
 		if (tx != null) {
 			calculateGeometries();
@@ -83,16 +81,18 @@ public class ArrowPainter implements IPainter {
 
 	private int getConcurrencyIndex(ITx tx) {
 		IEvent[] eventList = tx.getStream().getEventsBeforeTime(tx.getBeginTime());
-		Optional<Integer> res = Arrays.stream(eventList).map(e -> ((ITxEvent)e).getRowIndex()).findFirst();
+		Optional<Integer> res = Arrays.stream(eventList).filter(e -> ((ITxEvent)e).getTransaction()== tx).map(e -> ((ITxEvent)e).getRowIndex()).findFirst();
 		if(res.isPresent() && res.get()>0) {
 			return res.get();
 		} else 			
 			return 0;
 	}
 	
-	private Rectangle getBoundingBox(IWaveformPainter painter, ITx itx) {
-		int laneHeight = painter.getHeight() / itx.getStream().getRowCount();
-		int laneOffset = laneHeight * getConcurrencyIndex(itx);
+	private Rectangle getBoundingBox(IWaveformPainter painter, ITx itx, IWaveform stream) {
+		int laneHeight = painter.getHeight() / stream.getRowCount();
+		//TODO: it needs to take the concurrency index within the current waveform (stream or generator) into account
+		int concIdx=getConcurrencyIndex(itx);
+		int laneOffset = laneHeight * (concIdx>=stream.getRowCount()?stream.getRowCount()-1:concIdx);
 		int rulerHeight = waveCanvas.rulerHeight;
 		Rectangle bb = new Rectangle((int) (itx.getBeginTime() / scaleFactor),
 				rulerHeight + painter.getVerticalOffset() + laneOffset,
@@ -103,14 +103,17 @@ public class ArrowPainter implements IPainter {
 	protected boolean calculateGeometries() {
 		iRect.clear();
 		oRect.clear();
-		IWaveformPainter painter = waveCanvas.wave2painterMap.get(tx.getStream());
+		IWaveformPainter painter = null;
+		if(waveCanvas.currentSelectedTrack != null)
+			painter = waveCanvas.trackAreaPainter.getPainterFor(waveCanvas.currentSelectedTrack);
 		if(painter == null)
 			painter = waveCanvas.wave2painterMap.get(tx.getGenerator());
-		if (painter == null) { // stream has been added but painter not yet
-								// created
+		if(painter==null)
+			painter = waveCanvas.wave2painterMap.get(tx.getStream());
+		if (painter == null) { // stream has been added but painter not yet created
 			return true;
 		}
-		Rectangle bb = getBoundingBox(painter, tx);
+		Rectangle bb = getBoundingBox(painter, tx, painter instanceof StreamPainter? ((StreamPainter)painter).getStream() : tx.getStream());
 		txRectangle = bb;
 		deriveGeom(tx.getIncomingRelations(), iRect, false);
 		deriveGeom(tx.getOutgoingRelations(), oRect, true);
@@ -120,13 +123,15 @@ public class ArrowPainter implements IPainter {
 	protected void deriveGeom(Collection<ITxRelation> relations, List<LinkEntry> res, boolean useTarget) {
 		for (ITxRelation iTxRelation : relations) {
 			ITx otherTx = useTarget ? iTxRelation.getTarget() : iTxRelation.getSource();
-			if(otherTx!=null && otherTx.getBeginTime()>=0) 
-				for(IWaveform iWaveform: new IWaveform[]{otherTx.getStream(), otherTx.getGenerator()}) {
+			if (otherTx != null && otherTx.getBeginTime() >= 0)
+				for (IWaveform iWaveform : new IWaveform[] { otherTx.getStream(), otherTx.getGenerator() }) {
 					if (waveCanvas.wave2painterMap.containsKey(iWaveform)) {
 						IWaveformPainter painter = waveCanvas.wave2painterMap.get(iWaveform);
-						if(painter!=null) {
-							Rectangle bb = getBoundingBox(painter, otherTx);
-							res.add(new LinkEntry(bb, iTxRelation.getRelationType()));				
+						if (painter != null) {
+							Rectangle bb = getBoundingBox(painter, otherTx,
+									painter instanceof StreamPainter ? ((StreamPainter) painter).getStream()
+											: otherTx.getStream());
+							res.add(new LinkEntry(bb, iTxRelation.getRelationType()));
 						}
 					}
 				}

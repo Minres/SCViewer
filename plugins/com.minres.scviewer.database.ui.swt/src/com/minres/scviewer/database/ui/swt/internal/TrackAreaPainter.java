@@ -10,12 +10,14 @@
  *******************************************************************************/
 package com.minres.scviewer.database.ui.swt.internal;
 
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
 
+import com.minres.scviewer.database.ui.TrackEntry;
 import com.minres.scviewer.database.ui.WaveformColors;
 
 public class TrackAreaPainter implements IPainter {
@@ -60,6 +62,14 @@ public class TrackAreaPainter implements IPainter {
 		}
 	}
 
+	public IWaveformPainter getPainterFor(TrackEntry e) {
+		for (Entry<Integer,IWaveformPainter> entry : trackVerticalOffset.entrySet()) {
+			if(entry.getValue().getTrackEntry() == e)
+				return entry.getValue();
+		}
+		return null;
+	}
+	
 	public void addTrackPainter(IWaveformPainter trackPainter){
 		trackVerticalOffset.put(trackPainter.getVerticalOffset()+waveCanvas.rulerHeight, trackPainter);
 

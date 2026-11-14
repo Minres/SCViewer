@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -72,13 +74,15 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	protected List<IPainter> painterList;
 
-	ITx currentSelection;
+	ITx currentSelectedTx;
+	
+	TrackEntry currentSelectedTrack;
 
 	private List<SelectionAdapter> selectionListeners;
 
 	private RulerPainter rulerPainter;
 
-	private TrackAreaPainter trackAreaPainter;
+	TrackAreaPainter trackAreaPainter;
 
 	private ArrowPainter arrowPainter;
 
@@ -214,8 +218,9 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			factor=maxFactor;
 		if(factor!=getScale() || (getMaxVisibleTime()+getMinVisibleTime()/2) != centerTime) {
 			updateScaleFactor(factor);
-			ITx tx = arrowPainter.getTx();
-			arrowPainter.setTx(null);
+			ITx tx = currentSelectedTx;
+			currentSelectedTx=null;
+			arrowPainter.updateSelection();
 			/*
 			 * xc = tc/oldScaleFactor
 			 * xoffs = xc+origin.x
@@ -231,7 +236,8 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 				origin.x=0;
 			}
 			syncSb();
-			arrowPainter.setTx(tx);    		
+			currentSelectedTx=tx;
+			arrowPainter.updateSelection();    		
 			redraw();
 		}
 	}
@@ -451,13 +457,19 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		return result;
 	}
 
-	public void setSelected(ITx currentSelection) {
-		this.currentSelection = currentSelection;
-		if (currentSelection != null)
-			reveal(currentSelection);
-		arrowPainter.setTx(currentSelection);
-		if(!isDisposed())
-			redraw();
+	public void setSelected(ISelection selection) {
+		if(selection instanceof IStructuredSelection) {
+			IStructuredSelection structuredSelection = (IStructuredSelection)selection;
+			Object[] selList = structuredSelection.toArray();
+			currentSelectedTrack = (selList.length> 1 &&  selList[1] instanceof TrackEntry) ? (TrackEntry) selList[1] : null;
+			currentSelectedTx = (selList.length> 0 &&  selList[0] instanceof ITx)? (ITx) selList[0] : null;
+			if(currentSelectedTx != null)
+				reveal(currentSelectedTx);
+			if(currentSelectedTrack!=null && currentSelectedTx!=null)
+				arrowPainter.updateSelection();
+			if(!isDisposed())
+				redraw();
+		}
 	}
 
 	public void reveal(ITx tx) {
@@ -471,19 +483,29 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 		} else if (higher > (size.x - origin.x)) {
 			setOrigin(size.x - higher, origin.y);
 		}
-		for (IWaveformPainter painter : wave2painterMap.values()) {
-			if (painter instanceof StreamPainter && ((StreamPainter) painter).getStream() == tx.getStream()) {
-				EventEntry entry = tx.getStream().getEvents().floorEntry(tx.getBeginTime());
-				Optional<IEvent> res = Arrays.stream(entry.events).filter(e -> ((ITxEvent)e).getTransaction().equals(tx)).findFirst();
-				if(res.isPresent()) {
-					int top = painter.getVerticalOffset() + styleProvider.getTrackHeight() * ((ITxEvent)res.get()).getRowIndex();
-					int bottom = top + styleProvider.getTrackHeight();
-					if (top < -origin.y) {
-						setOrigin(origin.x, -(top-styleProvider.getTrackHeight()));
-					} else if (bottom > (size.y - origin.y)) {
-						setOrigin(origin.x, size.y - bottom);
-					}
+		if(currentSelectedTrack != null) {
+			EventEntry entry = currentSelectedTrack.waveform.getEvents().floorEntry(tx.getBeginTime());
+			IWaveformPainter painter = trackAreaPainter.getPainterFor(currentSelectedTrack);
+			if (painter != null && painter instanceof StreamPainter)
+				reveal(tx, size, painter, entry);
+		} else
+			for (IWaveformPainter painter : wave2painterMap.values()) {
+				if (painter instanceof StreamPainter && ((StreamPainter) painter).getStream() == tx.getStream()) {
+					EventEntry entry = tx.getStream().getEvents().floorEntry(tx.getBeginTime());
+					reveal(tx, size, painter, entry);
 				}
+			}
+	}
+
+	private void reveal(ITx tx, Point size, IWaveformPainter painter, EventEntry entry) {
+		Optional<IEvent> res = Arrays.stream(entry.events).filter(e -> ((ITxEvent)e).getTransaction().equals(tx)).findFirst();
+		if(res.isPresent()) {
+			int top = painter.getVerticalOffset() + styleProvider.getTrackHeight() * ((ITxEvent)res.get()).getRowIndex();
+			int bottom = top + styleProvider.getTrackHeight();
+			if (top < -origin.y) {
+				setOrigin(origin.x, -(top-styleProvider.getTrackHeight()));
+			} else if (bottom > (size.y - origin.y)) {
+				setOrigin(origin.x, size.y - bottom);
 			}
 		}
 	}

@@ -82,7 +82,7 @@ public class StreamPainter extends TrackPainter{
         for (ITxEvent event : getIntervalIndex().overlapping(beginTime, endTime)) {
             ITx tx = event.getTransaction();
             drawTx(proj, area, tx, event.getRowIndex(), false);
-            if (waveCanvas.currentSelection != null && waveCanvas.currentSelection.getId() == tx.getId())
+            if (waveCanvas.currentSelectedTx != null && waveCanvas.currentSelectedTx.getId() == tx.getId())
                 highlighted = event;
         }
         if (highlighted != null) {
