@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: SCViewer application tests
 Bundle-SymbolicName: com.minres.scviewer.e4.application.test
-Bundle-Version: 2.19.6
+Bundle-Version: 2.20.0
 Fragment-Host: com.minres.scviewer.e4.application
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.junit
