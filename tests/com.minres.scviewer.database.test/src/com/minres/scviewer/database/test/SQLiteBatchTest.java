@@ -21,6 +21,25 @@ public class SQLiteBatchTest {
     }
 
     @Test
+    public void concurrentAttributeReadersShareOneCompletedLoad() throws Exception {
+        Database database = new Database();
+        ScvStream row = new ScvStream(); row.setId(1); row.setName("test"); row.setKind("test");
+        TxStream stream = new TxStream(database, row);
+        ITx transaction = stream.getTransactionList().get(0);
+        int before = database.connections;
+        java.util.concurrent.ExecutorService workers = java.util.concurrent.Executors.newFixedThreadPool(8);
+        java.util.concurrent.CountDownLatch start = new java.util.concurrent.CountDownLatch(1);
+        try {
+            java.util.List<java.util.concurrent.Future<java.util.List<com.minres.scviewer.database.tx.ITxAttribute>>> results = new java.util.ArrayList<>();
+            for (int i = 0; i < 8; i++) results.add(workers.submit(() -> { start.await(); return transaction.getAttributes(); }));
+            start.countDown();
+            java.util.List<com.minres.scviewer.database.tx.ITxAttribute> attributes = results.get(0).get(5, java.util.concurrent.TimeUnit.SECONDS);
+            for (java.util.concurrent.Future<?> result : results) assertSame(attributes, result.get(5, java.util.concurrent.TimeUnit.SECONDS));
+            assertEquals(before + 1, database.connections);
+        } finally { workers.shutdownNow(); }
+    }
+
+    @Test
     public void loadsAllTimesInOneQueryAndSharesGeneratorTransactions() {
         Database database = new Database();
         ScvStream row = new ScvStream();row.setId(1);row.setName("test");row.setKind("test");

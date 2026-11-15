@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 
 import com.minres.scviewer.database.RelationType;
 import com.minres.scviewer.database.RelationTypeFactory;
-import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.ui.WaveformSelection;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.parts.PartListener;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
@@ -130,14 +130,11 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 	 */
 	protected void checkSelection(ISelection selection) {
 		if (disposed || comboViewer == null || comboViewer.getCombo().isDisposed()) return;
-		if( selection instanceof IStructuredSelection) {
-			Object object= ((IStructuredSelection)selection).getFirstElement();			
-			if(object instanceof ITx && waveformViewerPart!=null){
-				comboViewer.getCombo().setEnabled(true);
-				comboViewer.setInput(waveformViewerPart.getSelectionRelationTypes());//getAllRelationTypes());
-			    comboViewer.setSelection(new StructuredSelection(waveformViewerPart.getRelationTypeFilter()));
-			    return;
-			}
+		if (WaveformSelection.from(selection).transaction() != null && waveformViewerPart != null) {
+			comboViewer.getCombo().setEnabled(true);
+			comboViewer.setInput(waveformViewerPart.getSelectionRelationTypes());
+			comboViewer.setSelection(new StructuredSelection(waveformViewerPart.getRelationTypeFilter()));
+			return;
 		}
 		if(comboViewer!=null && !comboViewer.getCombo().isDisposed()) comboViewer.getCombo().setEnabled(false);
 	}

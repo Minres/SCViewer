@@ -15,7 +15,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
-import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.WaveformSelection;
 
 public class TransactionListView {
 	private WaveformViewer waveformViewer;
@@ -60,20 +60,7 @@ public class TransactionListView {
 		MPart part = partService.getActivePart();
 		if( part == null || ! (part.getObject() instanceof WaveformViewer )  || part.getObject() != waveformViewer)
 			return;
-		if(selection==null || selection.isEmpty())
-			transactionList.setInput(null);	
-		else if(selection instanceof IStructuredSelection) {
-			TrackEntry e = findTrackEntry(selection.toArray());
-			if(e!=null)
-				transactionList.setInput(e);		
-		}
-	}
-
-	private TrackEntry findTrackEntry(Object[] elems) {
-		for(Object o: elems)
-			if(o instanceof TrackEntry)
-				return (TrackEntry)o;
-		return null;
+		transactionList.setInput(WaveformSelection.from(selection).track());
 	}
 
 	public TransactionList getControl() {

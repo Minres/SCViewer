@@ -54,6 +54,7 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
 import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.ui.WaveformSelection;
 import com.minres.scviewer.database.tx.ITxAttribute;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.parts.txTableTree.AbstractTransactionTreeContentProvider;
@@ -393,10 +394,8 @@ public class TransactionDetails {
 		MPart part = partService.getActivePart();
 		if( part == null || ! (part.getObject() instanceof WaveformViewer )  || part.getObject() != waveformViewerPart)
 			return;
-		if(treeViewer!=null && selection!=null && !treeViewer.getTree().isDisposed() &&
-				selection instanceof IStructuredSelection && !selection.isEmpty()) {
-			setInput(selection.getFirstElement());		
-		}
+		if (treeViewer != null && !treeViewer.getTree().isDisposed())
+			setInput(WaveformSelection.from(selection).transaction());
 	}
 }
 

@@ -34,6 +34,17 @@ public class TxFilterTest {
     }
 
     @Test
+    public void backgroundFilterSnapshotIsUnaffectedBySubsequentUiEdits() {
+        TxFilter filter = new TxFilter();
+        filter.setSearchProp("text", DataType.STRING);
+        filter.setSearchValue("old");
+        java.util.function.Predicate<ITx> snapshot = filter.snapshot();
+        filter.setSearchValue("new");
+        assertTrue(snapshot.test(transaction("text", "old")));
+        assertFalse(snapshot.test(transaction("text", "new")));
+    }
+
+    @Test
     public void booleanValuesCanBeMatchedWithoutAStringCast() {
         TxFilter filter = new TxFilter();
         filter.setSearchProp("flag", DataType.BOOLEAN);

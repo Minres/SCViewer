@@ -12,6 +12,11 @@
 package com.minres.scviewer.database.text;
 
 
+import java.util.List;
+import com.minres.scviewer.database.LazyValue;
+import com.minres.scviewer.database.tx.ITx;
+import com.minres.scviewer.database.tx.TransactionLists;
+import com.minres.scviewer.database.tx.ITransactionProvider;
 import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventList;
 import com.minres.scviewer.database.HierNode;
@@ -25,7 +30,22 @@ import com.minres.scviewer.database.tx.ITxEvent;
 /**
  * The Class AbstractTxStream.
  */
-abstract class AbstractTxStream extends HierNode implements IWaveform {
+abstract class AbstractTxStream extends HierNode implements IWaveform, ITransactionProvider {
+
+    private final LazyValue<List<ITx>> transactionList = new LazyValue<>();
+
+    @Override
+    public List<ITx> getTransactionList() {
+        return transactionList.get(() -> TransactionLists.fromEvents(getEvents(), () -> false));
+    }
+
+    @Override
+    public ITx getTransaction(long id) {
+        ITx transaction;
+        try { transaction = loader.getTransaction(id); }
+        catch (IllegalArgumentException missing) { return null; }
+        return transaction != null && (transaction.getStream() == this || transaction.getGenerator() == this) ? transaction : null;
+    }
 
 	private final String fullName;
 

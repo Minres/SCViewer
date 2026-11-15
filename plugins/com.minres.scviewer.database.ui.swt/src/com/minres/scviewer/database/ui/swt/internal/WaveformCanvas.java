@@ -19,7 +19,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -46,6 +45,7 @@ import com.minres.scviewer.database.ui.IWaveformStyleProvider;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.WaveformSelection;
 import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.database.ui.swt.Constants;
 import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
@@ -458,17 +458,12 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	}
 
 	public void setSelected(ISelection selection) {
-		if(selection instanceof IStructuredSelection) {
-			IStructuredSelection structuredSelection = (IStructuredSelection)selection;
-			Object[] selList = structuredSelection.toArray();
-			currentSelectedTrack = (selList.length> 1 &&  selList[1] instanceof TrackEntry) ? (TrackEntry) selList[1] : null;
-			currentSelectedTx = (selList.length> 0 &&  selList[0] instanceof ITx)? (ITx) selList[0] : null;
-			if(currentSelectedTx != null)
-				reveal(currentSelectedTx);
-			arrowPainter.updateSelection();
-			if(!isDisposed())
-				redraw();
-		}
+		WaveformSelection selected = WaveformSelection.from(selection);
+		currentSelectedTrack = selected.track();
+		currentSelectedTx = selected.transaction();
+		if (currentSelectedTx != null) reveal(currentSelectedTx);
+		arrowPainter.updateSelection();
+		if (!isDisposed()) redraw();
 	}
 
 	public void reveal(ITx tx) {

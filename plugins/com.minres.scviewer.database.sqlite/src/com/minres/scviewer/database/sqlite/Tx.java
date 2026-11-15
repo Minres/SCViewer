@@ -88,7 +88,7 @@ public class Tx implements ITx {
     public long getEndTime() { return end; }
 
 	@Override
-	public List<ITxAttribute> getAttributes() {
+	public synchronized List<ITxAttribute> getAttributes() {
 		if(attributes==null){
 			SQLiteDatabaseSelectHandler<ScvTxAttribute> handler = new SQLiteDatabaseSelectHandler<>(
 					ScvTxAttribute.class, database, "tx="+scvTx.getId());

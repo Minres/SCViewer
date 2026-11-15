@@ -91,6 +91,7 @@ import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformZoom;
 import com.minres.scviewer.database.ui.IWaveformviewEventListener;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.WaveformSelection;
 import com.minres.scviewer.database.ui.TrackEntry.HierState;
 import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
 
@@ -806,12 +807,7 @@ public class WaveformView implements IWaveformView {
 	 */
 	@Override
 	public ISelection getSelection() {
-		ArrayList<Object> sel = new ArrayList<>();
-		if (currentTxSelection != null) {
-			sel.add(currentTxSelection);
-		}
-		sel.addAll(currentWaveformSelection);
-		return new StructuredSelection(sel.toArray());
+		return new WaveformSelection(currentTxSelection, currentWaveformSelection).toSelection();
 	}
 
 	/*
@@ -851,62 +847,38 @@ public class WaveformView implements IWaveformView {
 	}
 
 	public void setSelection(ISelection selection, boolean add, boolean addIfNeeded) {
-		boolean selectionChanged = false;
-		currentWaveformSelection.forEach(e -> {if(e!=null) e.selected = false;});
-		if (selection instanceof IStructuredSelection) {
-			IStructuredSelection sel = (IStructuredSelection) selection;
-			if (sel.size() == 0) {
-				selectionChanged = currentTxSelection != null || currentWaveformSelection != null;
-				currentTxSelection = null;
-				currentWaveformSelection.clear();
-			} else {
-				if (!add)
-					currentWaveformSelection.clear();
-				List<?> selList = sel.toList();
-				for(Object o: selList) {
-					if (o instanceof ITx) {
-						ITx txSel = (ITx) o;
-						TrackEntry trackEntry = selList.size() == 2 && selList.get(1) instanceof TrackEntry
-								? (TrackEntry) selList.get(1)
-										: null;
-						if (trackEntry == null) {
-							trackEntry = getEntryFor(txSel);
-							if (trackEntry == null && addIfNeeded) {
-								IWaveform stream = txSel.getStream();
-								Optional<TrackEntry> te = streams.stream().filter(e -> stream.equals(e.waveform)).findFirst();
-								if (te.isEmpty()) { // add stream only if really needed
-									trackEntry = new TrackEntry(txSel.getStream(), styleProvider);
-									streams.add(trackEntry);
-								}
-							}
-						}
-						currentTxSelection = txSel;
-						currentWaveformSelection.clear();
-						currentWaveformSelection.add(trackEntry);
-						selectionChanged = true;
-					} else if (o instanceof TrackEntry) {
-						TrackEntry e = (TrackEntry)o;
-						if(!currentWaveformSelection.contains(e))
-							currentWaveformSelection.add(e);
-						selectionChanged = true;
-					}
-					
+		WaveformSelection requested = WaveformSelection.from(selection);
+		currentWaveformSelection.forEach(e -> e.selected = false);
+		if (!add || (requested.transaction() == null && requested.tracks().isEmpty())) {
+			currentWaveformSelection.clear();
+			currentTxSelection = null;
+		}
+		if (requested.transaction() != null) {
+			ITx transaction = requested.transaction();
+			TrackEntry track = requested.track();
+			if (track == null) track = getEntryFor(transaction);
+			if (track == null && addIfNeeded) {
+				track = getEntryFor(transaction.getStream());
+				if (track == null) {
+					track = new TrackEntry(transaction.getStream(), styleProvider);
+					streams.add(track);
 				}
 			}
-		} else {
-			if (currentTxSelection != null || !currentWaveformSelection.isEmpty())
-				selectionChanged = true;
-			currentTxSelection = null;
 			currentWaveformSelection.clear();
+			if (track != null) currentWaveformSelection.add(track);
+			currentTxSelection = track == null ? null : transaction;
+		} else {
+			for (TrackEntry track : requested.tracks())
+				if (!currentWaveformSelection.contains(track)) currentWaveformSelection.add(track);
 		}
-		currentWaveformSelection.forEach(e -> {if(e!=null)e.selected = true;});
-		if (selectionChanged) {
-			currentWaveformSelection.forEach(e -> waveformCanvas.reveal(e.waveform));
-			waveformCanvas.setSelected(getSelection());
-			valueList.redraw();
-			nameList.redraw();
-			fireSelectionChanged();
-		}
+		currentWaveformSelection.forEach(e -> {
+			e.selected = true;
+			waveformCanvas.reveal(e.waveform);
+		});
+		waveformCanvas.setSelected(getSelection());
+		valueList.redraw();
+		nameList.redraw();
+		fireSelectionChanged();
 	}
 
 	protected void fireSelectionChanged() {

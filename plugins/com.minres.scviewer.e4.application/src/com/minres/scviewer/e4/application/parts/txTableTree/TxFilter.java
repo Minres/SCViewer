@@ -57,6 +57,14 @@ public class TxFilter extends ViewerFilter {
 		}
 	}
 
+    /** A worker receives an independent filter, never mutable UI state. */
+    public java.util.function.Predicate<ITx> snapshot() {
+        TxFilter copy = new TxFilter();
+        copy.setSearchProp(searchProp, searchType);
+        copy.setSearchValue(searchValue);
+        return transaction -> copy.select(null, null, transaction);
+    }
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -70,6 +78,7 @@ public class TxFilter extends ViewerFilter {
 		else if(element instanceof TransactionTreeNode && ((TransactionTreeNode)element).type == TransactionTreeNodeType.TX)
 			iTx = ((TransactionTreeNode)element).element;
 		if(iTx==null) return true;
+		if (searchProp == null || searchType == null) return true;
 		List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> searchProp.equals(a.getName())).collect(Collectors.toList());
 		if(res.size()==1) {
 			try {

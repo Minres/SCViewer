@@ -11,16 +11,12 @@
 package com.minres.scviewer.e4.application.parts;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.nio.file.Path;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,7 +72,6 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.EmptyWaveform;
-import com.minres.scviewer.database.IHierNode;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbFactory;
@@ -91,18 +86,17 @@ import com.minres.scviewer.database.ui.ICursor;
 import com.minres.scviewer.database.ui.IWaveformView;
 import com.minres.scviewer.database.ui.IWaveformviewEventListener;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.WaveformSelection;
 import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.database.ui.swt.Constants;
 import com.minres.scviewer.database.ui.swt.IToolTipContentProvider;
 import com.minres.scviewer.database.ui.swt.IToolTipHelpTextProvider;
 import com.minres.scviewer.database.ui.swt.WaveformViewFactory;
 import com.minres.scviewer.e4.application.AppModelId;
+import com.minres.scviewer.e4.application.internal.util.ViewerSettings;
+import com.minres.scviewer.e4.application.internal.util.DatabaseSessionManager;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl;
-import com.minres.scviewer.e4.application.internal.util.DatabaseLoadSession;
-import com.minres.scviewer.e4.application.internal.util.FileMonitor;
-import com.minres.scviewer.e4.application.internal.util.IFileChangeListener;
-import com.minres.scviewer.e4.application.internal.util.IModificationChecker;
 import com.minres.scviewer.e4.application.preferences.PreferenceConstants;
 
 /**
@@ -115,42 +109,6 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 
 	/** The Constant ADD_WAVEFORM. */
 	public static final String ADD_WAVEFORM = "AddWaveform"; //$NON-NLS-1$
-
-	/** The Constant DATABASE_FILE. */
-	protected static final String DATABASE_FILE = "DATABASE_FILE"; //$NON-NLS-1$
-
-	/** The Constant SHOWN_WAVEFORM. */
-	protected static final String SHOWN_WAVEFORM = "SHOWN_WAVEFORM"; //$NON-NLS-1$
-
-	protected static final String WAVEFORM_TYPE = ".WAVEFORM_TYPE"; //$NON-NLS-1$
-
-	protected static final String VALUE_DISPLAY = ".VALUE_DISPLAY"; //$NON-NLS-1$
-
-	protected static final String WAVE_DISPLAY = ".WAVE_DISPLAY"; //$NON-NLS-1$
-
-	/** The Constant SHOWN_CURSOR. */
-	protected static final String SHOWN_CURSOR = "SHOWN_CURSOR"; //$NON-NLS-1$
-
-	/** The Constant ZOOM_LEVEL. */
-	protected static final String SCALING_FACTOR = "SCALING_FACTOR"; //$NON-NLS-1$
-
-	/** The Constant BASE_LINE_TIME. */
-	protected static final String BASE_LINE_TIME = "BASE_LINE_TIME"; //$NON-NLS-1$
-
-	/** The Constant SELECTED_TX_ID. */
-	protected static final String SELECTED_TX_ID = "SELECTED_TX_ID"; //$NON-NLS-1$
-
-	/** The Constant SELECTED_TRACKENTRY_NAME. */
-	protected static final String SELECTED_TRACKENTRY_NAME = "SELECTED_TRACKENTRY_NAME"; //$NON-NLS-1$
-
-	/** The Constant WAVEFORM_SELECTED. */
-	protected static final String WAVEFORM_SELECTED = ".WAVEFORM_SELECTED"; //$NON-NLS-1$
-
-	/** The Constant FILE_CHECK_INTERVAL. */
-	protected static final long FILE_CHECK_INTERVAL = 60000;
-
-	/** The Constant TX_DETAILS_SHOWN. */
-	protected static final String TX_DETAILS_SHOWN = "TX_DETAILS_SHOWN"; //$NON-NLS-1$
 
 	/** The Constant ID. */
 	public static final String ID = "com.minres.scviewer.ui.TxEditorPart"; //$NON-NLS-1$
@@ -198,25 +156,15 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 
 	IEclipsePreferences store = null;
 
-	/** The database. */
-	private IWaveformDb database;
-
-	private volatile DatabaseLoadSession loadSession;
+	private DatabaseSessionManager sessions;
 
 	private volatile boolean disposed;
 
-	private boolean loadingDatabase;
-
-	/** The check for updates. */
-	private volatile boolean checkForUpdates;
+	private boolean checkForUpdates;
 
 	private IEclipsePreferences observedPreferences;
 
 	private PartListener partListener;
-
-	private IFileChangeListener fileChangeListener;
-
-	private long fileWatchGeneration;
 
 	/** The my part. */
 	@Inject private MPart myPart;
@@ -241,11 +189,6 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	/** The navigation relation type. */
 	private RelationType navigationRelationType=IWaveformView.NEXT_PREV_IN_STREAM ;
 
-	/** The file monitor. */
-	FileMonitor fileMonitor = new FileMonitor();
-
-	/** The file checker. */
-	IModificationChecker fileChecker;
 
 	@Inject IWaveformDbFactory dbFactory;
 
@@ -276,12 +219,14 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		myParent = parent;
 		store=prefs;
 		showHover=hover;
-		database = dbFactory.getDatabase();
+		sessions = new DatabaseSessionManager(dbFactory, task -> sync.asyncExec(task),
+				db -> { if (!isViewerDisposed()) waveformPane.setMaxTime(db.getMaxTime()); },
+				db -> { if (!isViewerDisposed() && confirmReload()) reloadDatabase(); }, 60000);
 		parent.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 		IEclipseContext ctx = myPart.getContext();
 		ctx.set(WaveformViewer.class, this);
-		ctx.set(IWaveformDb.class, database);
+		ctx.set(IWaveformDb.class, getDatabase());
 
 		topSash = new SashForm(parent, SWT.BORDER | SWT.SMOOTH | SWT.HORIZONTAL);
 		Composite left = new Composite(topSash, SWT.NONE);
@@ -390,6 +335,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		});
 
 		checkForUpdates = store.getBoolean(PreferenceConstants.DATABASE_RELOAD, true);
+		sessions.setReloadEnabled(checkForUpdates);
 		filesToLoad = new ArrayList<>();
 		persistedState = part.getPersistedState();
 		try {
@@ -406,8 +352,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 			@Override
 			public void partActivated(MPart part) {
 				if (part == myPart && !disposed) {
-					if (fileChecker != null)
-						fileChecker.check();
+					sessions.checkFiles();
 					updateAll();
 				}
 			}
@@ -515,8 +460,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	public void closeDatabase() {
 		if (disposed) return;
 		disposed = true;
-		stopFileMonitoring();
-		fileMonitor.dispose();
+		if (sessions != null) sessions.close();
 		if (observedPreferences != null) {
 			observedPreferences.removePreferenceChangeListener(this);
 			observedPreferences = null;
@@ -525,8 +469,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 			ePartService.removePartListener(partListener);
 			partListener = null;
 		}
-		fileChecker = null;
-		if (loadSession != null) loadSession.close();
+
 	}
 	
 	@Inject
@@ -555,7 +498,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	@Optional
 	public void reactOnReloadDatabaseChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.DATABASE_RELOAD) Boolean enabled) {
 		checkForUpdates = Boolean.TRUE.equals(enabled);
-		if (!disposed && waveformPane != null) sync.asyncExec(this::startFileMonitoring);
+		if (!disposed && sessions != null) sync.asyncExec(() -> sessions.setReloadEnabled(checkForUpdates));
 	}
 
 	protected boolean isViewerDisposed() {
@@ -564,34 +507,6 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 
 	protected boolean confirmReload() {
 		return MessageDialog.openQuestion(myParent.getShell(), Messages.WaveformViewer_17, Messages.WaveformViewer_18);
-	}
-
-	private void stopFileMonitoring() {
-		++fileWatchGeneration;
-		if (fileChangeListener != null) fileMonitor.removeFileChangeListener(fileChangeListener);
-		fileChangeListener = null;
-		fileChecker = null;
-	}
-
-	private void startFileMonitoring() {
-		stopFileMonitoring();
-		if (disposed || loadingDatabase || !checkForUpdates || database == null || !database.isLoaded()
-				|| loadSession == null || loadSession.isCancelled()) return;
-		final long generation = fileWatchGeneration;
-		final DatabaseLoadSession requestedSession = loadSession;
-		fileChangeListener = files -> sync.asyncExec(() -> {
-			if (isViewerDisposed() || !checkForUpdates
-					|| loadSession != requestedSession || generation != fileWatchGeneration) return;
-			stopFileMonitoring();
-			boolean reload = false;
-			try {
-				reload = confirmReload();
-			} finally {
-				if (!reload && loadSession == requestedSession) startFileMonitoring();
-			}
-			if (reload && !disposed && loadSession == requestedSession) reloadDatabase();
-		});
-		fileChecker = fileMonitor.addFileChangeListener(fileChangeListener, List.copyOf(filesToLoad), FILE_CHECK_INTERVAL);
 	}
 
 	/* (non-Javadoc)
@@ -613,53 +528,28 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 
 	protected void loadDatabase(final Map<String, String> state, long delay) {
 		if (disposed) return;
-		stopFileMonitoring();
-		if (loadSession != null) {
-			setSelection(null);
-			loadSession.close();
-			waveformPane.getStreamList().clear();
-			waveformPane.update();
-			database = dbFactory.getDatabase();
-		}
-		loadingDatabase = true;
-		final IWaveformDb requestedDatabase = database;
-		final List<File> requestedFiles = List.copyOf(filesToLoad);
+		setSelection(null);
+		waveformPane.getStreamList().clear();
+		waveformPane.update();
 		final Map<String, String> requestedState = state == null ? Map.of() : new HashMap<>(state);
 		final String requestedConfig = partConfig;
-		// An input configuration applies once; reloads preserve the current layout.
 		partConfig = "";
-		requestedDatabase.setName(requestedFiles.stream().map(File::getName).collect(java.util.stream.Collectors.joining(",")));
-		myPart.getContext().set(IWaveformDb.class, requestedDatabase);
-		loadSession = new DatabaseLoadSession(requestedDatabase, requestedFiles, event -> {
-			if (IHierNode.WAVEFORMS.equals(event.getPropertyName())
-					|| IHierNode.LOADING_FINISHED.equals(event.getPropertyName())) {
-				sync.asyncExec(() -> {
-					if (isCurrentDatabase(requestedDatabase))
-						waveformPane.setMaxTime(requestedDatabase.getMaxTime());
-				});
-			}
-		}, result -> sync.asyncExec(() -> {
-			if (!isCurrentDatabase(requestedDatabase)) return;
-			loadingDatabase = false;
+		IWaveformDb requested = sessions.load(filesToLoad, delay, result -> {
+			IWaveformDb current = sessions.database();
+			if (isViewerDisposed()) return;
 			if (!result.isOK()) {
 				MessageDialog.openWarning(myParent.getShell(), "Error loading database", result.getMessage());
 				ePartService.hidePart(myPart, true);
 				return;
 			}
-			waveformPane.setMaxTime(requestedDatabase.getMaxTime());
+			waveformPane.setMaxTime(current.getMaxTime());
 			if (!requestedState.isEmpty()) restoreWaveformViewerState(requestedState);
-			if (!isCurrentDatabase(requestedDatabase)) return;
+			if (isViewerDisposed() || !sessions.isCurrent(current)) return;
 			if (requestedConfig != null && !requestedConfig.isEmpty()) loadState(requestedConfig);
-			if (!isCurrentDatabase(requestedDatabase)) return;
-			if (designBrowser != null) designBrowser.setWaveformDb(requestedDatabase);
-			startFileMonitoring();
-		}));
-		loadSession.schedule(delay);
-	}
-
-	private boolean isCurrentDatabase(IWaveformDb requestedDatabase) {
-		return !disposed && !myParent.isDisposed() && database == requestedDatabase
-				&& loadSession != null && !loadSession.isCancelled();
+			if (isViewerDisposed() || !sessions.isCurrent(current)) return;
+			if (designBrowser != null) designBrowser.setWaveformDb(current);
+		});
+		myPart.getContext().set(IWaveformDb.class, requested);
 	}
 
 	public void reloadDatabase() {
@@ -704,44 +594,19 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	 */
 	@PersistState
 	public void saveState(MPart part) {
-		// save changes
-		Map<String, String> persistingState = part.getPersistedState();
-		persistingState.put(DATABASE_FILE + "S", Integer.toString(filesToLoad.size())); //$NON-NLS-1$
-		Integer index = 0;
-		for (File file : filesToLoad) {
-			persistingState.put(DATABASE_FILE + index, file.getAbsolutePath());
-			index++;
-		}
-		saveWaveformViewerState(persistingState);
+		captureSettings().replaceState(part.getPersistedState());
 	}
 
-	public void saveState(String fileName){
-		Map<String, String> persistingState = new HashMap<>();
-		persistingState.put(DATABASE_FILE + "S", Integer.toString(filesToLoad.size())); //$NON-NLS-1$
-		Integer index = 0;
-		for (File file : filesToLoad) {
-			persistingState.put(DATABASE_FILE + index, file.getAbsolutePath());
-			index++;
-		}
-		saveWaveformViewerState(persistingState);
-		Properties props = new Properties();
-		props.putAll(persistingState);
-
-		try (FileOutputStream out = new FileOutputStream(fileName)) {
-			props.store(out, "Written by SCViewer"); //$NON-NLS-1$
-		} catch (IOException e) {
+	public void saveState(String fileName) {
+		try { captureSettings().write(Path.of(fileName)); }
+		catch (IOException | IllegalArgumentException e) {
 			reportSettingsError("Cannot save settings", fileName + ": " + e.getMessage());
 		}
 	}
 
 	public void loadState(String fileName) {
-		try (FileInputStream in = new FileInputStream(fileName)) {
-			Properties props = new Properties();
-			props.load(in);
-			Map<String, String> state = new HashMap<>();
-			for (String key : props.stringPropertyNames()) state.put(key, props.getProperty(key));
-			applySettings(ViewerSettings.parse(state));
-		} catch (IOException | IllegalArgumentException e) {
+		try { applySettings(ViewerSettings.read(Path.of(fileName))); }
+		catch (IOException | IllegalArgumentException e) {
 			reportSettingsError("Cannot load settings", fileName + ": " + e.getMessage());
 		}
 	}
@@ -757,63 +622,22 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	 *
 	 * @param persistingState the persisted state
 	 */
-	protected void saveWaveformViewerState(Map<String, String> persistingState) {
-		persistingState.put(SHOWN_WAVEFORM + "S", Integer.toString(waveformPane.getStreamList().size())); //$NON-NLS-1$
-		Integer index = 0;
-		for (TrackEntry trackEntry : waveformPane.getStreamList()) {
-			persistingState.put(SHOWN_WAVEFORM + index, trackEntry.waveform.getFullName());
-			persistingState.put(SHOWN_WAVEFORM + index + WAVEFORM_TYPE, trackEntry.waveform.getType().toString());
-			persistingState.put(SHOWN_WAVEFORM + index + WAVEFORM_SELECTED, String.valueOf(trackEntry.selected).toUpperCase());
-			if (trackEntry.waveform.getType()!=WaveformType.EMPTY) {
-				persistingState.put(SHOWN_WAVEFORM + index + VALUE_DISPLAY, trackEntry.valueDisplay.toString());
-				persistingState.put(SHOWN_WAVEFORM + index + WAVE_DISPLAY, trackEntry.waveDisplay.toString());
-			}
-			index++;
-		}
-		List<ICursor> cursors = waveformPane.getCursorList();
-		persistingState.put(SHOWN_CURSOR + "S", Integer.toString(cursors.size())); //$NON-NLS-1$
-		index = 0;
-		for (ICursor cursor : cursors) {
-			persistingState.put(SHOWN_CURSOR + index, Long.toString(cursor.getTime()));
-			index++;
-		}
-		persistingState.put(SCALING_FACTOR, Long.toString(waveformPane.getWaveformZoom().getScale()));
-		persistingState.put(BASE_LINE_TIME, Long.toString(waveformPane.getWaveformZoom().getMinVisibleTime()));
-
-		persistingState.remove(SELECTED_TX_ID);
-		persistingState.remove(SELECTED_TRACKENTRY_NAME);
-		// get selected transaction	of a stream	
-		ISelection selection = waveformPane.getSelection();
-		if (!selection.isEmpty()) {
-			List<Object> sel = getISelection(selection);
-			if(sel.size()>1 && sel.get(0) instanceof ITx && sel.get(1) instanceof TrackEntry) {
-				ITx tx = (ITx) sel.get(0);
-				TrackEntry te = (TrackEntry) sel.get(1);
-				// get transaction id
-				persistingState.put(SELECTED_TX_ID, Long.toString(tx.getId()));
-				//get TrackEntry name
-				String name = te.waveform.getFullName();
-				persistingState.put(SELECTED_TRACKENTRY_NAME, name);
-			}
-		}
-		persistingState.put(TX_DETAILS_SHOWN, Boolean.toString(store.getBoolean(PreferenceConstants.SHOW_TX_DETAILS, false)));
+	protected void saveWaveformViewerState(Map<String, String> state) {
+		captureSettings().replaceState(state);
 	}
 
-	protected List<Object> getISelection(ISelection selection){
-		List<Object> result = new LinkedList<> ();
-
-		if ( selection instanceof IStructuredSelection ) {
-			Iterator<?> i = ((IStructuredSelection)selection).iterator();
-			while (i.hasNext()){
-				Object o = i.next ();
-				if (o == null) {
-					continue;
-				}
-				result.add(o);
-			}
-		}
-		return result;
-	}	
+	private ViewerSettings captureSettings() {
+		List<ViewerSettings.Track> tracks = waveformPane.getStreamList().stream()
+				.map(t -> new ViewerSettings.Track(t.waveform.getFullName(), t.waveform.getType(),
+						t.valueDisplay, t.waveDisplay, t.selected)).toList();
+		WaveformSelection selection = WaveformSelection.from(waveformPane.getSelection());
+		boolean selectedTransaction = selection.transaction() != null && selection.track() != null;
+		return new ViewerSettings(tracks, waveformPane.getCursorList().stream().map(ICursor::getTime).toList(),
+				waveformPane.getWaveformZoom().getScale(), waveformPane.getWaveformZoom().getMinVisibleTime(),
+				selectedTransaction ? selection.transaction().getId() : null,
+				selectedTransaction ? selection.track().waveform.getFullName() : null,
+				store.getBoolean(PreferenceConstants.SHOW_TX_DETAILS, false), List.copyOf(filesToLoad));
+	}
 
 	/**
 	 * Restore waveform viewer state.
@@ -838,7 +662,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		IWaveform selectedWaveform = null;
 		for (ViewerSettings.Track track : settings.tracks()) {
 			IWaveform waveform = track.type() == WaveformType.EMPTY ? new EmptyWaveform(track.name())
-					: ViewerSettings.resolveWaveform(database, track.name());
+					: ViewerSettings.resolveWaveform(getDatabase(), track.name());
 			if (waveform == null) {
 				missing.add(track.name());
 				continue;
@@ -870,7 +694,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		if (settings.detailsShown() != null) showTxDetails(settings.detailsShown());
 		waveformPane.update();
 		if (selectedTransaction != null && transactionTrack != null)
-			waveformPane.setSelection(new StructuredSelection(new Object[] {selectedTransaction, transactionTrack}));
+			waveformPane.setSelection(WaveformSelection.of(selectedTransaction, transactionTrack));
 		else waveformPane.setSelection(new StructuredSelection(selectedTracks));
 		updateAll();
 		if (!missing.isEmpty() && !disposed && !myParent.isDisposed())
@@ -957,7 +781,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	 * @return the database
 	 */
 	public IWaveformDb getDatabase() {
-		return database;
+		return sessions == null ? null : sessions.database();
 	}
 
 	/**
@@ -1149,7 +973,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	public List<RelationType> getAllRelationTypes() {
 		List<RelationType> res =new ArrayList<>();
 		res.add(IWaveformView.NEXT_PREV_IN_STREAM);
-		res.addAll(database.getAllRelationTypes());
+		res.addAll(getDatabase().getAllRelationTypes());
 		return res;
 	}
 
@@ -1161,20 +985,12 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	public List<RelationType> getSelectionRelationTypes() {
 		List<RelationType> res =new ArrayList<>();
 		res.add(IWaveformView.NEXT_PREV_IN_STREAM);
-		ISelection selection = waveformPane.getSelection();
-		if(selection instanceof IStructuredSelection && !selection.isEmpty()){
-			IStructuredSelection sel=(IStructuredSelection) selection;
-			if(sel.getFirstElement() instanceof ITx){
-				ITx tx = (ITx) sel.getFirstElement();
-				for(ITxRelation rel:tx.getIncomingRelations()){
-					if(!res.contains(rel.getRelationType()))
-						res.add(rel.getRelationType());
-				}
-				for(ITxRelation rel:tx.getOutgoingRelations()){
-					if(!res.contains(rel.getRelationType()))
-						res.add(rel.getRelationType());
-				}
-			}
+		ITx transaction = WaveformSelection.from(waveformPane.getSelection()).transaction();
+		if (transaction != null) {
+			for (ITxRelation relation : transaction.getIncomingRelations())
+				if (!res.contains(relation.getRelationType())) res.add(relation.getRelationType());
+			for (ITxRelation relation : transaction.getOutgoingRelations())
+				if (!res.contains(relation.getRelationType())) res.add(relation.getRelationType());
 		}
 		return res;
 	}

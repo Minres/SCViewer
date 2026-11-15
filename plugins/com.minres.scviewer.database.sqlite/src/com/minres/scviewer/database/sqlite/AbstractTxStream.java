@@ -10,6 +10,9 @@
  *******************************************************************************/
 package com.minres.scviewer.database.sqlite;
 
+import com.minres.scviewer.database.LazyValue;
+import com.minres.scviewer.database.tx.TransactionLists;
+import com.minres.scviewer.database.tx.ITransactionProvider;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +31,19 @@ import com.minres.scviewer.database.sqlite.db.IDatabase;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.TxRowAllocator;
 
-abstract class AbstractTxStream extends HierNode implements IWaveform {
+abstract class AbstractTxStream extends HierNode implements IWaveform, ITransactionProvider {
+
+    private final LazyValue<List<ITx>> transactionList = new LazyValue<>();
+
+    @Override
+    public List<ITx> getTransactionList() {
+        return transactionList.get(() -> TransactionLists.sorted(getTransactions().values()));
+    }
+
+    @Override
+    public ITx getTransaction(long id) {
+        return id < Integer.MIN_VALUE || id > Integer.MAX_VALUE ? null : getTransactions().get((int) id);
+    }
 
 	protected IDatabase database;
 
