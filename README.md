@@ -80,3 +80,23 @@ to collapse or expand it. Select a group and press Ctrl+Shift+G
 Settings files and persisted viewer state preserve group names, membership, nesting,
 and expansion state, including tracks inside collapsed groups. Older settings files
 continue to load as an ordinary list of tracks.
+
+Embedded Help
+=============
+
+The legacy Jasper JSP loader uses `File.toURL()` for its generated-class directory.
+A PDE configuration directory containing a literal percent escape (such as
+`scviewer.product%20issue3`) can therefore produce HTTP 500 / `PWC6034` /
+`ClassNotFoundException: org.apache.jsp.index_jsp` even when the class was compiled.
+`-clearPersistedState` clears the application model; it does not correct that path.
+
+In **Run/Debug Configurations > Configuration**, disable the default configuration
+area and choose an explicit path without spaces or percent escapes, for example:
+
+```
+${workspace_loc}/.metadata/.plugins/org.eclipse.pde.core/scviewer-product
+```
+
+Use a distinct safe configuration directory for each launch. Stop and relaunch
+the application after changing it; the new area will have a fresh JSP cache.
+Graphics warnings about EGL/DRI3 are separate from JSP class loading.

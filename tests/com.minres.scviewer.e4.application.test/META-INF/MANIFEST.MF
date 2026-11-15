@@ -5,7 +5,8 @@ Bundle-SymbolicName: com.minres.scviewer.e4.application.test
 Bundle-Version: 2.20.0
 Fragment-Host: com.minres.scviewer.e4.application
 Bundle-RequiredExecutionEnvironment: JavaSE-17
-Require-Bundle: org.eclipse.equinox.http.jetty,
+Require-Bundle: org.eclipse.e4.ui.bindings,
+ org.eclipse.equinox.http.jetty,
  org.eclipse.equinox.http.registry,
  org.eclipse.equinox.jsp.jasper.registry,
  org.eclipse.jdt.core,
