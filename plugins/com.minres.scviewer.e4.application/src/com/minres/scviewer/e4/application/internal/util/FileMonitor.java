@@ -13,7 +13,8 @@ package com.minres.scviewer.e4.application.internal.util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Hashtable;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -28,10 +29,12 @@ public class FileMonitor {
 	private Timer timer;
 
 	/** The enabled. */
-	private boolean enabled;
+	private volatile boolean enabled;
+
+	private boolean disposed;
 	
 	/** The timer entries. */
-	private Hashtable<String, FileSetMonitorTask> timerEntries;
+	private final Map<IFileChangeListener, FileSetMonitorTask> timerEntries;
 
 	/**
 	 * Constructor.
@@ -39,11 +42,15 @@ public class FileMonitor {
 	public FileMonitor() {
 		// Create timer, run timer thread as daemon.
 		timer = new Timer(true);
-		timerEntries = new Hashtable<String, FileSetMonitorTask>();
+		timerEntries = new IdentityHashMap<>();
 		enabled=true;
 	}
 
-	public void dispose() {
+	public synchronized void dispose() {
+		if (disposed) return;
+		disposed = true;
+		enabled = false;
+		timerEntries.values().forEach(FileSetMonitorTask::cancel);
 		timer.cancel();
 		timerEntries.clear();
 	}
@@ -69,10 +76,11 @@ public class FileMonitor {
 	 * @param period          polling period in milliseconds.
 	 * @return the i modification checker
 	 */
-	public IModificationChecker addFileChangeListener(IFileChangeListener listener, List<File> files, long period) {
+	public synchronized IModificationChecker addFileChangeListener(IFileChangeListener listener, List<File> files, long period) {
+		if (disposed) throw new IllegalStateException("File monitor is disposed");
 		removeFileChangeListener(listener);
 		FileSetMonitorTask task = new FileSetMonitorTask(listener, files, period);
-		timerEntries.put(Integer.toHexString(listener.hashCode()), task);
+		timerEntries.put(listener, task);
 		timer.schedule(task, period, period);
 		return task;
 	}
@@ -83,9 +91,12 @@ public class FileMonitor {
 	 * @param listener
 	 *          the listener to be removed.
 	 */
-	public void removeFileChangeListener(IFileChangeListener listener) {
-		FileSetMonitorTask task = timerEntries.remove(Integer.toHexString(listener.hashCode()));
-		if (task != null) task.cancel();
+	public synchronized void removeFileChangeListener(IFileChangeListener listener) {
+		FileSetMonitorTask task = timerEntries.remove(listener);
+		if (task != null) {
+			task.cancel();
+			timer.purge();
+		}
 	}
 
 	/**
@@ -114,8 +125,8 @@ public class FileMonitor {
 	 *
 	 * @param enabled the new enabled
 	 */
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
+	public synchronized void setEnabled(boolean enabled) {
+		this.enabled = !disposed && enabled;
 	}
 
 	/**
@@ -132,6 +143,8 @@ public class FileMonitor {
 		/** The last modified times. */
 		private List<Long> lastModifiedTimes;
 
+		private volatile boolean active = true;
+
 		/** The period. */
 		public final long period;
 
@@ -144,10 +157,10 @@ public class FileMonitor {
 		 */
 		public FileSetMonitorTask(IFileChangeListener listener, List<File> monitoredFiles, long period) {
 			this.period=period;
-			this.monitoredFiles = monitoredFiles;
+			this.monitoredFiles = List.copyOf(monitoredFiles);
 			this.listener = listener;
 			lastModifiedTimes= new ArrayList<>();
-			for(File monitoredFile:monitoredFiles){
+			for(File monitoredFile:this.monitoredFiles){
 				Long lmt = 0L;
 				try {
 					lmt=monitoredFile.lastModified();
@@ -163,10 +176,15 @@ public class FileMonitor {
 			check();
 		}
 
-		/* (non-Javadoc)
-		 * @see com.minres.scviewer.e4.application.internal.util.IModificationChecker#check()
-		 */
-		public void check() {
+		@Override
+		public boolean cancel() {
+			active = false;
+			return super.cancel();
+		}
+
+		@Override
+		public synchronized void check() {
+			if (!active || !enabled) return;
 			boolean res = false;
 			for(int i=0; i<monitoredFiles.size(); ++i){
 				File file = monitoredFiles.get(i);
@@ -178,7 +196,7 @@ public class FileMonitor {
 					res |= true;
 				lastModifiedTimes.set(i, lmt);
 			}
-			if(res)
+			if(res && active)
 				fireFileChangeEvent(this.listener, monitoredFiles);
 		}
 	}

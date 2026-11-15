@@ -42,14 +42,15 @@ public class LoadStoreSettingsHandler {
 	public void execute(@Named(PARAMETER_ID) String param, Shell shell, MApplication app, EModelService modelService, 
 			EPartService partService){
 		
+		MPart part = partService.getActivePart();
+		if (part == null || !(part.getObject() instanceof WaveformViewer)) return;
+		Object obj = part.getObject();
 		boolean load = "load".equals(param); //$NON-NLS-1$
 		FileDialog dialog = new FileDialog(shell, load?SWT.OPEN:SWT.SAVE);
 		dialog.setFilterExtensions (new String []{Messages.LoadStoreSettingsHandler_2});
 		if(!load) dialog.setFileName(Messages.LoadStoreSettingsHandler_3);
 		
 		String fileName = null;
-		MPart part = partService.getActivePart();
-		Object obj = part.getObject();
 		
 		// Save active tab settings
 		if(!load) {

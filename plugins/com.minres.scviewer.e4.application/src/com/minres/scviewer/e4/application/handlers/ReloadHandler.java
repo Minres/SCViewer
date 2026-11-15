@@ -33,8 +33,8 @@ public class ReloadHandler {
 			EPartService partService){
 		
 		MPart part = partService.getActivePart();
-		Object obj = part.getObject();
-		if(part!=null && (obj instanceof WaveformViewer)) { 
+		Object obj = part == null ? null : part.getObject();
+		if(obj instanceof WaveformViewer) {
 			((WaveformViewer)obj).reloadDatabase();
 		}
 	    

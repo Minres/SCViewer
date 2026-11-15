@@ -294,15 +294,23 @@ public class TransactionList extends Composite {
 		});
 	}
 
+	public void focusSearch() {
+		if (isDisposed()) return;
+		searchPropValue.setFocus();
+		searchPropValue.selectAll();
+	}
+
 	public void setSearchProps(String propName, DataType type, String propValue) {
-		for(int i=0; i<searchPropComboViewer.getCombo().getItemCount(); ++i) {
-			String itemName  = searchPropComboViewer.getCombo().getItem(i);
-			if(propName.equals(itemName)) {
-				searchPropComboViewer.getCombo().select(i);
+		for (int i = 0; i < attrNames.size(); i++) {
+			if (propName.equals(attrNames.get(i).getName())) {
+				searchPropComboViewer.setSelection(new StructuredSelection(attrNames.get(i)));
 				break;
 			}
 		}
+		txFilter.setSearchProp(propName, type);
+		txFilter.setSearchValue(propValue);
 		searchPropValue.setText(propValue);
+		tableViewer.refresh();
 	}
 
 }

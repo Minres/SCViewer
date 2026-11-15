@@ -12,7 +12,6 @@ import org.eclipse.e4.ui.services.IServiceConstants;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
@@ -64,7 +63,7 @@ public class TransactionListView {
 		if(selection==null || selection.isEmpty())
 			transactionList.setInput(null);	
 		else if(selection instanceof IStructuredSelection) {
-			TrackEntry e = findTrackEntry(((StructuredSelection)selection).toArray());
+			TrackEntry e = findTrackEntry(selection.toArray());
 			if(e!=null)
 				transactionList.setInput(e);		
 		}

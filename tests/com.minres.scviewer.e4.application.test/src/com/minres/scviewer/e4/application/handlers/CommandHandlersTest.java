@@ -1,0 +1,145 @@
+package com.minres.scviewer.e4.application.handlers;
+
+import static org.junit.Assert.*;
+
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.junit.Test;
+
+import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.IWaveformDb;
+import com.minres.scviewer.database.WaveformType;
+import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.e4.application.parts.DesignBrowser;
+import com.minres.scviewer.e4.application.parts.WaveformViewer;
+
+public class CommandHandlersTest {
+    private static class Viewer extends WaveformViewer {
+        ISelection selection = StructuredSelection.EMPTY;
+        DesignBrowser browser;
+        IWaveform[] added;
+        boolean insert;
+        int searches;
+        final IWaveformDb db = (IWaveformDb) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{IWaveformDb.class},
+                (proxy, method, args) -> method.getName().equals("isLoaded") ? true : null);
+        @Override public ISelection getSelection() { return selection; }
+        @Override public IWaveformDb getDatabase() { return db; }
+        @Override public DesignBrowser getDesignBrowser() { return browser; }
+        @Override public void addStreamsToList(IWaveform[] waveforms, boolean before) { added = waveforms; insert = before; }
+        @Override public void focusTransactionSearch() { searches++; }
+    }
+
+    private DesignBrowser browser(Viewer viewer, Object... entries) {
+        return new DesignBrowser() {
+            @Override public WaveformViewer getActiveWaveformViewerPart() { return viewer; }
+            @Override public Object[] getFilteredChildren() { return entries; }
+        };
+    }
+
+    private IWaveform waveform(WaveformType type) {
+        return (IWaveform) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{IWaveform.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "getType" -> type;
+                    case "getChildNodes" -> List.of();
+                    default -> null;
+                });
+    }
+
+    private MPart part(Object object) {
+        return (MPart) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{MPart.class},
+                (proxy, method, args) -> method.getName().equals("getObject") ? object : null);
+    }
+
+    private EPartService parts(AtomicReference<MPart> active) {
+        return (EPartService) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{EPartService.class},
+                (proxy, method, args) -> method.getName().equals("getActivePart") ? active.get() : null);
+    }
+
+    @Test
+    public void addAllUsesFilteredChildrenWithoutASelectionAndFollowsActiveTab() {
+        Viewer first = new Viewer(), second = new Viewer();
+        IWaveform a = waveform(WaveformType.STREAM), b = waveform(WaveformType.STREAM);
+        first.browser = browser(first, a, "unrelated"); second.browser = browser(second, b);
+        AtomicReference<MPart> active = new AtomicReference<>(part(first));
+        EPartService service = parts(active);
+        AddWaveformHandler handler = new AddWaveformHandler();
+        try {
+            assertTrue(handler.canExecute("after", "true", service, null));
+            handler.execute("after", "true", service, null);
+            assertArrayEquals(new IWaveform[]{a}, first.added);
+            active.set(part(second));
+            handler.execute("after", "true", service, null);
+            assertArrayEquals(new IWaveform[]{b}, second.added);
+            assertFalse(second.insert);
+        } finally { first.closeDatabase(); second.closeDatabase(); }
+    }
+
+    @Test
+    public void staleBrowserFromPreviousTabCannotReceiveAddCommands() {
+        Viewer previous = new Viewer(), activeViewer = new Viewer();
+        IWaveform wave = waveform(WaveformType.STREAM);
+        activeViewer.browser = browser(previous, wave);
+        EPartService service = parts(new AtomicReference<>(part(activeViewer)));
+        AddWaveformHandler handler = new AddWaveformHandler();
+        try {
+            assertFalse(handler.canExecute("after", "true", service, null));
+            handler.execute("after", "true", service, null);
+            assertNull(previous.added);
+            assertNull(activeViewer.added);
+        } finally { previous.closeDatabase(); activeViewer.closeDatabase(); }
+    }
+
+    @Test
+    public void executeRechecksInsertionAndRejectsMissingOrUnrelatedSelection() {
+        Viewer viewer = new Viewer();
+        IWaveform wave = waveform(WaveformType.STREAM);
+        viewer.browser = browser(viewer, wave);
+        EPartService service = parts(new AtomicReference<>(part(viewer)));
+        AddWaveformHandler handler = new AddWaveformHandler();
+        try {
+            handler.execute("before", "true", service, null);
+            assertNull(viewer.added);
+            assertFalse(handler.canExecute("after", "false", service, new StructuredSelection("unrelated")));
+            handler.execute("after", "false", service, null);
+            assertNull(viewer.added);
+            viewer.selection = new StructuredSelection(new TrackEntry(wave, null));
+            handler.execute("before", "false", service, new StructuredSelection(wave));
+            assertArrayEquals(new IWaveform[]{wave}, viewer.added);
+            assertTrue(viewer.insert);
+        } finally { viewer.closeDatabase(); }
+    }
+
+    @Test
+    public void searchRevealsExistingControlsOnlyForTransactionTracks() {
+        Viewer viewer = new Viewer();
+        SearchHandler handler = new SearchHandler();
+        MPart part = part(viewer);
+        try {
+            viewer.selection = new StructuredSelection(new TrackEntry(waveform(WaveformType.SIGNAL), null));
+            handler.execute(null, part);
+            assertEquals(0, viewer.searches);
+            viewer.selection = new StructuredSelection(new TrackEntry(waveform(WaveformType.STREAM), null));
+            assertTrue(handler.evaluate(part));
+            handler.execute(null, part);
+            assertEquals(1, viewer.searches);
+            assertFalse(handler.evaluate(null));
+        } finally { viewer.closeDatabase(); }
+    }
+
+    @Test
+    public void missingActivePartIsSafeDuringCommandExecution() {
+        EPartService service = parts(new AtomicReference<>());
+        AddWaveformHandler add = new AddWaveformHandler();
+        assertFalse(add.canExecute("after", "true", service, null));
+        add.execute("after", "true", service, null);
+        new ReloadHandler().execute(null, null, null, service);
+        new LoadStoreSettingsHandler().execute("load", null, null, null, service);
+        new SearchHandler().execute(null, null);
+    }
+}

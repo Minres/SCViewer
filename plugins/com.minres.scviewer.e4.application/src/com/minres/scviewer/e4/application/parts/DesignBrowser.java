@@ -47,6 +47,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -144,6 +145,13 @@ public class DesignBrowser {
 		}
 	});
 
+	private final DisposeListener viewerDisposed = event -> {
+		if (!treeViewer.getControl().isDisposed()) resetTreeViewer();
+		if (subscribedDatabase != null) subscribedDatabase.removePropertyChangeListener(treeViewerPCL);
+		subscribedDatabase = null;
+		waveformViewerPart = null;
+	};
+
 	/** The sash paint listener. */
 	protected PaintListener sashPaintListener= e -> {
 		int size=Math.min(e.width, e.height)-1;
@@ -171,6 +179,8 @@ public class DesignBrowser {
 		Composite bottom = new Composite(sashForm, SWT.NONE);
 		createTableComposite(bottom);
 		parent.addDisposeListener(event -> {
+			if (this.waveformViewerPart != null) this.waveformViewerPart.removeDisposeListener(viewerDisposed);
+			this.waveformViewerPart = null;
 			if (subscribedDatabase != null)
 				subscribedDatabase.removePropertyChangeListener(treeViewerPCL);
 			subscribedDatabase = null;
@@ -362,19 +372,16 @@ public class DesignBrowser {
 		if( this.waveformViewerPart == null || this.waveformViewerPart != waveformViewerPart ) {
 			if(this.waveformViewerPart!=null)
 				this.waveformViewerPart.storeDesignBrowerState(new DBState());
-			waveformViewerPart.addDisposeListener( e -> {
-				Control control = treeViewer.getControl();
-				// check if widget is already disposed (f.ex. because of workbench closing)
-				if (control == null || control.isDisposed()) { //if so: do nothing
-				}else {  //reset tree- and tableviewer
-					resetTreeViewer();
-				}
-			});
+
 			setWaveformViewer(waveformViewerPart);
 		}
 	}
 
 	public void setWaveformViewer(WaveformViewer waveformViewerPart) {
+		if (this.waveformViewerPart != waveformViewerPart) {
+			if (this.waveformViewerPart != null) this.waveformViewerPart.removeDisposeListener(viewerDisposed);
+			waveformViewerPart.addDisposeListener(viewerDisposed);
+		}
 		this.waveformViewerPart=waveformViewerPart;
 		IWaveformDb database = waveformViewerPart.getDatabase();
 		setWaveformDb(database);

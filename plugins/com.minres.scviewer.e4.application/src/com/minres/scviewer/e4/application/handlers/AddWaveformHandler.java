@@ -11,7 +11,6 @@
 
 package com.minres.scviewer.e4.application.handlers;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.e4.core.di.annotations.CanExecute;
@@ -24,52 +23,56 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.e4.application.parts.DesignBrowser;
+import com.minres.scviewer.e4.application.parts.WaveformViewer;
+import java.util.Arrays;
+import org.eclipse.jface.viewers.ISelection;
 
 public class AddWaveformHandler {
 
 	public static final String PARAM_WHERE_ID="com.minres.scviewer.e4.application.command.addwaveform.where"; //$NON-NLS-1$
 	public static final String PARAM_ALL_ID="com.minres.scviewer.e4.application.command.addwaveform.all"; //$NON-NLS-1$
 	
-	@Inject @Optional DesignBrowser designBrowser;
-	
 	@CanExecute
 	public boolean canExecute(@Named(PARAM_WHERE_ID) String where, @Named(PARAM_ALL_ID) String all,
 			EPartService partService,
 			@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection) {
-		if(designBrowser==null) designBrowser = getListPart( partService);
-		if(designBrowser==null || designBrowser.getActiveWaveformViewerPart()==null) return false;
-		boolean before = "before".equalsIgnoreCase(where); //$NON-NLS-1$
-		IStructuredSelection waveformSelection = null;
-		if(designBrowser.getActiveWaveformViewerPart()!=null) {
-			if(!designBrowser.getActiveWaveformViewerPart().getDatabase().isLoaded())
-				return false;
-			waveformSelection = (IStructuredSelection)designBrowser.getActiveWaveformViewerPart().getSelection();
-		}
-		if("true".equalsIgnoreCase(all))  //$NON-NLS-1$
-			return designBrowser.getFilteredChildren().length>0 && 
-					(!before || (waveformSelection!=null && waveformSelection.size()>0));
-		else
-			return selection!=null && selection.size()>0 && 
-					(!before || (waveformSelection!=null && waveformSelection.size()>0));
+		DesignBrowser browser = getListPart(partService);
+		return canAdd(browser, where) && candidates(browser, all, selection).length > 0;
 	}
 
 	@Execute
-	public void execute(@Named(PARAM_WHERE_ID) String where, @Named(PARAM_ALL_ID) String all, 
+	public void execute(@Named(PARAM_WHERE_ID) String where, @Named(PARAM_ALL_ID) String all,
 			EPartService partService,
 			@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection) {
-		if(designBrowser==null) designBrowser = getListPart( partService);
-		if(designBrowser!=null && selection.size()>0){
-			@SuppressWarnings("unchecked")
-			IWaveform[] sel=(IWaveform[]) selection.toList().stream().filter(t -> t instanceof IWaveform).toArray(IWaveform[]::new);
-			designBrowser.getActiveWaveformViewerPart().addStreamsToList(sel, "before".equalsIgnoreCase(where)); //$NON-NLS-1$
-		}
+		DesignBrowser browser = getListPart(partService);
+		if (!canAdd(browser, where)) return;
+		IWaveform[] waveforms = candidates(browser, all, selection);
+		if (waveforms.length > 0)
+			browser.getActiveWaveformViewerPart().addStreamsToList(waveforms, "before".equalsIgnoreCase(where));
 	}
 
-	protected DesignBrowser getListPart(EPartService partService){
-		MPart part = partService.getActivePart();
-		if(part.getObject() instanceof DesignBrowser)
-			return (DesignBrowser) part.getObject();
-		else
-			return null;
-	}	
+	private boolean canAdd(DesignBrowser browser, String where) {
+		WaveformViewer target = browser == null ? null : browser.getActiveWaveformViewerPart();
+		if (target == null || target.getDatabase() == null || !target.getDatabase().isLoaded()) return false;
+		ISelection selection = target.getSelection();
+		return !"before".equalsIgnoreCase(where) || (selection != null && !selection.isEmpty());
+	}
+
+	private IWaveform[] candidates(DesignBrowser browser, String all, IStructuredSelection selection) {
+		Object[] entries = "true".equalsIgnoreCase(all) ? browser.getFilteredChildren()
+				: selection == null ? new Object[0] : selection.toArray();
+		if (entries == null) return new IWaveform[0];
+		return Arrays.stream(entries).filter(IWaveform.class::isInstance).toArray(IWaveform[]::new);
+	}
+
+	protected DesignBrowser getListPart(EPartService partService) {
+		MPart part = partService == null ? null : partService.getActivePart();
+		if (part == null) return null;
+		if (part.getObject() instanceof DesignBrowser browser) return browser;
+		if (part.getObject() instanceof WaveformViewer viewer) {
+			DesignBrowser browser = viewer.getDesignBrowser();
+			return browser != null && browser.getActiveWaveformViewerPart() == viewer ? browser : null;
+		}
+		return null;
+	}
 }

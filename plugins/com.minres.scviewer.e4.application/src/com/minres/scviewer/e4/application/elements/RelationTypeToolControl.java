@@ -11,6 +11,7 @@
 package com.minres.scviewer.e4.application.elements;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -52,6 +53,8 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 	
 	/** The dummy. */
 	RelationType dummy = RelationTypeFactory.create(Messages.RelationTypeToolControl_0);
+
+	private boolean disposed;
 	
 	/**
 	 * Instantiates a new relation type tool control.
@@ -79,6 +82,16 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 	    comboViewer.setInput(new RelationType[] {dummy});
 	    comboViewer.setSelection(new StructuredSelection(dummy));
 	    comboViewer.addSelectionChangedListener(this);
+	    comboBox.addDisposeListener(event -> dispose());
+	}
+
+	@PreDestroy
+	public void dispose() {
+		if (disposed) return;
+		disposed = true;
+		partService.removePartListener(this);
+		if (comboViewer != null) comboViewer.removeSelectionChangedListener(this);
+		waveformViewerPart = null;
 	}
 
 	/* (non-Javadoc)
@@ -86,6 +99,7 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 	 */
 	@Override
 	public void partActivated(MPart part) {
+		if (disposed) return;
 		if(part.getObject() instanceof WaveformViewer){
 			waveformViewerPart=(WaveformViewer) part.getObject();
 			checkSelection(waveformViewerPart.getSelection());
@@ -115,6 +129,7 @@ public class RelationTypeToolControl extends PartListener implements ISelectionC
 	 * @param selection the selection
 	 */
 	protected void checkSelection(ISelection selection) {
+		if (disposed || comboViewer == null || comboViewer.getCombo().isDisposed()) return;
 		if( selection instanceof IStructuredSelection) {
 			Object object= ((IStructuredSelection)selection).getFirstElement();			
 			if(object instanceof ITx && waveformViewerPart!=null){

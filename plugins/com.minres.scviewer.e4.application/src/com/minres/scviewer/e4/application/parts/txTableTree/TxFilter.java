@@ -37,6 +37,7 @@ public class TxFilter extends ViewerFilter {
 	public void setSearchProp(String s, DataType type) {
 		this.searchProp = s;
 		this.searchType = type;
+		setSearchValue(searchValue);
 	}
 	/**
 	 * Sets the search text.
@@ -45,7 +46,8 @@ public class TxFilter extends ViewerFilter {
 	 */
 	public void setSearchValue(String s) {
 		this.searchValue = s;
-		if(searchType==DataType.STRING) {
+		pattern = null;
+		if(searchType==DataType.STRING && searchValue != null) {
 			try {
 			    //pattern = Pattern.compile(searchValue, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 			    pattern = Pattern.compile(searchValue);
@@ -75,7 +77,7 @@ public class TxFilter extends ViewerFilter {
 				switch(searchType) {
 				case BOOLEAN: // bool
 				case ENUMERATION:
-					return searchValue.equalsIgnoreCase((String) attr.getValue());
+					return searchValue.equalsIgnoreCase(String.valueOf(attr.getValue()));
 				case INTEGER:
 				case UNSIGNED:
 					BigInteger lval = new BigInteger(attr.getValue().toString());
