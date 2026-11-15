@@ -119,7 +119,19 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 * @return true, if successful
 	 */
 	@Override
-	public synchronized boolean load(File inp) {
+	public boolean load(File inp) {
+        List<PropertyChangeEvent> notifications = new ArrayList<>();
+        boolean result;
+        synchronized (this) {
+            result = loadLocked(inp, notifications);
+        }
+        // A listener may wait for the UI, which in turn may need close().
+        // Never invoke external listeners while holding the database lock.
+        notifications.forEach(pcs::firePropertyChange);
+        return result;
+    }
+
+    private boolean loadLocked(File inp, List<PropertyChangeEvent> notifications) {
         for (IWaveformDbLoaderFactory factory : getLoaders()) {
             if (!factory.canLoad(inp)) continue;
             IWaveformDbLoader loader = factory.getLoader();
@@ -146,13 +158,14 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
             if (name == null) name = getFileBasename(inp.getName());
             for (RelationType type : types) if (!relationTypes.contains(type)) relationTypes.add(type);
             synchronized (pending) {
-                for (PropertyChangeEvent event : pending) propertyChange(event);
+                for (PropertyChangeEvent event : pending) applyWaveform(event);
+                if (!pending.isEmpty()) addWaveformNotifications(notifications);
             }
             loaded = true;
-            pcs.firePropertyChange(IHierNode.LOADING_FINISHED, null, Boolean.TRUE);
+            notifications.add(new PropertyChangeEvent(this, IHierNode.LOADING_FINISHED, null, Boolean.TRUE));
             return true;
         }
-        pcs.firePropertyChange(IHierNode.LOADING_FINISHED, null, Boolean.FALSE);
+        notifications.add(new PropertyChangeEvent(this, IHierNode.LOADING_FINISHED, null, Boolean.FALSE));
         return false;
     }
 
@@ -197,37 +210,28 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		if (IWaveformDbLoader.SIGNAL_ADDED.equals(evt.getPropertyName())
-				|| IWaveformDbLoader.STREAM_ADDED.equals(evt.getPropertyName())) {
-			IWaveform waveform = (IWaveform) evt.getNewValue();
-			waveforms.put(waveform.getFullName(), waveform);
-			putInHierarchy(waveform);
-			pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
-			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
-		} else if (IWaveformDbLoader.GENERATOR_ADDED.equals(evt.getPropertyName())) {
-            IWaveform generator = (IWaveform) evt.getNewValue();
-            waveforms.put(generator.getFullName(), generator);
-            pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
-			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
-		}
-	}
+        List<PropertyChangeEvent> notifications = new ArrayList<>();
+        synchronized (this) {
+            if (applyWaveform(evt)) addWaveformNotifications(notifications);
+        }
+        notifications.forEach(pcs::firePropertyChange);
+    }
 
-	/**
-	 * Builds the hierarchy nodes.
-	 */
-	private synchronized void buildHierarchyNodes() {
-		boolean needsSorting = false;
-		for (IWaveform stream : getAllWaves()) {
-			if (stream.getParent() == null) {
-				putInHierarchy(stream);
-				needsSorting = true;
-			}
-		}
-		if (needsSorting) {
-			pcs.firePropertyChange(IHierNode.WAVEFORMS, null, waveforms);
-			pcs.firePropertyChange(IHierNode.CHILDS, null, childNodes);
-		}
-	}
+    private boolean applyWaveform(PropertyChangeEvent evt) {
+        String property = evt.getPropertyName();
+        if (!IWaveformDbLoader.SIGNAL_ADDED.equals(property)
+                && !IWaveformDbLoader.STREAM_ADDED.equals(property)
+                && !IWaveformDbLoader.GENERATOR_ADDED.equals(property)) return false;
+        IWaveform waveform = (IWaveform) evt.getNewValue();
+        waveforms.put(waveform.getFullName(), waveform);
+        if (!IWaveformDbLoader.GENERATOR_ADDED.equals(property)) putInHierarchy(waveform);
+        return true;
+    }
+
+    private void addWaveformNotifications(List<PropertyChangeEvent> notifications) {
+        notifications.add(new PropertyChangeEvent(this, IHierNode.WAVEFORMS, null, new HashMap<>(waveforms)));
+        notifications.add(new PropertyChangeEvent(this, IHierNode.CHILDS, null, new ArrayList<>(childNodes)));
+    }
 
 	private synchronized void putInHierarchy(IWaveform waveform) {
 		String[] hier = waveform.getName().split("\\.");

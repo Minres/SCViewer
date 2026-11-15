@@ -33,12 +33,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.eclipse.core.commands.ParameterizedCommand;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.core.runtime.jobs.JobGroup;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -110,6 +104,7 @@ import com.minres.scviewer.database.ui.swt.WaveformViewFactory;
 import com.minres.scviewer.e4.application.AppModelId;
 import com.minres.scviewer.e4.application.Messages;
 import com.minres.scviewer.e4.application.internal.status.WaveStatusBarControl;
+import com.minres.scviewer.e4.application.internal.util.DatabaseLoadSession;
 import com.minres.scviewer.e4.application.internal.util.FileMonitor;
 import com.minres.scviewer.e4.application.internal.util.IFileChangeListener;
 import com.minres.scviewer.e4.application.internal.util.IModificationChecker;
@@ -209,6 +204,10 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	/** The database. */
 	private IWaveformDb database;
 
+	private volatile DatabaseLoadSession loadSession;
+
+	private volatile boolean disposed;
+
 	/** The check for updates. */
 	private boolean checkForUpdates;
 
@@ -271,11 +270,6 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		store=prefs;
 		showHover=hover;
 		database = dbFactory.getDatabase();
-		database.addPropertyChangeListener(evt -> {
-			if (IHierNode.WAVEFORMS.equals(evt.getPropertyName())) { //$NON-NLS-1$
-				myParent.getDisplay().syncExec(() -> waveformPane.setMaxTime(database.getMaxTime()));
-			}
-		});
 		parent.setLayout(new FillLayout(SWT.HORIZONTAL));
 
 		IEclipseContext ctx = myPart.getContext();
@@ -404,7 +398,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		ePartService.addPartListener(new PartListener() {
 			@Override
 			public void partActivated(MPart part) {
-				if (part == myPart) {
+				if (part == myPart && !disposed) {
 					if (fileChecker != null)
 						fileChecker.check();
 					updateAll();
@@ -511,8 +505,11 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 
 	@PreDestroy
 	public void closeDatabase() {
-		if(database.isLoaded())
-			database.close();
+		if (disposed) return;
+		disposed = true;
+		fileMonitor.dispose();
+		fileChecker = null;
+		if (loadSession != null) loadSession.close();
 	}
 	
 	@Inject
@@ -537,6 +534,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	@Inject
 	@Optional
 	public void reactOnReloadDatabaseChange(@Preference(nodePath = PreferenceConstants.PREFERENCES_SCOPE, value = PreferenceConstants.DATABASE_RELOAD) Boolean checkForUpdates) {
+		if (disposed) return;
 		if (checkForUpdates.booleanValue()) {
 			fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
 		} else { 
@@ -550,89 +548,63 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	@Override
 	public void preferenceChange(PreferenceChangeEvent event) {
-		if (!PreferenceConstants.DATABASE_RELOAD.equals(event.getKey()) && !PreferenceConstants.SHOW_HOVER.equals(event.getKey())){
-			waveformPane.setStyleProvider(new WaveformStyleProvider(store));		}
-	}
-
-	class DbLoadJob extends Job {
-		final File file;
-		public DbLoadJob(String name, final File file) {
-			super(name);
-			this.file=file;
-		}
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-			boolean res = database.load(file);
-			database.addPropertyChangeListener(waveformPane);
-			return res?Status.OK_STATUS:Status.CANCEL_STATUS;
+		if (!PreferenceConstants.DATABASE_RELOAD.equals(event.getKey()) && !PreferenceConstants.SHOW_HOVER.equals(event.getKey())) {
+			sync.asyncExec(() -> {
+				if (!disposed && waveformPane != null && !myParent.isDisposed())
+					waveformPane.setStyleProvider(new WaveformStyleProvider(store));
+			});
 		}
 	}
-	/**
-	 * Load database.
-	 *
-	 * @param state the state
-	 */
+
 	protected void loadDatabase(final Map<String, String> state) {
 		loadDatabase(state, 1000L);
 	}
 
 	protected void loadDatabase(final Map<String, String> state, long delay) {
+		if (disposed) return;
 		fileMonitor.removeFileChangeListener(this);
-		database.setName(filesToLoad.stream().map(File::getName).reduce(null, (prefix, element) -> prefix==null? element : prefix + ","+ element));
-		Job job = new Job(Messages.WaveformViewer_15) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
-				IProgressMonitor progressGroup = getJobManager().createProgressGroup(); 
-				JobGroup jobGroup = new JobGroup(Messages.WaveformViewer_15, filesToLoad.size(), filesToLoad.size());
-				filesToLoad.forEach((final File file) -> {
-					Job job = new DbLoadJob(Messages.WaveformViewer_16 + file.getName(), file);
-					job.setProgressGroup(progressGroup, 1);
-					job.setJobGroup(jobGroup);
-					job.schedule();
+		fileChecker = null;
+		if (loadSession != null) {
+			setSelection(null);
+			loadSession.close();
+			waveformPane.getStreamList().clear();
+			waveformPane.update();
+			database = dbFactory.getDatabase();
+		}
+		final IWaveformDb requestedDatabase = database;
+		final List<File> requestedFiles = List.copyOf(filesToLoad);
+		final Map<String, String> requestedState = state == null ? Map.of() : new HashMap<>(state);
+		final String requestedConfig = partConfig;
+		requestedDatabase.setName(requestedFiles.stream().map(File::getName).collect(java.util.stream.Collectors.joining(",")));
+		myPart.getContext().set(IWaveformDb.class, requestedDatabase);
+		loadSession = new DatabaseLoadSession(requestedDatabase, requestedFiles, event -> {
+			if (IHierNode.WAVEFORMS.equals(event.getPropertyName())
+					|| IHierNode.LOADING_FINISHED.equals(event.getPropertyName())) {
+				sync.asyncExec(() -> {
+					if (isCurrentDatabase(requestedDatabase))
+						waveformPane.setMaxTime(requestedDatabase.getMaxTime());
 				});
-				try {
-					jobGroup.join(0, monitor);
-				} catch (OperationCanceledException e) {
-					throw new OperationCanceledException(Messages.WaveformViewer_14);
-				}catch (InterruptedException e) {
-					// Restore interrupted state...
-					Thread.currentThread().interrupt();
-					throw new OperationCanceledException(Messages.WaveformViewer_14);
-				}
-				if (monitor.isCanceled())
-					throw new OperationCanceledException(Messages.WaveformViewer_14);
-
-
-				IStatus result = jobGroup.getResult();
-				if( (!result.isMultiStatus() && result.getCode() != Status.OK_STATUS.getCode() ) ||
-						(result.isMultiStatus() && result.getChildren().length > 0 && result.getChildren()[0].getCode() != Status.OK_STATUS.getCode() ) ){
-					// kill editor and pop up warning for user
-					sync.asyncExec(() -> {
-						if(myParent.isDisposed()) return;
-						final Display display = myParent.getDisplay();
-						MessageDialog.openWarning(display.getActiveShell(), "Error loading database", "Database cannot be loaded. Aborting...");
-						ePartService.hidePart(myPart, true);
-					});
-				} else
-					sync.asyncExec(()->{
-						waveformPane.setMaxTime(database.getMaxTime());
-						if(partConfig!=null && !partConfig.isEmpty())
-							loadState(partConfig);
-						if (state != null && !state.isEmpty())
-							restoreWaveformViewerState(state);
-						if(designBrowser!=null)
-							designBrowser.setWaveformDb(database); 
-						fileChecker = null;
-						if (checkForUpdates)
-							fileChecker = fileMonitor.addFileChangeListener(WaveformViewer.this, filesToLoad, FILE_CHECK_INTERVAL);
-					});
-				return result;
 			}
-		};
-		job.setName("Load Database");
-		job.setSystem(true);
-		job.schedule(delay); // let the UI initialize so that we have a progress monitor
+		}, result -> sync.asyncExec(() -> {
+			if (!isCurrentDatabase(requestedDatabase)) return;
+			if (!result.isOK()) {
+				MessageDialog.openWarning(myParent.getShell(), "Error loading database", result.getMessage());
+				ePartService.hidePart(myPart, true);
+				return;
+			}
+			waveformPane.setMaxTime(requestedDatabase.getMaxTime());
+			if (requestedConfig != null && !requestedConfig.isEmpty()) loadState(requestedConfig);
+			if (!requestedState.isEmpty()) restoreWaveformViewerState(requestedState);
+			if (designBrowser != null) designBrowser.setWaveformDb(requestedDatabase);
+			if (checkForUpdates)
+				fileChecker = fileMonitor.addFileChangeListener(this, requestedFiles, FILE_CHECK_INTERVAL);
+		}));
+		loadSession.schedule(delay);
+	}
+
+	private boolean isCurrentDatabase(IWaveformDb requestedDatabase) {
+		return !disposed && !myParent.isDisposed() && database == requestedDatabase
+				&& loadSession != null && !loadSession.isCancelled();
 	}
 
 	/* (non-Javadoc)
@@ -640,30 +612,20 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 */
 	@Override
 	public void fileChanged(List<File> file) {
-		final Display display = myParent.getDisplay();
-		display.asyncExec(() -> {
-			if (MessageDialog.openQuestion(display.getActiveShell(), Messages.WaveformViewer_17,
+		final DatabaseLoadSession requestedSession = loadSession;
+		fileMonitor.removeFileChangeListener(this);
+		sync.asyncExec(() -> {
+			if (disposed || myParent.isDisposed() || loadSession != requestedSession) return;
+			if (MessageDialog.openQuestion(myParent.getShell(), Messages.WaveformViewer_17,
 					Messages.WaveformViewer_18)) {
 				reloadDatabase();
 			}
 		});
-		fileMonitor.removeFileChangeListener(this);
 	}
 
 	public void reloadDatabase() {
 		Map<String, String> state = new HashMap<>();
 		saveWaveformViewerState(state);
-		setSelection(null);
-		waveformPane.getStreamList().clear();
-		waveformPane.update();
-		if(database.isLoaded())
-			database.close();
-		database =  dbFactory.getDatabase();
-		database.addPropertyChangeListener(evt -> {
-			if (IHierNode.WAVEFORMS.equals(evt.getPropertyName()) || IHierNode.LOADING_FINISHED.equals(evt.getPropertyName())) { //$NON-NLS-1$
-				myParent.getDisplay().syncExec(() -> waveformPane.setMaxTime(database.getMaxTime()));
-			}
-		});
 		if (!filesToLoad.isEmpty())
 			loadDatabase(state, 0L);
 	}
@@ -1259,6 +1221,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 	 * @param e
 	 */
 	public void widgetDisposed(DisposeEvent e) {
+		closeDatabase();
 		disposeListenerNumber -= 1;
 		if( disposeListenerNumber == 0) {  //if the last tab is closed, reset statusbar
 			eventBroker.post(WaveStatusBarControl.CURSOR_TIME, null);

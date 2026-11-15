@@ -18,6 +18,7 @@
 		<module>tests/com.minres.scviewer.database.test</module>
 		<module>plugins/com.minres.scviewer.database.ui.swt</module>
 		<module>plugins/com.minres.scviewer.e4.application</module>
+		<module>tests/com.minres.scviewer.e4.application.test</module>
 		<module>plugins/com.minres.scviewer.e4.application.help</module>
 		<module>plugins/com.minres.scviewer.ui</module>
 		<module>features/com.minres.scviewer.database.feature</module>

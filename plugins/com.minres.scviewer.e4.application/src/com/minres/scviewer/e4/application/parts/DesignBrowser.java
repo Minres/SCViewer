@@ -28,6 +28,7 @@ import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.UIEventTopic;
+import org.eclipse.e4.ui.di.UISynchronize;
 import org.eclipse.e4.ui.services.EMenuService;
 import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.IContentProvider;
@@ -83,6 +84,8 @@ public class DesignBrowser {
 	/** The event broker. */
 	@Inject IEventBroker eventBroker;
 
+	@Inject UISynchronize sync;
+
 	/** The selection service. */
 	@Inject	ESelectionService selectionService;
 
@@ -123,23 +126,23 @@ public class DesignBrowser {
 	/** The waveform viewer part. */
 	private WaveformViewer waveformViewerPart;
 
+	private IWaveformDb subscribedDatabase;
+
 	/** The tree viewer pcl. */
-	private PropertyChangeListener treeViewerPCL = evt -> {
-		if(IHierNode.CHILDS.equals(evt.getPropertyName())){ //$NON-NLS-1$
-			treeViewer.getTree().getDisplay().asyncExec(() -> treeViewer.refresh());
-		} else if(IHierNode.WAVEFORMS.equals(evt.getPropertyName())) {
-			treeViewer.getTree().getDisplay().asyncExec(() -> {
-				treeViewer.setInput(new IWaveformDb[]{waveformViewerPart.getDatabase()});
-				treeViewer.refresh();
-			});
-		} else if(IHierNode.LOADING_FINISHED.equals(evt.getPropertyName())) {
-			if(!treeViewer.getControl().isDisposed())
-				treeViewer.getTree().getDisplay().asyncExec(() -> {
-					treeViewer.update(waveformViewerPart.getDatabase(), null);
-					DesignBrowser.this.updateButtons();
-				});
+	private PropertyChangeListener treeViewerPCL = evt -> sync.asyncExec(() -> {
+		if (treeViewer.getControl().isDisposed() || waveformViewerPart == null
+				|| evt.getSource() != subscribedDatabase
+				|| subscribedDatabase != waveformViewerPart.getDatabase()) return;
+		if (IHierNode.CHILDS.equals(evt.getPropertyName())) {
+			treeViewer.refresh();
+		} else if (IHierNode.WAVEFORMS.equals(evt.getPropertyName())) {
+			treeViewer.setInput(new IWaveformDb[]{subscribedDatabase});
+			treeViewer.refresh();
+		} else if (IHierNode.LOADING_FINISHED.equals(evt.getPropertyName())) {
+			treeViewer.update(subscribedDatabase, null);
+			updateButtons();
 		}
-	};
+	});
 
 	/** The sash paint listener. */
 	protected PaintListener sashPaintListener= e -> {
@@ -167,6 +170,11 @@ public class DesignBrowser {
 		createTreeViewerComposite(top);
 		Composite bottom = new Composite(sashForm, SWT.NONE);
 		createTableComposite(bottom);
+		parent.addDisposeListener(event -> {
+			if (subscribedDatabase != null)
+				subscribedDatabase.removePropertyChangeListener(treeViewerPCL);
+			subscribedDatabase = null;
+		});
 
 		sashForm.setWeights(new int[] {100, 100});
 		sashForm.SASH_WIDTH=5;
@@ -372,14 +380,11 @@ public class DesignBrowser {
 		setWaveformDb(database);
 	}
 
-	@SuppressWarnings("unchecked")
 	public void setWaveformDb(IWaveformDb database) {
-		Object input = treeViewer.getInput();
-		if(input instanceof List<?>){
-			IWaveformDb db = ((List<IWaveformDb>)input).get(0);
-			if(db==database) return; // do nothing if old and new database is the same
-			((List<IWaveformDb>)input).get(0).removePropertyChangeListener(treeViewerPCL);
-		}
+		if (subscribedDatabase == database) return;
+		if (subscribedDatabase != null)
+			subscribedDatabase.removePropertyChangeListener(treeViewerPCL);
+		subscribedDatabase = database;
 		treeViewer.setInput(new IWaveformDb[]{database});
 		Object state=this.waveformViewerPart.retrieveDesignBrowerState();
 		if(state instanceof DBState) 

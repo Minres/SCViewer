@@ -43,6 +43,11 @@ public class FileMonitor {
 		enabled=true;
 	}
 
+	public void dispose() {
+		timer.cancel();
+		timerEntries.clear();
+	}
+
 	/**
 	 * Adds a monitored file with a FileChangeListener.
 	 *

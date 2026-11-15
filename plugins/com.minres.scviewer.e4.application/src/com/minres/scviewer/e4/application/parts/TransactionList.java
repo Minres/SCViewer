@@ -1,12 +1,12 @@
 package com.minres.scviewer.e4.application.parts;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.databinding.observable.list.ObservableList;
 import org.eclipse.core.databinding.observable.list.WritableList;
 import org.eclipse.jface.databinding.viewers.ObservableListContentProvider;
@@ -19,6 +19,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -35,9 +36,11 @@ import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.IEvent;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.e4.application.internal.util.LatestJob;
 import com.minres.scviewer.e4.application.parts.txTableTree.AbstractTransactionTreeContentProvider;
 import com.minres.scviewer.e4.application.parts.txTableTree.AttributeLabelProvider;
 import com.minres.scviewer.e4.application.parts.txTableTree.TransactionTreeNode;
@@ -76,7 +79,9 @@ public class TransactionList extends Composite {
 
 	private TableViewer tableViewer = null; 
 
-	Thread updateThread = null;
+	private LatestJob<TransactionData> updateJob;
+
+	private record TransactionData(List<ITx> transactions, List<AttributeNameBean> attributes) {}
 
 	private TableColumn valueColumn = null;
 
@@ -185,8 +190,8 @@ public class TransactionList extends Composite {
 			@SuppressWarnings("unchecked")
 			@Override
 			public Object[] getElements(Object inputElement) {
-				if (inputElement instanceof ArrayList<?>) {
-					return ((ArrayList<ITx>) inputElement).stream().map(tx-> new TransactionTreeNode(tx, TransactionTreeNodeType.TX)).collect(Collectors.toList()).toArray();
+				if (inputElement instanceof List<?>) {
+					return ((List<ITx>) inputElement).stream().map(tx-> new TransactionTreeNode(tx, TransactionTreeNodeType.TX)).collect(Collectors.toList()).toArray();
 				}
 				return new Object[0];
 			}
@@ -233,54 +238,60 @@ public class TransactionList extends Composite {
 		// Turn on the header and the lines
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
+		final Display display = getDisplay();
+		updateJob = new LatestJob<>(task -> {
+			if (!display.isDisposed()) display.asyncExec(task);
+		}, data -> {
+			if (isDisposed()) return;
+			attrNames.addAll(data.attributes());
+			if (!attrNames.isEmpty()) {
+				txFilter.setSearchProp(attrNames.get(0).getName(), attrNames.get(0).getType());
+				txFilter.setSearchValue(searchPropValue.getText());
+			}
+			tableViewer.setInput(data.transactions());
+			searchPropComboViewer.refresh();
+			viewPropComboViewer.refresh();
+		});
+		addDisposeListener(event -> {
+			updateJob.close();
+			attrNames.dispose();
+		});
 	}
 
 	public void setInput(TrackEntry trackEntry) {
-		if(trackEntry==null || !trackEntry.waveform.getType().isTransaction()) {
-			attrNames.clear();
-			tableViewer.setInput(emptyList);
-		} else if(stream != trackEntry.waveform) { 
-			stream=trackEntry.waveform;
-			tableViewer.setInput(emptyList);
-			try{
-				if(updateThread!=null)
-					updateThread.interrupt();
-			}catch(SecurityException e){}
-			updateThread = new Thread(()-> {
-				final ConcurrentHashMap<String, DataType> propNames=new ConcurrentHashMap<>();
-				Collection<EventEntry> values = stream.getEvents().entrySet();
-				final List<ITx> txList = values.parallelStream()
-						.map(e->e.events)
-						.map(Arrays::asList)
-						.flatMap(List::stream)
-						.filter(evt -> evt.getKind()==EventKind.BEGIN || evt.getKind()==EventKind.SINGLE)
-						.map(evt-> {
-							ITx tx = ((ITxEvent)evt).getTransaction();
-							tx.getAttributes().forEach(attr -> propNames.put(attr.getName(), attr.getDataType()));
-							return tx;
-						})
-						.sorted((t1, t2)-> Long.compare(t1.getBeginTime(),t2.getBeginTime()))
-						.collect(Collectors.toList());
-				final List<AttributeNameBean> newAttrNames=propNames.entrySet().stream()
-						.sorted((e1,e2)->e1.getKey().compareTo(e2.getKey()))
-						.map(e -> new AttributeNameBean(e.getKey(), e.getValue()))
-						.collect(Collectors.toList());
-				getDisplay().asyncExec(() -> {
-					if(tableViewer.getControl().isDisposed()) return;
-					tableViewer.setInput(txList);
-					attrNames.clear();
-					attrNames.addAll(newAttrNames);
-					if(!attrNames.isEmpty())
-						txFilter.setSearchProp(attrNames.get(0).getName(), attrNames.get(0).getType());
-					if (searchPropComboViewer!=null)
-						searchPropComboViewer.refresh();
-					if (viewPropComboViewer!=null)
-						viewPropComboViewer.refresh();
-				});
-				updateThread=null;
-			});
-			updateThread.start();
-		}
+		final IWaveform requestedStream = trackEntry != null && trackEntry.waveform.getType().isTransaction()
+				? trackEntry.waveform : null;
+		if (requestedStream != null && stream == requestedStream) return;
+		updateJob.cancel();
+		stream = requestedStream;
+		attrNames.clear();
+		tableViewer.setInput(emptyList);
+		if (requestedStream == null) return;
+
+		updateJob.schedule("Read transactions", monitor -> {
+			final Map<String, DataType> propNames = new HashMap<>();
+			final List<ITx> txList = new ArrayList<>();
+			if (monitor.isCanceled()) throw new OperationCanceledException();
+			for (EventEntry entry : requestedStream.getEvents().entrySet()) {
+				if (monitor.isCanceled()) throw new OperationCanceledException();
+				if (entry.events == null) continue;
+				for (IEvent event : entry.events) {
+					if (monitor.isCanceled()) throw new OperationCanceledException();
+					if (event.getKind() == EventKind.BEGIN || event.getKind() == EventKind.SINGLE) {
+						ITx tx = ((ITxEvent) event).getTransaction();
+						tx.getAttributes().forEach(attr -> propNames.put(attr.getName(), attr.getDataType()));
+						txList.add(tx);
+					}
+				}
+			}
+			if (monitor.isCanceled()) throw new OperationCanceledException();
+			txList.sort((t1, t2) -> Long.compare(t1.getBeginTime(), t2.getBeginTime()));
+			final List<AttributeNameBean> newAttrNames = propNames.entrySet().stream()
+					.sorted(Map.Entry.comparingByKey())
+					.map(e -> new AttributeNameBean(e.getKey(), e.getValue()))
+					.collect(Collectors.toList());
+			return new TransactionData(txList, newAttrNames);
+		});
 	}
 
 	public void setSearchProps(String propName, DataType type, String propValue) {

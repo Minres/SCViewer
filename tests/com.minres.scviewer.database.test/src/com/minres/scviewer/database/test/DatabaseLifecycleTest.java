@@ -72,6 +72,28 @@ public class DatabaseLifecycleTest {
     }
 
     @Test
+    public void notificationsRunOutsideDatabaseLockAndSeeCommittedState() {
+        WaveformDb db = new WaveformDb();
+        Loader loader = new Loader(false);
+        IWaveformDbLoaderFactory factory = factory(loader);
+        db.bind(factory);
+        java.util.List<String> notifications = new java.util.ArrayList<>();
+        db.addPropertyChangeListener(event -> {
+            assertFalse("Listeners must be able to hand work to a thread calling close()", Thread.holdsLock(db));
+            assertTrue(db.isLoaded());
+            assertEquals(100, db.getMaxTime());
+            assertEquals(1, db.getAllWaves().size());
+            notifications.add(event.getPropertyName());
+        });
+        try {
+            assertTrue(db.load(new File("success.review")));
+            assertTrue(notifications.contains(IHierNode.WAVEFORMS));
+            assertTrue(notifications.contains(IHierNode.CHILDS));
+            assertTrue(notifications.contains(IHierNode.LOADING_FINISHED));
+        } finally { db.unbind(factory); db.close(); }
+    }
+
+    @Test
     public void invalidFtrFailsAndLoaderCanBeReusedAfterDisposal() throws Exception {
         FtrDbLoader loader = new FtrDbLoader();Path invalid = Files.createTempFile("invalid-ftr-", ".ftr");
         try {
