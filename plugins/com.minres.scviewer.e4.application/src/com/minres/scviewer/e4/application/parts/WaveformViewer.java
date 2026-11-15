@@ -626,10 +626,19 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		captureSettings().replaceState(state);
 	}
 
+	private static void captureTracks(List<TrackEntry> entries, Integer parent, List<ViewerSettings.Track> result) {
+		for (TrackEntry entry : entries) {
+			int index = result.size();
+			result.add(new ViewerSettings.Track(entry.waveform.getFullName(), entry.waveform.getType(),
+					entry.valueDisplay, entry.waveDisplay, entry.selected, parent, entry.isGroup(),
+					entry.hierState == TrackEntry.HierState.OPENED));
+			if (entry.isGroup()) captureTracks(entry.waveforms, index, result);
+		}
+	}
+
 	private ViewerSettings captureSettings() {
-		List<ViewerSettings.Track> tracks = waveformPane.getStreamList().stream()
-				.map(t -> new ViewerSettings.Track(t.waveform.getFullName(), t.waveform.getType(),
-						t.valueDisplay, t.waveDisplay, t.selected)).toList();
+		List<ViewerSettings.Track> tracks = new ArrayList<>();
+		captureTracks(waveformPane.getStreamList(), null, tracks);
 		WaveformSelection selection = WaveformSelection.from(waveformPane.getSelection());
 		boolean selectedTransaction = selection.transaction() != null && selection.track() != null;
 		return new ViewerSettings(tracks, waveformPane.getCursorList().stream().map(ICursor::getTime).toList(),
@@ -677,14 +686,30 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		waveformPane.setSelection(StructuredSelection.EMPTY);
 		waveformPane.getStreamList().clear();
 		List<TrackEntry> selectedTracks = new ArrayList<>();
+		Map<ViewerSettings.Track, TrackEntry> entries = new java.util.IdentityHashMap<>();
 		TrackEntry transactionTrack = null;
 		for (ResolvedTrack track : resolved) {
 			TrackEntry entry = waveformPane.addWaveform(track.waveform(), -1);
 			entry.valueDisplay = track.settings().valueDisplay();
 			entry.waveDisplay = track.settings().waveDisplay();
+			if (track.settings().group()) entry.hierState = track.settings().expanded()
+					? TrackEntry.HierState.OPENED : TrackEntry.HierState.CLOSED;
+			entries.put(track.settings(), entry);
 			if (track.settings().selected()) selectedTracks.add(entry);
 			if (track.waveform() == selectedWaveform) transactionTrack = entry;
 		}
+		for (ViewerSettings.Track track : settings.tracks()) {
+			if (track.parent() == null) continue;
+			TrackEntry child = entries.get(track);
+			TrackEntry parent = entries.get(settings.tracks().get(track.parent()));
+			if (child != null && parent != null) {
+				waveformPane.getStreamList().remove(child);
+				parent.waveforms.add(child);
+			}
+		}
+		List<TrackEntry> visible = TrackEntry.visibleTracks(waveformPane.getStreamList());
+		selectedTracks.retainAll(visible);
+		if (!visible.contains(transactionTrack)) transactionTrack = null;
 		List<ICursor> cursors = waveformPane.getCursorList();
 		if (settings.cursors().size() == cursors.size()) {
 			for (int i = 0; i < cursors.size(); i++) cursors.get(i).setTime(settings.cursors().get(i));
@@ -810,13 +835,15 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 			java.util.Optional<TrackEntry> o = selection.toList().stream().filter(e -> e instanceof TrackEntry).findFirst();
 			if(o.isPresent()) {
 				TrackEntry trackEntry = o.get();
-				if (insert) {
-					int index = waveformPane.getStreamList().indexOf(trackEntry);
-					for (IWaveform waveform : iWaveforms)
-						waveformPane.addWaveform(waveform, index++);
-				} else {
-					for (IWaveform waveform : iWaveforms)
-						waveformPane.addWaveform(waveform, -1);
+				List<TrackEntry> siblings = TrackEntry.siblingsOf(waveformPane.getStreamList(), trackEntry);
+				if (siblings != null) {
+					int index = insert ? siblings.indexOf(trackEntry) : siblings.indexOf(trackEntry) + 1;
+					for (IWaveform waveform : iWaveforms) {
+						TrackEntry added = waveformPane.addWaveform(waveform, -1);
+						waveformPane.getStreamList().remove(added);
+						siblings.add(index++, added);
+					}
+					waveformPane.update();
 				}
 
 			}
@@ -896,6 +923,27 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 			return;
 		}
 		updateAll();
+	}
+
+	public boolean canGroupSelectedTracks() {
+		return waveformPane != null && TrackEntry.groupingSiblings(waveformPane.getStreamList(),
+				WaveformSelection.from(getSelection()).tracks()) != null;
+	}
+
+	public boolean canUngroupSelectedTracks() {
+		return waveformPane != null && WaveformSelection.from(getSelection()).tracks().stream()
+				.anyMatch(track -> track.isGroup() && TrackEntry.siblingsOf(waveformPane.getStreamList(), track) != null);
+	}
+
+	public void groupSelectedTracks(String name) {
+		if (canGroupSelectedTracks() && name != null && !name.isBlank()) waveformPane.groupSelectedTracks(name);
+	}
+
+	public void ungroupSelectedTracks() {
+		if (waveformPane == null) return;
+		for (TrackEntry track : WaveformSelection.from(getSelection()).tracks()) {
+			if (track.isGroup()) waveformPane.ungroupTracks(track);
+		}
 	}
 
 	/**

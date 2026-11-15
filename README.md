@@ -68,3 +68,15 @@ Legend:
 | Key Pos1   |          | ZoomBar  | scroll to begin                   |
 | Key End    |          | ZoomBar  | scroll to end                     |
 
+
+Track groups
+============
+
+In the track name pane, select tracks and press Ctrl+G (Command+G on macOS)
+to create a named group. Tracks, separators, and existing groups can be grouped
+when they share a parent; selecting members within a group creates a subgroup. Click the disclosure arrow or double-click its header
+to collapse or expand it. Select a group and press Ctrl+Shift+G
+(Command+Shift+G on macOS) to ungroup it without removing its tracks.
+Settings files and persisted viewer state preserve group names, membership, nesting,
+and expansion state, including tracks inside collapsed groups. Older settings files
+continue to load as an ordinary list of tracks.

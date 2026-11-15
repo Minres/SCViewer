@@ -137,6 +137,20 @@ public class WaveformView implements IWaveformView {
 
 	private TreeMap<Integer, TrackEntry> trackVerticalOffset;
 
+	private static final int GROUP_INDENT = 16;
+	private final java.util.Map<TrackEntry, Integer> trackDepths = new java.util.IdentityHashMap<>();
+
+	private void collectTrackDepths(List<TrackEntry> entries, int depth) {
+		for (TrackEntry entry : entries) {
+			trackDepths.put(entry, depth);
+			if (entry.hierState == HierState.OPENED) collectTrackDepths(entry.waveforms, depth + 1);
+		}
+	}
+
+	private int nameIndent(TrackEntry entry) {
+		return trackDepths.getOrDefault(entry, 0) * GROUP_INDENT;
+	}
+
 	private IWaveformStyleProvider styleProvider;
 
 	protected TrackEntry lastClickedEntry;
@@ -181,12 +195,18 @@ public class WaveformView implements IWaveformView {
 			if (e.button == 1) {
 				Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
 				if (entry != null) {
+					if (e.widget == nameList && e.x >= nameIndent(entry.getValue()) && e.x < nameIndent(entry.getValue()) + 16 && entry.getValue().isGroup()) {
+						setGroupExpanded(entry.getValue(), entry.getValue().hierState != HierState.OPENED);
+						lastClickedEntry = entry.getValue();
+						return;
+					}
 					if ((e.stateMask & SWT.SHIFT) != 0) {
-						if (lastClickedEntry.selected) {
-							int firstIdx = streams.indexOf(lastClickedEntry);
-							int lastIdx = streams.indexOf(entry.getValue());
-							List<TrackEntry> res = firstIdx > lastIdx ? streams.subList(lastIdx, firstIdx + 1)
-									: streams.subList(firstIdx, lastIdx + 1);
+						if (lastClickedEntry != null && lastClickedEntry.selected) {
+							List<TrackEntry> visible = TrackEntry.visibleTracks(streams);
+						int firstIdx = visible.indexOf(lastClickedEntry);
+							int lastIdx = visible.indexOf(entry.getValue());
+							List<TrackEntry> res = firstIdx > lastIdx ? visible.subList(lastIdx, firstIdx + 1)
+									: visible.subList(firstIdx, lastIdx + 1);
 							setSelection(new StructuredSelection(res), (e.stateMask & SWT.CTRL) != 0, false);
 						} else
 							setSelection(new StructuredSelection(entry.getValue()), (e.stateMask & SWT.CTRL) != 0, false);
@@ -201,13 +221,18 @@ public class WaveformView implements IWaveformView {
 		@Override
 		public void mouseDoubleClick(MouseEvent e) {
 			Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
-			if(entry != null)
-				setSelection(new StructuredSelection(entry.getValue()), false, false);
-				lastClickedEntry = entry.getValue();
-				for (IWaveformviewEventListener listner : eventListener) {
-					listner.onTrackEntryDoubleClickEvent(entry.getValue());
-				}
+			if (entry == null || e.y >= entry.getKey() + entry.getValue().height) return;
+			TrackEntry track = entry.getValue();
+			setSelection(new StructuredSelection(track), false, false);
+			lastClickedEntry = track;
+			if (track.isGroup()) {
+				setGroupExpanded(track, track.hierState != HierState.OPENED);
+				return;
+			}
+			for (IWaveformviewEventListener listener : eventListener)
+				listener.onTrackEntryDoubleClickEvent(track);
 		}
+
 	};
 
 	class WaveformMouseListener implements PaintListener, Listener {
@@ -591,32 +616,48 @@ public class WaveformView implements IWaveformView {
 		}
 	}
 
+	@Override
+	public TrackEntry groupSelectedTracks(String name) {
+		TrackEntry group = TrackEntry.groupTracks(streams, currentWaveformSelection, name, styleProvider);
+		if (group == null) return null;
+		update();
+		setSelection(new StructuredSelection(group));
+		return group;
+	}
+
+	@Override
+	public void ungroupTracks(TrackEntry group) {
+		if (!TrackEntry.ungroupTracks(streams, group)) return;
+		update();
+		setSelection(new StructuredSelection(group.waveforms));
+	}
+
+	@Override
+	public void setGroupExpanded(TrackEntry group, boolean expanded) {
+		if (!group.isGroup()) return;
+		group.hierState = expanded ? HierState.OPENED : HierState.CLOSED;
+		update();
+		setSelection(new StructuredSelection(group));
+	}
+
 	public void update() {
 		tracksVerticalHeight = 0;
 		int nameMaxWidth = 0;
 		trackVerticalOffset.clear();
+		trackDepths.clear();
+		collectTrackDepths(streams, 0);
 		waveformCanvas.clearAllWaveformPainter(false);
 		boolean even = true;
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
 		tl.setFont(styleProvider.getNameFont());
-		for (TrackEntry streamEntry : streams) {
-			if(streamEntry.hierState == HierState.OPENED) {
-				for (TrackEntry trackEntry : streamEntry.waveforms) {
-					addPainter(even, trackEntry);
-					trackVerticalOffset.put(tracksVerticalHeight, trackEntry);
-					tl.setText(trackEntry.waveform.getFullName());
-					nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width);
-					tracksVerticalHeight += trackEntry.height;
-					even = !even;					
-				}
-			} else {
-				addPainter(even, streamEntry);
-				trackVerticalOffset.put(tracksVerticalHeight, streamEntry);
-				tl.setText(streamEntry.waveform.getFullName());
-				nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width);
-				tracksVerticalHeight += streamEntry.height;
-				even = !even;
-			}
+		for (TrackEntry entry : TrackEntry.visibleTracks(streams)) {
+			addPainter(even, entry);
+			trackVerticalOffset.put(tracksVerticalHeight, entry);
+			tl.setText(entry.waveform.getFullName());
+			nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width + nameIndent(entry)
+					+ (entry.hierState == HierState.NONE && nameIndent(entry) == 0 ? 5 : 18));
+			tracksVerticalHeight += entry.height;
+			even = !even;
 		}
 		waveformCanvas.syncSb();
 		nameList.setSize(nameMaxWidth + 15, tracksVerticalHeight);
@@ -652,7 +693,7 @@ public class WaveformView implements IWaveformView {
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
 		tl.setFont(styleProvider.getNameFontHighlite());
 		int valueMaxWidth = 0;
-		for (TrackEntry v : streams) {
+		for (TrackEntry v : TrackEntry.visibleTracks(streams)) {
 			tl.setText(v.currentValue);
 			valueMaxWidth = Math.max(valueMaxWidth, tl.getBounds().width);
 		}
@@ -662,7 +703,7 @@ public class WaveformView implements IWaveformView {
 
 	private void updateValueList() {
 		final Long time = getCursorTime();
-		streams.stream()/*.parallel()*/.forEach(entry -> {
+		TrackEntry.visibleTracks(streams).stream().forEach(entry -> {
 			if (entry.waveform.getType() == WaveformType.SIGNAL) {
 				IEvent[] value = entry.waveform.getEventsBeforeTime(time);
 				if (value[0] instanceof BitVector) {
@@ -904,11 +945,12 @@ public class WaveformView implements IWaveformView {
 			moveSelection(direction, NEXT_PREV_IN_STREAM);
 		else {
 			if (currentWaveformSelection.size() == 1) {
-				int idx = streams.indexOf(currentWaveformSelection.get(0));
+				List<TrackEntry> visible = TrackEntry.visibleTracks(streams);
+				int idx = visible.indexOf(currentWaveformSelection.get(0));
 				if (direction == GotoDirection.UP && idx > 0) {
-					setSelection(new StructuredSelection(streams.get(idx - 1)));
-				} else if (direction == GotoDirection.DOWN && idx < (streams.size() - 1)) {
-					setSelection(new StructuredSelection(streams.get(idx + 1)));
+					setSelection(new StructuredSelection(visible.get(idx - 1)));
+				} else if (direction == GotoDirection.DOWN && idx < (visible.size() - 1)) {
+					setSelection(new StructuredSelection(visible.get(idx + 1)));
 				}
 			}
 		}
@@ -1034,7 +1076,8 @@ public class WaveformView implements IWaveformView {
 	private boolean streamsVisible(ITxRelation relation) {
 		final IWaveform src = relation.getSource().getStream();
 		final IWaveform tgt = relation.getTarget().getStream();
-		return streams.stream().anyMatch(x -> x.waveform == src) && streams.stream().anyMatch(x -> x.waveform == tgt);
+		return TrackEntry.visibleTracks(streams).stream().anyMatch(x -> x.waveform == src)
+				&& TrackEntry.visibleTracks(streams).stream().anyMatch(x -> x.waveform == tgt);
 	}
 
 	/*
@@ -1083,14 +1126,7 @@ public class WaveformView implements IWaveformView {
 	 */
 	@Override
 	public void deleteSelectedTracks() {
-		List<TrackEntry> streamList = getStreamList();
-		for (Object o : (IStructuredSelection) getSelection()) {
-			if (o instanceof TrackEntry) {
-				TrackEntry e = (TrackEntry) o;
-				e.selected = false;
-				streamList.remove(e);
-			}
-		}
+		TrackEntry.removeTracks(streams, WaveformSelection.from(getSelection()).tracks());
 		setSelection(new StructuredSelection());
 		update();
 	}
@@ -1167,7 +1203,7 @@ public class WaveformView implements IWaveformView {
 	protected void drawName(GC gc, Rectangle subArea, Integer firstKey, TrackEntry entry) {
 		IWaveform w = entry.waveform;
 		subArea.height = w.getRowCount() * styleProvider.getTrackHeight();
-		drawTextFormat(gc, subArea, firstKey, w.getFullName(), entry.selected, entry.hierState);
+		drawTextFormat(gc, subArea, firstKey, w.getFullName(), entry.selected, entry.hierState, nameIndent(entry));
 	}
 
 	protected void drawValue(GC gc, Rectangle subArea, Integer yOffset, String value, boolean highlite) {
@@ -1186,6 +1222,11 @@ public class WaveformView implements IWaveformView {
 	}
 	
 	protected void drawTextFormat(GC gc, Rectangle subArea, int yOffset, String value, boolean highlite, HierState state) {
+		drawTextFormat(gc, subArea, yOffset, value, highlite, state, 0);
+	}
+
+	private void drawTextFormat(GC gc, Rectangle subArea, int yOffset, String value, boolean highlite,
+			HierState state, int indent) {
 		Point size = gc.textExtent(value);
 		int height = styleProvider.getTrackHeight();
 		if (highlite) {
@@ -1198,28 +1239,16 @@ public class WaveformView implements IWaveformView {
 			gc.setForeground(namePaneHeader.getForeground());
 			gc.setFont(styleProvider.getNameFont());
 		}
-		gc.drawText(value, subArea.x + 5, subArea.y + yOffset + (height - size.y) / 2, true);
-/*		if(state==HierState.NONE) {
-			gc.drawText(value, subArea.x + 5, subArea.y + yOffset + (height - size.y) / 2, true);
-		} else {
-			gc.setBackground(highlite?SWTResourceManager.getColor(SWT.COLOR_LIST_SELECTION_TEXT):namePaneHeader.getForeground());
-			int o = yOffset + (height-12)/2;
-			if(state==HierState.OPENED) {
-				Point tl = new Point(1,o+2);
-				Point tr = new Point(10,o+2);
-				Point br = new Point(6,o+9);
-				Point bl = new Point(5,o+9);
-				gc.fillPolygon(new int[] {tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y});
-			} else {
-				Point tl = new Point(2,o+1);
-				Point tr = new Point(9,o+5);
-				Point br = new Point(9,o+6);
-				Point bl = new Point(2,o+10);
-				gc.fillPolygon(new int[] {tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y});
-			}
-			Rectangle textArea = new Rectangle(subArea.x+12,  subArea.y, subArea.width-12, subArea.height);
-			gc.drawText(value, textArea.x + 5, subArea.y + yOffset + (height - size.y) / 2, true);
-		}*/
+		gc.drawText(value, subArea.x + indent + (state == HierState.NONE && indent == 0 ? 5 : 18), subArea.y + yOffset + (height - size.y) / 2, true);
+		if (state != HierState.NONE) {
+			int y = subArea.y + yOffset + height / 2;
+			gc.setBackground(gc.getForeground());
+			int x = subArea.x + indent;
+			gc.fillPolygon(state == HierState.OPENED
+					? new int[] {x + 5, y - 3, x + 13, y - 3, x + 9, y + 3}
+					: new int[] {x + 6, y - 4, x + 6, y + 4, x + 12, y});
+		}
+
 	}
 
 	public void setHighliteRelation(RelationType relationType) {
@@ -1363,13 +1392,13 @@ public class WaveformView implements IWaveformView {
 
 	public TrackEntry getEntryFor(ITx source) {
 		if(source.getGenerator()==null) return null; 
-		Optional<TrackEntry> optGen = streams.stream()
+		Optional<TrackEntry> optGen = TrackEntry.visibleTracks(streams).stream()
 				.filter(e -> source.getGenerator().equals(e.waveform))
 				.findFirst();
 		if (optGen.isPresent())
 			return optGen.get();
 		if(source.getStream()==null) return null; 
-		Optional<TrackEntry> optStr = streams.stream().filter(e -> source.getStream().equals(e.waveform)).findFirst();
+		Optional<TrackEntry> optStr = TrackEntry.visibleTracks(streams).stream().filter(e -> source.getStream().equals(e.waveform)).findFirst();
 		if (optStr.isPresent())
 			return optStr.get();
 		return null;
@@ -1377,7 +1406,7 @@ public class WaveformView implements IWaveformView {
 
 	@Override
 	public TrackEntry getEntryFor(IWaveform source) {
-		Optional<TrackEntry> optGen = streams.stream().filter(e -> source.equals(e.waveform)).findFirst();
+		Optional<TrackEntry> optGen = TrackEntry.visibleTracks(streams).stream().filter(e -> source.equals(e.waveform)).findFirst();
 		if (optGen.isPresent())
 			return optGen.get();
 		return null;
@@ -1606,7 +1635,7 @@ public class WaveformView implements IWaveformView {
 	}
 	
 	public boolean waveformsContainsTx() {
-		return  streams.stream().filter(e -> e.waveform.getType().isTransaction()).findFirst().isPresent();
+		return TrackEntry.visibleTracks(streams).stream().filter(e -> e.waveform.getType().isTransaction()).findFirst().isPresent();
 	}
 
 	@Override

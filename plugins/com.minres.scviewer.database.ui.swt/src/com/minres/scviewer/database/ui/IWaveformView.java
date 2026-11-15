@@ -45,6 +45,14 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	
 	void update();
 
+	/** Group selected sibling tracks in their display order. */
+	TrackEntry groupSelectedTracks(String name);
+
+	/** Remove a group header, preserving its members. */
+	void ungroupTracks(TrackEntry group);
+
+	void setGroupExpanded(TrackEntry group, boolean expanded);
+
 	Control getControl();
 
 	Control getNameControl();

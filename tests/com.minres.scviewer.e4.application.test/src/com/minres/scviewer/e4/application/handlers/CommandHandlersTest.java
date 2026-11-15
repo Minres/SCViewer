@@ -62,6 +62,47 @@ public class CommandHandlersTest {
     }
 
     @Test
+    public void groupingHandlersFollowActivePartAndGuardMissingSelection() {
+        class GroupViewer extends Viewer {
+            boolean enabled;
+            String name;
+            int ungrouped;
+            @Override public boolean canGroupSelectedTracks() { return enabled; }
+            @Override public boolean canUngroupSelectedTracks() { return enabled; }
+            @Override public void groupSelectedTracks(String value) { name = value; }
+            @Override public void ungroupSelectedTracks() { ungrouped++; }
+        }
+        AtomicReference<MPart> active = new AtomicReference<>();
+        EPartService service = parts(active);
+        AtomicReference<String> answer = new AtomicReference<>("bus");
+        GroupTracksHandler group = new GroupTracksHandler() {
+            @Override protected String requestGroupName(org.eclipse.swt.widgets.Shell shell) { return answer.get(); }
+        };
+        UngroupTracksHandler ungroup = new UngroupTracksHandler();
+        assertFalse(group.canExecute(service));
+        assertFalse(ungroup.canExecute(service));
+        group.execute(service, null); ungroup.execute(service);
+        active.set(part("other part"));
+        assertFalse(group.canExecute(service));
+        GroupViewer first = new GroupViewer(), second = new GroupViewer();
+        try {
+            active.set(part(first));
+            assertFalse(group.canExecute(service));
+            group.execute(service, null); ungroup.execute(service);
+            assertNull(first.name); assertEquals(0, first.ungrouped);
+            first.enabled = true;
+            assertTrue(group.canExecute(service)); assertTrue(ungroup.canExecute(service));
+            answer.set(null); group.execute(service, null);
+            assertNull(first.name);
+            second.enabled = true;
+            active.set(part(second));
+            answer.set("bus"); group.execute(service, null); ungroup.execute(service);
+            assertEquals("bus", second.name); assertEquals(1, second.ungrouped);
+            assertNull(first.name); assertEquals(0, first.ungrouped);
+        } finally { first.closeDatabase(); second.closeDatabase(); }
+    }
+
+    @Test
     public void addAllUsesFilteredChildrenWithoutASelectionAndFollowsActiveTab() {
         Viewer first = new Viewer(), second = new Viewer();
         IWaveform a = waveform(WaveformType.STREAM), b = waveform(WaveformType.STREAM);

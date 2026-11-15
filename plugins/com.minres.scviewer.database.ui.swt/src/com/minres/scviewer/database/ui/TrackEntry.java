@@ -70,6 +70,84 @@ public class TrackEntry {
 		}
 	}
 
+	/** A group retains its header when expanded. Children are ordinary tracks or groups. */
+	public static TrackEntry group(String name, List<TrackEntry> children, IWaveformStyleProvider styles) {
+		TrackEntry group = new TrackEntry(children.toArray(new TrackEntry[0]), styles);
+		group.waveform.setName(name);
+		group.hierState = HierState.OPENED;
+		return group;
+	}
+
+	public boolean isGroup() {
+		return waveform instanceof EmptyWaveform && hierState != HierState.NONE;
+	}
+
+	/** Returns the actual sibling list owning this entry, including collapsed groups. */
+	public static List<TrackEntry> siblingsOf(List<TrackEntry> roots, TrackEntry track) {
+		if (roots.stream().anyMatch(entry -> entry == track)) return roots;
+		for (TrackEntry entry : roots) {
+			if (!entry.isGroup()) continue;
+			List<TrackEntry> siblings = siblingsOf(entry.waveforms, track);
+			if (siblings != null) return siblings;
+		}
+		return null;
+	}
+
+	/** Group only siblings, so selecting a group and its descendant cannot create a cycle. */
+	public static List<TrackEntry> groupingSiblings(List<TrackEntry> roots, List<TrackEntry> selected) {
+		if (selected.isEmpty()) return null;
+		List<TrackEntry> siblings = siblingsOf(roots, selected.get(0));
+		return siblings != null && selected.stream().allMatch(track -> siblingsOf(roots, track) == siblings)
+				? siblings : null;
+	}
+
+	public static TrackEntry groupTracks(List<TrackEntry> roots, List<TrackEntry> selected,
+			String name, IWaveformStyleProvider styles) {
+		List<TrackEntry> siblings = groupingSiblings(roots, selected);
+		if (siblings == null) return null;
+		List<TrackEntry> members = siblings.stream()
+				.filter(entry -> selected.stream().anyMatch(track -> track == entry)).toList();
+		int index = siblings.indexOf(members.get(0));
+		TrackEntry group = group(name, members, styles);
+		siblings.removeAll(members);
+		siblings.add(index, group);
+		return group;
+	}
+
+	public static boolean ungroupTracks(List<TrackEntry> roots, TrackEntry group) {
+		List<TrackEntry> siblings = siblingsOf(roots, group);
+		if (!group.isGroup() || siblings == null) return false;
+		int index = siblings.indexOf(group);
+		siblings.remove(index);
+		siblings.addAll(index, group.waveforms);
+		return true;
+	}
+
+	/** Remove selected entries from their owning lists, leaving empty group headers intact. */
+	public static void removeTracks(List<TrackEntry> roots, List<TrackEntry> selected) {
+		for (TrackEntry track : new ArrayList<>(selected)) {
+			track.selected = false;
+			List<TrackEntry> siblings = siblingsOf(roots, track);
+			if (siblings == null) continue;
+			for (int index = 0; index < siblings.size(); index++) {
+				if (siblings.get(index) == track) {
+					siblings.remove(index);
+					break;
+				}
+			}
+		}
+	}
+
+	public static List<TrackEntry> visibleTracks(List<TrackEntry> roots) {
+		List<TrackEntry> result = new ArrayList<>();
+		for (TrackEntry entry : roots) {
+			result.add(entry);
+			if (entry.hierState == HierState.OPENED)
+				result.addAll(visibleTracks(entry.waveforms));
+		}
+		return result;
+	}
+
 	@Override
     public boolean equals(Object obj) {
 		if(obj instanceof TrackEntry){

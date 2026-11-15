@@ -37,7 +37,16 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
     public static final String WAVEFORM_SELECTED = ".WAVEFORM_SELECTED";
     public static final String TX_DETAILS_SHOWN = "TX_DETAILS_SHOWN";
 
-    public record Track(String name, WaveformType type, ValueDisplay valueDisplay, WaveDisplay waveDisplay, boolean selected) {}
+    /** Tracks are stored in preorder, including hidden descendants. PARENT is an index
+     * into this list; it must refer to an earlier group, making cycles impossible.
+     * Legacy entries have no parent or group flags and remain ordinary root tracks.
+     */
+    public record Track(String name, WaveformType type, ValueDisplay valueDisplay, WaveDisplay waveDisplay,
+            boolean selected, Integer parent, boolean group, boolean expanded) {
+        public Track(String name, WaveformType type, ValueDisplay valueDisplay, WaveDisplay waveDisplay, boolean selected) {
+            this(name, type, valueDisplay, waveDisplay, selected, null, false, false);
+        }
+    }
 
     public ViewerSettings {
         tracks = List.copyOf(tracks);
@@ -68,6 +77,11 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
             Track track = tracks.get(i);
             String key = SHOWN_WAVEFORM + i;
             state.put(key, track.name());
+            if (track.parent() != null) state.put(key + ".PARENT", track.parent().toString());
+            if (track.group()) {
+                state.put(key + ".GROUP", "true");
+                state.put(key + ".EXPANDED", Boolean.toString(track.expanded()));
+            }
             if (track.type() != null) state.put(key + WAVEFORM_TYPE, track.type().name());
             state.put(key + WAVEFORM_SELECTED, Boolean.toString(track.selected()));
             state.put(key + VALUE_DISPLAY, track.valueDisplay().name());
@@ -100,10 +114,18 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
             String name = required(state, key);
             WaveformType type = "TRANSACTION".equals(state.get(key + WAVEFORM_TYPE)) ? WaveformType.STREAM
                     : enumeration(state, key + WAVEFORM_TYPE, WaveformType.class, null);
+            Long parent = number(state, key + ".PARENT");
+            if (parent != null && (parent < 0 || parent >= i || !tracks.get(parent.intValue()).group()))
+                throw invalid(key + ".PARENT", "must reference an earlier group");
+            boolean group = Boolean.TRUE.equals(bool(state, key + ".GROUP"));
+            Boolean expanded = bool(state, key + ".EXPANDED");
+            if (group && type != WaveformType.EMPTY) throw invalid(key + WAVEFORM_TYPE, "group must have EMPTY type");
+            if (!group && expanded != null) throw invalid(key + ".EXPANDED", "requires a group");
             tracks.add(new Track(name, type,
                     enumeration(state, key + VALUE_DISPLAY, ValueDisplay.class, ValueDisplay.DEFAULT),
                     enumeration(state, key + WAVE_DISPLAY, WaveDisplay.class, WaveDisplay.DEFAULT),
-                    Boolean.TRUE.equals(bool(state, key + WAVEFORM_SELECTED))));
+                    Boolean.TRUE.equals(bool(state, key + WAVEFORM_SELECTED)),
+                    parent == null ? null : parent.intValue(), group, group && !Boolean.FALSE.equals(expanded)));
         }
         List<Long> cursors = new ArrayList<>();
         for (int i = 0, n = count(state, SHOWN_CURSOR + "S"); i < n; i++) {
