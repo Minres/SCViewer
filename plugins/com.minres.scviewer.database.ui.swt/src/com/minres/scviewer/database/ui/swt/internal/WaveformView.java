@@ -67,7 +67,6 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.wb.swt.SWTResourceManager;
 
@@ -126,6 +125,13 @@ public class WaveformView implements IWaveformView {
 	final ToolTipHandler toolTipHandler;
 
 	private boolean revealSelected = false;
+	private boolean layoutInProgress;
+	private boolean synchronizingScroll;
+	private boolean verticalLayoutQueued;
+	private boolean updateQueued;
+	private boolean revealAfterUpdate;
+	private int nameContentWidth;
+	private int valueContentWidth;
 
 	private Composite top;
 
@@ -508,32 +514,23 @@ public class WaveformView implements IWaveformView {
 		waveformCanvas.addListener(SWT.MouseMove, waveformMouseListener);
 		waveformCanvas.addListener(SWT.MouseWheel, waveformMouseListener);
 
-		nameListScrolled.getVerticalBar().addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				int y = ((ScrollBar) e.widget).getSelection();
-				Point v = valueListScrolled.getOrigin();
-				valueListScrolled.setOrigin(v.x, y);
-				Point t = waveformCanvas.getOrigin();
-				waveformCanvas.setOrigin(t.x, -y);
-			}
-		});
-		valueListScrolled.getVerticalBar().addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				int y = ((ScrollBar) e.widget).getSelection();
-				nameListScrolled.setOrigin(nameListScrolled.getOrigin().x, y);
-				waveformCanvas.setOrigin(waveformCanvas.getOrigin().x, -y);
-			}
-		});
+		nameListScrolled.getVerticalBar().addListener(SWT.Selection,
+				e -> synchronizeVerticalScroll(nameListScrolled.getOrigin().y));
+		valueListScrolled.getVerticalBar().addListener(SWT.Selection,
+				e -> synchronizeVerticalScroll(valueListScrolled.getOrigin().y));
 		waveformCanvas.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				int y = waveformCanvas.getVerticalBar().getSelection();
-				nameListScrolled.setOrigin(nameListScrolled.getOrigin().x, y);
-				valueListScrolled.setOrigin(valueListScrolled.getOrigin().x, y);
+				synchronizeVerticalScroll(-waveformCanvas.getOrigin().y);
 			}
 		});
+		// ScrolledComposite can adjust its origin during layout without a Selection event.
+		nameList.addListener(SWT.Move, e -> synchronizeVerticalScroll(nameListScrolled.getOrigin().y));
+		valueList.addListener(SWT.Move, e -> synchronizeVerticalScroll(valueListScrolled.getOrigin().y));
+		nameListScrolled.addListener(SWT.Resize, e -> queueVerticalLayout());
+		valueListScrolled.addListener(SWT.Resize, e -> queueVerticalLayout());
+		waveformCanvas.addListener(SWT.Resize, e -> queueVerticalLayout());
+
 		topSash.setWeights(new int[] { 25, 75 });
 		rightSash.setWeights(new int[] { 10, 90 });
 
@@ -557,16 +554,7 @@ public class WaveformView implements IWaveformView {
 	            }
 	        }
 	    });
-	    getControl().addListener(SWT.Resize, (evt) -> {
-			int y = waveformCanvas.getVerticalBar().getSelection();
-			nameListScrolled.setOrigin(nameListScrolled.getOrigin().x, y);
-			valueListScrolled.setOrigin(valueListScrolled.getOrigin().x, y);	    	
-	    });
-	    getControl().addListener(SWT.Move, (evt) -> {
-			int y = waveformCanvas.getVerticalBar().getSelection();
-			nameListScrolled.setOrigin(nameListScrolled.getOrigin().x, y);
-			valueListScrolled.setOrigin(valueListScrolled.getOrigin().x, y);	    	
-	    });
+		getControl().addListener(SWT.Resize, e -> queueVerticalLayout());
 	}
 
 	private Control createFill(Composite pane) {
@@ -602,18 +590,15 @@ public class WaveformView implements IWaveformView {
 
 	@Override
 	public void propertyChange(PropertyChangeEvent pce) {
-		if ("size".equals(pce.getPropertyName()) || "content".equals(pce.getPropertyName())) {
-			if (revealSelected) {
-				waveformCanvas.getDisplay().asyncExec(() -> {
-					update();
-					currentWaveformSelection.stream().forEach(e -> waveformCanvas.reveal(e.waveform));
-					valueList.redraw();
-					nameList.redraw();
-				});
-				revealSelected = false;
-			} else
-				waveformCanvas.getDisplay().asyncExec(WaveformView.this::update);
-		}
+		if (!"size".equals(pce.getPropertyName()) && !"content".equals(pce.getPropertyName())) return;
+		revealAfterUpdate |= revealSelected;
+		revealSelected = false;
+		if (updateQueued) return;
+		updateQueued = true;
+		waveformCanvas.getDisplay().asyncExec(() -> {
+			if (!updateQueued || waveformCanvas.isDisposed()) return;
+			update();
+		});
 	}
 
 	@Override
@@ -641,35 +626,96 @@ public class WaveformView implements IWaveformView {
 	}
 
 	public void update() {
-		tracksVerticalHeight = 0;
-		int nameMaxWidth = 0;
-		trackVerticalOffset.clear();
-		trackDepths.clear();
-		collectTrackDepths(streams, 0);
-		waveformCanvas.clearAllWaveformPainter(false);
-		boolean even = true;
+		if (waveformCanvas.isDisposed()) return;
+		updateQueued = false;
+		int scrollY = -waveformCanvas.getOrigin().y;
+		layoutInProgress = true;
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
-		tl.setFont(styleProvider.getNameFont());
-		for (TrackEntry entry : TrackEntry.visibleTracks(streams)) {
-			addPainter(even, entry);
-			trackVerticalOffset.put(tracksVerticalHeight, entry);
-			tl.setText(entry.waveform.getFullName());
-			nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width + nameIndent(entry)
-					+ (entry.hierState == HierState.NONE && nameIndent(entry) == 0 ? 5 : 18));
-			tracksVerticalHeight += entry.height;
-			even = !even;
+		try {
+			tracksVerticalHeight = 0;
+			int nameMaxWidth = 0;
+			trackVerticalOffset.clear();
+			trackDepths.clear();
+			collectTrackDepths(streams, 0);
+			waveformCanvas.clearAllWaveformPainter(false);
+			boolean even = true;
+			tl.setFont(styleProvider.getNameFont());
+			for (TrackEntry entry : TrackEntry.visibleTracks(streams)) {
+				addPainter(even, entry);
+				trackVerticalOffset.put(tracksVerticalHeight, entry);
+				tl.setText(entry.waveform.getFullName());
+				nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width + nameIndent(entry)
+						+ (entry.hierState == HierState.NONE && nameIndent(entry) == 0 ? 5 : 18));
+				tracksVerticalHeight += entry.height;
+				even = !even;
+			}
+			nameContentWidth = nameMaxWidth + 15;
+			updateValueList();
+			top.layout(true, true);
+			alignVerticalRanges();
+		} finally {
+			tl.dispose();
+			layoutInProgress = false;
 		}
-		waveformCanvas.syncSb();
-		nameList.setSize(nameMaxWidth + 15, tracksVerticalHeight);
-		nameListScrolled.setMinSize(nameMaxWidth + 15, tracksVerticalHeight);
+		if (trackVerticalOffset.isEmpty()) waveformCanvas.setOrigin(0, 0);
+		synchronizeVerticalScroll(scrollY);
+		if (revealAfterUpdate) {
+			revealAfterUpdate = false;
+			currentWaveformSelection.forEach(entry -> waveformCanvas.reveal(entry.waveform));
+		}
 		nameList.redraw();
-		updateValueList();
+		valueList.redraw();
 		waveformCanvas.redraw();
-		top.layout(new Control[] { valueList, nameList, waveformCanvas });
-		if (trackVerticalOffset.isEmpty()) {
-			waveformCanvas.setOrigin(0, 0);
+	}
+
+	/** All panes use the same track viewport; extra space is blank bottom padding. */
+	private void alignVerticalRanges() {
+		int nameHeight = Math.max(0, nameListScrolled.getClientArea().height);
+		int valueHeight = Math.max(0, valueListScrolled.getClientArea().height);
+		int waveformHeight = Math.max(0, waveformCanvas.getClientArea().height - waveformCanvas.getRulerHeight());
+		int viewport = Math.min(waveformHeight, Math.min(nameHeight, valueHeight));
+		int maximumScroll = Math.max(0, tracksVerticalHeight - viewport);
+		nameList.setSize(nameContentWidth, Math.max(tracksVerticalHeight, nameHeight + maximumScroll));
+		nameListScrolled.setMinSize(nameContentWidth, Math.max(tracksVerticalHeight, nameHeight + maximumScroll));
+		valueList.setSize(valueContentWidth, Math.max(tracksVerticalHeight, valueHeight + maximumScroll));
+		valueListScrolled.setMinSize(valueContentWidth, Math.max(tracksVerticalHeight, valueHeight + maximumScroll));
+		nameListScrolled.layout();
+		valueListScrolled.layout();
+		waveformCanvas.setVerticalScrollPadding(waveformHeight - viewport);
+	}
+
+	private void synchronizeVerticalScroll(int requestedY) {
+		if (layoutInProgress || synchronizingScroll || waveformCanvas.isDisposed()) return;
+		synchronizingScroll = true;
+		try {
+			waveformCanvas.setOrigin(waveformCanvas.getOrigin().x, -Math.max(0, requestedY));
+			int y = -waveformCanvas.getOrigin().y;
+			nameListScrolled.setOrigin(nameListScrolled.getOrigin().x, y);
+			valueListScrolled.setOrigin(valueListScrolled.getOrigin().x, y);
+			// During a native resize a follower may still have its old range.
+			int accepted = Math.min(y, Math.min(nameListScrolled.getOrigin().y, valueListScrolled.getOrigin().y));
+			if (accepted != y) {
+				waveformCanvas.setOrigin(waveformCanvas.getOrigin().x, -accepted);
+				nameListScrolled.setOrigin(nameListScrolled.getOrigin().x, accepted);
+				valueListScrolled.setOrigin(valueListScrolled.getOrigin().x, accepted);
+			}
+		} finally {
+			synchronizingScroll = false;
 		}
-		tl.dispose();
+	}
+
+	private void queueVerticalLayout() {
+		if (layoutInProgress || verticalLayoutQueued || waveformCanvas.isDisposed()) return;
+		verticalLayoutQueued = true;
+		waveformCanvas.getDisplay().asyncExec(() -> {
+			verticalLayoutQueued = false;
+			if (waveformCanvas.isDisposed()) return;
+			int y = -waveformCanvas.getOrigin().y;
+			layoutInProgress = true;
+			try { alignVerticalRanges(); }
+			finally { layoutInProgress = false; }
+			synchronizeVerticalScroll(y);
+		});
 	}
 
 	private void addPainter(boolean even, TrackEntry streamEntry) {
@@ -764,9 +810,12 @@ public class WaveformView implements IWaveformView {
 			}
 		});
 		int width = calculateValueWidth();
-		valueList.setSize(width, tracksVerticalHeight);
-		valueListScrolled.setMinSize(width, tracksVerticalHeight);
-		valueListScrolled.redraw();
+		if (valueContentWidth != width) {
+			valueContentWidth = width;
+			valueListScrolled.setMinWidth(width);
+			if (!layoutInProgress) queueVerticalLayout();
+		}
+		valueList.redraw();
 	}
 
 	private boolean isArrayFull(Object[] array) {

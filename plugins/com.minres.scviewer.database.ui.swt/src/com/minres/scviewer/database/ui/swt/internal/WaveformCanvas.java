@@ -96,6 +96,12 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	
 	private ScrollBar vertical;
 
+	private int verticalScrollPadding;
+
+	void setVerticalScrollPadding(int padding) {
+		verticalScrollPadding = Math.max(0, padding);
+	}
+
 	HashMap<IWaveform, IWaveformPainter> wave2painterMap;
 
 	public WaveformCanvas(final Composite parent, int style, IWaveformStyleProvider styleProvider, ZoomBar.IProvider scrollbarProvider) {
@@ -345,36 +351,27 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 	 * :<b> transform, image size, client area</b>.
 	 */
 	public void syncSb() {
-		if (!painterList.isEmpty()) {
-			syncHSb();
-			syncVSb();
-			fireSelectionEvent();
-		}
+		if (!painterList.isEmpty()) syncHSb();
+		syncVSb();
+		fireSelectionEvent();
 		redraw();
 	}
 
 	private void syncVSb() {
-		Rectangle clientArea=getClientArea();
-		int height = trackAreaPainter.getHeight(); // incl. Ruler
-		int clientHeight = clientArea.height;
-		vertical.setIncrement(clientHeight / 100);
-		vertical.setPageIncrement(clientHeight/2);
-		if (height > clientHeight) { /* image is higher than client area */
-			vertical.setMinimum(0);
-			vertical.setMaximum(height);
-			vertical.setEnabled(true);
-			if ( -origin.y > vertical.getMaximum() - clientHeight) {
-				origin.y = -vertical.getMaximum() + clientHeight;
-			}
-		} else { /* image is less higher than client area */
-			vertical.setMaximum(clientHeight);
-			vertical.setEnabled(false);
-			if ( -origin.y > vertical.getMaximum() - height) {
-				origin.y = -vertical.getMaximum() + height;
-			}
-		}
+		int clientHeight = Math.max(1, getClientArea().height);
+		int height = trackAreaPainter.trackVerticalOffset.isEmpty() ? 0
+				: trackAreaPainter.getHeight() + verticalScrollPadding;
+		int maximumScroll = Math.max(0, height - clientHeight);
+		int scrollY = (int) Math.max(0L, Math.min(-(long) origin.y, maximumScroll));
+		vertical.setMinimum(0);
+		vertical.setMaximum(Math.max(clientHeight, height));
 		vertical.setThumb(clientHeight);
-		vertical.setSelection(-origin.y);
+		vertical.setIncrement(Math.max(1, clientHeight / 100));
+		vertical.setPageIncrement(Math.max(1, clientHeight / 2));
+		vertical.setEnabled(maximumScroll > 0);
+		vertical.setSelection(scrollY);
+		// SWT clamps selection; the painting transform must use that same value.
+		origin.y = -vertical.getSelection();
 	}
 
 	private void syncHSb() {
