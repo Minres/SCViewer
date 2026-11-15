@@ -823,7 +823,7 @@ public class WaveformViewer implements IFileChangeListener, IPreferenceChangeLis
 		List<TrackEntry> selectedTrackEntries = new LinkedList<>();
 		for (int i = 0; i < waves; i++) {
 			String wtString  = state.get(SHOWN_WAVEFORM + i + WAVEFORM_TYPE);
-			if(wtString!=null && WaveformType.valueOf(wtString)==WaveformType.EMPTY) {
+			if(wtString!=null && wtString.equals("EMPTY")) {
 				TrackEntry trackEntry = waveformPane.addWaveform(new EmptyWaveform(state.get(SHOWN_WAVEFORM + i)), -1);
 				//check if t is selected
 				trackEntries.add(trackEntry);
