@@ -165,28 +165,36 @@ public class ArrowPainter implements IPainter {
 	protected void drawArrow(Projection proj, Color fgColor, Rectangle srcRectangle, Rectangle tgtRectangle) {
 		Point point1 = proj.project(new Point(srcRectangle.x, srcRectangle.y + srcRectangle.height / 2));
 		Point point2 = proj.project(new Point(tgtRectangle.x, tgtRectangle.y + tgtRectangle.height / 2));
+		int arrowTipOffset=yCtrlOffset/2;
 
 		if (point2.x > point1.x + srcRectangle.width)
 			point1.x += srcRectangle.width;
 		if (point1.x > point2.x + tgtRectangle.width)
 			point2.x += tgtRectangle.width;
 
+		Point endPoint = new Point(point2.x-arrowTipOffset, point2.y);
 		Path path = new Path(Display.getCurrent());
 		path.moveTo(point1.x, point1.y);
 		if (point1.y == point2.y) {
-			Point center = new Point((point1.x + point2.x) / 2, point1.y - yCtrlOffset);
+			Point center = new Point((point1.x + endPoint.x) / 2, point1.y - yCtrlOffset);
 			path.cubicTo(point1.x + X_CTRL_OFFSET, point1.y, center.x - X_CTRL_OFFSET, center.y, center.x, center.y);
-			path.cubicTo(center.x + X_CTRL_OFFSET, center.y, point2.x - X_CTRL_OFFSET, point2.y, point2.x, point2.y);
+			path.cubicTo(center.x + X_CTRL_OFFSET, center.y, endPoint.x - X_CTRL_OFFSET, endPoint.y, endPoint.x, endPoint.y);
 		} else
-			path.cubicTo(point1.x + X_CTRL_OFFSET, point1.y, point2.x - X_CTRL_OFFSET, point2.y, point2.x, point2.y);
-
+			path.cubicTo(point1.x + X_CTRL_OFFSET, point1.y, endPoint.x - X_CTRL_OFFSET, endPoint.y, endPoint.x, endPoint.y);
+		path.lineTo(point2.x, point2.y);
 		proj.setAntialias(SWT.ON);
 		proj.setForeground(fgColor);
 		proj.getGC().drawPath(path);
 		path.dispose();
 		// now draw the arrow head
-		proj.getGC().drawLine(point2.x - 8, point2.y - 5, point2.x, point2.y);
-		proj.getGC().drawLine(point2.x - 8, point2.y + 5, point2.x, point2.y);
+		Color background = proj.getGC().getBackground();
+		proj.setBackground(fgColor);
+		proj.getGC().fillPolygon(new int[] {
+				point2.x, point2.y,
+				point2.x - arrowTipOffset, point2.y - 3*arrowTipOffset/5,
+				point2.x - 3*arrowTipOffset/5, point2.y,
+				point2.x - arrowTipOffset, point2.y + 3*arrowTipOffset/5 });
+		proj.setBackground(background);
 
 	}
 
