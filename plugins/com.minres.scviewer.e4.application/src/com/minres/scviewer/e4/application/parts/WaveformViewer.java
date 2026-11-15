@@ -176,6 +176,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	ArrayList<File> filesToLoad = new ArrayList<>();
 
 	String partConfig = "";
+	private Path settingsFile;
 
 	/** The persisted state. */
 	Map<String, String> persistedState;
@@ -597,17 +598,30 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	}
 
 	public void saveState(String fileName) {
-		try { captureSettings().write(Path.of(fileName)); }
+		try {
+			Path file = Path.of(fileName).toAbsolutePath().normalize();
+			captureSettings().write(file);
+			settingsFile = file;
+		}
 		catch (IOException | IllegalArgumentException e) {
 			reportSettingsError("Cannot save settings", fileName + ": " + e.getMessage());
 		}
 	}
 
 	public void loadState(String fileName) {
-		try { applySettings(ViewerSettings.read(Path.of(fileName))); }
+		try {
+			Path file = Path.of(fileName).toAbsolutePath().normalize();
+			applySettings(ViewerSettings.read(file));
+			settingsFile = file;
+		}
 		catch (IOException | IllegalArgumentException e) {
 			reportSettingsError("Cannot load settings", fileName + ": " + e.getMessage());
 		}
+	}
+
+	/** Last successfully loaded or saved settings file for this viewer. */
+	public Path getSettingsFile() {
+		return settingsFile;
 	}
 
 	protected void reportSettingsError(String title, String message) {

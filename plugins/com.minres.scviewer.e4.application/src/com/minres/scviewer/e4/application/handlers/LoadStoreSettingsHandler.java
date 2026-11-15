@@ -48,7 +48,13 @@ public class LoadStoreSettingsHandler {
 		boolean load = "load".equals(param); //$NON-NLS-1$
 		FileDialog dialog = new FileDialog(shell, load?SWT.OPEN:SWT.SAVE);
 		dialog.setFilterExtensions (new String []{Messages.LoadStoreSettingsHandler_2});
-		if(!load) dialog.setFileName(Messages.LoadStoreSettingsHandler_3);
+		if (!load) {
+			java.nio.file.Path settingsFile = ((WaveformViewer) obj).getSettingsFile();
+			if (settingsFile != null) {
+				dialog.setFilterPath(settingsFile.getParent().toString());
+				dialog.setFileName(settingsFile.getFileName().toString());
+			} else dialog.setFileName(Messages.LoadStoreSettingsHandler_3);
+		}
 		
 		String fileName = null;
 		
