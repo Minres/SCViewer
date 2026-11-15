@@ -465,8 +465,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			currentSelectedTx = (selList.length> 0 &&  selList[0] instanceof ITx)? (ITx) selList[0] : null;
 			if(currentSelectedTx != null)
 				reveal(currentSelectedTx);
-			if(currentSelectedTrack!=null && currentSelectedTx!=null)
-				arrowPainter.updateSelection();
+			arrowPainter.updateSelection();
 			if(!isDisposed())
 				redraw();
 		}

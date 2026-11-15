@@ -902,7 +902,7 @@ public class WaveformView implements IWaveformView {
 		currentWaveformSelection.forEach(e -> {if(e!=null)e.selected = true;});
 		if (selectionChanged) {
 			currentWaveformSelection.forEach(e -> waveformCanvas.reveal(e.waveform));
-			waveformCanvas.setSelected(selection);
+			waveformCanvas.setSelected(getSelection());
 			valueList.redraw();
 			nameList.redraw();
 			fireSelectionChanged();
