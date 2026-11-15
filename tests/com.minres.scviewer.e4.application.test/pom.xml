@@ -18,6 +18,10 @@
                 <version>${tycho-version}</version>
                 <configuration>
                     <useUIHarness>false</useUIHarness>
+                    <bundleStartLevel>
+                      <bundle><id>org.eclipse.equinox.http.registry</id><level>4</level><autoStart>true</autoStart></bundle>
+                      <bundle><id>org.eclipse.equinox.jsp.jasper.registry</id><level>4</level><autoStart>true</autoStart></bundle>
+                    </bundleStartLevel>
                     <useUIThread>false</useUIThread>
                 </configuration>
             </plugin>

@@ -326,8 +326,6 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 				case SWT.END:
 					waveformPane.scrollTo(IWaveformView.CURSOR_POS);
 					return;
-				case SWT.DEL:
-					waveformPane.deleteSelectedTracks();
 				default:
 					break;
 				}

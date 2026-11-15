@@ -47,7 +47,7 @@ public class TrackAreaPainter implements IPainter {
 			Integer lastKey = trackVerticalOffset.floorKey(area.y+area.height);
 			//if(lastKey==null) lastKey= trackVerticalOffset.lastKey();
 			Rectangle subArea = new Rectangle(area.x, 0, area.width, 0);
-			if(lastKey.equals(firstKey)){
+			if(lastKey != null && lastKey.equals(firstKey)){
 				subArea.y=firstKey;
 				IWaveformPainter p = trackVerticalOffset.get(firstKey);
 				subArea.height=p.getHeight();

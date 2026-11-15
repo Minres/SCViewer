@@ -23,6 +23,14 @@
         <children xsi:type="menu:HandledMenuItem" xmi:id="_95QGw3NmEeWBq8z1Dv39LA" label="Quit" command="_95PfvHNmEeWBq8z1Dv39LA"/>
       </children>
       <children xsi:type="menu:Menu" xmi:id="_ZyHC0HgvEeWwZ-9vrAR2UQ" elementId="" label="Edit">
+        <children xsi:type="menu:Menu" xmi:id="_rqzhQOD5EfG4-56o-g9i4w" elementId="com.minres.scviewer.e4.application.menu.edit.addSeparator" label="Add separator ...">
+          <children xsi:type="menu:HandledMenuItem" xmi:id="_UMyXoOD5EfG4-56o-g9i4w" elementId="com.minres.scviewer.e4.application.menu.edit.addSeparator.above" label="before" command="_vYAOQLcxEe294PIiYLxpfA">
+            <parameters xmi:id="_gnm5kOD5EfG4-56o-g9i4w" elementId="com.minres.scviewer.e4.application.parameter.21" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="before"/>
+          </children>
+          <children xsi:type="menu:HandledMenuItem" xmi:id="_xRFNQOD5EfG4-56o-g9i4w" elementId="com.minres.scviewer.e4.application.menu.edit.addSeparator.below" label="after" command="_vYAOQLcxEe294PIiYLxpfA">
+            <parameters xmi:id="_xRFNQeD5EfG4-56o-g9i4w" elementId="com.minres.scviewer.e4.application.parameter.22" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="after"/>
+          </children>
+        </children>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_edit_groupTracks" elementId="com.minres.scviewer.e4.application.menu.edit.groupTracks" label="Group tracks…" command="_command_groupTracks"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_edit_ungroupTracks" elementId="com.minres.scviewer.e4.application.menu.edit.ungroupTracks" label="Ungroup tracks" command="_command_ungroupTracks"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_FiwZcEhdEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.delete" label="Delete" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/cross.png" command="_WUZ2wHXHEeWwZ-9vrAR2UQ"/>
@@ -103,8 +111,6 @@
       </children>
     </trimBars>
   </children>
-  <handlers xmi:id="_handler_ungroupTracks" elementId="com.minres.scviewer.e4.application.handler.ungroupTracks" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.UngroupTracksHandler" command="_command_ungroupTracks"/>
-  <handlers xmi:id="_handler_groupTracks" elementId="com.minres.scviewer.e4.application.handler.groupTracks" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.GroupTracksHandler" command="_command_groupTracks"/>
   <handlers xmi:id="_95PfvXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.quitCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.QuitHandler" command="_95PfvHNmEeWBq8z1Dv39LA"/>
   <handlers xmi:id="_95PfwXNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.openCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.OpenHandler" command="_95PfwHNmEeWBq8z1Dv39LA"/>
   <handlers xmi:id="_95PfxHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.handler.saveCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SaveHandler" command="_95Pfw3NmEeWBq8z1Dv39LA"/>
@@ -116,12 +122,10 @@
   <handlers xmi:id="__99WoJebEeW09eyIbHsdvg" elementId="com.minres.scviewer.e4.application.handler.loadStoreSettings" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.LoadStoreSettingsHandler" command="_7-AIMJebEeW09eyIbHsdvg"/>
   <handlers xmi:id="_x4pSEGtTEeqmlpoaaMHoiw" elementId="com.minres.scviewer.e4.application.handler.enablehover" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableHover" command="_uyeyYGtTEeqmlpoaaMHoiw"/>
   <handlers xmi:id="_h3jU8BkWEeudD5MqrWoETQ" elementId="com.minres.scviewer.e4.application.handler.reloadCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ReloadHandler" command="_srACsBkREeudD5MqrWoETQ"/>
-  <handlers xmi:id="_gn_boBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.txSearch" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler" command="_XDxTYBlEEeuiP60JNw0iiA"/>
   <handlers xmi:id="_CCEtAB07EeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.update" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.UpdateHandler" command="_-9ED4B06EeuiP60JNw0iiA"/>
   <handlers xmi:id="_ru2NIEYEEeyPM8G0E2EYww" elementId="com.minres.scviewer.e4.application.handler.help" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpHandler" command="_lqjIYEYEEeyPM8G0E2EYww"/>
   <handlers xmi:id="_TwU0IEYoEeyKK_icsY7Xjg" elementId="com.minres.scviewer.e4.application.handler.enabletxdetails" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.EnableTxDetails" command="_Fj1gQEYoEeyKK_icsY7Xjg"/>
   <handlers xmi:id="_htyxgHCOEeyub8CfGE1sGA" elementId="com.minres.scviewer.e4.application.handler.helpContent" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.HelpContentsHandler" command="_RdUMoHCOEeyub8CfGE1sGA"/>
-  <handlers xmi:id="__Ozu4LcxEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handler.add_separator" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.AddSeparatorHandler" command="_vYAOQLcxEe294PIiYLxpfA"/>
   <handlers xmi:id="_zpAa4LepEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handler.wave_double_click" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.WaveformDoubleClickTextHandler" command="_wcqasLepEe294PIiYLxpfA"/>
   <bindingTables xmi:id="_95PfvnNmEeWBq8z1Dv39LA" bindingContext="_95PfuXNmEeWBq8z1Dv39LA">
     <bindings xmi:id="_95Pfv3NmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.quit" keySequence="M1+Q" command="_95PfvHNmEeWBq8z1Dv39LA">
@@ -130,8 +134,6 @@
     <bindings xmi:id="_2-008EhnEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.keybinding.help" keySequence="F1" command="_RdUMoHCOEeyub8CfGE1sGA"/>
   </bindingTables>
   <bindingTables xmi:id="_XullMGVOEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.bindingtable.window" bindingContext="_95PfunNmEeWBq8z1Dv39LA">
-    <bindings xmi:id="_binding_ungroupTracks" elementId="com.minres.scviewer.e4.application.keybinding.ungroupTracks" keySequence="M1+M2+G" command="_command_ungroupTracks"/>
-    <bindings xmi:id="_binding_groupTracks" elementId="com.minres.scviewer.e4.application.keybinding.groupTracks" keySequence="M1+G" command="_command_groupTracks"/>
     <bindings xmi:id="_95PfwnNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.keybinding.load" keySequence="M1+L" command="_7-AIMJebEeW09eyIbHsdvg">
       <tags>type:user</tags>
       <parameters xmi:id="_G_ulwGVPEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.parameter.35" name="com.minres.scviewer.e4.application.commandparameter.loadStore" value="load"/>
@@ -156,6 +158,15 @@
       <parameters xmi:id="__UCh4GVNEeqSQM-A6dw9ig" elementId="com.minres.scviewer.e4.application.parameter.34" name="com.minres.scviewer.e4.application.command.zoomcommand.parameter.level" value="out"/>
     </bindings>
     <bindings xmi:id="_KjmnsEheEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.keybinding.0" keySequence="M1+R" command="_srACsBkREeudD5MqrWoETQ"/>
+    <bindings xmi:id="_binding_groupTracks" elementId="com.minres.scviewer.e4.application.keybinding.groupTracks" keySequence="M1+G" command="_command_groupTracks">
+      <tags>type:user</tags>
+    </bindings>
+    <bindings xmi:id="_binding_ungroupTracks" elementId="com.minres.scviewer.e4.application.keybinding.ungroupTracks" keySequence="M1+M2+G" command="_command_ungroupTracks">
+      <tags>type:user</tags>
+    </bindings>
+    <bindings xmi:id="_2pDiEOD6EfG4-56o-g9i4w" elementId="com.minres.scviewer.e4.application.keybinding.deleteWaveform" keySequence="DEL" command="_WUZ2wHXHEeWwZ-9vrAR2UQ">
+      <tags>type:user</tags>
+    </bindings>
   </bindingTables>
   <rootContext xmi:id="_95PfuXNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.contexts.dialogAndWindow" name="In Dialog and Windows">
     <children xmi:id="_95PfunNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.contexts.window" name="In Windows"/>
@@ -163,6 +174,8 @@
   </rootContext>
   <descriptors xmi:id="_KicY0HRMEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.partdescriptor.waveformviewer" label="SCViewer" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/scviewer.png" allowMultiple="true" category="General" closeable="true" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.WaveformViewer">
     <tags>categoryTag:General</tags>
+    <handlers xmi:id="_handler_groupTracks" elementId="com.minres.scviewer.e4.application.handler.groupTracks" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.GroupTracksHandler" command="_command_groupTracks"/>
+    <handlers xmi:id="_handler_ungroupTracks" elementId="com.minres.scviewer.e4.application.handler.ungroupTracks" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.UngroupTracksHandler" command="_command_ungroupTracks"/>
     <handlers xmi:id="_BSIuEHacEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handler.navigateEventCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.NavigateEvent" command="_79rx4HabEeWwZ-9vrAR2UQ"/>
     <handlers xmi:id="_JpdGwHXKEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handler.navigateTransCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.NavigateTrans" command="_Gn3lEHXKEeWwZ-9vrAR2UQ"/>
     <handlers xmi:id="_297tsHXHEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handler.deletewaveformCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.DeleteWaveformHandler" command="_WUZ2wHXHEeWwZ-9vrAR2UQ"/>
@@ -171,6 +184,8 @@
     <handlers xmi:id="_bxt4QM3rEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.handler.changeWaveDisplay" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ChangeWaveformDisplay" command="_FZunYM2PEei6rfTGo88R-w"/>
     <handlers xmi:id="_bxw7kM3rEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.handler.changeValueDisplay" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.ChangeValueDisplay" command="_4C_asM3ZEei6rfTGo88R-w"/>
     <handlers xmi:id="_ZVHbYE-JEeyuGJbYVZjX8w" elementId="com.minres.scviewer.e4.application.handler.panCommand" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.PanHandler" command="_y2BUsE-HEeyuGJbYVZjX8w"/>
+    <handlers xmi:id="_gn_boBlEEeuiP60JNw0iiA" elementId="com.minres.scviewer.e4.application.handler.txSearch" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.SearchHandler" command="_XDxTYBlEEeuiP60JNw0iiA"/>
+    <handlers xmi:id="__Ozu4LcxEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handler.add_separator" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.AddSeparatorHandler" command="_vYAOQLcxEe294PIiYLxpfA"/>
     <menus xsi:type="menu:PopupMenu" xmi:id="_TwzrsHWSEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.popupmenu.namecontext" label="Name Menu">
       <children xsi:type="menu:HandledMenuItem" xmi:id="_Vco7YHWSEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.moveup" label="Move up" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/up_blue.png" tooltip="Move stream/waveform in list up" command="_N_sOkHXHEeWwZ-9vrAR2UQ">
         <visibleWhen xsi:type="ui:CoreExpression" xmi:id="_elFdcHr_EeWVM_sKoXvptg" coreExpressionId="com.minres.scviewer.e4.application.oneWaveSeleted"/>
@@ -209,16 +224,13 @@
         <parameters xmi:id="_4ZeEQXabEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.parameter.5" name="com.minres.scviewer.e4.application.command.navigateTransCommand.parameter.dir" value="prev"/>
       </children>
       <children xsi:type="menu:MenuSeparator" xmi:id="_cxgs4Lc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.menuseparator.1"/>
-      <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_popup_groupTracks" elementId="com.minres.scviewer.e4.application.menu.popup.groupTracks" label="Group tracks…" command="_command_groupTracks"/>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_popup_groupTracks" elementId="com.minres.scviewer.e4.application.menu.popup.groupTracks" label="Group tracks…" mnemonics="M1+G" command="_command_groupTracks"/>
       <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_popup_ungroupTracks" elementId="com.minres.scviewer.e4.application.menu.popup.ungroupTracks" label="Ungroup tracks" command="_command_ungroupTracks"/>
-      <children xsi:type="menu:HandledMenuItem" xmi:id="_NFfK0LcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" label="Add separator above" command="_vYAOQLcxEe294PIiYLxpfA">
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_NFfK0LcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" label="Add separator before" command="_vYAOQLcxEe294PIiYLxpfA">
         <parameters xmi:id="_or7iYLcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="before"/>
       </children>
-      <children xsi:type="menu:HandledMenuItem" xmi:id="_Dj-FUBTJEe6ZlJc8qY5-Zw" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" label="Add separator after last" command="_vYAOQLcxEe294PIiYLxpfA">
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_Dj-FUBTJEe6ZlJc8qY5-Zw" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" label="Add separator after" command="_vYAOQLcxEe294PIiYLxpfA">
         <parameters xmi:id="_Dj-FURTJEe6ZlJc8qY5-Zw" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="after"/>
-      </children>
-      <children xsi:type="menu:HandledMenuItem" xmi:id="_ecbWkLc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" visible="false" label="Add blank below" enabled="false" command="_vYAOQLcxEe294PIiYLxpfA">
-        <parameters xmi:id="_ecbWkbc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="after"/>
       </children>
       <children xsi:type="menu:MenuSeparator" xmi:id="__Ubd4M1eEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.menuseparator.0"/>
       <children xsi:type="menu:Menu" xmi:id="_mAA6sM1bEei6rfTGo88R-w" elementId="com.minres.scviewer.e4.application.menu.view" label="View">
