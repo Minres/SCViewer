@@ -21,6 +21,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.graphics.Point;
@@ -85,6 +87,80 @@ public class WaveformScrollTest {
     private void drainEvents() {
         int events = 0;
         while (display.readAndDispatch()) assertTrue("Layout must converge", ++events < 1000);
+    }
+
+    private Object invokeView(String method, Class<?>[] types, Object... arguments) {
+        try {
+            var target = view.getClass().getDeclaredMethod(method, types);
+            target.setAccessible(true);
+            return target.invoke(view, arguments);
+        } catch (ReflectiveOperationException e) { throw new AssertionError(e); }
+    }
+
+    private Object dropLocation(int y) {
+        return invokeView("streamDropLocationAt", new Class<?>[]{int.class}, y);
+    }
+
+    private void moveTracks(List<TrackEntry> tracks, Object location) {
+        invokeView("moveTracks", new Class<?>[]{List.class, location.getClass()}, tracks, location);
+        drainEvents();
+    }
+
+    private void assertInsertionLine(int y, boolean expected) {
+        Canvas namesCanvas = (Canvas) view.getNameControl();
+        var bounds = namesCanvas.getClientArea();
+        Image image = new Image(display, bounds.width, bounds.height);
+        GC gc = new GC(image);
+        try {
+            gc.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+            gc.fillRectangle(bounds);
+            Event paint = new Event();
+            paint.gc = gc;
+            namesCanvas.notifyListeners(SWT.Paint, paint);
+            var data = image.getImageData();
+            assertEquals(expected, display.getSystemColor(SWT.COLOR_RED).getRGB()
+                    .equals(data.palette.getRGB(data.getPixel(bounds.width - 2, y))));
+        } finally { gc.dispose(); image.dispose(); }
+    }
+
+    @Test
+    public void dragIndicatorMatchesInsertionAndClearsAfterDrop() {
+        List<TrackEntry> tracks = tracks(3);
+        view.getStreamList().addAll(tracks);
+        drainEvents();
+        Object location = dropLocation(25);
+        invokeView("setStreamDropLocation", new Class<?>[]{location.getClass()}, location);
+        assertInsertionLine(20, true);
+        moveTracks(List.of(tracks.get(2)), location);
+        assertEquals(List.of(tracks.get(0), tracks.get(2), tracks.get(1)), view.getStreamList());
+        assertInsertionLine(20, false);
+    }
+
+    @Test
+    public void bottomInsertionUsesTheEndOfTheLastTrack() {
+        List<TrackEntry> tracks = tracks(3);
+        view.getStreamList().addAll(tracks);
+        drainEvents();
+        Object location = dropLocation(100);
+        invokeView("setStreamDropLocation", new Class<?>[]{location.getClass()}, location);
+        assertInsertionLine(60, true);
+        moveTracks(List.of(tracks.get(0)), location);
+        assertEquals(List.of(tracks.get(1), tracks.get(2), tracks.get(0)), view.getStreamList());
+    }
+
+    @Test
+    public void groupedInsertionUsesTheVisibleChildAndRejectsCycles() {
+        List<TrackEntry> tracks = tracks(3);
+        TrackEntry group = TrackEntry.group("group", List.of(tracks.get(0), tracks.get(1)), null);
+        view.getStreamList().addAll(List.of(group, tracks.get(2)));
+        drainEvents();
+        Object location = dropLocation(45);
+        assertEquals(false, invokeView("canDropTracks", new Class<?>[]{List.class, location.getClass()}, List.of(group), location));
+        invokeView("setStreamDropLocation", new Class<?>[]{location.getClass()}, location);
+        assertInsertionLine(40, true);
+        moveTracks(List.of(tracks.get(2)), location);
+        assertEquals(List.of(group), view.getStreamList());
+        assertEquals(List.of(tracks.get(0), tracks.get(2), tracks.get(1)), group.waveforms);
     }
 
     private Point origin() {

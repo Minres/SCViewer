@@ -141,6 +141,9 @@ public class WaveformView implements IWaveformView {
 
 	private int tracksVerticalHeight;
 
+	private record StreamDropLocation(List<TrackEntry> siblings, TrackEntry before, int y) {}
+	private StreamDropLocation streamDropLocation;
+
 	private TreeMap<Integer, TrackEntry> trackVerticalOffset;
 
 	private static final int GROUP_INDENT = 16;
@@ -466,6 +469,7 @@ public class WaveformView implements IWaveformView {
 				Rectangle rect = ((Canvas) event.widget).getClientArea();
 				paintNames(gc, rect);
 			}
+			paintStreamDropIndicator(event.gc);
 		});
 		nameList.addMouseListener(nameValueMouseListener);
 		nameListScrolled.setContent(nameList);
@@ -628,6 +632,7 @@ public class WaveformView implements IWaveformView {
 	public void update() {
 		if (waveformCanvas.isDisposed()) return;
 		updateQueued = false;
+		setStreamDropLocation(null);
 		int scrollY = -waveformCanvas.getOrigin().y;
 		layoutInProgress = true;
 		TextLayout tl = new TextLayout(waveformCanvas.getDisplay());
@@ -1385,11 +1390,18 @@ public class WaveformView implements IWaveformView {
 		dragSource.addDragListener(new DragSourceAdapter() {
 			@Override
 			public void dragStart(DragSourceEvent event) {
-				if (event.y < tracksVerticalHeight) {
-					event.doit = true;
-					LocalSelectionTransfer.getTransfer()
-					.setSelection(new StructuredSelection(currentWaveformSelection));
-				}
+				Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(event.y);
+				event.doit = entry != null && event.y < tracksVerticalHeight;
+				if (!event.doit) return;
+				if (!currentWaveformSelection.contains(entry.getValue()))
+					setSelection(new StructuredSelection(entry.getValue()));
+				LocalSelectionTransfer.getTransfer()
+						.setSelection(new StructuredSelection(currentWaveformSelection));
+			}
+
+			@Override
+			public void dragFinished(DragSourceEvent event) {
+				setStreamDropLocation(null);
 			}
 
 			@Override
@@ -1401,40 +1413,93 @@ public class WaveformView implements IWaveformView {
 		});
 	}
 
+	/** Resolve the insertion boundary before mutating the list or rebuilding its row offsets. */
+	private StreamDropLocation streamDropLocationAt(int y) {
+		if (trackVerticalOffset.isEmpty() || y >= tracksVerticalHeight)
+			return new StreamDropLocation(streams, null, tracksVerticalHeight);
+		Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(Math.max(0, y));
+		if (entry == null) entry = trackVerticalOffset.firstEntry();
+		return new StreamDropLocation(TrackEntry.siblingsOf(streams, entry.getValue()), entry.getValue(), entry.getKey());
+	}
+
+	private void setStreamDropLocation(StreamDropLocation location) {
+		if (java.util.Objects.equals(streamDropLocation, location)) return;
+		streamDropLocation = location;
+		if (nameList != null && !nameList.isDisposed()) nameList.redraw();
+	}
+
+	private void paintStreamDropIndicator(GC gc) {
+		if (streamDropLocation == null) return;
+		Rectangle area = nameList.getClientArea();
+		int y = Math.min(streamDropLocation.y(), area.height - 1);
+		var foreground = gc.getForeground();
+		int width = gc.getLineWidth();
+		gc.setForeground(nameList.getDisplay().getSystemColor(SWT.COLOR_RED));
+		gc.setLineWidth(2);
+		gc.drawLine(0, y, area.width - 1, y);
+		gc.setForeground(foreground);
+		gc.setLineWidth(width);
+	}
+
+	private List<TrackEntry> draggedTracks() {
+		ISelection selection = LocalSelectionTransfer.getTransfer().getSelection();
+		if (!(selection instanceof IStructuredSelection structured) || structured.isEmpty()) return List.of();
+		List<TrackEntry> tracks = new ArrayList<>();
+		for (Object item : structured.toArray()) {
+			if (!(item instanceof TrackEntry track)) return List.of();
+			tracks.add(track);
+		}
+		// Moving a group also moves its descendants; don't insert selected children twice.
+		return tracks.stream().filter(track -> tracks.stream().noneMatch(parent -> parent != track
+				&& TrackEntry.siblingsOf(List.of(parent), track) != null)).toList();
+	}
+
+	private boolean canDropTracks(List<TrackEntry> tracks, StreamDropLocation location) {
+		return !tracks.isEmpty() && location.siblings() != null && tracks.stream().noneMatch(track ->
+				location.before() != null && TrackEntry.siblingsOf(List.of(track), location.before()) != null);
+	}
+
+	private void moveTracks(List<TrackEntry> tracks, StreamDropLocation location) {
+		for (TrackEntry track : tracks) {
+			List<TrackEntry> siblings = TrackEntry.siblingsOf(streams, track);
+			if (siblings != null) siblings.remove(track);
+		}
+		int index = location.before() == null ? location.siblings().size() : location.siblings().indexOf(location.before());
+		location.siblings().addAll(index, tracks);
+		update();
+	}
+
 	private void createStreamDropTarget(final Canvas canvas) {
 		Transfer[] types = new Transfer[] { LocalSelectionTransfer.getTransfer() };
 		DropTarget dropTarget = new DropTarget(canvas, DND.DROP_MOVE);
 		dropTarget.setTransfer(types);
-
 		dropTarget.addDropListener(new DropTargetAdapter() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public void drop(DropTargetEvent event) {
-				if (LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)) {
-					ISelection s = LocalSelectionTransfer.getTransfer().getSelection();
-					if (s instanceof IStructuredSelection) {
-						IStructuredSelection sel = (IStructuredSelection) s;
-						for (Object o : sel.toList())
-							streams.remove(o);
-						DropTarget tgt = (DropTarget) event.widget;
-						Point dropPoint = ((Canvas) tgt.getControl()).toControl(event.x, event.y);
-						// extract all elements being selected
-						if (dropPoint.y > trackVerticalOffset.lastKey()) {
-							streams.addAll(sel.toList());
-						} else {
-							TrackEntry target = trackVerticalOffset.floorEntry(dropPoint.y).getValue();
-							int tgtIdx = streams.indexOf(target);
-							streams.addAll(tgtIdx, sel.toList());
-						}
-					}
-				}
+			private void updateFeedback(DropTargetEvent event) {
+				StreamDropLocation location = streamDropLocationAt(canvas.toControl(event.x, event.y).y);
+				boolean accepted = (event.operations & DND.DROP_MOVE) != 0
+						&& event.detail != DND.DROP_COPY && event.detail != DND.DROP_LINK
+						&& LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)
+						&& canDropTracks(draggedTracks(), location);
+				event.detail = accepted ? DND.DROP_MOVE : DND.DROP_NONE;
+				event.feedback = DND.FEEDBACK_NONE;
+				setStreamDropLocation(accepted ? location : null);
 			}
 
+			@Override public void dragEnter(DropTargetEvent event) { updateFeedback(event); }
+			@Override public void dragOver(DropTargetEvent event) { updateFeedback(event); }
+			@Override public void dragOperationChanged(DropTargetEvent event) { updateFeedback(event); }
+			@Override public void dragLeave(DropTargetEvent event) { setStreamDropLocation(null); }
+			@Override public void dropAccept(DropTargetEvent event) { updateFeedback(event); }
+
 			@Override
-			public void dropAccept(DropTargetEvent event) {
-				if (event.detail != DND.DROP_MOVE) {
-					event.detail = DND.DROP_NONE;
-				}
+			public void drop(DropTargetEvent event) {
+				try {
+					StreamDropLocation location = streamDropLocationAt(canvas.toControl(event.x, event.y).y);
+					List<TrackEntry> tracks = draggedTracks();
+					if (event.detail == DND.DROP_MOVE && LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)
+							&& canDropTracks(tracks, location)) moveTracks(tracks, location);
+					else event.detail = DND.DROP_NONE;
+				} finally { setStreamDropLocation(null); }
 			}
 		});
 	}
