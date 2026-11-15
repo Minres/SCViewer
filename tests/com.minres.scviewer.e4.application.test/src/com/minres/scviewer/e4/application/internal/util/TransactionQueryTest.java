@@ -35,6 +35,30 @@ public class TransactionQueryTest {
     }
 
     @Test
+    public void discoveryIncludesLatePropertiesAndCachesTheCompleteSchema() {
+        AtomicInteger reads = new AtomicInteger();
+        Waveform wave = new Waveform();
+        ITxAttribute lateAttribute = (ITxAttribute) Proxy.newProxyInstance(getClass().getClassLoader(),
+                new Class<?>[]{ITxAttribute.class}, (p, m, a) -> switch (m.getName()) {
+                    case "getName" -> "late";
+                    case "getDataType" -> DataType.STRING;
+                    default -> "later value";
+                });
+        ITx late = (ITx) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{ITx.class},
+                (p, m, a) -> {
+                    if (m.getName().equals("getAttributes")) { reads.incrementAndGet(); return List.of(lateAttribute); }
+                    return 3L;
+                });
+        wave.transactions = List.of(transaction(1, reads), transaction(2, reads), late);
+        TransactionQuery query = new TransactionQuery(wave);
+        assertEquals(List.of(new TransactionQuery.Attribute("field", DataType.STRING),
+                new TransactionQuery.Attribute("late", DataType.STRING)), query.discoverAttributes(() -> false));
+        assertEquals(3, reads.get());
+        query.discoverAttributes(() -> false);
+        assertEquals(3, reads.get());
+    }
+
+    @Test
     public void headerQueriesAndIndexedRestorationNeverReadAttributesOrEvents() {
         AtomicInteger reads = new AtomicInteger();
         Waveform wave = new Waveform();

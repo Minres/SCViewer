@@ -18,7 +18,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
@@ -40,7 +39,6 @@ public class TransactionList extends Composite {
     private final ComboViewer viewProperty;
     private final Text searchValue;
     private final TableViewer tableViewer;
-    private final Button loadProperties;
     private final AttributeLabelProvider valueProvider;
     private final LatestJob<List<ITx>> rowsJob;
     private record PropertyDiscovery(List<Attribute> attributes, RuntimeException error) {}
@@ -52,25 +50,24 @@ public class TransactionList extends Composite {
     private IWaveform stream;
     private TrackEntry track;
     private TransactionQuery query;
+    private boolean propertiesRequested;
+    private String lastSelectedDisplayProperty;
+    private boolean restoringDisplayProperty;
 
     public TransactionList(Composite parent, int style, WaveformViewer waveformViewer) {
         super(parent, style);
         parent.setLayout(new FillLayout());
-        setLayout(new GridLayout(6, false));
+        setLayout(new GridLayout(5, false));
         label("Property to match:");
         searchProperty = propertiesCombo();
         searchValue = new Text(this, SWT.BORDER);
         searchValue.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
         label("Property to show:");
         viewProperty = propertiesCombo();
-        loadProperties = new Button(this, SWT.PUSH);
-        loadProperties.setText("Load properties");
-        loadProperties.setToolTipText("Discover property names in this track; values are otherwise loaded only when needed.");
-        loadProperties.setEnabled(false);
 
         tableViewer = new TableViewer(this, SWT.VIRTUAL | SWT.FULL_SELECTION | SWT.BORDER);
         tableViewer.setUseHashlookup(true);
-        tableViewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 6, 1));
+        tableViewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 5, 1));
         tableViewer.getTable().setHeaderVisible(true);
         tableViewer.getTable().setLinesVisible(true);
         tableViewer.setContentProvider(new ILazyContentProvider() {
@@ -94,26 +91,44 @@ public class TransactionList extends Composite {
         });
         attributesJob = new LatestJob<>(task -> { if (!display.isDisposed()) display.asyncExec(task); }, result -> {
             if (isDisposed()) return;
-            loadProperties.setEnabled(query != null);
-            loadProperties.setText("Load properties");
             if (result.error() != null) {
                 MessageDialog.openError(getShell(), "Cannot load properties", result.error().toString());
                 return;
             }
             Object selected = ((IStructuredSelection) searchProperty.getSelection()).getFirstElement();
-            String displayedProperty = valueProvider.getShowProp();
-            attributes = result.attributes();
+            String displayedProperty = lastSelectedDisplayProperty != null
+                    ? lastSelectedDisplayProperty : valueProvider.getShowProp();
+            // A details-panel search may add a known property while discovery is running.
+            java.util.Map<String, Attribute> known = new java.util.TreeMap<>();
+            attributes.forEach(attribute -> known.put(attribute.name(), attribute));
+            result.attributes().forEach(attribute -> known.put(attribute.name(), attribute));
+            attributes = List.copyOf(known.values());
             searchProperty.setInput(attributes);
             viewProperty.setInput(attributes);
-            if (attributes.contains(selected)) searchProperty.setSelection(new StructuredSelection(selected));
+            if (selected != null && attributes.contains(selected)) searchProperty.setSelection(new StructuredSelection(selected));
             else if (!attributes.isEmpty()) searchProperty.setSelection(new StructuredSelection(attributes.get(0)));
-            attributes.stream().filter(attribute -> attribute.name().equals(displayedProperty)).findFirst()
-                    .ifPresent(attribute -> viewProperty.setSelection(new StructuredSelection(attribute)));
-            loadProperties.setEnabled(query != null);
+            Attribute displayed = attributes.stream().filter(attribute -> attribute.name().equals(displayedProperty))
+                    .findFirst().orElse(attributes.isEmpty() ? null : attributes.get(0));
+            if (displayed != null) showProperty(displayed);
+            else {
+                valueProvider.setShowProp(null);
+                tableViewer.refresh();
+            }
         });
         addListener(SWT.Show, event -> {
             getDisplay().timerExec(-1, applyFilter);
-            refreshTransactions();
+            // SWT sends Show before updating the control's visibility flag.
+            display.asyncExec(() -> {
+                if (isDisposed() || !getVisible()) return;
+                refreshTransactions();
+                discoverProperties();
+            });
+        });
+        addListener(SWT.Hide, event -> {
+            getDisplay().timerExec(-1, applyFilter);
+            rowsJob.cancel();
+            attributesJob.cancel();
+            propertiesRequested = false;
         });
         searchValue.addModifyListener(event -> requestFilter(200));
         searchProperty.addSelectionChangedListener(event -> {
@@ -124,20 +139,10 @@ public class TransactionList extends Composite {
         });
         viewProperty.addSelectionChangedListener(event -> {
             if (event.getSelection() instanceof IStructuredSelection selected && selected.getFirstElement() instanceof Attribute attribute) {
+                if (!restoringDisplayProperty) lastSelectedDisplayProperty = attribute.name();
                 valueProvider.setShowProp(attribute.name());
                 tableViewer.refresh();
             }
-        });
-        loadProperties.addListener(SWT.Selection, event -> {
-            TransactionQuery requested = query;
-            if (requested == null) return;
-            loadProperties.setEnabled(false);
-            loadProperties.setText("Loading properties…");
-            attributesJob.schedule("Discover transaction properties", monitor -> {
-                try { return new PropertyDiscovery(requested.discoverAttributes(monitor::isCanceled), null); }
-                catch (OperationCanceledException e) { throw e; }
-                catch (RuntimeException e) { return new PropertyDiscovery(List.of(), e); }
-            });
         });
         tableViewer.addSelectionChangedListener(event -> {
             if (event.getSelection() instanceof IStructuredSelection selected && selected.getFirstElement() instanceof ITx tx)
@@ -147,6 +152,26 @@ public class TransactionList extends Composite {
             display.timerExec(-1, applyFilter);
             rowsJob.close();
             attributesJob.close();
+        });
+    }
+
+    /** Automatic defaults must not replace the user's preference when a stream lacks it. */
+    private void showProperty(Attribute property) {
+        restoringDisplayProperty = true;
+        try { viewProperty.setSelection(new StructuredSelection(property)); }
+        finally { restoringDisplayProperty = false; }
+    }
+
+    private void discoverProperties() {
+        TransactionQuery requested = query;
+        if (requested == null || !getVisible() || propertiesRequested) return;
+        propertiesRequested = true;
+        attributesJob.schedule("Discover transaction properties", monitor -> {
+            try {
+                List<Attribute> discovered = requested.discoverAttributes(monitor::isCanceled);
+                return new PropertyDiscovery(discovered, null);
+            } catch (OperationCanceledException e) { throw e; }
+            catch (RuntimeException e) { return new PropertyDiscovery(List.of(), e); }
         });
     }
 
@@ -191,9 +216,9 @@ public class TransactionList extends Composite {
         filter.setSearchProp(null, null);
         tableViewer.setInput(rows);
         tableViewer.setItemCount(0);
-        loadProperties.setEnabled(query != null);
-        loadProperties.setText("Load properties");
+        propertiesRequested = false;
         requestFilter(0);
+        discoverProperties();
     }
 
     private void requestFilter(int delay) {
@@ -230,6 +255,7 @@ public class TransactionList extends Composite {
             viewProperty.setInput(attributes);
         }
         searchProperty.setSelection(new StructuredSelection(property));
+        if (valueProvider.getShowProp() == null) showProperty(property);
         filter.setSearchProp(name, type);
         searchValue.setText(value);
         requestFilter(0);

@@ -15,7 +15,7 @@ import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITransactionProvider;
 import com.minres.scviewer.database.tx.TransactionLists;
 
-/** Cached transaction headers; attribute values are visited only on explicit request. */
+/** Cached transaction headers and property discovery for a selected track. */
 public final class TransactionQuery {
     public record Attribute(String name, DataType type) {}
     private final IWaveform waveform;

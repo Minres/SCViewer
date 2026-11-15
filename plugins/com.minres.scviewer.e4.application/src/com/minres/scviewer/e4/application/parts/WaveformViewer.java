@@ -267,8 +267,9 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		});
 
 		waveformPane.addSelectionChangedListener(event -> {
-			if (event.getSelection() instanceof IStructuredSelection) {
-				selectionService.setSelection(event.getSelection());
+			if (event.getSelection() instanceof IStructuredSelection selection) {
+				transactionList.setSelection(selection);
+				selectionService.setSelection(selection);
 			}
 		});
 

@@ -1,16 +1,9 @@
 package com.minres.scviewer.e4.application.parts;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.eclipse.e4.core.di.annotations.Optional;
-import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.e4.ui.di.Focus;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
-import org.eclipse.e4.ui.services.IServiceConstants;
-import org.eclipse.e4.ui.workbench.modeling.EPartService;
-import org.eclipse.e4.ui.workbench.modeling.ESelectionService;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -18,21 +11,8 @@ import org.eclipse.swt.widgets.Composite;
 import com.minres.scviewer.database.ui.WaveformSelection;
 
 public class TransactionListView {
-	private WaveformViewer waveformViewer;
-
 	private TransactionList transactionList;
-		
-	/** The event broker. */
-	@Inject IEventBroker eventBroker;
 
-	/** The selection service. */
-	@Inject	ESelectionService selectionService;
-
-	/**
-	 * Create the composite.
-	 * @param parent
-	 * @param style
-	 */
 	/**
 	 * Creates the composite.
 	 *
@@ -40,7 +20,6 @@ public class TransactionListView {
 	 */
 	@PostConstruct
 	public void createComposite(final Composite parent, @Optional WaveformViewer waveformViewer) {
-		this.waveformViewer=waveformViewer;
 		transactionList = new TransactionList(parent, SWT.BORDER, waveformViewer);
 	}
 	
@@ -50,17 +29,14 @@ public class TransactionListView {
 			transactionList.setFocus();
 	}
 	/**
-	 * Sets the selection.
+	 * Receives selections directly from the owning waveform pane, independently of
+	 * the workbench's active part and global selection injection.
 	 *
 	 * @param selection the new selection
 	 */
-	@Inject
-	public void setSelection(@Named(IServiceConstants.ACTIVE_SELECTION) @Optional IStructuredSelection selection, EPartService partService){
-		// only react if selection is actually from the WaveformViewer and nothing else
-		MPart part = partService.getActivePart();
-		if( part == null || ! (part.getObject() instanceof WaveformViewer )  || part.getObject() != waveformViewer)
-			return;
-		transactionList.setInput(WaveformSelection.from(selection).track());
+	public void setSelection(IStructuredSelection selection) {
+		if (transactionList != null && !transactionList.isDisposed())
+			transactionList.setInput(WaveformSelection.from(selection).track());
 	}
 
 	public TransactionList getControl() {
