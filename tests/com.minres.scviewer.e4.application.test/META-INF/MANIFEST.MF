@@ -1,6 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: SCViewer application tests
+Bundle-Vendor: MINRES Technologies GmbH
 Bundle-SymbolicName: com.minres.scviewer.e4.application.test
 Bundle-Version: 2.20.0
 Fragment-Host: com.minres.scviewer.e4.application

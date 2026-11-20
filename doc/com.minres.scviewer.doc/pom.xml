@@ -44,9 +44,9 @@
 							<goal>process-asciidoc</goal>
 						</goals>
 						<configuration>
-							<sourceHighlighter>coderay</sourceHighlighter>
 							<backend>html</backend>
 							<attributes>
+								<source-highlighter>coderay</source-highlighter>
 								<toc />
 								<linkcss>false</linkcss>
 							</attributes>
@@ -70,8 +70,8 @@
 						</goals>
 						<configuration>
 							<backend>pdf</backend>
-							<sourceHighlighter>coderay</sourceHighlighter>
 							<attributes>
+								<source-highlighter>coderay</source-highlighter>
 								<icons>font</icons>
 								<pagenums />
 								<toc />

@@ -32,7 +32,8 @@
 	</modules>
 
 	<properties>
-		<tycho-version>4.0.13</tycho-version>
+		<tycho-version>5.0.4</tycho-version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<software.download.area>${project.basedir}/../../..</software.download.area>
 	</properties>
 
@@ -77,7 +78,6 @@
 					</target>
 					<executionEnvironment>
 						org.eclipse.justj.openjdk.hotspot.jre.minimal-21</executionEnvironment>
-					<includePackedArtifacts>true</includePackedArtifacts>
 					<environments>
 						<environment>
 							<os>linux</os>
@@ -107,12 +107,6 @@
 						<id>plugin-source</id>
 						<goals>
 							<goal>plugin-source</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>feature-source</id>
-						<goals>
-							<goal>feature-source</goal>
 						</goals>
 					</execution>
 				</executions>

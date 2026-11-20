@@ -3,20 +3,11 @@
    <feature id="com.minres.scviewer.feature" version="0.0.0">
       <category name="ide_components"/>
    </feature>
-   <feature id="com.minres.scviewer.feature.source" version="0.0.0">
-      <category name="ide_components"/>
-   </feature>
    <feature id="com.minres.scviewer.ui.feature" version="0.0.0">
       <category name="devel_components"/>
    </feature>
-   <feature id="com.minres.scviewer.ui.feature.source" version="0.0.0">
-      <category name="devel_components.source"/>
-   </feature>
    <feature id="com.minres.scviewer.database.feature" version="0.0.0">
       <category name="devel_components"/>
-   </feature>
-   <feature id="com.minres.scviewer.database.feature.source" version="0.0.0">
-      <category name="devel_components.source"/>
    </feature>
    <feature id="com.minres.scviewer.e4.feature">
       <category name="ide_components_standalone"/>
@@ -37,7 +28,6 @@
          Components to deal with the transaction recording outputs of the SystemC Verification (SCV) library
       </description>
    </category-def>
-   <category-def name="devel_components.source" label="Developer Resources (Source)"/>
    <category-def name="ide_components_standalone" label="Standalone">
       <category name="ide_components"/>
    </category-def>
