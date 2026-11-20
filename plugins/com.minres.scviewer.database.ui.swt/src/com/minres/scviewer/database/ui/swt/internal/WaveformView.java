@@ -1468,14 +1468,37 @@ public class WaveformView implements IWaveformView {
 				location.before() != null && TrackEntry.siblingsOf(List.of(track), location.before()) != null);
 	}
 
+	private boolean isBitVectorChildren(List<TrackEntry> entries, List<TrackEntry> children) {
+		for (TrackEntry entry : entries) {
+			if (entry.waveforms == children) return entry.isBitVector();
+			if (isBitVectorChildren(entry.waveforms, children)) return true;
+		}
+		return false;
+	}
+
 	private void moveTracks(List<TrackEntry> tracks, StreamDropLocation location) {
+		List<TrackEntry> inserted = new ArrayList<>();
+		boolean copied = false;
 		for (TrackEntry track : tracks) {
 			List<TrackEntry> siblings = TrackEntry.siblingsOf(streams, track);
-			if (siblings != null) siblings.remove(track);
+			if (siblings != location.siblings() && isBitVectorChildren(streams, siblings)
+					&& track.waveform != null && track.waveform.getWidth() == 1 && track.waveform.isBitVector()) {
+				// A bit belongs to its expanded vector. Extract an independent display
+				// entry while sharing the read-only projection of the recorded data.
+				TrackEntry copy = new TrackEntry(track.waveform, styleProvider);
+				copy.valueDisplay = track.valueDisplay;
+				copy.waveDisplay = track.waveDisplay;
+				inserted.add(copy);
+				copied = true;
+			} else {
+				if (siblings != null) siblings.remove(track);
+				inserted.add(track);
+			}
 		}
 		int index = location.before() == null ? location.siblings().size() : location.siblings().indexOf(location.before());
-		location.siblings().addAll(index, tracks);
+		location.siblings().addAll(index, inserted);
 		update();
+		if (copied) setSelection(new StructuredSelection(inserted));
 	}
 
 	private void createStreamDropTarget(final Canvas canvas) {

@@ -388,6 +388,83 @@ public class WaveformScrollTest {
         assertEquals(List.of(tracks.get(0), tracks.get(2), tracks.get(1)), group.waveforms);
     }
 
+    @Test
+    public void draggingBitsOutOfRecordedAndCombinedVectorsCreatesIndependentTracks() {
+        var source = new BitVectorExpansionTest.Signal("bus", 2);
+        source.events.put(0, com.minres.scviewer.database.BitVector.fromString(2, "10"));
+        var combined = new com.minres.scviewer.database.CombinedBitVectorWaveform("combined", List.of(
+                new com.minres.scviewer.database.CombinedBitVectorWaveform.SourceBit(source, 1),
+                new com.minres.scviewer.database.CombinedBitVectorWaveform.SourceBit(source, 0)));
+        for (var waveform : List.of(source, combined)) {
+            TrackEntry bus = new TrackEntry(waveform, null);
+            bus.setExpanded(true);
+            TrackEntry outer = TrackEntry.group("outer", List.of(bus), null);
+            TrackEntry tail = new TrackEntry(new EmptyWaveform("tail"), null);
+            view.getStreamList().clear();
+            view.getStreamList().addAll(List.of(outer, tail));
+            view.update();
+            var bits = List.copyOf(bus.waveforms);
+            TrackEntry bit = bits.get(0);
+            bit.valueDisplay = TrackEntry.ValueDisplay.SIGNED;
+            bit.waveDisplay = TrackEntry.WaveDisplay.STEP_WISE;
+            view.setSelection(new StructuredSelection(bit));
+
+            moveTracks(List.of(bit), dropLocation(tail.vOffset));
+            assertEquals(bits, bus.waveforms);
+            assertEquals(3, view.getStreamList().size());
+            TrackEntry copy = view.getStreamList().get(1);
+            assertNotSame(bit, copy);
+            assertSame(bit.waveform, copy.waveform);
+            assertEquals(bit.valueDisplay, copy.valueDisplay);
+            assertEquals(bit.waveDisplay, copy.waveDisplay);
+            assertSame(copy, ((StructuredSelection) view.getSelection()).getFirstElement());
+            copy.valueDisplay = TrackEntry.ValueDisplay.BINARY;
+            assertEquals(TrackEntry.ValueDisplay.SIGNED, bit.valueDisplay);
+
+            // The extracted track moves normally on subsequent drags.
+            moveTracks(List.of(copy), dropLocation(10000));
+            assertEquals(List.of(outer, tail, copy), view.getStreamList());
+            assertEquals(bits, bus.waveforms);
+            assertSame(copy, view.getStreamList().get(2));
+        }
+    }
+
+    @Test
+    public void draggingSeveralVectorBitsIntoAGroupKeepsAllSourceBits() {
+        var source = new BitVectorExpansionTest.Signal("bus", 3);
+        TrackEntry bus = new TrackEntry(source, null);
+        bus.setExpanded(true);
+        TrackEntry anchor = new TrackEntry(new EmptyWaveform("anchor"), null);
+        TrackEntry destination = TrackEntry.group("destination", List.of(anchor), null);
+        view.getStreamList().addAll(List.of(bus, destination));
+        view.update();
+        var bits = List.copyOf(bus.waveforms);
+        moveTracks(List.of(bits.get(0), bits.get(2)), dropLocation(anchor.vOffset));
+        assertEquals(bits, bus.waveforms);
+        assertEquals(3, destination.waveforms.size());
+        for (int i = 0; i < 2; i++) {
+            TrackEntry original = bits.get(i == 0 ? 0 : 2);
+            TrackEntry copy = destination.waveforms.get(i);
+            assertNotSame(original, copy);
+            assertSame(original.waveform, copy.waveform);
+        }
+        assertSame(anchor, destination.waveforms.get(2));
+    }
+
+    @Test
+    public void reorderingBitsWithinTheirVectorMovesTheOriginalEntries() {
+        var source = new BitVectorExpansionTest.Signal("bus", 3);
+        TrackEntry bus = new TrackEntry(source, null);
+        bus.setExpanded(true);
+        view.getStreamList().add(bus);
+        view.update();
+        var bits = List.copyOf(bus.waveforms);
+        moveTracks(List.of(bits.get(2)), dropLocation(bits.get(0).vOffset));
+        assertEquals(List.of(bits.get(2), bits.get(0), bits.get(1)), bus.waveforms);
+        assertSame(bits.get(2), bus.waveforms.get(0));
+        assertEquals(List.of(bus), view.getStreamList());
+    }
+
     private Point origin() {
         try { return (Point) canvas.getClass().getMethod("getOrigin").invoke(canvas); }
         catch (ReflectiveOperationException e) { throw new AssertionError(e); }
