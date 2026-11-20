@@ -81,7 +81,7 @@ public class FstDbLoader implements IWaveformDbLoader, IFstDatabaseBuilder {
 		pcs.firePropertyChange(IWaveformDbLoader.LOADING_FINISHED, null, null);
 	}
 
-	public void dispose() {
+	public synchronized void dispose() {
 		if(parser!=null) {
 			parser.close();
 			parser=null;
@@ -183,7 +183,9 @@ public class FstDbLoader implements IWaveformDbLoader, IFstDatabaseBuilder {
 		pcs.removePropertyChangeListener(l);
 	}
 
-	public void getEvents(int id, int width, IEventList values) {
+	public synchronized void getEvents(int id, int width, IEventList values) {
+        com.minres.scviewer.database.ReadCancellation.check();
+        if (parser == null) throw new IllegalStateException("FST recording is closed");
 		if(values instanceof EventList)
 			parser.getValueChanges(id, width, timeScaleFactor, (EventList) values);
 	}

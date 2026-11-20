@@ -112,7 +112,10 @@ public class TransactionListPropertiesTest {
                     case "getId" -> id;
                     case "getBeginTime" -> 0L;
                     case "getEndTime" -> 1L;
-                    case "getAttributes" -> List.of(attributes);
+                    case "getAttributes" -> {
+                        assertNull("A label callback read attributes on SWT", Display.getCurrent());
+                        yield List.of(attributes);
+                    }
                     case "hashCode" -> System.identityHashCode(p);
                     case "equals" -> p == a[0];
                     case "toString" -> "tx#" + id;
@@ -136,6 +139,7 @@ public class TransactionListPropertiesTest {
         await(() -> shown.getItemCount() == 2 && table.getItemCount() == 1);
         assertEquals("late [STRING]", search.getText());
         assertEquals("late [STRING]", shown.getText());
+        await(() -> "last".equals(table.getItem(0).getText(2)));
         assertEquals("last", table.getItem(0).getText(2));
     }
 
@@ -145,6 +149,7 @@ public class TransactionListPropertiesTest {
         await(() -> shown.getSelectionIndex() >= 0 && table.getItemCount() == 1);
         assertEquals("address [STRING]", shown.getText());
         assertEquals("address [STRING]", search.getText());
+        await(() -> "value".equals(table.getItem(0).getText(2)));
         assertEquals("value", table.getItem(0).getText(2));
     }
 
@@ -156,6 +161,7 @@ public class TransactionListPropertiesTest {
         input(transactions.toArray(new ITx[0]));
         await(() -> shown.getItemCount() == 3 && table.getItemCount() == 33);
         shown.select(1); shown.notifyListeners(SWT.Selection, new Event());
+        await(() -> "second".equals(table.getItem(0).getText(2)));
         assertEquals("second", table.getItem(0).getText(2));
         assertTrue(Arrays.asList(shown.getItems()).contains("late [STRING]"));
         list.setVisible(false);
@@ -169,22 +175,26 @@ public class TransactionListPropertiesTest {
         input(transaction(1, attribute("alpha", "first"), attribute("beta", "chosen")));
         await(() -> shown.getItemCount() == 2 && table.getItemCount() == 1);
         shown.select(1); shown.notifyListeners(SWT.Selection, new Event());
+        await(() -> "chosen".equals(table.getItem(0).getText(2)));
         assertEquals("chosen", table.getItem(0).getText(2));
 
         // The preferred property is no longer the second entry in the new stream.
         input(transaction(2, attribute("aardvark", "a"), attribute("alpha", "b"), attribute("beta", "restored")));
         await(() -> shown.getItemCount() == 3 && table.getItemCount() == 1);
         assertEquals("beta [STRING]", shown.getText());
+        await(() -> "restored".equals(table.getItem(0).getText(2)));
         assertEquals("restored", table.getItem(0).getText(2));
 
         // A temporary fallback and a separator must not erase the user's preference.
         input(transaction(3, attribute("other", "fallback")));
         await(() -> shown.getText().equals("other [STRING]") && table.getItemCount() == 1);
+        await(() -> "fallback".equals(table.getItem(0).getText(2)));
         assertEquals("fallback", table.getItem(0).getText(2));
         listView.setSelection(new StructuredSelection(new TrackEntry(new EmptyWaveform(), null)));
         input(transaction(4, attribute("alpha", "default"), attribute("beta", "remembered")));
         await(() -> shown.getItemCount() == 2 && table.getItemCount() == 1);
         assertEquals("beta [STRING]", shown.getText());
+        await(() -> "remembered".equals(table.getItem(0).getText(2)));
         assertEquals("remembered", table.getItem(0).getText(2));
 
         // A subsequent explicit choice replaces the remembered preference.
@@ -192,6 +202,7 @@ public class TransactionListPropertiesTest {
         input(transaction(5, attribute("aardvark", "default"), attribute("alpha", "new preference"), attribute("beta", "old")));
         await(() -> shown.getItemCount() == 3 && table.getItemCount() == 1);
         assertEquals("alpha [STRING]", shown.getText());
+        await(() -> "new preference".equals(table.getItem(0).getText(2)));
         assertEquals("new preference", table.getItem(0).getText(2));
     }
 
@@ -209,6 +220,7 @@ public class TransactionListPropertiesTest {
         list.setVisible(true);
         await(() -> shown.getItemCount() == 1 && table.getItemCount() == 1);
         assertEquals("address [STRING]", shown.getText());
+        await(() -> "value".equals(table.getItem(0).getText(2)));
         assertEquals("value", table.getItem(0).getText(2));
     }
 
@@ -217,6 +229,7 @@ public class TransactionListPropertiesTest {
         input(transaction(1, attribute("old", "old value")));
         input(transaction(2, attribute("new", "new value")));
         await(() -> shown.getText().equals("new [STRING]") && table.getItemCount() == 1);
+        await(() -> "new value".equals(table.getItem(0).getText(2)));
         assertEquals("new value", table.getItem(0).getText(2));
         listView.setSelection(new StructuredSelection(new TrackEntry(new EmptyWaveform(), null)));
         assertEquals(0, shown.getItemCount());

@@ -22,10 +22,10 @@ import java.util.List;
 public class HierNode implements IHierNode {
 
 	/** The name. */
-	protected String name;
+	protected volatile String name;
 
 	/** The parent. */
-	protected IHierNode parent = null;
+	protected volatile IHierNode parent = null;
 
 	/** The childs. */
 	protected List<IHierNode> childNodes = Collections.synchronizedList(new ArrayList<>());
@@ -139,7 +139,7 @@ public class HierNode implements IHierNode {
 	 */
 	@Override
 	public List<IHierNode> getChildNodes() {
-		return Collections.unmodifiableList(childNodes);
+		synchronized (childNodes) { return List.copyOf(childNodes); }
 	}
 
 	/**
@@ -149,9 +149,11 @@ public class HierNode implements IHierNode {
 	 */
 	@Override
 	public void addChild(IHierNode child) {
-		if (!childNodes.contains(child)) {
-			childNodes.add(child);
-			child.setParent(this);
+		synchronized (childNodes) {
+			if (!childNodes.contains(child)) {
+				child.setParent(this);
+				childNodes.add(child);
+			}
 		}
 	}
 

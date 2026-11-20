@@ -471,12 +471,14 @@ public class HeapStatus extends Composite {
 	 * Gc.
 	 */
 	private void gc() {
+        var display = getDisplay();
 		gcRunning(true);
 		Thread t = new Thread() {
 			@Override
 			public void run() {
 				busyGC();
-				getDisplay().asyncExec(() -> {
+                if (display.isDisposed()) return;
+				com.minres.scviewer.database.ui.UiDispatch.async(display, () -> {
 					if (!isDisposed())
 						gcRunning(false);
 				});

@@ -132,7 +132,9 @@ abstract class AbstractTxStream extends HierNode implements IWaveform, ITransact
 
 	public RelationType getRelationType(String name) {
 		RelationType relType=RelationTypeFactory.create(name);
-		if(!usedRelationsList.contains(relType)) usedRelationsList.add(relType);
+		synchronized (usedRelationsList) {
+			if (!usedRelationsList.contains(relType)) usedRelationsList.add(relType);
+		}
 		return relType;
 	}
 

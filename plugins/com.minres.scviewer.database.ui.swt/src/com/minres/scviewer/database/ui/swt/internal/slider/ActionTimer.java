@@ -19,6 +19,7 @@ public class ActionTimer implements Runnable {
 
 	private final Display display;
 	private final TimerAction timerAction;
+    private boolean active;
 
 	public interface TimerAction extends Runnable {
 		boolean isEnabled();
@@ -30,16 +31,22 @@ public class ActionTimer implements Runnable {
 	}
 
 	public void activate() {
-		if( timerAction.isEnabled() ) {
+		if (!display.isDisposed() && timerAction.isEnabled()) {
+            active = true;
 			display.timerExec( INITIAL_DELAY, this );
 		}
 	}
 
+    public void cancel() {
+        active = false;
+        if (!display.isDisposed()) display.timerExec(-1, this);
+    }
+
 	@Override
 	public void run() {
-		if( timerAction.isEnabled() ) {
-			timerAction.run();
-			display.timerExec( FAST_DELAY, this );
+		if (active && !display.isDisposed() && timerAction.isEnabled()) {
+            timerAction.run();
+            if (active && !display.isDisposed() && timerAction.isEnabled()) display.timerExec(FAST_DELAY, this);
 		}
 	}
 }

@@ -93,13 +93,13 @@ public class TransactionList extends Composite {
         column("Property Value", 180, valueProvider);
 
         Display display = getDisplay();
-        rowsJob = new LatestJob<>(task -> { if (!display.isDisposed()) display.asyncExec(task); }, result -> {
+        rowsJob = new LatestJob<>(task -> com.minres.scviewer.database.ui.UiDispatch.async(display, task), result -> {
             if (isDisposed()) return;
             rows = result;
             tableViewer.setInput(rows);
             tableViewer.setItemCount(rows.size());
         });
-        attributesJob = new LatestJob<>(task -> { if (!display.isDisposed()) display.asyncExec(task); }, result -> {
+        attributesJob = new LatestJob<>(task -> com.minres.scviewer.database.ui.UiDispatch.async(display, task), result -> {
             if (isDisposed()) return;
             if (result.error() != null) {
                 MessageDialog.openError(getShell(), "Cannot load properties", result.error().toString());
@@ -216,6 +216,7 @@ public class TransactionList extends Composite {
         getDisplay().timerExec(-1, applyFilter);
         rowsJob.cancel();
         attributesJob.cancel();
+        valueProvider.reset();
         stream = requestedStream;
         query = stream == null ? null : new TransactionQuery(stream);
         rows = List.of();

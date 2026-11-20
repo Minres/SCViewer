@@ -125,4 +125,29 @@ public class TransactionQueryTest {
         assertEquals(0, reads.get());
         assertEquals(0, wave.requests);
     }
+
+    @Test public void slowPropertyDiscoveryDoesNotBlockHeaderRequests() throws Exception {
+        var entered = new java.util.concurrent.CountDownLatch(1);
+        var release = new java.util.concurrent.CountDownLatch(1);
+        Waveform wave = new Waveform();
+        ITx slow = (ITx) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{ITx.class}, (p, m, a) -> {
+            if (m.getName().equals("getAttributes")) {
+                entered.countDown();
+                assertTrue(release.await(5, java.util.concurrent.TimeUnit.SECONDS));
+                return List.of();
+            }
+            return 1L;
+        });
+        wave.transactions = List.of(slow);
+        TransactionQuery query = new TransactionQuery(wave);
+        var workers = java.util.concurrent.Executors.newFixedThreadPool(2);
+        try {
+            var discovery = workers.submit(() -> query.discoverAttributes(() -> false));
+            assertTrue(entered.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            assertSame(wave.transactions, workers.submit(() -> query.transactions(() -> false))
+                    .get(1, java.util.concurrent.TimeUnit.SECONDS));
+            release.countDown();
+            assertTrue(discovery.get(5, java.util.concurrent.TimeUnit.SECONDS).isEmpty());
+        } finally { release.countDown(); workers.shutdownNow(); }
+    }
 }

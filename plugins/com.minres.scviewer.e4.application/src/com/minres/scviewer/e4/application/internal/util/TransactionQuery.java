@@ -30,40 +30,47 @@ public final class TransactionQuery {
     public record Attribute(String name, DataType type) {}
     private final IWaveform waveform;
     private volatile List<ITx> transactions;
-    private List<Attribute> attributes;
+    private volatile List<Attribute> attributes;
 
     public TransactionQuery(IWaveform waveform) { this.waveform = waveform; }
 
     public List<ITx> transactions(BooleanSupplier cancelled) {
-        check(cancelled);
-        List<ITx> result = transactions;
-        if (result == null) {
-            synchronized (this) {
-                result = transactions;
-                if (result == null) {
-                    try {
-                        result = waveform instanceof ITransactionProvider indexed ? indexed.getTransactionList()
-                                : TransactionLists.fromEvents(waveform.getEvents(), cancelled);
-                    } catch (java.util.concurrent.CancellationException e) { throw new OperationCanceledException(); }
-                    check(cancelled);
-                    transactions = result;
+        return cancellable(cancelled,
+                () -> com.minres.scviewer.database.WaveformAccess.read(waveform, () -> {
+            check(cancelled);
+            List<ITx> result = transactions;
+            if (result == null) {
+                result = waveform instanceof ITransactionProvider indexed ? indexed.getTransactionList()
+                        : TransactionLists.fromEvents(waveform.getEvents(), cancelled);
+                check(cancelled);
+                synchronized (this) {
+                    if (transactions == null) transactions = result;
+                    result = transactions;
                 }
             }
-        }
-        check(cancelled);
-        return result;
+            check(cancelled);
+            return result;
+        }));
     }
 
     public List<ITx> filter(Predicate<ITx> predicate, BooleanSupplier cancelled) {
+        return cancellable(cancelled,
+                () -> com.minres.scviewer.database.WaveformAccess.read(waveform, () -> {
         List<ITx> result = new ArrayList<>();
         for (ITx transaction : transactions(cancelled)) {
             check(cancelled);
             if (predicate.test(transaction)) result.add(transaction);
         }
         return List.copyOf(result);
+        }));
     }
 
-    public synchronized List<Attribute> discoverAttributes(BooleanSupplier cancelled) {
+    public List<Attribute> discoverAttributes(BooleanSupplier cancelled) {
+        return cancellable(cancelled,
+                () -> com.minres.scviewer.database.WaveformAccess.read(waveform, () -> discover(cancelled)));
+    }
+
+    private List<Attribute> discover(BooleanSupplier cancelled) {
         check(cancelled);
         if (attributes != null) return attributes;
         Map<String, DataType> types = new TreeMap<>();
@@ -72,8 +79,13 @@ public final class TransactionQuery {
             transaction.getAttributes().forEach(attribute -> types.putIfAbsent(attribute.getName(), attribute.getDataType()));
         }
         check(cancelled);
-        attributes = types.entrySet().stream().map(e -> new Attribute(e.getKey(), e.getValue())).toList();
-        return attributes;
+        List<Attribute> result = types.entrySet().stream().map(e -> new Attribute(e.getKey(), e.getValue())).toList();
+        synchronized (this) { if (attributes == null) attributes = result; return attributes; }
+    }
+
+    private static <T> T cancellable(BooleanSupplier cancelled, java.util.function.Supplier<T> query) {
+        try { return com.minres.scviewer.database.ReadCancellation.with(cancelled, query); }
+        catch (java.util.concurrent.CancellationException e) { throw new OperationCanceledException(); }
     }
 
     private static void check(BooleanSupplier cancelled) {

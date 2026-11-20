@@ -46,11 +46,13 @@ public class ImageButton extends Composite
 			}
 			@Override
 			public boolean isEnabled() {
-				return pressed;
+				return !isDisposed() && pressed;
 			}
 		};
 		actionTimer = new ActionTimer(timerAction, this.getDisplay() );
 		addListener(SWT.Dispose, event ->  {
+            pressed = false;
+            actionTimer.cancel();
 			if (hoverImage != null)	hoverImage.dispose();
 			if (normalImage != null) normalImage.dispose();
 			if (pressedImage != null) pressedImage.dispose();
@@ -87,6 +89,7 @@ public class ImageButton extends Composite
 			@Override
 			public void mouseUp(MouseEvent e) {
 				pressed=false;
+                actionTimer.cancel();
 				redraw();
 			}
 		});

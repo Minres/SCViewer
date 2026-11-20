@@ -45,6 +45,18 @@ public class CombinedBitVectorTest {
     }
     private String value(EventEntry entry) { return entry == null ? null : entry.events[0].toString(); }
 
+    @Test public void cancellationStopsAnUnchangedHistoryScanAndAllowsRetry() {
+        var input = new Signal(0, "input", 2);
+        for (int i = 0; i < 1000; i++) input.addSignalChange(i, BitVector.fromString(2, i % 2 == 0 ? "00" : "10"));
+        var bus = combine(input, input);
+        AtomicInteger checks = new AtomicInteger();
+        try {
+            ReadCancellation.with(() -> checks.incrementAndGet() > 30, () -> bus.getEvents().floorEntry(999));
+            fail("History scan ignored cancellation");
+        } catch (java.util.concurrent.CancellationException expected) { }
+        assertEquals(0, bus.getEvents().floorEntry(999).timestamp);
+    }
+
     @Test public void mergesStaggeredAndSimultaneousChangesAndSuppressesUnchangedValues() {
         var a = signal("a", new long[]{5, 20, 20, 25, 30, 40}, "0", "0", "1", "1", "x", "z");
         var b = signal("b", new long[]{10, 20, 25}, "1", "0", "0");

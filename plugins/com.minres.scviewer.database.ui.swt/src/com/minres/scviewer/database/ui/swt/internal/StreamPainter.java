@@ -18,7 +18,6 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import com.minres.scviewer.database.EventKind;
 import com.minres.scviewer.database.IEvent;
-import com.minres.scviewer.database.IEventList;
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
@@ -35,9 +34,6 @@ public class StreamPainter extends TrackPainter{
 	private IWaveform stream;
 	private int txBase;
 	private int txHeight;
-	private TxIntervalIndex intervalIndex;
-	private IEventList indexedEvents;
-	private int indexedSize = -1;
 
 	public StreamPainter(WaveformCanvas waveCanvas, boolean even, TrackEntry trackEntry) {
 		super(trackEntry, even);
@@ -46,8 +42,8 @@ public class StreamPainter extends TrackPainter{
 	}
 
 	public void paintArea(Projection proj, Rectangle area) {
-		int trackHeight=trackEntry.height/stream.getRowCount();
-		if(stream.getEvents().size()==0) {
+		int trackHeight=trackEntry.height/waveCanvas.rows(stream);
+		if(waveCanvas.events(stream).size()==0) {
 			proj.setFillRule(SWT.FILL_EVEN_ODD);
 			proj.setLineStyle(SWT.LINE_SOLID);
 			proj.setLineWidth(1);
@@ -79,7 +75,9 @@ public class StreamPainter extends TrackPainter{
 		for( int y1=area.y+trackHeight/2; y1<area.y+trackEntry.height; y1+=trackHeight)
 			proj.drawLine(area.x, y1, area.x+area.width, y1);
 		ITxEvent highlighted = null;
-        for (ITxEvent event : getIntervalIndex().overlapping(beginTime, endTime)) {
+        TxIntervalIndex index = getIntervalIndex();
+        if (index == null) return;
+        for (ITxEvent event : index.overlapping(beginTime, endTime)) {
             ITx tx = event.getTransaction();
             drawTx(proj, area, tx, event.getRowIndex(), false);
             if (waveCanvas.currentSelectedTx != null && waveCanvas.currentSelectedTx.getId() == tx.getId())
@@ -91,16 +89,7 @@ public class StreamPainter extends TrackPainter{
         }
     }
 
-    private TxIntervalIndex getIntervalIndex() {
-        stream.getRowCount();
-        IEventList events = stream.getEvents();
-        if (intervalIndex == null || indexedEvents != events || indexedSize != events.size()) {
-            intervalIndex = new TxIntervalIndex(events);
-            indexedEvents = events;
-            indexedSize = events.size();
-        }
-        return intervalIndex;
-    }
+    private TxIntervalIndex getIntervalIndex() { return waveCanvas.intervals(stream); }
 
 	protected void drawTx(Projection proj, Rectangle area, ITx tx, int concurrencyIndex, boolean highlighted ) {
 		// compute colors
@@ -140,7 +129,9 @@ public class StreamPainter extends TrackPainter{
         long time = (long) point.x * scale;
         long low = Math.max(0L, (long) point.x - 5) * scale;
         long high = ((long) point.x + 5) * scale;
-        for (ITxEvent event : getIntervalIndex().overlapping(low, high)) {
+        TxIntervalIndex index = getIntervalIndex();
+        if (index == null) return null;
+        for (ITxEvent event : index.overlapping(low, high)) {
             if (event.getRowIndex() != lane) continue;
             ITx tx = event.getTransaction();
             if (event.getKind() == EventKind.SINGLE ||
@@ -155,8 +146,6 @@ public class StreamPainter extends TrackPainter{
 
 	public void setStream(IWaveform stream) {
 		this.stream = stream;
-        intervalIndex = null;
-        indexedEvents = null;
 	}
 
 	protected ITx getTxFromEntry(int lane, int offset, IEvent[] firstTx) {

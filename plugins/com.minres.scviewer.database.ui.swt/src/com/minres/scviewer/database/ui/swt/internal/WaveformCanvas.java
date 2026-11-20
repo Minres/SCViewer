@@ -51,6 +51,32 @@ import com.minres.scviewer.database.ui.swt.Constants;
 import com.minres.scviewer.database.ui.swt.internal.slider.ZoomBar;
 
 public class WaveformCanvas extends Canvas implements IWaveformZoom{
+    private final WaveformData data;
+    final org.eclipse.swt.widgets.Display uiDisplay;
+    final com.minres.scviewer.database.ui.AsyncTransactionData transactionData;
+    Runnable dataChanged = () -> redraw();
+
+    com.minres.scviewer.database.IEventList events(IWaveform waveform) {
+        return data.events(waveform, Math.max(0, getMinVisibleTime()), getMaxVisibleTime(), Math.max(1, getScale()));
+    }
+    com.minres.scviewer.database.IEvent[] value(IWaveform waveform, long time) {
+        EventEntry entry = data.events(waveform, time, time, 1).floorEntry(time);
+        return entry == null ? new IEvent[0] : entry.events;
+    }
+    void retainData(List<TrackEntry> tracks) {
+        java.util.Set<IWaveform> retained = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        collectWaveforms(tracks, retained);
+        data.retain(retained);
+    }
+    private void collectWaveforms(List<TrackEntry> tracks, java.util.Set<IWaveform> retained) {
+        for (TrackEntry track : tracks) {
+            if (track.waveform != null) retained.add(track.waveform);
+            collectWaveforms(track.waveforms, retained);
+        }
+    }
+    int rows(IWaveform waveform) { return data.rows(waveform); }
+    com.minres.scviewer.database.tx.TxIntervalIndex intervals(IWaveform waveform) { return data.intervals(waveform); }
+
 
 	public static final long ZOOM_FIT = -2;
 
@@ -106,6 +132,14 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 
 	public WaveformCanvas(final Composite parent, int style, IWaveformStyleProvider styleProvider, ZoomBar.IProvider scrollbarProvider) {
 		super(parent, (style & ~SWT.H_SCROLL) | SWT.DOUBLE_BUFFERED | SWT.NO_BACKGROUND | SWT.V_SCROLL );
+        var display = parent.getDisplay();
+        uiDisplay = display;
+        java.util.function.Consumer<Runnable> dispatch = task -> com.minres.scviewer.database.ui.UiDispatch.async(display, task);
+        data = new WaveformData(dispatch, () -> { if (!isDisposed()) dataChanged.run(); });
+        transactionData = new com.minres.scviewer.database.ui.AsyncTransactionData(dispatch, tx -> {
+            if (!isDisposed()) { if (arrowPainter != null) arrowPainter.updateSelection(); redraw(); }
+        });
+        addDisposeListener(event -> { data.close(); transactionData.close(); });
 		this.styleProvider=styleProvider;
 		addControlListener(new ControlAdapter() { /* resize listener. */
 			@Override
@@ -321,7 +355,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 						setScalingFactor(factor, lowerTime+time_diff/2);
 					} else {
 						origin.x = -(int) (lowerTime/getScale());
-						WaveformCanvas.this.getDisplay().asyncExec(() -> {redraw();});
+						WaveformCanvas.this.getDisplay().asyncExec(() -> { if (!isDisposed()) redraw(); });
 					}
 					lastHorSelection=sel;
 				}
@@ -339,7 +373,7 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 				if (!painterList.isEmpty()) {
 					origin.y=-vertical.getSelection();
 					fireSelectionEvent();
-					WaveformCanvas.this.getDisplay().asyncExec(() -> {redraw();});
+					WaveformCanvas.this.getDisplay().asyncExec(() -> { if (!isDisposed()) redraw(); });
 				}
 			}
 		});
@@ -475,20 +509,21 @@ public class WaveformCanvas extends Canvas implements IWaveformZoom{
 			setOrigin(size.x - higher, origin.y);
 		}
 		if(currentSelectedTrack != null) {
-			EventEntry entry = currentSelectedTrack.waveform.getEvents().floorEntry(tx.getBeginTime());
+			EventEntry entry = events(currentSelectedTrack.waveform).floorEntry(tx.getBeginTime());
 			IWaveformPainter painter = trackAreaPainter.getPainterFor(currentSelectedTrack);
 			if (painter != null && painter instanceof StreamPainter)
 				reveal(tx, size, painter, entry);
 		} else
 			for (IWaveformPainter painter : wave2painterMap.values()) {
 				if (painter instanceof StreamPainter && ((StreamPainter) painter).getStream() == tx.getStream()) {
-					EventEntry entry = tx.getStream().getEvents().floorEntry(tx.getBeginTime());
+					EventEntry entry = events(tx.getStream()).floorEntry(tx.getBeginTime());
 					reveal(tx, size, painter, entry);
 				}
 			}
 	}
 
 	private void reveal(ITx tx, Point size, IWaveformPainter painter, EventEntry entry) {
+        if (entry == null) return;
 		Optional<IEvent> res = Arrays.stream(entry.events).filter(e -> ((ITxEvent)e).getTransaction().equals(tx)).findFirst();
 		if(res.isPresent()) {
 			int top = painter.getVerticalOffset() + styleProvider.getTrackHeight() * ((ITxEvent)res.get()).getRowIndex();

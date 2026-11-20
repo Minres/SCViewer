@@ -22,7 +22,9 @@ public class ActionScheduler {
     this.action = action;
   }
 
+  public void cancel() { if (!display.isDisposed()) display.timerExec(-1, action); }
+
   public void schedule( int delay ) {
-    display.timerExec( delay, action );
+    if (!display.isDisposed()) display.timerExec(delay, action);
   }
 }

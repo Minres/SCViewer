@@ -88,6 +88,7 @@ public class TransactionDetails {
 
 	/** The tree viewer. */
 	private TreeViewer treeViewer;
+    private com.minres.scviewer.e4.application.internal.util.LatestJob<ITx> inputJob;
 
 	/** The col3. */
 	private TreeViewerColumn col1;
@@ -289,7 +290,40 @@ public class TransactionDetails {
 	}
 	HashMap<Integer, ViewSettings> settings = new HashMap<>();
 	
-	public void setInput(Object object) {
+    public void setInput(Object object) {
+        if (treeViewer == null || treeViewer.getControl().isDisposed()) return;
+        if (inputJob == null) {
+            var display = treeViewer.getControl().getDisplay();
+            inputJob = new com.minres.scviewer.e4.application.internal.util.LatestJob<>(
+                    task -> com.minres.scviewer.database.ui.UiDispatch.async(display, task), tx -> {
+                        if (!treeViewer.getControl().isDisposed()) setPreparedInput(tx);
+                    });
+            treeViewer.getControl().addDisposeListener(event -> inputJob.close());
+        }
+        inputJob.cancel();
+        if (object instanceof ITx tx) {
+            // Drop stale details immediately; remember layout only for completed inputs.
+            rememberInput();
+            treeViewer.setInput(null);
+            inputJob.schedule("Load selected transaction", monitor ->
+                com.minres.scviewer.database.WaveformAccess.read(tx.getStream(), () -> {
+                    tx.getAttributes();
+                    tx.getIncomingRelations();
+                    tx.getOutgoingRelations();
+                    return tx;
+                }));
+        } else treeViewer.setInput(null);
+    }
+
+    private void rememberInput() {
+        Object oldInput = treeViewer.getInput();
+        if (oldInput != null) {
+            settings.put(getAttrNameHash(oldInput), new ViewSettings(
+                    getTopItemHier(treeViewer.getTree().getTopItem()), treeViewer.getExpandedTreePaths()));
+        }
+    }
+
+    private void setPreparedInput(Object object) {
 		if(object instanceof ITx){
 			Object oldInput = treeViewer.getInput();
 			if(oldInput!=null) {

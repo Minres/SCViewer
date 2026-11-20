@@ -52,6 +52,9 @@ public class TxOutlinePage extends ContentOutlinePage implements  ISelectionList
 
 	private TxEditorPart editor;
 	TreeViewer contentOutlineViewer ;
+    private org.eclipse.swt.widgets.Display display;
+    private com.minres.scviewer.database.IWaveformDb observedDatabase;
+    private volatile boolean disposed;
 	
 	public TxOutlinePage(TxEditorPart editor) {
 		this.editor = editor;
@@ -66,6 +69,8 @@ public class TxOutlinePage extends ContentOutlinePage implements  ISelectionList
 	 */
 	public void createControl(Composite parent) {
 		super.createControl(parent);
+        display = parent.getDisplay();
+        observedDatabase = editor.getDatabase();
 		contentOutlineViewer = getTreeViewer();
 		contentOutlineViewer.addSelectionChangedListener(this);
 		// Set up the tree viewer
@@ -87,7 +92,7 @@ public class TxOutlinePage extends ContentOutlinePage implements  ISelectionList
 		getSite().getPage().addSelectionListener((ISelectionListener) this);
 		//getSite().getPage().addSelectionListener("SampleViewId",(ISelectionListener)this);
 		getSite().setSelectionProvider(this);
-		editor.getDatabase().addPropertyChangeListener(this);
+		observedDatabase.addPropertyChangeListener(this);
 	}
 
 	/*
@@ -96,8 +101,11 @@ public class TxOutlinePage extends ContentOutlinePage implements  ISelectionList
 	 * @see org.eclipse.ui.part.IPage#dispose()
 	 */
 	public void dispose() {
-		// dispose
-		super.dispose();
+        disposed = true;
+        if (observedDatabase != null) observedDatabase.removePropertyChangeListener(this);
+        if (getSite() != null) getSite().getPage().removeSelectionListener(this);
+        if (contentOutlineViewer != null) contentOutlineViewer.removeSelectionChangedListener(this);
+        super.dispose();
 	}
 
 	/*
@@ -213,7 +221,10 @@ public class TxOutlinePage extends ContentOutlinePage implements  ISelectionList
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if("CHILDS".equals(evt.getPropertyName())) {
-			contentOutlineViewer.refresh();
+            if (!disposed && display != null) com.minres.scviewer.database.ui.UiDispatch.async(display, () -> {
+                if (!disposed && evt.getSource() == observedDatabase && contentOutlineViewer != null
+                        && !contentOutlineViewer.getControl().isDisposed()) contentOutlineViewer.refresh();
+            });
 		}
 	}
 

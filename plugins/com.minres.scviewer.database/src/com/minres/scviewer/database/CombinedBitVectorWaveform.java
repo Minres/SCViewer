@@ -65,6 +65,7 @@ public final class CombinedBitVectorWaveform extends HierNode implements IWavefo
         this.sources = List.copyOf(normalized);
     }
 
+    @Override public List<IWaveform> getReadSources() { return sources.stream().map(SourceBit::waveform).toList(); }
     public List<SourceBit> getSources() { return sources; }
     @Override public String getFullName() { return identifier; }
     @Override public String getDisplayName() { return getName(); }
@@ -95,6 +96,7 @@ public final class CombinedBitVectorWaveform extends HierNode implements IWavefo
         }
         BitValue[] value = new BitValue[getWidth()];
         for (int i = 0; i < value.length; i++) {
+            ReadCancellation.check();
             EventEntry entry = inputs().get(i).floorEntry(time);
             value[i] = BitValue.X;
             if (entry != null && entry.events != null && entry.events.length > 0) {
@@ -112,6 +114,7 @@ public final class CombinedBitVectorWaveform extends HierNode implements IWavefo
     private Long candidate(long time, boolean forward, boolean inclusive) {
         Long result = null;
         for (IEventList input : inputs()) {
+            ReadCancellation.check();
             EventEntry entry = forward ? (inclusive ? input.ceilingEntry(time) : input.higherEntry(time))
                     : (inclusive ? input.floorEntry(time) : input.lowerEntry(time));
             if (entry != null && (result == null || (forward
@@ -138,7 +141,7 @@ public final class CombinedBitVectorWaveform extends HierNode implements IWavefo
                 break;
             }
             if (changed(next)) break;
-            if (Thread.currentThread().isInterrupted()) throw new java.util.concurrent.CancellationException();
+            ReadCancellation.check();
             next = candidate(next, forward, false);
         }
         synchronized (positions) { positions.put(query, next); }

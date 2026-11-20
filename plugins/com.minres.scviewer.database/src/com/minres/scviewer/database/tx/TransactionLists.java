@@ -27,9 +27,11 @@ public final class TransactionLists {
     public static List<ITx> fromEvents(IEventList events, BooleanSupplier cancelled) {
         List<ITx> transactions = new ArrayList<>();
         for (EventEntry entry : events.entrySet()) {
+            com.minres.scviewer.database.ReadCancellation.check();
             if (cancelled.getAsBoolean()) throw new java.util.concurrent.CancellationException();
             if (entry.events == null) continue;
             for (IEvent event : entry.events) {
+                com.minres.scviewer.database.ReadCancellation.check();
                 if (cancelled.getAsBoolean()) throw new java.util.concurrent.CancellationException();
                 if (event instanceof ITxEvent tx && (event.getKind() == EventKind.BEGIN || event.getKind() == EventKind.SINGLE))
                     transactions.add(tx.getTransaction());
@@ -40,7 +42,8 @@ public final class TransactionLists {
 
     public static List<ITx> sorted(java.util.Collection<ITx> transactions) {
         List<ITx> sorted = new ArrayList<>(transactions);
-        sorted.sort(Comparator.comparingLong(ITx::getBeginTime).thenComparingLong(ITx::getId));
+        Comparator<ITx> order = Comparator.comparingLong(ITx::getBeginTime).thenComparingLong(ITx::getId);
+        sorted.sort((left, right) -> { com.minres.scviewer.database.ReadCancellation.check(); return order.compare(left, right); });
         return List.copyOf(sorted);
     }
 }

@@ -113,18 +113,28 @@ public class BitVectorExpansionTest {
     }
 
     @Test
-    public void realScalarAndEmptySignalsCannotBeExpanded() {
-        Signal real = new Signal("real", 64);
+    public void realAndScalarSignalsCannotBeExpanded() {
+        Signal real = new Signal("real", 64) { @Override public boolean isBitVector() { return false; } };
         real.events.put(0, new DoubleVal(1.5));
         Signal scalar = new Signal("scalar", 1);
         scalar.events.put(0, BitVector.fromString(1, "1"));
-        for (Signal source : List.of(real, scalar, new Signal("empty", 8))) {
+        for (Signal source : List.of(real, scalar)) {
             TrackEntry track = new TrackEntry(source, null);
             track.setExpanded(true);
             assertFalse(track.isExpandable());
             assertEquals(HierState.NONE, track.hierState);
             assertTrue(track.waveforms.isEmpty());
         }
+    }
+
+    @Test public void vectorMetadataDoesNotReadEventsOnTheUiThread() {
+        Signal source = new Signal("lazy", 8) {
+            @Override public IEventList getEvents() { throw new AssertionError("Metadata triggered I/O"); }
+        };
+        TrackEntry track = new TrackEntry(source, null);
+        assertTrue(track.isExpandable());
+        track.setExpanded(true);
+        assertEquals(8, track.waveforms.size());
     }
 
     @Test

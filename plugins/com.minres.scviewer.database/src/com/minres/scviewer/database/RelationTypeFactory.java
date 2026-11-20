@@ -10,7 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.database;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A factory for creating RelationType objects.
@@ -24,14 +24,7 @@ public class RelationTypeFactory {
 	 * @return the relation type
 	 */
 	public static RelationType create(String name) {
-		if (registry.containsKey(name)) {
-			return registry.get(name);
-		} else {
-			RelationType relType = new RelationType(name);
-			registry.put(name, relType);
-			return relType;
-		}
-
+		return registry.computeIfAbsent(name, RelationType::new);
 	}
 
 	/**
@@ -41,6 +34,6 @@ public class RelationTypeFactory {
 	}
 
 	/** The registry. */
-	private static HashMap<String, RelationType> registry = new HashMap<>();
+	private static ConcurrentHashMap<String, RelationType> registry = new ConcurrentHashMap<>();
 
 }

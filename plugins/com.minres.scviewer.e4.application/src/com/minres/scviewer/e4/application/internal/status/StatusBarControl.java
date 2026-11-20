@@ -15,7 +15,6 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
@@ -45,14 +44,15 @@ public class StatusBarControl {
 	/** The osgi preverences. */
 	@Inject	@Optional PreferencesService osgiPreverences;
 
-	/** The sync. */
-	private final UISynchronize sync;
-
 	/** The manager. */
 	protected StatusLineManager manager;
 
 	/** The monitor. */
-	private SyncedProgressMonitor monitor;
+	private final java.util.Set<JobProgress> monitors = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final java.util.concurrent.atomic.AtomicBoolean updatePending = new java.util.concurrent.atomic.AtomicBoolean();
+    private static StatusBarControl providerOwner;
+    private volatile boolean disposed;
+    private org.eclipse.swt.widgets.Display display;
 	
 	/**
 	 * Instantiates a new status bar control.
@@ -61,7 +61,6 @@ public class StatusBarControl {
 	 */
 	@Inject
 	public StatusBarControl(UISynchronize sync) {
-		this.sync=sync;
 		manager = new StatusLineManager();
 		manager.update(true);
 	}
@@ -86,6 +85,12 @@ public class StatusBarControl {
 	 */
 	@PreDestroy
 	void destroy() {
+        disposed = true;
+        if (providerOwner == this) {
+            Job.getJobManager().setProgressProvider(null);
+            providerOwner = null;
+        }
+        monitors.clear();
 		if (manager != null) {
 			manager.dispose();
 			manager = null;
@@ -101,14 +106,24 @@ public class StatusBarControl {
 	private void createStatusLine(Composite parent, MToolControl toolControl) {
 		//		IEclipseContext context = modelService.getContainingContext(toolControl);
 		manager.createControl(parent);
-		monitor=new SyncedProgressMonitor(manager.getProgressMonitor());
-		Job.getJobManager().setProgressProvider(new ProgressProvider() {
-			@Override
-			public IProgressMonitor createMonitor(Job job) {
-				return monitor.addJob(job);
-			}
-		});
-
+        display = parent.getDisplay();
+        manager.setCancelEnabled(false);
+        providerOwner = this;
+        Job.getJobManager().setProgressProvider(new ProgressProvider() {
+            @Override public IProgressMonitor createMonitor(Job job) {
+                JobProgress monitor = new JobProgress(StatusBarControl.this::requestProgressUpdate);
+                if (disposed) return monitor;
+                monitors.add(monitor);
+                job.addJobChangeListener(new JobChangeAdapter() {
+                    @Override public void done(IJobChangeEvent event) {
+                        monitors.remove(monitor);
+                        requestProgressUpdate();
+                        event.getJob().removeJobChangeListener(this);
+                    }
+                });
+                return monitor;
+            }
+        });
 	}
 
 	/**
@@ -124,118 +139,20 @@ public class StatusBarControl {
 		}
 	} 
 
-	/**
-	 * The Class SyncedProgressMonitor.
-	 */
-	private final class SyncedProgressMonitor extends NullProgressMonitor {
-
-		/** The progress bar. */
-		private IProgressMonitor progressBar;
-
-		/**
-		 * Instantiates a new synced progress monitor.
-		 *
-		 * @param iProgressMonitor the progress bar
-		 */
-		public SyncedProgressMonitor(IProgressMonitor iProgressMonitor) {
-			super();
-			this.progressBar = iProgressMonitor;
-		}
-
-		/* (non-Javadoc)
-		 * @see org.eclipse.core.runtime.NullProgressMonitor#beginTask(java.lang.String, int)
-		 */
-		@Override
-		public void beginTask(final String name, final int totalWork) {
-			sync.asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					progressBar.beginTask(name, totalWork);
-				}
-			});
-		}
-
-		/**
-		 * This implementation does nothing.
-		 * Subclasses may override this method to do something
-		 * with the name of the task.
-		 * 
-		 * @see IProgressMonitor#setTaskName(String)
-		 */
-		@Override
-		public void setTaskName(String name) {
-			sync.asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					progressBar.setTaskName(name);
-				}
-			});
-		}
-
-		/**
-		 * This implementation does nothing.
-		 * Subclasses may override this method to do interesting
-		 * processing when a subtask begins.
-		 * 
-		 * @see IProgressMonitor#subTask(String)
-		 */
-		@Override
-		public void subTask(String name) {
-			sync.asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					progressBar.subTask(name);
-				}
-			});
-		}
-
-		/* (non-Javadoc)
-		 * @see org.eclipse.core.runtime.NullProgressMonitor#worked(int)
-		 */
-		@Override
-		public void worked(final int work) {
-			sync.asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					progressBar.worked(work);
-				}
-			});
-		}
-		@Override
-		public void done() {
-			sync.asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					progressBar.done();
-				}
-			});
-		}
-
-		/**
-		 * Adds the job.
-		 *
-		 * @param job the job
-		 * @return the i progress monitor
-		 */
-		public IProgressMonitor addJob(Job job){
-			if(job != null){
-				job.addJobChangeListener(new JobChangeAdapter() {
-					@Override
-					public void done(final IJobChangeEvent event) {
-						sync.asyncExec(new Runnable() {
-							@Override
-							public void run() {
-								if(event.getResult()==null) return;
-								if(!event.getResult().isOK())
-									progressBar.done();
-							}
-						});
-						// clean-up
-						event.getJob().removeJobChangeListener(this);
-					}
-				});
-			}
-			return this;
-		}
-	}
+    private void requestProgressUpdate() {
+        if (disposed || !updatePending.compareAndSet(false, true)) return;
+        com.minres.scviewer.database.ui.UiDispatch.async(display, () -> {
+            updatePending.set(false);
+            if (disposed || manager == null || manager.getControl().isDisposed()) return;
+            var snapshots = monitors.stream().map(JobProgress::snapshot).filter(p -> !p.done()).toList();
+            IProgressMonitor bar = manager.getProgressMonitor();
+            if (snapshots.isEmpty()) { bar.done(); return; }
+            String title = snapshots.get(0).name();
+            if (snapshots.size() > 1) title += " (+" + (snapshots.size() - 1) + " tasks)";
+            bar.beginTask(title, 1000);
+            int work = (int) snapshots.stream().mapToDouble(p -> p.total() > 0
+                    ? Math.min(1, p.work() / p.total()) * 1000 : 0).average().orElse(0);
+            bar.worked(work);
+        });
+    }
 }

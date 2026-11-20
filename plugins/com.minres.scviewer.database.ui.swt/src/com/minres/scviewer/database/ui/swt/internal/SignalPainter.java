@@ -103,18 +103,18 @@ public class SignalPainter extends TrackPainter {
 		long beginTime = beginPos*scaleFactor;
 		long endTime = beginTime + area.width*scaleFactor;
 
-		EventEntry first = signal.getEvents().floorEntry(beginTime);
+		EventEntry first = waveCanvas.events(signal).floorEntry(beginTime);
 		if (first == null)
-			first = signal.getEvents().firstEntry();
+			first = waveCanvas.events(signal).firstEntry();
 		if (first == null || Long.compareUnsigned(first.timestamp, endTime) > 0) return;
 		beginTime = first.timestamp;
 		proj.setForeground(this.waveCanvas.styleProvider.getColor(WaveformColors.LINE));
 		proj.setLineStyle(SWT.LINE_SOLID);
 		proj.setLineWidth(1);
-		IEventList entries = signal.getEvents().subMap(beginTime, true, endTime);
+		IEventList entries = waveCanvas.events(signal).subMap(beginTime, true, endTime);
 		if (entries.isEmpty()) return;
 		SignalChange left = new SignalChange(entries.firstEntry());
-		SignalChange right = new SignalChange(entries.size() > 1 ? entries.higherEntry(left.time) : entries.firstEntry());
+		SignalChange right = new SignalChange(entries.higherEntry(left.time) != null ? entries.higherEntry(left.time) : entries.firstEntry());
 		maxPosX = area.x + area.width;
 		yOffsetT = this.waveCanvas.styleProvider.getTrackHeight() / 5 + area.y;
 		yOffsetM = this.waveCanvas.styleProvider.getTrackHeight() / 2 + area.y;

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.IWaveformDbLoader;
 import com.minres.scviewer.database.IWaveformDbLoaderFactory;
 import com.minres.scviewer.database.RelationType;
+import com.minres.scviewer.database.WaveformAccess;
 
 /**
  * The Class WaveformDb.
@@ -38,6 +40,9 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 
 	/** The loaders. */
 	private static final CopyOnWriteArrayList<IWaveformDbLoaderFactory> loaderFactories = new CopyOnWriteArrayList<>();
+
+	private final ReentrantLock lifecycle = new ReentrantLock();
+    private WaveformAccess.Scope readScope = new WaveformAccess.Scope();
 
 	private List<IWaveformDbLoader> activeLoader = new ArrayList<>();
 	/** The loaded. */
@@ -122,9 +127,10 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	public boolean load(File inp) {
         List<PropertyChangeEvent> notifications = new ArrayList<>();
         boolean result;
-        synchronized (this) {
-            result = loadLocked(inp, notifications);
-        }
+        lifecycle.lock();
+        try {
+            synchronized (this) { result = loadLocked(inp, notifications); }
+        } finally { lifecycle.unlock(); }
         // A listener may wait for the UI, which in turn may need close().
         // Never invoke external listeners while holding the database lock.
         notifications.forEach(pcs::firePropertyChange);
@@ -132,6 +138,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
     }
 
     private boolean loadLocked(File inp, List<PropertyChangeEvent> notifications) {
+        if (activeLoader.isEmpty()) readScope = new WaveformAccess.Scope();
         for (IWaveformDbLoaderFactory factory : getLoaders()) {
             if (!factory.canLoad(inp)) continue;
             IWaveformDbLoader loader = factory.getLoader();
@@ -161,6 +168,7 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
                 for (PropertyChangeEvent event : pending) applyWaveform(event);
                 if (!pending.isEmpty()) addWaveformNotifications(notifications);
             }
+            readScope.register(getAllWaves());
             loaded = true;
             notifications.add(new PropertyChangeEvent(this, IHierNode.LOADING_FINISHED, null, Boolean.TRUE));
             return true;
@@ -170,7 +178,13 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
     }
 
     @Override
-    public synchronized void close() {
+    public void close() {
+        lifecycle.lock();
+        try { readScope.close(this::closeLocked); }
+        finally { lifecycle.unlock(); }
+    }
+
+    private synchronized void closeLocked() {
         for (IWaveformDbLoader loader : activeLoader) {
             try { loader.dispose(); }
             catch (RuntimeException e) { LOG.warn("Cannot dispose database loader", e); }
@@ -264,8 +278,8 @@ public class WaveformDb extends HierNode implements IWaveformDb, PropertyChangeL
 	 * @return the all relation types
 	 */
 	@Override
-	public List<RelationType> getAllRelationTypes() {
-		return relationTypes;
+	public synchronized List<RelationType> getAllRelationTypes() {
+		return List.copyOf(relationTypes);
 	}
 
 }

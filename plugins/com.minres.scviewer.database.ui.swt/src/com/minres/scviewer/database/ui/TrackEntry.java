@@ -16,8 +16,6 @@ import java.util.List;
 
 import com.minres.scviewer.database.EmptyWaveform;
 import com.minres.scviewer.database.IWaveform;
-import com.minres.scviewer.database.BitVector;
-import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.WaveformType;
 
 public class TrackEntry {
@@ -93,11 +91,9 @@ public class TrackEntry {
 		return bitVector;
 	}
 
-	private static boolean isBitVector(IWaveform waveform) {
-		if (waveform == null || waveform.getType() != WaveformType.SIGNAL || waveform.getWidth() <= 1) return false;
-		EventEntry first = waveform.getEvents().firstEntry();
-		return first != null && first.events != null && first.events.length > 0 && first.events[0] instanceof BitVector;
-	}
+    private static boolean isBitVector(IWaveform waveform) {
+        return waveform != null && waveform.getWidth() > 1 && waveform.isBitVector();
+    }
 
 	public boolean isExpandable() {
 		return isGroup() || isBitVector();

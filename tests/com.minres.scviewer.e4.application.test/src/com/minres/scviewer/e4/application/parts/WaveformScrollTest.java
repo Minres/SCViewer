@@ -176,6 +176,7 @@ public class WaveformScrollTest {
             assertSame(bus, ((StructuredSelection) view.getSelection()).getFirstElement());
             view.setGroupExpanded(bus, true);
             assertEquals(6, TrackEntry.visibleTracks(view.getStreamList()).size());
+            waitUntil(() -> "b'1".equals(bus.waveforms.get(0).currentValue) && "b'0".equals(bus.waveforms.get(1).currentValue));
             assertEquals("b'1", bus.waveforms.get(0).currentValue);
             assertEquals("b'0", bus.waveforms.get(1).currentValue);
             view.setGroupExpanded(bus, false);
@@ -270,8 +271,53 @@ public class WaveformScrollTest {
         } finally { if (dialog.getShell() != null && !dialog.getShell().isDisposed()) dialog.close(); }
     }
 
+    @Test public void lazySignalReadsStayOffSwtAndQueuedUpdatesSurviveDisposal() throws Exception {
+        var reads = new java.util.concurrent.atomic.AtomicInteger();
+        var source = new BitVectorExpansionTest.Signal("lazy", 4) {
+            @Override public com.minres.scviewer.database.IEventList getEvents() {
+                assertNull("Lazy signal read on SWT", Display.getCurrent());
+                reads.incrementAndGet();
+                return events;
+            }
+        };
+        source.events.put(0, com.minres.scviewer.database.BitVector.fromString(4, "1010"));
+        TrackEntry track = view.addWaveform(source, -1);
+        view.setCursorTime(0); view.update();
+        waitUntil(() -> !track.currentValue.equals("---") && reads.get() > 0);
+        invokeView("asyncUpdate", new Class<?>[]{org.eclipse.swt.widgets.Widget.class}, canvas);
+        shell.dispose();
+        drainEvents();
+    }
+
+    @Test public void disposingPressedImageButtonStopsItsRepeatTimer() throws Exception {
+        Class<?> type = view.getClass().getClassLoader().loadClass(
+                "com.minres.scviewer.database.ui.swt.internal.slider.ImageButton");
+        var button = (org.eclipse.swt.widgets.Composite) type.getConstructor(org.eclipse.swt.widgets.Composite.class, int.class)
+                .newInstance(shell, SWT.NONE);
+        type.getMethod("setAutoFire", boolean.class).invoke(button, true);
+        button.notifyListeners(SWT.MouseDown, new Event());
+        var field = type.getDeclaredField("actionTimer"); field.setAccessible(true);
+        Runnable timer = (Runnable) field.get(button);
+        button.dispose();
+        timer.run();
+        drainEvents();
+    }
+
+    @Test public void twoRapidCombineCommandsBothCreateVectors() throws Exception {
+        var inputs = scalarInputs();
+        WaveformViewer viewer = compositionViewer(display::asyncExec);
+        try {
+            viewer.combineBits("first", inputs);
+            viewer.combineBits("second", inputs);
+            waitUntil(() -> view.getStreamList().size() == 4);
+            assertEquals(java.util.Set.of("first", "second"), view.getStreamList().stream()
+                    .filter(track -> track.waveform instanceof com.minres.scviewer.database.CombinedBitVectorWaveform)
+                    .map(track -> track.waveform.getDisplayName()).collect(java.util.stream.Collectors.toSet()));
+        } finally { viewer.closeDatabase(); }
+    }
+
     @Test
-    public void bitvectorDisclosureUpdatesAllPanesAndCursorValues() {
+    public void bitvectorDisclosureUpdatesAllPanesAndCursorValues() throws Exception {
         var source = new BitVectorExpansionTest.Signal("bus", 4);
         source.events.put(10, com.minres.scviewer.database.BitVector.fromString(4, "10xz"));
         source.events.put(20, com.minres.scviewer.database.BitVector.fromString(4, "0011"));
@@ -287,10 +333,12 @@ public class WaveformScrollTest {
         view.getNameControl().notifyListeners(SWT.MouseUp, event);
         drainEvents();
         assertEquals(TrackEntry.HierState.OPENED, bus.hierState);
+        waitUntil(() -> bus.waveforms.stream().map(track -> track.currentValue).toList().equals(List.of("b'1", "b'0", "b'x", "b'z")));
         assertEquals(List.of("b'1", "b'0", "b'x", "b'z"),
                 bus.waveforms.stream().map(track -> track.currentValue).toList());
         view.setCursorTime(20);
         view.update();
+        waitUntil(() -> bus.waveforms.stream().map(track -> track.currentValue).toList().equals(List.of("b'0", "b'0", "b'1", "b'1")));
         assertEquals(List.of("b'0", "b'0", "b'1", "b'1"),
                 bus.waveforms.stream().map(track -> track.currentValue).toList());
         view.getNameControl().notifyListeners(SWT.MouseUp, event);

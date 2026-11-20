@@ -80,7 +80,7 @@ public class ArrowPainter implements IPainter {
 	}
 
 	private int getConcurrencyIndex(ITx tx) {
-		IEvent[] eventList = tx.getStream().getEventsBeforeTime(tx.getBeginTime());
+		IEvent[] eventList = waveCanvas.value(tx.getStream(), tx.getBeginTime());
 		Optional<Integer> res = Arrays.stream(eventList).filter(e -> ((ITxEvent)e).getTransaction()== tx).map(e -> ((ITxEvent)e).getRowIndex()).findFirst();
 		if(res.isPresent() && res.get()>0) {
 			return res.get();
@@ -89,10 +89,10 @@ public class ArrowPainter implements IPainter {
 	}
 	
 	private Rectangle getBoundingBox(IWaveformPainter painter, ITx itx, IWaveform stream) {
-		int laneHeight = painter.getHeight() / stream.getRowCount();
+		int laneHeight = painter.getHeight() / waveCanvas.rows(stream);
 		//TODO: it needs to take the concurrency index within the current waveform (stream or generator) into account
 		int concIdx=getConcurrencyIndex(itx);
-		int laneOffset = laneHeight * (concIdx>=stream.getRowCount()?stream.getRowCount()-1:concIdx);
+		int laneOffset = laneHeight * (concIdx>=waveCanvas.rows(stream)?waveCanvas.rows(stream)-1:concIdx);
 		int rulerHeight = waveCanvas.rulerHeight;
 		Rectangle bb = new Rectangle((int) (itx.getBeginTime() / scaleFactor),
 				rulerHeight + painter.getVerticalOffset() + laneOffset,
@@ -115,8 +115,8 @@ public class ArrowPainter implements IPainter {
 		}
 		Rectangle bb = getBoundingBox(painter, tx, painter instanceof StreamPainter? ((StreamPainter)painter).getStream() : tx.getStream());
 		txRectangle = bb;
-		deriveGeom(tx.getIncomingRelations(), iRect, false);
-		deriveGeom(tx.getOutgoingRelations(), oRect, true);
+		deriveGeom(waveCanvas.transactionData.get(tx).incoming(), iRect, false);
+		deriveGeom(waveCanvas.transactionData.get(tx).outgoing(), oRect, true);
 		return false;
 	}
 

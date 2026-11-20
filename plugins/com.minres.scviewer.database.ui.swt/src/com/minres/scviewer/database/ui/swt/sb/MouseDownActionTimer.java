@@ -18,6 +18,7 @@ public class MouseDownActionTimer implements Runnable {
   public static final int FAST_DELAY = 50;
 
   private final ActionScheduler scheduler;
+  private boolean active;
   private final TimerAction timerAction;
   private final ButtonClick mouseClick;
 
@@ -33,15 +34,18 @@ public class MouseDownActionTimer implements Runnable {
 
   public void activate() {
     if( timerAction.isEnabled() ) {
+      active = true;
       scheduler.schedule( INITIAL_DELAY );
     }
   }
 
+  public void cancel() { active = false; scheduler.cancel(); }
+
   @Override
   public void run() {
-    if( mouseClick.isArmed() && timerAction.isEnabled() ) {
+    if( active && mouseClick.isArmed() && timerAction.isEnabled() ) {
       timerAction.run();
-      scheduler.schedule( FAST_DELAY );
+      if (active && timerAction.isEnabled()) scheduler.schedule(FAST_DELAY);
     }
   }
 }

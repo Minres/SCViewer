@@ -70,4 +70,38 @@ public class LatestJobTest {
         query.schedule("closed", monitor -> { fail("Disposed query must not run"); return ""; });
         assertTrue(displayed.isEmpty());
     }
+
+    @Test public void additiveRequestsBothPublishAndCloseDiscardsQueuedResults() throws Exception {
+        BlockingQueue<Runnable> ui = new LinkedBlockingQueue<>();
+        List<String> displayed = new ArrayList<>();
+        try (LatestJob<String> jobs = new LatestJob<>(ui::add, displayed::add, false)) {
+            jobs.schedule("first vector", monitor -> "first");
+            Runnable first = take(ui);
+            jobs.schedule("second vector", monitor -> "second");
+            Runnable second = take(ui);
+            first.run(); second.run();
+            assertEquals(List.of("first", "second"), displayed);
+            jobs.schedule("stale", monitor -> "stale");
+            Runnable stale = take(ui);
+            jobs.cancel(); stale.run();
+            assertEquals(2, displayed.size());
+        }
+    }
+
+    @Test public void cancellingJobReachesNestedReadContext() throws Exception {
+        BlockingQueue<Runnable> ui = new LinkedBlockingQueue<>();
+        java.util.concurrent.CountDownLatch entered = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.CountDownLatch stopped = new java.util.concurrent.CountDownLatch(1);
+        try (LatestJob<String> query = new LatestJob<>(ui::add, ignored -> fail("Cancelled job published"))) {
+            query.schedule("long read", monitor -> {
+                entered.countDown();
+                try { while (true) com.minres.scviewer.database.ReadCancellation.check(); }
+                finally { stopped.countDown(); }
+            });
+            assertTrue(entered.await(5, TimeUnit.SECONDS));
+            query.cancel();
+            assertTrue(stopped.await(5, TimeUnit.SECONDS));
+            assertTrue(ui.isEmpty());
+        }
+    }
 }

@@ -106,37 +106,39 @@ public class Tx implements ITx {
 	}
 
 	@Override
-	public Collection<ITxRelation> getIncomingRelations() {
+	public synchronized Collection<ITxRelation> getIncomingRelations() {
 		if(incoming==null){
 			SQLiteDatabaseSelectHandler<ScvTxRelation> handler = new SQLiteDatabaseSelectHandler<>(
 					ScvTxRelation.class, database, "sink="+scvTx.getId());
 			try {
 				incoming = new ArrayList<>();
 				for(ScvTxRelation scvRelation:handler.selectObjects()){
-					incoming.add(createRelation(scvRelation, false));
+					ITxRelation relation = createRelation(scvRelation, false);
+					if (relation != null) incoming.add(relation);
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
 					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			}
 		}
-		return incoming;
+		return List.copyOf(incoming);
 	}
 
 	@Override
-	public Collection<ITxRelation> getOutgoingRelations() {
+	public synchronized Collection<ITxRelation> getOutgoingRelations() {
 		if(outgoing==null){
 			SQLiteDatabaseSelectHandler<ScvTxRelation> handler = new SQLiteDatabaseSelectHandler<>(
 					ScvTxRelation.class, database, "src="+scvTx.getId());
 			try {
 				outgoing = new ArrayList<>();
 				for(ScvTxRelation scvRelation:handler.selectObjects()){
-					outgoing.add(createRelation(scvRelation, true));
+					ITxRelation relation = createRelation(scvRelation, true);
+					if (relation != null) outgoing.add(relation);
 				}
 			} catch (SecurityException | IllegalArgumentException | InstantiationException | IllegalAccessException
 					| InvocationTargetException | SQLException | IntrospectionException | NoSuchMethodException e) {
 			}
 		}
-		return outgoing;
+		return List.copyOf(outgoing);
 	}
 
 	private ITxRelation createRelation(ScvTxRelation rel, boolean outgoing) {

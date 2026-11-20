@@ -52,7 +52,7 @@ public class CombinedVectorSettingsTest {
         assertTrue(BitVectorComposition.selectedBits(roots, List.of(bus, first)).isEmpty());
         assertTrue(BitVectorComposition.selectedBits(roots, List.of(first)).isEmpty());
         assertTrue(BitVectorComposition.selectedBits(roots, List.of(first, new TrackEntry(input, null))).isEmpty());
-        var real = new BitVectorExpansionTest.Signal("real", 1);
+        var real = new BitVectorExpansionTest.Signal("real", 1) { @Override public boolean isBitVector() { return false; } };
         real.events.put(0, new DoubleVal(1.0));
         assertFalse(BitVectorComposition.isSingleBit(new TrackEntry(real, null)));
         var sources = BitVectorComposition.sources(List.of(second, first));

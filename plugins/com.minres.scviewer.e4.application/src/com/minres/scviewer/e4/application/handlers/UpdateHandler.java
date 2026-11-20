@@ -35,25 +35,29 @@ import com.minres.scviewer.e4.application.Messages;
 
 public class UpdateHandler {
 
-	boolean cancelled = false;
+	private final java.util.concurrent.atomic.AtomicBoolean updating = new java.util.concurrent.atomic.AtomicBoolean();
 
 	@Execute
 	public void execute(IProvisioningAgent agent, UISynchronize sync, IWorkbench workbench) {
+        if (!updating.compareAndSet(false, true)) return;
+        java.util.concurrent.atomic.AtomicBoolean scheduled = new java.util.concurrent.atomic.AtomicBoolean();
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-				update(agent, monitor, sync, workbench);
+				update(agent, monitor, sync, workbench, scheduled);
 			}
 		};
 		try {
 			new ProgressMonitorDialog(null).run(true, true, runnable);
 		} catch (InvocationTargetException | InterruptedException e) {
-			e.printStackTrace();
-		}
+            if (e instanceof InterruptedException) Thread.currentThread().interrupt();
+            e.printStackTrace();
+        } finally { if (!scheduled.get()) updating.set(false); }
 	}
 
 	private IStatus update(IProvisioningAgent agent, IProgressMonitor monitor, UISynchronize sync,
-			IWorkbench workbench) {
+			IWorkbench workbench, java.util.concurrent.atomic.AtomicBoolean scheduled) {
+        java.util.concurrent.atomic.AtomicBoolean cancelled = new java.util.concurrent.atomic.AtomicBoolean();
 		ProvisioningSession session = new ProvisioningSession(agent);
 		UpdateOperation operation = new UpdateOperation(session);
 		try {
@@ -80,8 +84,9 @@ public class UpdateHandler {
 							provisioningJob.addJobChangeListener(new JobChangeAdapter() {
 								@Override
 								public void done(IJobChangeEvent event) {
+                                    updating.set(false);
 									if (event.getResult().isOK()) {
-										sync.syncExec(new Runnable() {
+										sync.asyncExec(new Runnable() {
 
 											@Override
 											public void run() {
@@ -93,17 +98,17 @@ public class UpdateHandler {
 											}
 										});
 									} else {
-										sync.syncExec(() -> {
+										sync.asyncExec(() -> {
 											MessageDialog.openInformation(null, Messages.UpdateHandler_11,
 													event.getResult().getMessage());
 										});
-										cancelled = true;
 									}
 								}
 							});
+                            scheduled.set(true);
 							provisioningJob.schedule();
 						} else {
-							cancelled = true;
+							cancelled.set(true);
 						}
 					}
 				});
@@ -118,11 +123,10 @@ public class UpdateHandler {
 						MessageDialog.openInformation(null, Messages.UpdateHandler_11, Messages.UpdateHandler_9);
 					});
 				}
-				cancelled = true;
+				cancelled.set(true);
 			}
 		}
-		if (cancelled) {
-			cancelled = false;
+		if (cancelled.get()) {
 			return Status.CANCEL_STATUS;
 		}
 		return Status.OK_STATUS;

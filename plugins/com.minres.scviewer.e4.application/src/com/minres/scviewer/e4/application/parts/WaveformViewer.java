@@ -175,6 +175,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 
 	/** The my parent. */
 	private Composite myParent;
+    private Display uiDisplay;
 
 	/** The files to load. */
 	ArrayList<File> filesToLoad = new ArrayList<>();
@@ -182,6 +183,17 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	String partConfig = "";
 	private Path settingsFile;
     private LatestJob<PreparedVector> vectorJob;
+    private LatestJob<PreparedSettings> settingsJob;
+    private com.minres.scviewer.database.ui.AsyncTransactionData transactionSnapshots;
+    private com.minres.scviewer.database.ui.AsyncTransactionData.Snapshot transactionSnapshot(ITx tx) {
+        if (transactionSnapshots == null) transactionSnapshots = new com.minres.scviewer.database.ui.AsyncTransactionData(
+                this::dispatchSettings, changed -> { if (!disposed && eventBroker != null) eventBroker.post(ACTIVE_WAVEFORMVIEW, this); });
+        return transactionSnapshots.get(tx);
+    }
+    private record SettingsWrite(long request, ViewerSettings settings, Path file) { }
+    private final java.util.Queue<SettingsWrite> settingsWriteQueue = new java.util.concurrent.ConcurrentLinkedQueue<>();
+    private final java.util.concurrent.atomic.AtomicBoolean writingSettings = new java.util.concurrent.atomic.AtomicBoolean();
+    private final java.util.concurrent.atomic.AtomicLong settingsWrites = new java.util.concurrent.atomic.AtomicLong();
     private record PreparedVector(CombinedBitVectorWaveform vector, List<TrackEntry> tracks,
             IWaveformDb database, String error) { }
 
@@ -225,9 +237,10 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 
 		myPart = part;
 		myParent = parent;
+        uiDisplay = parent.getDisplay();
 		store=prefs;
 		showHover=hover;
-		sessions = new DatabaseSessionManager(dbFactory, task -> sync.asyncExec(task),
+		sessions = new DatabaseSessionManager(dbFactory, this::dispatchSettings,
 				db -> { if (!isViewerDisposed()) waveformPane.setMaxTime(db.getMaxTime()); },
 				db -> { if (!isViewerDisposed() && confirmReload()) reloadDatabase(); }, 60000);
 		parent.setLayout(new FillLayout(SWT.HORIZONTAL));
@@ -417,7 +430,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 						final TableColumn valueCol = new TableColumn(table, SWT.LEFT);
 						valueCol.setText("Value");
 
-						for (ITxAttribute iTxAttribute : tx.getAttributes()) {
+						for (ITxAttribute iTxAttribute : transactionSnapshot(tx).attributes()) {
 							String value = iTxAttribute.getValue().toString();
 							if((DataType.UNSIGNED == iTxAttribute.getDataType() || DataType.INTEGER==iTxAttribute.getDataType()) && !"0".equals(value)) {
 								try {
@@ -468,6 +481,8 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		if (disposed) return;
 		disposed = true;
         if (vectorJob != null) vectorJob.close();
+        if (settingsJob != null) settingsJob.close();
+        if (transactionSnapshots != null) transactionSnapshots.close();
 		if (sessions != null) sessions.close();
 		if (observedPreferences != null) {
 			observedPreferences.removePreferenceChangeListener(this);
@@ -537,6 +552,8 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	protected void loadDatabase(final Map<String, String> state, long delay) {
 		if (disposed) return;
         if (vectorJob != null) vectorJob.cancel();
+        if (settingsJob != null) settingsJob.cancel();
+        if (transactionSnapshots != null) { transactionSnapshots.close(); transactionSnapshots = null; }
 		setSelection(null);
 		waveformPane.getStreamList().clear();
 		waveformPane.update();
@@ -606,27 +623,83 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		captureSettings().replaceState(part.getPersistedState());
 	}
 
-	public void saveState(String fileName) {
-		try {
-			Path file = Path.of(fileName).toAbsolutePath().normalize();
-			captureSettings().write(file);
-			settingsFile = file;
-		}
-		catch (IOException | IllegalArgumentException e) {
-			reportSettingsError("Cannot save settings", fileName + ": " + e.getMessage());
-		}
-	}
+    public void saveState(String fileName) {
+        try {
+            Path file = Path.of(fileName).toAbsolutePath().normalize();
+            settingsWriteQueue.add(new SettingsWrite(settingsWrites.incrementAndGet(), captureSettings(), file));
+            scheduleSettingsWrites();
+        } catch (IllegalArgumentException e) { reportSettingsError("Cannot save settings", fileName + ": " + e.getMessage()); }
+    }
 
-	public void loadState(String fileName) {
-		try {
-			Path file = Path.of(fileName).toAbsolutePath().normalize();
-			applySettings(ViewerSettings.read(file));
-			settingsFile = file;
-		}
-		catch (IOException | IllegalArgumentException e) {
-			reportSettingsError("Cannot load settings", fileName + ": " + e.getMessage());
-		}
-	}
+    private void scheduleSettingsWrites() {
+        if (!writingSettings.compareAndSet(false, true)) return;
+        var save = new org.eclipse.core.runtime.jobs.Job("Save waveform settings") {
+            @Override protected org.eclipse.core.runtime.IStatus run(org.eclipse.core.runtime.IProgressMonitor monitor) {
+                try {
+                    SettingsWrite pending;
+                    while ((pending = settingsWriteQueue.poll()) != null) {
+                        SettingsWrite current = pending;
+                        try {
+                            current.settings().write(current.file());
+                            dispatchSettings(() -> {
+                                if (!disposed && current.request() == settingsWrites.get()) settingsFile = current.file();
+                            });
+                        } catch (IOException | IllegalArgumentException e) {
+                            dispatchSettings(() -> {
+                                if (!disposed) reportSettingsError("Cannot save settings", current.file() + ": " + e.getMessage());
+                            });
+                        }
+                    }
+                    return org.eclipse.core.runtime.Status.OK_STATUS;
+                } finally {
+                    writingSettings.set(false);
+                    if (!settingsWriteQueue.isEmpty()) scheduleSettingsWrites();
+                    monitor.done();
+                }
+            }
+        };
+        save.setSystem(true); save.schedule();
+    }
+
+    public void loadState(String fileName) {
+        try {
+            Path file = Path.of(fileName).toAbsolutePath().normalize();
+            requestSettings(() -> ViewerSettings.read(file), file);
+        } catch (IllegalArgumentException e) { reportSettingsError("Cannot load settings", fileName + ": " + e.getMessage()); }
+    }
+
+    @FunctionalInterface private interface SettingsReader { ViewerSettings read() throws IOException; }
+    private void dispatchSettings(Runnable runnable) {
+        if (disposed) return;
+        if (uiDisplay != null) com.minres.scviewer.database.ui.UiDispatch.async(uiDisplay, runnable);
+        else if (sync != null) sync.asyncExec(runnable);
+        else runnable.run();
+    }
+    private void requestSettings(SettingsReader reader, Path file) {
+        IWaveformDb database = getDatabase();
+        List<IWaveform> sources = database == null ? List.of() : database.getAllWaves();
+        if (sync == null) {
+            // Headless callers have no SWT owner; retain synchronous validation.
+            try { applyPreparedSettings(prepareSettings(reader.read(), database, file)); }
+            catch (IOException | IllegalArgumentException e) { reportSettingsError("Cannot load settings", e.getMessage()); }
+            return;
+        }
+        if (settingsJob == null) settingsJob = new LatestJob<>(this::dispatchSettings, prepared -> {
+            if (disposed || getDatabase() != prepared.database()) return;
+            if (prepared.error() != null) { reportSettingsError("Cannot load settings", prepared.error()); return; }
+            applyPreparedSettings(prepared);
+        });
+        settingsJob.schedule("Prepare waveform settings", monitor -> {
+            try {
+                ViewerSettings settings = reader.read();
+                return com.minres.scviewer.database.WaveformAccess.read(sources,
+                        () -> prepareSettings(settings, database, file));
+            } catch (java.util.concurrent.CancellationException e) { throw e; }
+            catch (IOException | IllegalArgumentException e) {
+                return new PreparedSettings(null, List.of(), List.of(), null, null, database, file, e.getMessage());
+            }
+        });
+    }
 
 	/** Last successfully loaded or saved settings file for this viewer. */
 	public Path getSettingsFile() {
@@ -699,17 +772,22 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 
 	private record ResolvedTrack(IWaveform waveform, ViewerSettings.Track settings) {}
 
-	private void applySettings(ViewerSettings settings) {
-        if (vectorJob != null) vectorJob.cancel();
+    private record PreparedSettings(ViewerSettings settings, List<ResolvedTrack> resolved, List<String> missing,
+            ITx selectedTransaction, IWaveform selectedWaveform, IWaveformDb database, Path file, String error) { }
+
+    private void applySettings(ViewerSettings settings) { requestSettings(() -> settings, null); }
+
+    private PreparedSettings prepareSettings(ViewerSettings settings, IWaveformDb database, Path file) {
 		// Resolve all references before replacing the current layout.
 		List<ResolvedTrack> resolved = new ArrayList<>();
 		List<String> missing = new ArrayList<>();
-        Map<String, IWaveform> derived = settings.resolveCombinedVectors(getDatabase(), missing);
+        Map<String, IWaveform> derived = settings.resolveCombinedVectors(database, missing);
 		ITx selectedTransaction = null;
 		IWaveform selectedWaveform = null;
 		for (ViewerSettings.Track track : settings.tracks()) {
+            com.minres.scviewer.database.ReadCancellation.check();
 			IWaveform waveform = track.type() == WaveformType.EMPTY ? new EmptyWaveform(track.name())
-					: ViewerSettings.resolveWaveform(getDatabase(), track.name(), derived);
+					: ViewerSettings.resolveWaveform(database, track.name(), derived);
 			if (waveform == null) {
 				missing.add(settings.displayName(track.name()));
 				continue;
@@ -721,6 +799,18 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 				selectedWaveform = waveform;
 			}
 		}
+        return new PreparedSettings(settings, List.copyOf(resolved), List.copyOf(missing), selectedTransaction,
+                selectedWaveform, database, file, null);
+    }
+
+    private void applyPreparedSettings(PreparedSettings prepared) {
+        if (vectorJob != null) vectorJob.cancel();
+        ViewerSettings settings = prepared.settings();
+        List<ResolvedTrack> resolved = prepared.resolved();
+        List<String> missing = prepared.missing();
+        ITx selectedTransaction = prepared.selectedTransaction();
+        IWaveform selectedWaveform = prepared.selectedWaveform();
+        if (prepared.file() != null) settingsFile = prepared.file();
 		waveformPane.setSelection(StructuredSelection.EMPTY);
 		waveformPane.getStreamList().clear();
 		List<TrackEntry> selectedTracks = new ArrayList<>();
@@ -978,21 +1068,24 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
         long visibleStart = waveformPane.getWaveformZoom().getMinVisibleTime();
         long visibleEnd = waveformPane.getWaveformZoom().getMaxVisibleTime();
         long cursor = waveformPane.getCursorTime();
-        if (vectorJob == null) vectorJob = new LatestJob<>(task -> sync.asyncExec(task), result -> {
+        if (vectorJob == null) vectorJob = new LatestJob<>(this::dispatchSettings, result -> {
             if (disposed || getDatabase() != result.database()) return;
             if (result.error() != null) { reportSettingsError("Cannot combine bits", result.error()); return; }
             insertCombinedVector(result.vector(), result.tracks());
-        });
+        }, false);
         vectorJob.schedule("Combine bits", monitor -> {
             try {
                 var vector = new CombinedBitVectorWaveform(name.trim(), BitVectorComposition.sources(snapshot));
-                vector.getEvents().firstEntry(); // Load any lazy inputs on this worker, before painting on the UI thread.
+                return com.minres.scviewer.database.WaveformAccess.read(vector, () -> {
+                vector.getEvents().firstEntry(); // Load lazy inputs while holding a recording lease.
                 vector.getEvents().floorEntry(visibleStart);
                 vector.getEvents().floorEntry(cursor);
                 for (var ignored : vector.getEvents().subMap(visibleStart, true, visibleEnd)) {
                     if (monitor.isCanceled()) return null;
                 }
                 return new PreparedVector(vector, snapshot, database, null);
+                });
+            } catch (java.util.concurrent.CancellationException exception) { throw exception;
             } catch (RuntimeException exception) {
                 return new PreparedVector(null, snapshot, database, exception.toString());
             }
@@ -1125,9 +1218,9 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		res.add(IWaveformView.NEXT_PREV_IN_STREAM);
 		ITx transaction = WaveformSelection.from(waveformPane.getSelection()).transaction();
 		if (transaction != null) {
-			for (ITxRelation relation : transaction.getIncomingRelations())
+			for (ITxRelation relation : transactionSnapshot(transaction).incoming())
 				if (!res.contains(relation.getRelationType())) res.add(relation.getRelationType());
-			for (ITxRelation relation : transaction.getOutgoingRelations())
+			for (ITxRelation relation : transactionSnapshot(transaction).outgoing())
 				if (!res.contains(relation.getRelationType())) res.add(relation.getRelationType());
 		}
 		return res;

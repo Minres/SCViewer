@@ -36,7 +36,7 @@ abstract class AbstractTxStream extends HierNode implements IWaveform, ITransact
 
     @Override
     public List<ITx> getTransactionList() {
-        return transactionList.get(() -> TransactionLists.fromEvents(getEvents(), () -> false));
+        return transactionList.get(() -> TransactionLists.fromEvents(getEvents(), () -> { com.minres.scviewer.database.ReadCancellation.check(); return false; }));
     }
 
     @Override

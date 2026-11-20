@@ -19,6 +19,13 @@ package com.minres.scviewer.database;
  */
 public interface IWaveform extends IHierNode {
 
+    /** Recorded inputs used to coordinate derived reads with database closure. */
+    default java.util.List<IWaveform> getReadSources() { return java.util.List.of(this); }
+
+    /** Signal metadata; real-valued loaders override this without reading events. */
+    default boolean isBitVector() { return getType() == WaveformType.SIGNAL && getWidth() > 0; }
+
+
 	/** User-facing label; derived waveforms may have a separate persistent identity. */
 	default String getDisplayName() { return getFullName(); }
 

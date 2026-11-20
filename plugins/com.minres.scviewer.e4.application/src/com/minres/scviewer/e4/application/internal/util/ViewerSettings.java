@@ -23,7 +23,6 @@ import java.util.Map;
 
 import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.CombinedBitVectorWaveform;
-import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.EventEntry;
@@ -226,9 +225,7 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
                     missing.add(vector.name() + ": " + bit.waveform() + "[" + bit.bit() + "]");
                     break;
                 }
-                EventEntry first = waveform.getEvents().firstEntry();
-                if (first != null && (first.events == null || first.events.length == 0
-                        || !(first.events[first.events.length - 1] instanceof BitVector))) {
+                if (!waveform.isBitVector()) {
                     missing.add(vector.name() + ": " + bit.waveform() + " is not a bit signal");
                     break;
                 }

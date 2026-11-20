@@ -28,6 +28,19 @@ import com.minres.scviewer.e4.application.parts.WaveformViewer;
  * The Class AttributeLabelProvider.
  */
 public class AttributeLabelProvider extends LabelProvider implements IStyledLabelProvider {
+    private com.minres.scviewer.database.ui.AsyncTransactionData data;
+    private List<ITxAttribute> attributes(ITx tx) {
+        var display = org.eclipse.swt.widgets.Display.getCurrent();
+        // Headless consumers are already on a worker and can read synchronously.
+        if (display == null) return tx.getAttributes();
+        if (data == null) data = new com.minres.scviewer.database.ui.AsyncTransactionData(
+                task -> com.minres.scviewer.database.ui.UiDispatch.async(display, task),
+                changed -> fireLabelProviderChanged(new org.eclipse.jface.viewers.LabelProviderChangedEvent(this, changed)), false);
+        return data.get(tx).attributes();
+    }
+    public void reset() { if (data != null) data.close(); data = null; }
+    @Override public void dispose() { reset(); super.dispose(); }
+
 
 	/**
 	 * 
@@ -84,14 +97,14 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 				return new StyledString(waveformViewerPart.getScaledTime(iTx.getBeginTime()));
 			case TYPE:
 				if(showProp!=null){
-					List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
+					List<ITxAttribute> res = attributes(iTx).stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
 					if(res.size()==1)
 						return new StyledString(res.get(0).getDataType().toString());
 				}
 				return new StyledString("");
 			case VALUE:
 				if(showProp!=null){
-					List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
+					List<ITxAttribute> res = attributes(iTx).stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
 					if(res.size()==1)
 						return getAttrValueAsStyledString(res.get(0));
 				}
@@ -115,7 +128,7 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 				if(element instanceof TransactionTreeNode) {
 					if(showProp!=null){
 						ITx iTx = ((TransactionTreeNode) element).element;
-						List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
+						List<ITxAttribute> res = attributes(iTx).stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
 						if(res.size()==1)
 							return new StyledString(res.get(0).getDataType().toString());
 					}
@@ -137,7 +150,7 @@ public class AttributeLabelProvider extends LabelProvider implements IStyledLabe
 				if(element instanceof TransactionTreeNode) {
 					if(showProp!=null){
 						ITx iTx = ((TransactionTreeNode) element).element;
-						List<ITxAttribute> res = iTx.getAttributes().stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
+						List<ITxAttribute> res = attributes(iTx).stream().filter(a -> showProp.equals(a.getName())).collect(Collectors.toList());
 						if(res.size()==1)
 							return getAttrValueAsStyledString(res.get(0));
 					}

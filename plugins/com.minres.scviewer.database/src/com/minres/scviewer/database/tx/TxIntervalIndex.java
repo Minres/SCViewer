@@ -26,6 +26,7 @@ public final class TxIntervalIndex {
         final Node left, right;
 
         Node(List<ITxEvent> events, int from, int to) {
+            com.minres.scviewer.database.ReadCancellation.check();
             int mid = (from + to) >>> 1;
             event = events.get(mid);
             ITx tx = event.getTransaction();
@@ -52,10 +53,12 @@ public final class TxIntervalIndex {
 
     public TxIntervalIndex(IEventList events) {
         List<ITxEvent> starts = new ArrayList<>();
-        for (EventEntry entry : events)
+        for (EventEntry entry : events) {
+            com.minres.scviewer.database.ReadCancellation.check();
             for (IEvent event : entry.events)
                 if (event instanceof ITxEvent && event.getKind() != EventKind.END)
                     starts.add((ITxEvent) event);
+        }
         // EventList already orders buckets by timestamp, including same-time starts.
         root = starts.isEmpty() ? null : new Node(starts, 0, starts.size());
     }

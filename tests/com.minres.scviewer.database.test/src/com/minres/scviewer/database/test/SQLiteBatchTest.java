@@ -49,6 +49,51 @@ public class SQLiteBatchTest {
         } finally { workers.shutdownNow(); }
     }
 
+    @Test public void relationReadersWaitForCompletedInitialization() throws Exception {
+        var entered = new java.util.concurrent.CountDownLatch(1);
+        var release = new java.util.concurrent.CountDownLatch(1);
+        var recording = java.nio.file.Files.createTempFile("scviewer-relations-", ".txdb");
+        java.nio.file.Files.copy(TxTestSupport.input("my_sqldb.txdb").toPath(), recording, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        class BlockingDatabase extends Database {
+            volatile boolean block;
+            @Override public String getConnectionUrl() { return "jdbc:sqlite:" + recording; }
+            @Override public Connection createConnection() throws SQLException {
+                if (block) {
+                    entered.countDown();
+                    try { assertTrue(release.await(5, java.util.concurrent.TimeUnit.SECONDS)); }
+                    catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new SQLException(e); }
+                }
+                return super.createConnection();
+            }
+        }
+        BlockingDatabase database = new BlockingDatabase();
+        ScvStream row = new ScvStream(); row.setId(1); row.setName("test"); row.setKind("test");
+        TxStream stream = new TxStream(database, row);
+        try (Connection connection = database.createConnection(); var statement = connection.createStatement()) {
+            statement.executeUpdate("DELETE FROM ScvTxRelation");
+        }
+        ITx transaction = stream.getTransactionList().get(0);
+        int before = database.connections;
+        database.block = true;
+        var workers = java.util.concurrent.Executors.newFixedThreadPool(2);
+        try {
+            var first = workers.submit(transaction::getIncomingRelations);
+            assertTrue(entered.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            var secondStarted = new java.util.concurrent.CountDownLatch(1);
+            var second = workers.submit(() -> { secondStarted.countDown(); return transaction.getIncomingRelations(); });
+            assertTrue(secondStarted.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            try { second.get(100, java.util.concurrent.TimeUnit.MILLISECONDS); fail("Published an unfinished relation list"); }
+            catch (java.util.concurrent.TimeoutException expected) { }
+            release.countDown();
+            assertTrue(first.get(5, java.util.concurrent.TimeUnit.SECONDS).isEmpty());
+            assertTrue(second.get(5, java.util.concurrent.TimeUnit.SECONDS).isEmpty());
+            assertEquals(before + 1, database.connections);
+        } finally {
+            release.countDown(); workers.shutdownNow();
+            java.nio.file.Files.deleteIfExists(recording);
+        }
+    }
+
     @Test
     public void loadsAllTimesInOneQueryAndSharesGeneratorTransactions() {
         Database database = new Database();

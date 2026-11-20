@@ -30,9 +30,9 @@ class FstFileParser {
 		this.file=file;
 	}
 
-	public boolean open(IFstDatabaseBuilder builder) {
+	public synchronized boolean open(IFstDatabaseBuilder builder) {
 	    fst = FstLibrary.fstReaderOpen(file.getAbsolutePath());
-	    if(!fst.equals(Pointer.NULL)) {
+	    if(fst != null && !fst.equals(Pointer.NULL)) {
 	    	// String version = FstLibrary.fstReaderGetVersionString(fst);
 	    	long endTime = FstLibrary.fstReaderGetEndTime(fst);
 	    	byte timeScale = FstLibrary.fstReaderGetTimescale(fst);
@@ -76,7 +76,8 @@ class FstFileParser {
 	    	return false;
 	}
 
-	public void getValueChanges(final int id, final int width, long timeScale, final EventList values) {
+	public synchronized void getValueChanges(final int id, final int width, long timeScale, final EventList values) {
+		if (fst == null) throw new IllegalStateException("FST reader is closed");
 		FstLibrary.fstReaderClrFacProcessMaskAll(fst);
 		FstLibrary.fstReaderSetFacProcessMask(fst, id);
 		FstLibrary.iterateValueChanges(fst, new ValueChangeCallback() {
@@ -86,8 +87,11 @@ class FstFileParser {
 			}
 		});
 	}
-	public void close() {
-    	FstLibrary.fstReaderClose(fst);		
+	public synchronized void close() {
+		if (fst != null) {
+			FstLibrary.fstReaderClose(fst);
+			fst = null;
+		}
 	}
 
 }

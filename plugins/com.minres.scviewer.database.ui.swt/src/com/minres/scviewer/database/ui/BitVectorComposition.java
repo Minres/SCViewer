@@ -11,9 +11,7 @@
 package com.minres.scviewer.database.ui;
 
 import java.util.List;
-import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.CombinedBitVectorWaveform.SourceBit;
-import com.minres.scviewer.database.EventEntry;
 import com.minres.scviewer.database.WaveformType;
 
 /** Selection and source normalization shared by the combine action and viewer. */
@@ -23,9 +21,7 @@ public final class BitVectorComposition {
     public static boolean isSingleBit(TrackEntry track) {
         if (track.waveform == null || track.waveform.getType() != WaveformType.SIGNAL
                 || track.waveform.getWidth() != 1) return false;
-        EventEntry first = track.waveform.getEvents().firstEntry();
-        return first == null || (first.events != null && first.events.length > 0
-                && first.events[first.events.length - 1] instanceof BitVector);
+        return track.waveform.isBitVector();
     }
 
     public static List<TrackEntry> selectedBits(List<TrackEntry> roots, List<TrackEntry> selection) {

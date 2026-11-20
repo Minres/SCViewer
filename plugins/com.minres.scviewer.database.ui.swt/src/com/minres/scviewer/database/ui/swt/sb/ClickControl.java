@@ -42,6 +42,7 @@ class ClickControl extends ControlAdapter implements ViewComponent, MouseDownAct
     this.control.addMouseTrackListener( this );
     this.control.addMouseListener( this );
     this.control.addControlListener( this );
+    control.addDisposeListener(event -> { buttonClick.disarm(); mouseDownActionTimer.cancel(); });
   }
 
   @Override
@@ -73,7 +74,7 @@ class ClickControl extends ControlAdapter implements ViewComponent, MouseDownAct
 
   @Override
   public boolean isEnabled() {
-    return true;
+    return !control.isDisposed() && control.isEnabled();
   }
 
   @Override

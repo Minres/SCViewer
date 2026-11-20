@@ -56,15 +56,19 @@ import com.minres.scviewer.ui.views.TxOutlinePage;
 
 public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPageContributor {
 
-	private static IWaveformDbFactory waveformDbFactory;
+	private static volatile IWaveformDbFactory waveformDbFactory;
+    private PropertyChangeListener databaseListener;
+    private org.eclipse.swt.widgets.Display display;
+    private volatile boolean disposed;
 	
-	public synchronized void bind(IWaveformDbFactory factory){
-		waveformDbFactory=factory;
+	public void bind(IWaveformDbFactory factory){
+        synchronized (TxEditorPart.class) { waveformDbFactory=factory; }
 	}
 
-	public synchronized void unbind(IWaveformDbFactory factory){
-		if(waveformDbFactory==factory)
-			waveformDbFactory=null;
+	public void unbind(IWaveformDbFactory factory){
+        synchronized (TxEditorPart.class) {
+            if (waveformDbFactory == factory) waveformDbFactory = null;
+        }
 	}
 	
 	public static final String ID = "com.minres.scviewer.ui.TxEditorPart"; //$NON-NLS-1$
@@ -89,21 +93,23 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 	 */
 	@Override
 	public void createPartControl(Composite parent) {
-		myParent=parent;		
+		myParent=parent;
+        display = parent.getDisplay();
 		database=waveformDbFactory.getDatabase();
-		database.addPropertyChangeListener(new PropertyChangeListener() {
+		databaseListener = new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				if("WAVEFORMS".equals(evt.getPropertyName())) {
-					myParent.getDisplay().syncExec(new Runnable() {						
+					com.minres.scviewer.database.ui.UiDispatch.async(display, new Runnable() {
 						@Override
 						public void run() {
-							waveformView.setMaxTime(database.getMaxTime());
+							if (!disposed && !myParent.isDisposed()) waveformView.setMaxTime(database.getMaxTime());
 						}
 					});
 				}		
 			}
-		});
+        };
+        database.addPropertyChangeListener(databaseListener);
 		WaveformViewFactory factory = new WaveformViewFactory();
 		waveformView = factory.createPanel(parent);
 		waveformView.setMaxTime(0);
@@ -202,10 +208,10 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 						database.load(files[1]);
 						pm.worked(1);
 					}
-					myParent.getDisplay().syncExec(new Runnable() {
+					com.minres.scviewer.database.ui.UiDispatch.async(display, new Runnable() {
 						@Override
 						public void run() {
-							updateTxDisplay();
+                            if (!disposed && !myParent.isDisposed()) updateTxDisplay();
 						}
 					});
 				} catch (Exception e) {
@@ -361,13 +367,24 @@ public class TxEditorPart extends EditorPart implements ITabbedPropertySheetPage
 	}
 
 	public void setSelection(final ISelection selection){
-		myParent.getDisplay().asyncExec(new Runnable() {
+		com.minres.scviewer.database.ui.UiDispatch.async(display, new Runnable() {
 			@Override
 			public void run() {
-				waveformView.setSelection(selection);
+                if (!disposed && !myParent.isDisposed()) waveformView.setSelection(selection);
 			}
 		});
 	}
+
+    @Override public void dispose() {
+        disposed = true;
+        if (database != null) {
+            database.removePropertyChangeListener(databaseListener);
+            database.removePropertyChangeListener(waveformView);
+            var closing = database;
+            org.eclipse.core.runtime.jobs.Job.create("Close Database", monitor -> { closing.close(); return org.eclipse.core.runtime.Status.OK_STATUS; }).schedule();
+        }
+        super.dispose();
+    }
 
 	public ISelection getSelection(){
 		return waveformView.getSelection();
