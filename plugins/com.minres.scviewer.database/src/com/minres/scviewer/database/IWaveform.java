@@ -19,6 +19,9 @@ package com.minres.scviewer.database;
  */
 public interface IWaveform extends IHierNode {
 
+	/** User-facing label; derived waveforms may have a separate persistent identity. */
+	default String getDisplayName() { return getFullName(); }
+
 	public DirectionType getDirection();
 	/**
 	 * Gets the id.

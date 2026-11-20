@@ -73,6 +73,39 @@ public class CommandHandlersTest {
     }
 
     @Test
+    public void combineHandlerRoutesToActiveViewerAndHonorsDialogCancellation() {
+        var first = new TrackEntry(waveform(WaveformType.SIGNAL), null);
+        var second = new TrackEntry(waveform(WaveformType.SIGNAL), null);
+        class CombineViewer extends Viewer {
+            boolean enabled = true;
+            CombineBitsHandler.Request request;
+            @Override public List<TrackEntry> selectedBits() { return enabled ? List.of(first, second) : List.of(); }
+            @Override public void combineBits(String name, List<TrackEntry> bits) {
+                request = new CombineBitsHandler.Request(name, bits);
+            }
+        }
+        CombineViewer viewer = new CombineViewer();
+        AtomicReference<MPart> active = new AtomicReference<>();
+        var service = parts(active);
+        AtomicReference<CombineBitsHandler.Request> answer = new AtomicReference<>();
+        CombineBitsHandler handler = new CombineBitsHandler() {
+            @Override protected Request requestVector(org.eclipse.swt.widgets.Shell shell, List<TrackEntry> bits) {
+                assertEquals(List.of(first, second), bits); return answer.get();
+            }
+        };
+        try {
+            assertFalse(handler.canExecute(service)); handler.execute(service, null);
+            active.set(part(viewer)); assertTrue(handler.canExecute(service));
+            handler.execute(service, null); assertNull(viewer.request);
+            answer.set(new CombineBitsHandler.Request("bus", List.of(second, first)));
+            handler.execute(service, null); assertEquals(answer.get(), viewer.request);
+            viewer.enabled = false; viewer.request = null;
+            assertFalse(handler.canExecute(service)); handler.execute(service, null); assertNull(viewer.request);
+            active.set(part(new Object())); assertFalse(handler.canExecute(service));
+        } finally { viewer.closeDatabase(); }
+    }
+
+    @Test
     public void groupingHandlersFollowActivePartAndGuardMissingSelection() {
         class GroupViewer extends Viewer {
             boolean enabled;

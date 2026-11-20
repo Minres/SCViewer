@@ -70,6 +70,10 @@ import org.eclipse.swt.widgets.Widget;
 import org.eclipse.wb.swt.SWTResourceManager;
 import org.osgi.service.prefs.BackingStoreException;
 
+import com.minres.scviewer.database.CombinedBitVectorWaveform;
+import com.minres.scviewer.database.ui.BitVectorComposition;
+import com.minres.scviewer.database.ui.BitWaveform;
+import com.minres.scviewer.e4.application.internal.util.LatestJob;
 import com.minres.scviewer.database.DataType;
 import com.minres.scviewer.database.EmptyWaveform;
 import com.minres.scviewer.database.IWaveform;
@@ -177,6 +181,9 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 
 	String partConfig = "";
 	private Path settingsFile;
+    private LatestJob<PreparedVector> vectorJob;
+    private record PreparedVector(CombinedBitVectorWaveform vector, List<TrackEntry> tracks,
+            IWaveformDb database, String error) { }
 
 	/** The persisted state. */
 	Map<String, String> persistedState;
@@ -440,7 +447,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 						TrackEntry te = (TrackEntry)res.get(0);
 						final Font font = SWTResourceManager.getFont("Terminal", 10, SWT.NORMAL);
 						final Label label = new Label(parent, SWT.NONE);
-						label.setText(te.waveform.getFullName());
+						label.setText(te.waveform.getDisplayName());
 						label.setFont(font);
 						GridData labelGridData = new GridData();
 						labelGridData.horizontalAlignment = GridData.FILL;
@@ -460,6 +467,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	public void closeDatabase() {
 		if (disposed) return;
 		disposed = true;
+        if (vectorJob != null) vectorJob.close();
 		if (sessions != null) sessions.close();
 		if (observedPreferences != null) {
 			observedPreferences.removePreferenceChangeListener(this);
@@ -528,6 +536,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 
 	protected void loadDatabase(final Map<String, String> state, long delay) {
 		if (disposed) return;
+        if (vectorJob != null) vectorJob.cancel();
 		setSelection(null);
 		waveformPane.getStreamList().clear();
 		waveformPane.update();
@@ -649,16 +658,30 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		}
 	}
 
+    private static void captureCombined(List<TrackEntry> entries, Map<String, ViewerSettings.CombinedVector> definitions) {
+        for (TrackEntry entry : entries) {
+            IWaveform source = entry.waveform instanceof BitWaveform bit ? bit.getSource() : entry.waveform;
+            if (source instanceof CombinedBitVectorWaveform vector) {
+                definitions.putIfAbsent(vector.getFullName(), new ViewerSettings.CombinedVector(vector.getFullName(),
+                        vector.getName(), vector.getSources().stream()
+                                .map(bit -> new ViewerSettings.BitSource(bit.waveform().getFullName(), bit.bit())).toList()));
+            }
+            if (entry.isExpandable()) captureCombined(entry.waveforms, definitions);
+        }
+    }
+
 	private ViewerSettings captureSettings() {
 		List<ViewerSettings.Track> tracks = new ArrayList<>();
 		captureTracks(waveformPane.getStreamList(), null, tracks);
+        Map<String, ViewerSettings.CombinedVector> definitions = new java.util.LinkedHashMap<>();
+        captureCombined(waveformPane.getStreamList(), definitions);
 		WaveformSelection selection = WaveformSelection.from(waveformPane.getSelection());
 		boolean selectedTransaction = selection.transaction() != null && selection.track() != null;
 		return new ViewerSettings(tracks, waveformPane.getCursorList().stream().map(ICursor::getTime).toList(),
 				waveformPane.getWaveformZoom().getScale(), waveformPane.getWaveformZoom().getMinVisibleTime(),
 				selectedTransaction ? selection.transaction().getId() : null,
 				selectedTransaction ? selection.track().waveform.getFullName() : null,
-				store.getBoolean(PreferenceConstants.SHOW_TX_DETAILS, false), List.copyOf(filesToLoad));
+				store.getBoolean(PreferenceConstants.SHOW_TX_DETAILS, false), List.copyOf(filesToLoad), List.copyOf(definitions.values()));
 	}
 
 	/**
@@ -677,16 +700,18 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	private record ResolvedTrack(IWaveform waveform, ViewerSettings.Track settings) {}
 
 	private void applySettings(ViewerSettings settings) {
+        if (vectorJob != null) vectorJob.cancel();
 		// Resolve all references before replacing the current layout.
 		List<ResolvedTrack> resolved = new ArrayList<>();
 		List<String> missing = new ArrayList<>();
+        Map<String, IWaveform> derived = settings.resolveCombinedVectors(getDatabase(), missing);
 		ITx selectedTransaction = null;
 		IWaveform selectedWaveform = null;
 		for (ViewerSettings.Track track : settings.tracks()) {
 			IWaveform waveform = track.type() == WaveformType.EMPTY ? new EmptyWaveform(track.name())
-					: ViewerSettings.resolveWaveform(getDatabase(), track.name());
+					: ViewerSettings.resolveWaveform(getDatabase(), track.name(), derived);
 			if (waveform == null) {
-				missing.add(track.name());
+				missing.add(settings.displayName(track.name()));
 				continue;
 			}
 			resolved.add(new ResolvedTrack(waveform, track));
@@ -735,7 +760,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 			waveformPane.setSelection(WaveformSelection.of(selectedTransaction, transactionTrack));
 		else waveformPane.setSelection(new StructuredSelection(selectedTracks));
 		updateAll();
-		if (!missing.isEmpty() && !disposed && !myParent.isDisposed())
+		if (!missing.isEmpty() && !disposed && myParent != null && !myParent.isDisposed())
 			MessageDialog.openWarning(myParent.getShell(), "Missing waveforms",
 					"These waveforms are absent from the current database and were skipped:\n" + String.join("\n", missing));
 	}
@@ -937,6 +962,58 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		}
 		updateAll();
 	}
+
+    public List<TrackEntry> selectedBits() {
+        return disposed || waveformPane == null ? List.of() : BitVectorComposition.selectedBits(
+                waveformPane.getStreamList(), WaveformSelection.from(getSelection()).tracks());
+    }
+
+    public boolean canCombineSelectedBits() { return !selectedBits().isEmpty(); }
+
+    public void combineBits(String name, List<TrackEntry> ordered) {
+        if (disposed || name == null || name.isBlank() || waveformPane == null
+                || BitVectorComposition.selectedBits(waveformPane.getStreamList(), ordered).isEmpty()) return;
+        List<TrackEntry> snapshot = List.copyOf(ordered);
+        IWaveformDb database = getDatabase();
+        long visibleStart = waveformPane.getWaveformZoom().getMinVisibleTime();
+        long visibleEnd = waveformPane.getWaveformZoom().getMaxVisibleTime();
+        long cursor = waveformPane.getCursorTime();
+        if (vectorJob == null) vectorJob = new LatestJob<>(task -> sync.asyncExec(task), result -> {
+            if (disposed || getDatabase() != result.database()) return;
+            if (result.error() != null) { reportSettingsError("Cannot combine bits", result.error()); return; }
+            insertCombinedVector(result.vector(), result.tracks());
+        });
+        vectorJob.schedule("Combine bits", monitor -> {
+            try {
+                var vector = new CombinedBitVectorWaveform(name.trim(), BitVectorComposition.sources(snapshot));
+                vector.getEvents().firstEntry(); // Load any lazy inputs on this worker, before painting on the UI thread.
+                vector.getEvents().floorEntry(visibleStart);
+                vector.getEvents().floorEntry(cursor);
+                for (var ignored : vector.getEvents().subMap(visibleStart, true, visibleEnd)) {
+                    if (monitor.isCanceled()) return null;
+                }
+                return new PreparedVector(vector, snapshot, database, null);
+            } catch (RuntimeException exception) {
+                return new PreparedVector(null, snapshot, database, exception.toString());
+            }
+        });
+    }
+
+    protected void insertCombinedVector(CombinedBitVectorWaveform vector, List<TrackEntry> tracks) {
+        List<TrackEntry> roots = waveformPane.getStreamList();
+        List<TrackEntry> visible = TrackEntry.visibleTracks(roots);
+        if (tracks.stream().anyMatch(track -> !visible.contains(track))) return;
+        TrackEntry anchor = visible.stream().filter(tracks::contains).reduce((previous, current) -> current).orElse(null);
+        if (anchor == null) return;
+        // Nested bits stay in their group/bus; insert after their containing root.
+        int position = 0;
+        while (position < roots.size() && roots.get(position) != anchor
+                && TrackEntry.siblingsOf(List.of(roots.get(position)), anchor) == null) position++;
+        if (position == roots.size()) return;
+        TrackEntry combined = waveformPane.addWaveform(vector, position + 1);
+        waveformPane.update();
+        waveformPane.setSelection(new StructuredSelection(combined));
+    }
 
 	public boolean canGroupSelectedTracks() {
 		return waveformPane != null && TrackEntry.groupingSiblings(waveformPane.getStreamList(),

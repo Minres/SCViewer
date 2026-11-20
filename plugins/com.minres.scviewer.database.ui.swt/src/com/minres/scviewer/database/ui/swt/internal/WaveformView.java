@@ -648,7 +648,7 @@ public class WaveformView implements IWaveformView {
 			for (TrackEntry entry : TrackEntry.visibleTracks(streams)) {
 				addPainter(even, entry);
 				trackVerticalOffset.put(tracksVerticalHeight, entry);
-				tl.setText(entry.waveform.getFullName());
+				tl.setText(entry.waveform.getDisplayName());
 				nameMaxWidth = Math.max(nameMaxWidth, tl.getBounds().width + nameIndent(entry)
 						+ (entry.hierState == HierState.NONE && nameIndent(entry) == 0 ? 5 : 18));
 				tracksVerticalHeight += entry.height;
@@ -1261,7 +1261,7 @@ public class WaveformView implements IWaveformView {
 	protected void drawName(GC gc, Rectangle subArea, Integer firstKey, TrackEntry entry) {
 		IWaveform w = entry.waveform;
 		subArea.height = w.getRowCount() * styleProvider.getTrackHeight();
-		drawTextFormat(gc, subArea, firstKey, w.getFullName(), entry.selected, entry.hierState, nameIndent(entry));
+		drawTextFormat(gc, subArea, firstKey, w.getDisplayName(), entry.selected, entry.hierState, nameIndent(entry));
 	}
 
 	protected void drawValue(GC gc, Rectangle subArea, Integer yOffset, String value, boolean highlite) {

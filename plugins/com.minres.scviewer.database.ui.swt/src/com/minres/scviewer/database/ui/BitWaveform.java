@@ -38,6 +38,9 @@ public final class BitWaveform extends HierNode implements IWaveform {
 	}
 
 	@Override public String getFullName() { return source.getFullName() + getName(); }
+	@Override public String getDisplayName() { return source.getDisplayName() + getName(); }
+	public IWaveform getSource() { return source; }
+	public int getBitIndex() { return bit; }
 	@Override public DirectionType getDirection() { return source.getDirection(); }
 	@Override public long getId() { return source.getId(); }
 	@Override public WaveformType getType() { return WaveformType.SIGNAL; }

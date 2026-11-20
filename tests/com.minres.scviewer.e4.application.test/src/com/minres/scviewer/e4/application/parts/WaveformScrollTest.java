@@ -123,6 +123,153 @@ public class WaveformScrollTest {
         } finally { gc.dispose(); image.dispose(); }
     }
 
+    private WaveformViewer compositionViewer(java.util.function.Consumer<Runnable> dispatch) throws Exception {
+        WaveformViewer viewer = new WaveformViewer();
+        var pane = WaveformViewer.class.getDeclaredField("waveformPane");
+        pane.setAccessible(true); pane.set(viewer, view);
+        var synchronizer = WaveformViewer.class.getDeclaredField("sync");
+        synchronizer.setAccessible(true);
+        synchronizer.set(viewer, new org.eclipse.e4.ui.di.UISynchronize() {
+            @Override public void asyncExec(Runnable runnable) { dispatch.accept(runnable); }
+            @Override public void syncExec(Runnable runnable) { display.syncExec(runnable); }
+            @Override protected boolean isUIThread(Thread thread) { return thread == display.getThread(); }
+            @Override protected void showBusyWhile(Runnable runnable) { runnable.run(); }
+            @Override protected boolean dispatchEvents() { return display.readAndDispatch(); }
+        });
+        return viewer;
+    }
+
+    private List<TrackEntry> scalarInputs() {
+        var a = new BitVectorExpansionTest.Signal("a", 1);
+        var b = new BitVectorExpansionTest.Signal("b", 1);
+        a.events.put(0, com.minres.scviewer.database.BitVector.fromString(1, "0"));
+        b.events.put(0, com.minres.scviewer.database.BitVector.fromString(1, "1"));
+        TrackEntry first = view.addWaveform(a, -1), second = view.addWaveform(b, -1);
+        view.update();
+        return List.of(first, second);
+    }
+
+    private void waitUntil(java.util.function.BooleanSupplier condition) throws Exception {
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+        while (!condition.getAsBoolean()) {
+            drainEvents();
+            if (System.nanoTime() > deadline) fail("Timed out waiting for the combine job");
+            Thread.sleep(5);
+        }
+    }
+
+    @Test
+    public void combinesInRequestedOrderWithoutRemovingSourcesAndSupportsExpansion() throws Exception {
+        var inputs = scalarInputs();
+        TrackEntry tail = view.addWaveform(new EmptyWaveform("tail"), -1);
+        view.setSelection(new StructuredSelection(List.of(inputs.get(1), inputs.get(0))));
+        WaveformViewer viewer = compositionViewer(display::asyncExec);
+        try {
+            assertEquals(inputs, viewer.selectedBits());
+            assertTrue(viewer.canCombineSelectedBits());
+            viewer.combineBits("bus", List.of(inputs.get(1), inputs.get(0)));
+            waitUntil(() -> view.getStreamList().size() == 4);
+            TrackEntry bus = view.getStreamList().get(2);
+            assertEquals("bus", bus.waveform.getDisplayName());
+            assertEquals("10", bus.waveform.getEventsBeforeTime(0)[0].toString());
+            assertEquals(List.of(inputs.get(0), inputs.get(1), bus, tail), view.getStreamList());
+            assertSame(bus, ((StructuredSelection) view.getSelection()).getFirstElement());
+            view.setGroupExpanded(bus, true);
+            assertEquals(6, TrackEntry.visibleTracks(view.getStreamList()).size());
+            assertEquals("b'1", bus.waveforms.get(0).currentValue);
+            assertEquals("b'0", bus.waveforms.get(1).currentValue);
+            view.setGroupExpanded(bus, false);
+            assertEquals(4, TrackEntry.visibleTracks(view.getStreamList()).size());
+            view.deleteSelectedTracks(); drainEvents();
+            assertEquals(List.of(inputs.get(0), inputs.get(1), tail), view.getStreamList());
+        } finally { viewer.closeDatabase(); }
+    }
+
+    @Test
+    public void combinedVectorsAreTopLevelAfterLastSelectedBitsContainingRoot() throws Exception {
+        var inputs = scalarInputs();
+        var source = new BitVectorExpansionTest.Signal("original bus", 2);
+        source.events.put(0, com.minres.scviewer.database.BitVector.fromString(2, "10"));
+        TrackEntry bus = new TrackEntry(source, null);
+        bus.setExpanded(true);
+        var originalBits = List.copyOf(bus.waveforms);
+        TrackEntry inner = TrackEntry.group("inner", List.of(bus, inputs.get(1)), null);
+        TrackEntry outer = TrackEntry.group("outer", List.of(inner), null);
+        TrackEntry tail = new TrackEntry(new EmptyWaveform("tail"), null);
+        view.getStreamList().clear();
+        view.getStreamList().addAll(List.of(inputs.get(0), outer, tail));
+        view.update();
+        WaveformViewer viewer = compositionViewer(display::asyncExec);
+        try {
+            viewer.combineBits("from bus", List.of(originalBits.get(1), originalBits.get(0)));
+            waitUntil(() -> view.getStreamList().size() == 4);
+            TrackEntry combined = view.getStreamList().get(2);
+            assertEquals("from bus", combined.waveform.getDisplayName());
+            assertEquals(List.of(inputs.get(0), outer, combined, tail), view.getStreamList());
+            assertEquals(List.of(bus, inputs.get(1)), inner.waveforms);
+            assertEquals(originalBits, bus.waveforms);
+            viewer.combineBits("mixed", List.of(originalBits.get(0), inputs.get(0)));
+            waitUntil(() -> view.getStreamList().size() == 5);
+            TrackEntry mixed = view.getStreamList().get(2);
+            assertEquals("mixed", mixed.waveform.getDisplayName());
+            assertEquals("10", mixed.waveform.getEventsBeforeTime(0)[0].toString());
+            assertEquals(List.of(inputs.get(0), outer, mixed, combined, tail), view.getStreamList());
+            assertEquals(originalBits, bus.waveforms);
+        } finally { viewer.closeDatabase(); }
+    }
+
+    @Test
+    public void closingViewerRejectsACombineResultAlreadyQueuedForPublication() throws Exception {
+        var inputs = scalarInputs();
+        var pending = new java.util.concurrent.CopyOnWriteArrayList<Runnable>();
+        WaveformViewer viewer = compositionViewer(pending::add);
+        viewer.combineBits("bus", inputs);
+        waitUntil(() -> !pending.isEmpty());
+        viewer.closeDatabase();
+        pending.forEach(Runnable::run);
+        assertEquals(inputs, view.getStreamList());
+        assertFalse(viewer.canCombineSelectedBits());
+    }
+
+    private List<org.eclipse.swt.widgets.Control> descendants(org.eclipse.swt.widgets.Composite parent) {
+        var controls = new ArrayList<org.eclipse.swt.widgets.Control>();
+        for (var child : parent.getChildren()) {
+            controls.add(child);
+            if (child instanceof org.eclipse.swt.widgets.Composite composite) controls.addAll(descendants(composite));
+        }
+        return controls;
+    }
+
+    @Test
+    public void combineDialogLabelsDestinationBitsAndAllowsReorderingAndNameValidation() {
+        var inputs = scalarInputs();
+        class Dialog extends com.minres.scviewer.e4.application.handlers.CombineBitsHandler.CombineDialog {
+            Dialog() { super(shell, inputs); }
+            void accept() { okPressed(); }
+        }
+        Dialog dialog = new Dialog();
+        dialog.create();
+        try {
+            var controls = descendants(dialog.getShell());
+            var table = (org.eclipse.swt.widgets.Table) controls.stream()
+                    .filter(org.eclipse.swt.widgets.Table.class::isInstance).findFirst().orElseThrow();
+            assertEquals("1", table.getItem(0).getText(0));
+            assertEquals("a", table.getItem(0).getText(1));
+            var down = (org.eclipse.swt.widgets.Button) controls.stream()
+                    .filter(control -> control instanceof org.eclipse.swt.widgets.Button button
+                            && button.getText().equals("Move down")).findFirst().orElseThrow();
+            down.notifyListeners(SWT.Selection, new Event());
+            assertEquals("b", table.getItem(0).getText(1));
+            var name = (org.eclipse.swt.widgets.Text) controls.stream()
+                    .filter(org.eclipse.swt.widgets.Text.class::isInstance).findFirst().orElseThrow();
+            name.setText(" "); dialog.accept();
+            assertNull(dialog.getRequest()); assertFalse(dialog.getShell().isDisposed());
+            name.setText("ordered"); dialog.accept();
+            assertEquals("ordered", dialog.getRequest().name());
+            assertEquals(List.of(inputs.get(1), inputs.get(0)), dialog.getRequest().bits());
+        } finally { if (dialog.getShell() != null && !dialog.getShell().isDisposed()) dialog.close(); }
+    }
+
     @Test
     public void bitvectorDisclosureUpdatesAllPanesAndCursorValues() {
         var source = new BitVectorExpansionTest.Signal("bus", 4);

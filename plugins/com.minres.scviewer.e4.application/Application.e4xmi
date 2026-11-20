@@ -32,6 +32,7 @@
           </children>
         </children>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_edit_groupTracks" elementId="com.minres.scviewer.e4.application.menu.edit.groupTracks" label="Group tracks…" command="_command_groupTracks"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_edit_combineBits" elementId="com.minres.scviewer.e4.application.menu.edit.combineBits" label="Combine bits…" command="_command_combineBits"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_edit_ungroupTracks" elementId="com.minres.scviewer.e4.application.menu.edit.ungroupTracks" label="Ungroup tracks" command="_command_ungroupTracks"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_FiwZcEhdEeyp3vLifEzGbQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.delete" label="Delete" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/cross.png" command="_WUZ2wHXHEeWwZ-9vrAR2UQ"/>
         <children xsi:type="menu:HandledMenuItem" xmi:id="_cPlx4HgvEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handledmenuitem.delete" label="Select All" iconURI="" command="_bV-TMHXHEeWwZ-9vrAR2UQ"/>
@@ -179,6 +180,7 @@
   <descriptors xmi:id="_KicY0HRMEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.partdescriptor.waveformviewer" label="SCViewer" iconURI="platform:/plugin/com.minres.scviewer.e4.application/icons/scviewer.png" bindingContexts="_context_waveform" allowMultiple="true" category="General" closeable="true" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.parts.WaveformViewer">
     <tags>categoryTag:General</tags>
     <handlers xmi:id="_handler_groupTracks" elementId="com.minres.scviewer.e4.application.handler.groupTracks" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.GroupTracksHandler" command="_command_groupTracks"/>
+    <handlers xmi:id="_handler_combineBits" elementId="com.minres.scviewer.e4.application.handler.combineBits" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.CombineBitsHandler" command="_command_combineBits"/>
     <handlers xmi:id="_handler_ungroupTracks" elementId="com.minres.scviewer.e4.application.handler.ungroupTracks" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.UngroupTracksHandler" command="_command_ungroupTracks"/>
     <handlers xmi:id="_BSIuEHacEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handler.navigateEvent" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.NavigateEvent" command="_79rx4HabEeWwZ-9vrAR2UQ"/>
     <handlers xmi:id="_JpdGwHXKEeWwZ-9vrAR2UQ" elementId="com.minres.scviewer.e4.application.handler.navigateTrans" contributionURI="bundleclass://com.minres.scviewer.e4.application/com.minres.scviewer.e4.application.handlers.NavigateTrans" command="_Gn3lEHXKEeWwZ-9vrAR2UQ"/>
@@ -229,6 +231,7 @@
       </children>
       <children xsi:type="menu:MenuSeparator" xmi:id="_cxgs4Lc0Ee294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.menuseparator.1"/>
       <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_popup_groupTracks" elementId="com.minres.scviewer.e4.application.menu.popup.groupTracks" label="Group tracks…" mnemonics="M1+G" command="_command_groupTracks"/>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_popup_combineBits" elementId="com.minres.scviewer.e4.application.menu.popup.combineBits" label="Combine bits…" command="_command_combineBits"/>
       <children xsi:type="menu:HandledMenuItem" xmi:id="_menu_popup_ungroupTracks" elementId="com.minres.scviewer.e4.application.menu.popup.ungroupTracks" label="Ungroup tracks" command="_command_ungroupTracks"/>
       <children xsi:type="menu:HandledMenuItem" xmi:id="_NFfK0LcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.handledmenuitem.add_separator" label="Add separator before" command="_vYAOQLcxEe294PIiYLxpfA">
         <parameters xmi:id="_or7iYLcyEe294PIiYLxpfA" elementId="com.minres.scviewer.e4.application.parameter.15" name="com.minres.scviewer.e4.application.commandparameter.add_separator" value="before"/>
@@ -297,6 +300,7 @@
   </snippets>
   <commands xmi:id="_command_ungroupTracks" elementId="com.minres.scviewer.e4.application.command.ungroupTracks" commandName="Resolve group"/>
   <commands xmi:id="_command_groupTracks" elementId="com.minres.scviewer.e4.application.command.groupTracks" commandName="Group tracks…"/>
+  <commands xmi:id="_command_combineBits" elementId="com.minres.scviewer.e4.application.command.combineBits" commandName="Combine bits…"/>
   <commands xmi:id="_95PfvHNmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.file.exit" commandName="Quit Command"/>
   <commands xmi:id="_95PfwHNmEeWBq8z1Dv39LA" elementId="com.minres.scviewer.e4.application.open" commandName="Open Command"/>
   <commands xmi:id="_95Pfw3NmEeWBq8z1Dv39LA" elementId="org.eclipse.ui.file.save" commandName="Save Command"/>

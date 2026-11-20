@@ -12,6 +12,27 @@ bit 0 denoting the least significant position. Click again to collapse the bits.
 Bit tracks show binary values, including unknown (`x`) and high-impedance (`z`)
 states. Settings files preserve the expansion state and individual bit tracks.
 
+=== Combining single bits
+
+Select at least two single-bit signal tracks and choose *Combine bits…* from the
+Edit menu or the track context menu. Bits expanded from existing buses can also
+be selected. Name the new vector and reorder the inputs with *Move up* and
+*Move down*. The displayed destination indices run from the most significant bit
+at the top to bit 0 at the bottom. The initial order follows the waveform list.
+
+The combined bus is created at the top level after the last selected bit in
+display order. If that bit is inside a group or expanded bus, the new bus appears
+after its top-level container. The source tracks remain visible, and the combined bus supports normal value
+formats and expansion. Unknown and high-impedance values are preserved. An input
+without an initial sample contributes `x`. Simultaneous changes produce one
+combined value; unchanged values do not produce extra transitions.
+
+Saved settings retain the composition, bit order, name, and expansion state.
+Source references use the original recorded signals, including when combining
+bits from another combined vector. Removing a track from the view does not
+invalidate its data. Missing recordings or source bits cause the affected bus
+to be skipped and reported when loading settings; other tracks are restored.
+
 [#_keybindings]
 === Key Shortcuts
 

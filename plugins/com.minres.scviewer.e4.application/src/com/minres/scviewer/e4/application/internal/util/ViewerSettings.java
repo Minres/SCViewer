@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.CombinedBitVectorWaveform;
+import com.minres.scviewer.database.BitVector;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.EventEntry;
@@ -34,7 +36,7 @@ import com.minres.scviewer.database.ui.BitWaveform;
 
 /** Validates the existing properties format before any viewer state is changed. */
 public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale, Long baseline,
-        Long transactionId, String transactionTrack, Boolean detailsShown, List<File> files) {
+        Long transactionId, String transactionTrack, Boolean detailsShown, List<File> files, List<CombinedVector> combinedVectors) {
     public static final String DATABASE_FILE = "DATABASE_FILE";
     public static final String SHOWN_WAVEFORM = "SHOWN_WAVEFORM";
     public static final String WAVEFORM_TYPE = ".WAVEFORM_TYPE";
@@ -59,10 +61,32 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
         }
     }
 
+    public record BitSource(String waveform, int bit) {
+        public BitSource {
+            if (waveform == null || waveform.isBlank() || waveform.startsWith("@combined:") || bit < 0)
+                throw new IllegalArgumentException("Invalid recorded bit reference");
+        }
+    }
+    public record CombinedVector(String id, String name, List<BitSource> bits) {
+        public CombinedVector {
+            if (id == null || !id.startsWith("@combined:") || id.length() <= 10 || name == null || name.isBlank()
+                    || bits == null || bits.size() < 2) throw new IllegalArgumentException("Invalid combined vector definition");
+            bits = List.copyOf(bits);
+        }
+    }
+
+    public ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale, Long baseline,
+            Long transactionId, String transactionTrack, Boolean detailsShown, List<File> files) {
+        this(tracks, cursors, scale, baseline, transactionId, transactionTrack, detailsShown, files, List.of());
+    }
+
     public ViewerSettings {
         tracks = List.copyOf(tracks);
         cursors = List.copyOf(cursors);
         files = List.copyOf(files);
+        combinedVectors = List.copyOf(combinedVectors);
+        if (combinedVectors.stream().map(CombinedVector::id).distinct().count() != combinedVectors.size())
+            throw new IllegalArgumentException("Duplicate combined vector identity");
     }
 
     public static ViewerSettings read(Path path) throws IOException {
@@ -81,6 +105,18 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
 
     public Map<String, String> toMap() {
         Map<String, String> state = new HashMap<>();
+        state.put("COMBINED_VECTORS", Integer.toString(combinedVectors.size()));
+        for (int i = 0; i < combinedVectors.size(); i++) {
+            CombinedVector vector = combinedVectors.get(i);
+            String key = "COMBINED_VECTOR" + i;
+            state.put(key + ".ID", vector.id());
+            state.put(key + ".NAME", vector.name());
+            state.put(key + ".BITS", Integer.toString(vector.bits().size()));
+            for (int bit = 0; bit < vector.bits().size(); bit++) {
+                state.put(key + ".BIT" + bit + ".SOURCE", vector.bits().get(bit).waveform());
+                state.put(key + ".BIT" + bit + ".INDEX", Integer.toString(vector.bits().get(bit).bit()));
+            }
+        }
         state.put(DATABASE_FILE + "S", Integer.toString(files.size()));
         for (int i = 0; i < files.size(); i++) state.put(DATABASE_FILE + i, files.get(i).getAbsolutePath());
         state.put(SHOWN_WAVEFORM + "S", Integer.toString(tracks.size()));
@@ -113,13 +149,26 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
     }
 
     public void replaceState(Map<String, String> state) {
-        state.keySet().removeIf(key -> key.startsWith(DATABASE_FILE) || key.startsWith(SHOWN_WAVEFORM)
+        state.keySet().removeIf(key -> key.startsWith("COMBINED_VECTOR") || key.startsWith(DATABASE_FILE) || key.startsWith(SHOWN_WAVEFORM)
                 || key.startsWith(SHOWN_CURSOR) || key.equals(SCALING_FACTOR) || key.equals(BASE_LINE_TIME)
                 || key.equals(SELECTED_TX_ID) || key.equals(SELECTED_TRACKENTRY_NAME) || key.equals(TX_DETAILS_SHOWN));
         state.putAll(toMap());
     }
 
     public static ViewerSettings parse(Map<String, String> state) {
+        List<CombinedVector> vectors = new ArrayList<>();
+        for (int i = 0, n = count(state, "COMBINED_VECTORS"); i < n; i++) {
+            String key = "COMBINED_VECTOR" + i;
+            List<BitSource> bits = new ArrayList<>();
+            for (int j = 0, m = count(state, key + ".BITS"); j < m; j++) {
+                String source = key + ".BIT" + j;
+                required(state, source + ".INDEX");
+                Long bit = number(state, source + ".INDEX");
+                if (bit < 0 || bit > Integer.MAX_VALUE) throw invalid(source + ".INDEX", "invalid bit index");
+                bits.add(new BitSource(required(state, source + ".SOURCE"), bit.intValue()));
+            }
+            vectors.add(new CombinedVector(required(state, key + ".ID"), required(state, key + ".NAME"), bits));
+        }
         List<Track> tracks = new ArrayList<>();
         int count = count(state, SHOWN_WAVEFORM + "S");
         for (int i = 0; i < count; i++) {
@@ -156,7 +205,7 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
         String track = state.get(SELECTED_TRACKENTRY_NAME);
         if (tx != null) required(state, SELECTED_TRACKENTRY_NAME);
         return new ViewerSettings(List.copyOf(tracks), List.copyOf(cursors), scale, baseline,
-                tx, track, bool(state, TX_DETAILS_SHOWN), List.copyOf(databaseFiles(state)));
+                tx, track, bool(state, TX_DETAILS_SHOWN), List.copyOf(databaseFiles(state)), vectors);
     }
 
     public static List<File> databaseFiles(Map<String, String> state) {
@@ -166,12 +215,52 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
         return files;
     }
 
+    /** Definitions only reference recorded waveforms, so reconstruction cannot create cycles. */
+    public Map<String, IWaveform> resolveCombinedVectors(IWaveformDb database, List<String> missing) {
+        Map<String, IWaveform> resolved = new HashMap<>();
+        for (CombinedVector vector : combinedVectors) {
+            List<CombinedBitVectorWaveform.SourceBit> bits = new ArrayList<>();
+            for (BitSource bit : vector.bits()) {
+                IWaveform waveform = resolveWaveform(database, bit.waveform());
+                if (waveform == null || waveform.getType() != WaveformType.SIGNAL || bit.bit() >= waveform.getWidth()) {
+                    missing.add(vector.name() + ": " + bit.waveform() + "[" + bit.bit() + "]");
+                    break;
+                }
+                EventEntry first = waveform.getEvents().firstEntry();
+                if (first != null && (first.events == null || first.events.length == 0
+                        || !(first.events[first.events.length - 1] instanceof BitVector))) {
+                    missing.add(vector.name() + ": " + bit.waveform() + " is not a bit signal");
+                    break;
+                }
+                bits.add(new CombinedBitVectorWaveform.SourceBit(waveform, bit.bit()));
+            }
+            if (bits.size() == vector.bits().size())
+                resolved.put(vector.id(), new CombinedBitVectorWaveform(vector.id(), vector.name(), bits));
+        }
+        return resolved;
+    }
+
+    public String displayName(String identity) {
+        for (CombinedVector vector : combinedVectors) {
+            if (identity.equals(vector.id())) return vector.name();
+            if (identity.startsWith(vector.id() + "[")) return vector.name() + identity.substring(vector.id().length());
+        }
+        return identity;
+    }
+
     public static IWaveform resolveWaveform(IWaveformDb database, String name) {
-        IWaveform waveform = database.getStreamByName(name);
+        return resolveWaveform(database, name, Map.of());
+    }
+
+    public static IWaveform resolveWaveform(IWaveformDb database, String name, Map<String, IWaveform> derived) {
+        IWaveform waveform = derived.get(name);
+        if (waveform == null && database != null) waveform = database.getStreamByName(name);
         if (waveform != null) return waveform;
         int bitStart = name.lastIndexOf('[');
         if (bitStart > 0 && name.endsWith("]")) {
-            IWaveform source = database.getStreamByName(name.substring(0, bitStart));
+            String sourceName = name.substring(0, bitStart);
+            IWaveform source = derived.get(sourceName);
+            if (source == null && database != null) source = database.getStreamByName(sourceName);
             if (source != null && source.getType() == WaveformType.SIGNAL) {
                 try {
                     int bit = Integer.parseInt(name.substring(bitStart + 1, name.length() - 1));
@@ -179,6 +268,7 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
                 } catch (NumberFormatException e) { /* A declared signal range is not a projected bit. */ }
             }
         }
+        if (database == null) return null;
         int separator = name.lastIndexOf('.');
         if (separator <= 0 || separator == name.length() - 1) return null;
         IWaveform parent = database.getStreamByName(name.substring(0, separator));

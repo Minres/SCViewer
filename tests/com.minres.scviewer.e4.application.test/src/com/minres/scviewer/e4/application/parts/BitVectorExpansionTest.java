@@ -172,7 +172,7 @@ public class BitVectorExpansionTest {
         assertEquals(5, TrackEntry.visibleTracks(List.of(restored)).size());
     }
 
-    private List<TrackEntry> restore(ViewerSettings settings, IWaveformDb database) throws Exception {
+    List<TrackEntry> restore(ViewerSettings settings, IWaveformDb database) throws Exception {
         var roots = new ArrayList<TrackEntry>();
         var paneType = com.minres.scviewer.database.ui.IWaveformView.class;
         var zoomType = com.minres.scviewer.database.ui.IWaveformZoom.class;

@@ -6,6 +6,7 @@
    </topic>
    <topic label="Reference" href="ch02.html">
       <topic label="Bitvector expansion" href="ch02.html#_bitvector_expansion"/>
-      <topic label="Key Shortcuts" href="ch02s02.html"/>
+      <topic label="Combining single bits" href="ch02s02.html"/>
+      <topic label="Key Shortcuts" href="ch02s03.html"/>
    </topic>
 </toc>
