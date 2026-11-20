@@ -30,6 +30,7 @@ import com.minres.scviewer.database.tx.ITx;
 import com.minres.scviewer.database.tx.ITxEvent;
 import com.minres.scviewer.database.ui.TrackEntry.ValueDisplay;
 import com.minres.scviewer.database.ui.TrackEntry.WaveDisplay;
+import com.minres.scviewer.database.ui.BitWaveform;
 
 /** Validates the existing properties format before any viewer state is changed. */
 public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale, Long baseline,
@@ -48,7 +49,7 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
     public static final String TX_DETAILS_SHOWN = "TX_DETAILS_SHOWN";
 
     /** Tracks are stored in preorder, including hidden descendants. PARENT is an index
-     * into this list; it must refer to an earlier group, making cycles impossible.
+     * into this list; it must refer to an earlier group or signal, making cycles impossible.
      * Legacy entries have no parent or group flags and remain ordinary root tracks.
      */
     public record Track(String name, WaveformType type, ValueDisplay valueDisplay, WaveDisplay waveDisplay,
@@ -90,6 +91,8 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
             if (track.parent() != null) state.put(key + ".PARENT", track.parent().toString());
             if (track.group()) {
                 state.put(key + ".GROUP", "true");
+            }
+            if (track.group() || track.type() == WaveformType.SIGNAL) {
                 state.put(key + ".EXPANDED", Boolean.toString(track.expanded()));
             }
             if (track.type() != null) state.put(key + WAVEFORM_TYPE, track.type().name());
@@ -125,17 +128,20 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
             WaveformType type = "TRANSACTION".equals(state.get(key + WAVEFORM_TYPE)) ? WaveformType.STREAM
                     : enumeration(state, key + WAVEFORM_TYPE, WaveformType.class, null);
             Long parent = number(state, key + ".PARENT");
-            if (parent != null && (parent < 0 || parent >= i || !tracks.get(parent.intValue()).group()))
-                throw invalid(key + ".PARENT", "must reference an earlier group");
+            if (parent != null && (parent < 0 || parent >= i || !(tracks.get(parent.intValue()).group()
+                    || tracks.get(parent.intValue()).type() == WaveformType.SIGNAL)))
+                throw invalid(key + ".PARENT", "must reference an earlier group or signal");
             boolean group = Boolean.TRUE.equals(bool(state, key + ".GROUP"));
             Boolean expanded = bool(state, key + ".EXPANDED");
             if (group && type != WaveformType.EMPTY) throw invalid(key + WAVEFORM_TYPE, "group must have EMPTY type");
-            if (!group && expanded != null) throw invalid(key + ".EXPANDED", "requires a group");
+            if (!group && expanded != null && type != WaveformType.SIGNAL)
+                throw invalid(key + ".EXPANDED", "requires a group or signal");
             tracks.add(new Track(name, type,
                     enumeration(state, key + VALUE_DISPLAY, ValueDisplay.class, ValueDisplay.DEFAULT),
                     enumeration(state, key + WAVE_DISPLAY, WaveDisplay.class, WaveDisplay.DEFAULT),
                     Boolean.TRUE.equals(bool(state, key + WAVEFORM_SELECTED)),
-                    parent == null ? null : parent.intValue(), group, group && !Boolean.FALSE.equals(expanded)));
+                    parent == null ? null : parent.intValue(), group,
+                    group ? !Boolean.FALSE.equals(expanded) : Boolean.TRUE.equals(expanded)));
         }
         List<Long> cursors = new ArrayList<>();
         for (int i = 0, n = count(state, SHOWN_CURSOR + "S"); i < n; i++) {
@@ -163,6 +169,16 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
     public static IWaveform resolveWaveform(IWaveformDb database, String name) {
         IWaveform waveform = database.getStreamByName(name);
         if (waveform != null) return waveform;
+        int bitStart = name.lastIndexOf('[');
+        if (bitStart > 0 && name.endsWith("]")) {
+            IWaveform source = database.getStreamByName(name.substring(0, bitStart));
+            if (source != null && source.getType() == WaveformType.SIGNAL) {
+                try {
+                    int bit = Integer.parseInt(name.substring(bitStart + 1, name.length() - 1));
+                    if (bit >= 0 && bit < source.getWidth()) return new BitWaveform(source, bit);
+                } catch (NumberFormatException e) { /* A declared signal range is not a projected bit. */ }
+            }
+        }
         int separator = name.lastIndexOf('.');
         if (separator <= 0 || separator == name.length() - 1) return null;
         IWaveform parent = database.getStreamByName(name.substring(0, separator));

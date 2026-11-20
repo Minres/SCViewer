@@ -56,6 +56,7 @@ public class CommandHandlersTest {
         return (IWaveform) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{IWaveform.class},
                 (proxy, method, args) -> switch (method.getName()) {
                     case "getType" -> type;
+                    case "getWidth" -> 1;
                     case "getChildNodes" -> List.of();
                     default -> null;
                 });

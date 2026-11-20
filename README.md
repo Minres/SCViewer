@@ -93,6 +93,16 @@ Settings files and persisted viewer state preserve group names, membership, nest
 and expansion state, including tracks inside collapsed groups. Older settings files
 continue to load as an ordinary list of tracks.
 
+Bitvector expansion
+===================
+
+Click the disclosure arrow beside a multi-bit signal in the waveform track list,
+or double-click its name, to show its individual bits below the bus. The bus row
+remains visible. Bits are ordered from the most significant bit to bit 0, with
+bit 0 denoting the least significant position. Click again to collapse the bits.
+Bit tracks show binary values, including unknown (`x`) and high-impedance (`z`)
+states. Settings files preserve the expansion state and individual bit tracks.
+
 Embedded Help
 =============
 

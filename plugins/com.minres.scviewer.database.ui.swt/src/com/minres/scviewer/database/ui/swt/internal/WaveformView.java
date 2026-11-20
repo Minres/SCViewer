@@ -204,7 +204,7 @@ public class WaveformView implements IWaveformView {
 			if (e.button == 1) {
 				Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
 				if (entry != null) {
-					if (e.widget == nameList && e.x >= nameIndent(entry.getValue()) && e.x < nameIndent(entry.getValue()) + 16 && entry.getValue().isGroup()) {
+					if (e.widget == nameList && e.x >= nameIndent(entry.getValue()) && e.x < nameIndent(entry.getValue()) + 16 && entry.getValue().isExpandable()) {
 						setGroupExpanded(entry.getValue(), entry.getValue().hierState != HierState.OPENED);
 						lastClickedEntry = entry.getValue();
 						return;
@@ -234,7 +234,7 @@ public class WaveformView implements IWaveformView {
 			TrackEntry track = entry.getValue();
 			setSelection(new StructuredSelection(track), false, false);
 			lastClickedEntry = track;
-			if (track.isGroup()) {
+			if (track.isExpandable()) {
 				setGroupExpanded(track, track.hierState != HierState.OPENED);
 				return;
 			}
@@ -623,8 +623,8 @@ public class WaveformView implements IWaveformView {
 
 	@Override
 	public void setGroupExpanded(TrackEntry group, boolean expanded) {
-		if (!group.isGroup()) return;
-		group.hierState = expanded ? HierState.OPENED : HierState.CLOSED;
+		if (!group.isExpandable()) return;
+		group.setExpanded(expanded);
 		update();
 		setSelection(new StructuredSelection(group));
 	}
@@ -757,6 +757,10 @@ public class WaveformView implements IWaveformView {
 		TrackEntry.visibleTracks(streams).stream().forEach(entry -> {
 			if (entry.waveform.getType() == WaveformType.SIGNAL) {
 				IEvent[] value = entry.waveform.getEventsBeforeTime(time);
+				if (value == null || value.length == 0) {
+					entry.currentValue = "---";
+					return;
+				}
 				if (value[0] instanceof BitVector) {
 					BitVector bv = (BitVector) value[0];
 					if (bv.getWidth() == 1)

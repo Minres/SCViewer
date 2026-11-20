@@ -93,7 +93,7 @@ public class BitVector implements IEvent {
 		// Copy values out of packed array
 		for (int i = 0; i < width; i++) {
 			int currentWord = (packedValues[wordOffset] >> bitOffset) & 3;
-			res[width - i - 1] = BitValue.fromInt(currentWord).toChar();
+			res[width - i - 1] = BitValue.fromOrdinal(currentWord).toChar();
 			bitOffset += 2;
 			if (bitOffset == 32) {
 				wordOffset++;
@@ -101,6 +101,12 @@ public class BitVector implements IEvent {
 			}
 		}
 		return res;
+	}
+
+	/** Read a bit by its zero-based position, with bit 0 the least significant bit. */
+	public BitValue getValue(int index) {
+		if (index < 0 || index >= width) throw new IndexOutOfBoundsException(index);
+		return BitValue.fromOrdinal((packedValues[index / 16] >>> ((index % 16) * 2)) & 3);
 	}
 
 	/**

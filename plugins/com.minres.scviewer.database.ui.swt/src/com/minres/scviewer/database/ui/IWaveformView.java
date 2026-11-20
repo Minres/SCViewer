@@ -51,6 +51,7 @@ public interface IWaveformView extends PropertyChangeListener, ISelectionProvide
 	/** Remove a group header, preserving its members. */
 	void ungroupTracks(TrackEntry group);
 
+	/** Expand or collapse a group or a multi-bit signal track. */
 	void setGroupExpanded(TrackEntry group, boolean expanded);
 
 	Control getControl();

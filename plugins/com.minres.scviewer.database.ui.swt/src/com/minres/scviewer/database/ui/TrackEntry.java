@@ -16,6 +16,9 @@ import java.util.List;
 
 import com.minres.scviewer.database.EmptyWaveform;
 import com.minres.scviewer.database.IWaveform;
+import com.minres.scviewer.database.BitVector;
+import com.minres.scviewer.database.EventEntry;
+import com.minres.scviewer.database.WaveformType;
 
 public class TrackEntry {
 	public enum HierState { 
@@ -34,6 +37,7 @@ public class TrackEntry {
 	IWaveformStyleProvider styleProvider = null;
 
 	final public IWaveform waveform;
+	private final boolean bitVector;
 
 	public int vOffset=0;
 	
@@ -53,13 +57,16 @@ public class TrackEntry {
 	
 	public TrackEntry() {
 		this.waveform = null;
+		this.bitVector = false;
 		this.styleProvider=null;
 	}
 
 	public TrackEntry(IWaveform waveform, IWaveformStyleProvider styleProvider) {
 		this.waveform = waveform;
+		this.bitVector = isBitVector(waveform);
 		this.styleProvider=styleProvider;
 		this.hierState = (waveform!=null && waveform.getChildNodes().size()>0)?HierState.CLOSED:HierState.NONE;
+		if (isBitVector()) this.hierState = HierState.CLOSED;
 	}
 
 	public TrackEntry(TrackEntry[] waveform, IWaveformStyleProvider styleProvider) {
@@ -79,14 +86,38 @@ public class TrackEntry {
 	}
 
 	public boolean isGroup() {
-		return waveform instanceof EmptyWaveform && hierState != HierState.NONE;
+		return waveform instanceof EmptyWaveform && waveform.getType() == WaveformType.EMPTY && hierState != HierState.NONE;
+	}
+
+	public boolean isBitVector() {
+		return bitVector;
+	}
+
+	private static boolean isBitVector(IWaveform waveform) {
+		if (waveform == null || waveform.getType() != WaveformType.SIGNAL || waveform.getWidth() <= 1) return false;
+		EventEntry first = waveform.getEvents().firstEntry();
+		return first != null && first.events != null && first.events.length > 0 && first.events[0] instanceof BitVector;
+	}
+
+	public boolean isExpandable() {
+		return isGroup() || isBitVector();
+	}
+
+	/** Create bit tracks only on the first expansion, preserving their display settings on collapse. */
+	public void setExpanded(boolean expanded) {
+		if (!isExpandable()) return;
+		if (expanded && isBitVector() && waveforms.isEmpty()) {
+			for (int bit = waveform.getWidth() - 1; bit >= 0; bit--)
+				waveforms.add(new TrackEntry(new BitWaveform(waveform, bit), styleProvider));
+		}
+		hierState = expanded ? HierState.OPENED : HierState.CLOSED;
 	}
 
 	/** Returns the actual sibling list owning this entry, including collapsed groups. */
 	public static List<TrackEntry> siblingsOf(List<TrackEntry> roots, TrackEntry track) {
 		if (roots.stream().anyMatch(entry -> entry == track)) return roots;
 		for (TrackEntry entry : roots) {
-			if (!entry.isGroup()) continue;
+			if (!entry.isExpandable()) continue;
 			List<TrackEntry> siblings = siblingsOf(entry.waveforms, track);
 			if (siblings != null) return siblings;
 		}

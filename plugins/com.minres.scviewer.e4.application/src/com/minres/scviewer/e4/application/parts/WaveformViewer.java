@@ -645,7 +645,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 			result.add(new ViewerSettings.Track(entry.waveform.getFullName(), entry.waveform.getType(),
 					entry.valueDisplay, entry.waveDisplay, entry.selected, parent, entry.isGroup(),
 					entry.hierState == TrackEntry.HierState.OPENED));
-			if (entry.isGroup()) captureTracks(entry.waveforms, index, result);
+			if (entry.isExpandable()) captureTracks(entry.waveforms, index, result);
 		}
 	}
 
@@ -705,7 +705,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 			TrackEntry entry = waveformPane.addWaveform(track.waveform(), -1);
 			entry.valueDisplay = track.settings().valueDisplay();
 			entry.waveDisplay = track.settings().waveDisplay();
-			if (track.settings().group()) entry.hierState = track.settings().expanded()
+			if (track.settings().group() || entry.isBitVector()) entry.hierState = track.settings().expanded()
 					? TrackEntry.HierState.OPENED : TrackEntry.HierState.CLOSED;
 			entries.put(track.settings(), entry);
 			if (track.settings().selected()) selectedTracks.add(entry);

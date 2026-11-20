@@ -124,6 +124,36 @@ public class WaveformScrollTest {
     }
 
     @Test
+    public void bitvectorDisclosureUpdatesAllPanesAndCursorValues() {
+        var source = new BitVectorExpansionTest.Signal("bus", 4);
+        source.events.put(10, com.minres.scviewer.database.BitVector.fromString(4, "10xz"));
+        source.events.put(20, com.minres.scviewer.database.BitVector.fromString(4, "0011"));
+        TrackEntry bus = view.addWaveform(source, -1);
+        view.setMaxTime(30);
+        view.setCursorTime(10);
+        view.update();
+        assertEquals(TrackEntry.HierState.CLOSED, bus.hierState);
+        Event event = new Event();
+        event.button = 1;
+        event.x = 8;
+        event.y = 5;
+        view.getNameControl().notifyListeners(SWT.MouseUp, event);
+        drainEvents();
+        assertEquals(TrackEntry.HierState.OPENED, bus.hierState);
+        assertEquals(List.of("b'1", "b'0", "b'x", "b'z"),
+                bus.waveforms.stream().map(track -> track.currentValue).toList());
+        view.setCursorTime(20);
+        view.update();
+        assertEquals(List.of("b'0", "b'0", "b'1", "b'1"),
+                bus.waveforms.stream().map(track -> track.currentValue).toList());
+        view.getNameControl().notifyListeners(SWT.MouseUp, event);
+        assertEquals(TrackEntry.HierState.CLOSED, bus.hierState);
+        view.getNameControl().notifyListeners(SWT.MouseDoubleClick, event);
+        assertEquals(TrackEntry.HierState.OPENED, bus.hierState);
+        assertEquals(5, TrackEntry.visibleTracks(view.getStreamList()).size());
+    }
+
+    @Test
     public void dragIndicatorMatchesInsertionAndClearsAfterDrop() {
         List<TrackEntry> tracks = tracks(3);
         view.getStreamList().addAll(tracks);
