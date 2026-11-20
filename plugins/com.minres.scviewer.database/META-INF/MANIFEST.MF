@@ -4,7 +4,7 @@ Bundle-Name: Waveform database
 Bundle-SymbolicName: com.minres.scviewer.database
 Bundle-Version: 4.0.0.qualifier
 Bundle-Vendor: MINRES Technologies GmbH
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: com.minres.scviewer.database,
  com.minres.scviewer.database.tx,
  com.minres.scviewer.database.internal;x-friends:="com.minres.scviewer.database.test"

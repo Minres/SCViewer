@@ -32,7 +32,7 @@
 	</modules>
 
 	<properties>
-		<tycho-version>3.0.5</tycho-version>
+		<tycho-version>4.0.13</tycho-version>
 		<software.download.area>${project.basedir}/../../..</software.download.area>
 	</properties>
 
@@ -76,9 +76,7 @@
 						</artifact>
 					</target>
 					<executionEnvironment>
-						org.eclipse.justj.openjdk.hotspot.jre.minimal-17</executionEnvironment>
-					<executionEnvironmentDefault>
-						org.eclipse.justj.openjdk.hotspot.jre.minimal-17</executionEnvironmentDefault>
+						org.eclipse.justj.openjdk.hotspot.jre.minimal-21</executionEnvironment>
 					<includePackedArtifacts>true</includePackedArtifacts>
 					<environments>
 						<environment>
