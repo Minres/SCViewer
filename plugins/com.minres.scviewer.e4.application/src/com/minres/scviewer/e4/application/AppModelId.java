@@ -1,13 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2018-2023 MINRES Technologies GmbH and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *     MINRES Technologies GmbH - initial API and implementation
- *******************************************************************************/
 package com.minres.scviewer.e4.application;
 
 public class AppModelId {
@@ -20,9 +10,11 @@ public class AppModelId {
 	public static final String ADDON_ORG_ECLIPSE_E4_UI_WORKBENCH_CONTEXTS_MODEL = "org.eclipse.e4.ui.workbench.contexts.model";
 	public static final String ADDON_ORG_ECLIPSE_E4_UI_WORKBENCH_HANDLER_MODEL = "org.eclipse.e4.ui.workbench.handler.model";
 	public static final String APPLICATION_ORG_ECLIPSE_E4_IDE_APPLICATION = "org.eclipse.e4.ide.application";
+	public static final String BINDINGCONTEXT_COM_MINRES_SCVIEWER_E4_APPLICATION_CONTEXT_WAVEFORM = "com.minres.scviewer.e4.application.context.waveform";
 	public static final String BINDINGCONTEXT_ORG_ECLIPSE_UI_CONTEXTS_DIALOG = "org.eclipse.ui.contexts.dialog";
 	public static final String BINDINGCONTEXT_ORG_ECLIPSE_UI_CONTEXTS_DIALOGANDWINDOW = "org.eclipse.ui.contexts.dialogAndWindow";
 	public static final String BINDINGCONTEXT_ORG_ECLIPSE_UI_CONTEXTS_WINDOW = "org.eclipse.ui.contexts.window";
+	public static final String BINDINGTABLE_COM_MINRES_SCVIEWER_E4_APPLICATION_BINDINGTABLE_WAVEFORM = "com.minres.scviewer.e4.application.bindingtable.waveform";
 	public static final String BINDINGTABLE_COM_MINRES_SCVIEWER_E4_APPLICATION_BINDINGTABLE_WINDOW = "com.minres.scviewer.e4.application.bindingtable.window";
 	public static final String COMMANDPARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMANDPARAMETER_ADD_SEPARATOR = "com.minres.scviewer.e4.application.commandparameter.add_separator";
 	public static final String COMMANDPARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMANDPARAMETER_CHANGEVALUEDISPLAY = "com.minres.scviewer.e4.application.commandparameter.changevaluedisplay";
@@ -41,9 +33,11 @@ public class AppModelId {
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_ADD_SEPARATOR = "com.minres.scviewer.e4.application.command.add_separator";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_CHANGEVALUEDISPLAY = "com.minres.scviewer.e4.application.command.changevaluedisplay";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_CHANGEWAVEDISPLAY = "com.minres.scviewer.e4.application.command.changewavedisplay";
-	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_DELETEWAVEFORMCOMMAND = "com.minres.scviewer.e4.application.command.deletewaveformCommand";
+	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_COMBINEBITS = "com.minres.scviewer.e4.application.command.combineBits";
+	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_DELETEWAVEFORM = "com.minres.scviewer.e4.application.command.deleteWaveform";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_ENABLEHOVER = "com.minres.scviewer.e4.application.command.enablehover";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_ENABLETXDETAILS = "com.minres.scviewer.e4.application.command.enabletxdetails";
+	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_GROUPTRACKS = "com.minres.scviewer.e4.application.command.groupTracks";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_LOADSTORESETTINGS = "com.minres.scviewer.e4.application.command.loadStoreSettings";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_MOVEWAVEFORMUPCOMMAND = "com.minres.scviewer.e4.application.command.movewaveformupCommand";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_NAVIGATEEVENTCOMMAND = "com.minres.scviewer.e4.application.command.navigateEventCommand";
@@ -51,9 +45,10 @@ public class AppModelId {
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_PANCOMMAND = "com.minres.scviewer.e4.application.command.pancommand";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SELECTALLCOMMAND = "com.minres.scviewer.e4.application.command.selectallCommand";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SETRELATIONTYPE = "com.minres.scviewer.e4.application.command.setrelationtype";
-	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_WAVE_DOUBLE_CLICK = "com.minres.scviewer.e4.application.command.wave_double_click";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_SET_THEM = "com.minres.scviewer.e4.application.command.set_them";
+	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_UNGROUPTRACKS = "com.minres.scviewer.e4.application.command.ungroupTracks";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_UPDATE = "com.minres.scviewer.e4.application.command.update";
+	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_WAVE_DOUBLE_CLICK = "com.minres.scviewer.e4.application.command.wave_double_click";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_COMMAND_ZOOMCOMMAND = "com.minres.scviewer.e4.application.command.zoomcommand";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_OPEN = "com.minres.scviewer.e4.application.open";
 	public static final String COMMAND_COM_MINRES_SCVIEWER_E4_APPLICATION_RELOAD = "com.minres.scviewer.e4.application.reload";
@@ -68,6 +63,7 @@ public class AppModelId {
 	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_ADD_SEPARATOR = "com.minres.scviewer.e4.application.handledmenuitem.add_separator";
 	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_CHECKFORUPDATE = "com.minres.scviewer.e4.application.handledmenuitem.checkforupdate";
 	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_DELETE = "com.minres.scviewer.e4.application.handledmenuitem.delete";
+	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_EDIT_TEXT = "com.minres.scviewer.e4.application.handledmenuitem.edit_text";
 	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_MOVEDOWN = "com.minres.scviewer.e4.application.handledmenuitem.movedown";
 	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_MOVEUP = "com.minres.scviewer.e4.application.handledmenuitem.moveup";
 	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_NEXTCHANGE = "com.minres.scviewer.e4.application.handledmenuitem.nextchange";
@@ -78,6 +74,14 @@ public class AppModelId {
 	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_PREVTX = "com.minres.scviewer.e4.application.handledmenuitem.prevtx";
 	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_REMOVE = "com.minres.scviewer.e4.application.handledmenuitem.remove";
 	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDMENUITEM_SEARCH = "com.minres.scviewer.e4.application.handledmenuitem.search";
+	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_EDIT_ADDSEPARATOR_ABOVE = "com.minres.scviewer.e4.application.menu.edit.addSeparator.above";
+	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_EDIT_ADDSEPARATOR_BELOW = "com.minres.scviewer.e4.application.menu.edit.addSeparator.below";
+	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_EDIT_COMBINEBITS = "com.minres.scviewer.e4.application.menu.edit.combineBits";
+	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_EDIT_GROUPTRACKS = "com.minres.scviewer.e4.application.menu.edit.groupTracks";
+	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_EDIT_UNGROUPTRACKS = "com.minres.scviewer.e4.application.menu.edit.ungroupTracks";
+	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_POPUP_COMBINEBITS = "com.minres.scviewer.e4.application.menu.popup.combineBits";
+	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_POPUP_GROUPTRACKS = "com.minres.scviewer.e4.application.menu.popup.groupTracks";
+	public static final String HANDLEDMENUITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_POPUP_UNGROUPTRACKS = "com.minres.scviewer.e4.application.menu.popup.ungroupTracks";
 	public static final String HANDLEDTOOLITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDTOOLITEM_HOVER = "com.minres.scviewer.e4.application.handledtoolitem.hover";
 	public static final String HANDLEDTOOLITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDTOOLITEM_LOADSETTINGS = "com.minres.scviewer.e4.application.handledtoolitem.loadsettings";
 	public static final String HANDLEDTOOLITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDTOOLITEM_MOVESTREAMDOWN = "com.minres.scviewer.e4.application.handledtoolitem.movestreamdown";
@@ -96,45 +100,56 @@ public class AppModelId {
 	public static final String HANDLEDTOOLITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDTOOLITEM_ZOOMFULL = "com.minres.scviewer.e4.application.handledtoolitem.zoomfull";
 	public static final String HANDLEDTOOLITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDTOOLITEM_ZOOMIN = "com.minres.scviewer.e4.application.handledtoolitem.zoomin";
 	public static final String HANDLEDTOOLITEM_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLEDTOOLITEM_ZOOMOUT = "com.minres.scviewer.e4.application.handledtoolitem.zoomout";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ABOUTCOMMAND = "com.minres.scviewer.e4.application.handler.aboutCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ADD_SEPARATOR = "com.minres.scviewer.e4.application.handler.add_separator";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ABOUT = "com.minres.scviewer.e4.application.handler.about";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ADDSEPARATOR = "com.minres.scviewer.e4.application.handler.addSeparator";
 	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_CHANGEVALUEDISPLAY = "com.minres.scviewer.e4.application.handler.changeValueDisplay";
 	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_CHANGEWAVEDISPLAY = "com.minres.scviewer.e4.application.handler.changeWaveDisplay";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_DELETEWAVEFORMCOMMAND = "com.minres.scviewer.e4.application.handler.deletewaveformCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ENABLEHOVER = "com.minres.scviewer.e4.application.handler.enablehover";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ENABLETXDETAILS = "com.minres.scviewer.e4.application.handler.enabletxdetails";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_COMBINEBITS = "com.minres.scviewer.e4.application.handler.combineBits";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_DELETEWAVEFORM = "com.minres.scviewer.e4.application.handler.deleteWaveform";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ENABLEHOVER = "com.minres.scviewer.e4.application.handler.enableHover";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ENABLETXDETAILS = "com.minres.scviewer.e4.application.handler.enableTxDetails";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_GROUPTRACKS = "com.minres.scviewer.e4.application.handler.groupTracks";
 	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_HELP = "com.minres.scviewer.e4.application.handler.help";
 	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_HELPCONTENT = "com.minres.scviewer.e4.application.handler.helpContent";
 	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_LOADSTORESETTINGS = "com.minres.scviewer.e4.application.handler.loadStoreSettings";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_MOVEWAVEFORMUPCOMMAND = "com.minres.scviewer.e4.application.handler.movewaveformupCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_NAVIGATEEVENTCOMMAND = "com.minres.scviewer.e4.application.handler.navigateEventCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_NAVIGATETRANSCOMMAND = "com.minres.scviewer.e4.application.handler.navigateTransCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_OPENCOMMAND = "com.minres.scviewer.e4.application.handler.openCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_PANCOMMAND = "com.minres.scviewer.e4.application.handler.panCommand";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_MOVEWAVEFORMUP = "com.minres.scviewer.e4.application.handler.moveWaveformUp";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_NAVIGATEEVENT = "com.minres.scviewer.e4.application.handler.navigateEvent";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_NAVIGATETRANS = "com.minres.scviewer.e4.application.handler.navigateTrans";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_OPEN = "com.minres.scviewer.e4.application.handler.open";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_PAN = "com.minres.scviewer.e4.application.handler.pan";
 	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_PREFERENCES = "com.minres.scviewer.e4.application.handler.preferences";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_QUITCOMMAND = "com.minres.scviewer.e4.application.handler.quitCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_RELOADCOMMAND = "com.minres.scviewer.e4.application.handler.reloadCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_SAVECOMMAND = "com.minres.scviewer.e4.application.handler.saveCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_SELECTALLCOMMAND = "com.minres.scviewer.e4.application.handler.selectallCommand";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_SETRELEATIONTYPE = "com.minres.scviewer.e4.application.handler.setreleationtype";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_SET_LABEL_TEXT = "com.minres.scviewer.e4.application.handler.set_label_text";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_SET_THEM = "com.minres.scviewer.e4.application.handler.set_them";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_QUIT = "com.minres.scviewer.e4.application.handler.quit";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_RELOAD = "com.minres.scviewer.e4.application.handler.reload";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_SAVE = "com.minres.scviewer.e4.application.handler.save";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_SELECTALL = "com.minres.scviewer.e4.application.handler.selectAll";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_SETRELEATIONTYPE = "com.minres.scviewer.e4.application.handler.setReleationType";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_SETTHEME = "com.minres.scviewer.e4.application.handler.setTheme";
 	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_TXSEARCH = "com.minres.scviewer.e4.application.handler.txSearch";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_UNGROUPTRACKS = "com.minres.scviewer.e4.application.handler.ungroupTracks";
 	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_UPDATE = "com.minres.scviewer.e4.application.handler.update";
-	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ZOOMCOMMAND = "com.minres.scviewer.e4.application.handler.zoomCommand";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_WAVEDOUBLECLICK = "com.minres.scviewer.e4.application.handler.waveDoubleClick";
+	public static final String HANDLER_COM_MINRES_SCVIEWER_E4_APPLICATION_HANDLER_ZOOM = "com.minres.scviewer.e4.application.handler.zoom";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_0 = "com.minres.scviewer.e4.application.keybinding.0";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_1 = "com.minres.scviewer.e4.application.keybinding.1";
+	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_2 = "com.minres.scviewer.e4.application.keybinding.2";
+	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_3 = "com.minres.scviewer.e4.application.keybinding.3";
+	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_4 = "com.minres.scviewer.e4.application.keybinding.4";
+	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_DELETEWAVEFORM = "com.minres.scviewer.e4.application.keybinding.deleteWaveform";
+	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_GROUPTRACKS = "com.minres.scviewer.e4.application.keybinding.groupTracks";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_HELP = "com.minres.scviewer.e4.application.keybinding.help";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_LOAD = "com.minres.scviewer.e4.application.keybinding.load";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_OPEN = "com.minres.scviewer.e4.application.keybinding.open";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_PREFERENCES = "com.minres.scviewer.e4.application.keybinding.preferences";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_QUIT = "com.minres.scviewer.e4.application.keybinding.quit";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_SAVE = "com.minres.scviewer.e4.application.keybinding.save";
+	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_UNGROUPTRACKS = "com.minres.scviewer.e4.application.keybinding.ungroupTracks";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_ZOOM_IN = "com.minres.scviewer.e4.application.keybinding.zoom_in";
 	public static final String KEYBINDING_COM_MINRES_SCVIEWER_E4_APPLICATION_KEYBINDING_ZOOM_OUT = "com.minres.scviewer.e4.application.keybinding.zoom_out";
 	public static final String MENUSEPARATOR_COM_MINRES_SCVIEWER_E4_APPLICATION_MENUSEPARATOR_0 = "com.minres.scviewer.e4.application.menuseparator.0";
 	public static final String MENUSEPARATOR_COM_MINRES_SCVIEWER_E4_APPLICATION_MENUSEPARATOR_1 = "com.minres.scviewer.e4.application.menuseparator.1";
+	public static final String MENUSEPARATOR_COM_MINRES_SCVIEWER_E4_APPLICATION_MENUSEPARATOR_2 = "com.minres.scviewer.e4.application.menuseparator.2";
 	public static final String MENU_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_CURSOR = "com.minres.scviewer.e4.application.menu.cursor";
+	public static final String MENU_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_EDIT_ADDSEPARATOR = "com.minres.scviewer.e4.application.menu.edit.addSeparator";
 	public static final String MENU_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_FILE = "com.minres.scviewer.e4.application.menu.file";
 	public static final String MENU_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_HELP = "com.minres.scviewer.e4.application.menu.help";
 	public static final String MENU_COM_MINRES_SCVIEWER_E4_APPLICATION_MENU_NAVIGATE = "com.minres.scviewer.e4.application.menu.navigate";
@@ -157,6 +172,10 @@ public class AppModelId {
 	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_19 = "com.minres.scviewer.e4.application.parameter.19";
 	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_2 = "com.minres.scviewer.e4.application.parameter.2";
 	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_20 = "com.minres.scviewer.e4.application.parameter.20";
+	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_21 = "com.minres.scviewer.e4.application.parameter.21";
+	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_22 = "com.minres.scviewer.e4.application.parameter.22";
+	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_23 = "com.minres.scviewer.e4.application.parameter.23";
+	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_24 = "com.minres.scviewer.e4.application.parameter.24";
 	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_29 = "com.minres.scviewer.e4.application.parameter.29";
 	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_3 = "com.minres.scviewer.e4.application.parameter.3";
 	public static final String PARAMETER_COM_MINRES_SCVIEWER_E4_APPLICATION_PARAMETER_30 = "com.minres.scviewer.e4.application.parameter.30";
@@ -182,6 +201,7 @@ public class AppModelId {
 	public static final String PART_COM_MINRES_SCVIEWER_E4_APPLICATION_DIALOG_ONLINEHELP = "com.minres.scviewer.e4.application.dialog.onlinehelp";
 	public static final String PART_COM_MINRES_SCVIEWER_E4_APPLICATION_PART_CONTAINER = "com.minres.scviewer.e4.application.part.container";
 	public static final String POPUPMENU_COM_MINRES_SCVIEWER_E4_APPLICATION_POPUPMENU_NAMECONTEXT = "com.minres.scviewer.e4.application.popupmenu.namecontext";
+	public static final String POPUPMENU_COM_MINRES_SCVIEWER_E4_APPLICATION_POPUPMENU_VALUECONTEXT = "com.minres.scviewer.e4.application.popupmenu.valuecontext";
 	public static final String POPUPMENU_COM_MINRES_SCVIEWER_E4_APPLICATION_POPUPMENU_WAVECONTEXT = "com.minres.scviewer.e4.application.popupmenu.wavecontext";
 	public static final String TOOLBARSEPARATOR_COM_MINRES_SCVIEWER_E4_APPLICATION_TOOLBARSEPARATOR_0 = "com.minres.scviewer.e4.application.toolbarseparator.0";
 	public static final String TOOLBARSEPARATOR_COM_MINRES_SCVIEWER_E4_APPLICATION_TOOLBARSEPARATOR_1 = "com.minres.scviewer.e4.application.toolbarseparator.1";

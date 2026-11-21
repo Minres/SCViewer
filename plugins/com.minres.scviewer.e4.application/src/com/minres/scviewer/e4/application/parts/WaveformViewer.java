@@ -365,9 +365,11 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 		}
 		if (!filesToLoad.isEmpty())
 			loadDatabase(persistedState);
-		menuService.registerContextMenu(waveformPane.getNameControl(), MENU_CONTEXT);
-		menuService.registerContextMenu(waveformPane.getValueControl(),	MENU_CONTEXT);
-		menuService.registerContextMenu(waveformPane.getWaveformControl(), MENU_CONTEXT);
+		
+		menuService.registerContextMenu(waveformPane.getNameControl(),     AppModelId.POPUPMENU_COM_MINRES_SCVIEWER_E4_APPLICATION_POPUPMENU_NAMECONTEXT);
+		menuService.registerContextMenu(waveformPane.getValueControl(),	   AppModelId.POPUPMENU_COM_MINRES_SCVIEWER_E4_APPLICATION_POPUPMENU_VALUECONTEXT);
+		menuService.registerContextMenu(waveformPane.getWaveformControl(), AppModelId.POPUPMENU_COM_MINRES_SCVIEWER_E4_APPLICATION_POPUPMENU_WAVECONTEXT);
+
 		partListener = new PartListener() {
 			@Override
 			public void partActivated(MPart part) {

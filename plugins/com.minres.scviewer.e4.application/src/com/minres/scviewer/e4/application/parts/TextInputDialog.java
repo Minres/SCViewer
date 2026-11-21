@@ -90,8 +90,18 @@ public class TextInputDialog extends TitleAreaDialog {
 	
 	@Override
     protected void okPressed() {
+        String error = validateText(txtLabel.getText());
+        if (error != null) {
+            setErrorMessage(error);
+            return;
+        }
         saveInput();
         super.okPressed();
+    }
+
+    /** Return an error message to keep the dialog open, or null to accept the text. */
+    protected String validateText(String text) {
+        return null;
     }
 
     public String getText() {

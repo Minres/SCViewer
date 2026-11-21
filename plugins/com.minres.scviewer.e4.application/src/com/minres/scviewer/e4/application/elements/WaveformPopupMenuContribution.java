@@ -104,9 +104,9 @@ public class WaveformPopupMenuContribution {
 				addValueMenuItem(items, application, modelService, Messages.WaveformPopupMenuContribution_3, TrackEntry.ValueDisplay.SIGNED, elem);
 				items.add(MMenuFactory.INSTANCE.createMenuSeparator());
 				addWaveMenuItem(items, application, modelService, Messages.WaveformPopupMenuContribution_4, TrackEntry.WaveDisplay.DEFAULT, elem);
+				addWaveMenuItem(items, application, modelService, Messages.WaveformPopupMenuContribution_5, TrackEntry.WaveDisplay.STEP_WISE, elem);
+				addWaveMenuItem(items, application, modelService, Messages.WaveformPopupMenuContribution_6, TrackEntry.WaveDisplay.CONTINOUS, elem);
 			}						
-			addWaveMenuItem(items, application, modelService, Messages.WaveformPopupMenuContribution_5, TrackEntry.WaveDisplay.STEP_WISE, elem);
-			addWaveMenuItem(items, application, modelService, Messages.WaveformPopupMenuContribution_6, TrackEntry.WaveDisplay.CONTINOUS, elem);
 		}
 	}
 

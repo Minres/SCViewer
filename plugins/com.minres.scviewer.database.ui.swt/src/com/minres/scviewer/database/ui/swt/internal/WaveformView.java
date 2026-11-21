@@ -164,11 +164,15 @@ public class WaveformView implements IWaveformView {
 
 	protected TrackEntry lastClickedEntry;
 
-	protected MouseListener nameValueMouseListener = new MouseListener() {
-
+	class ValueMouseListener implements MouseListener {
+		Canvas canvas;
+		ValueMouseListener(Canvas c) {
+			canvas = c;
+		}
 		@Override
 		public void mouseDown(MouseEvent e) {
 			if (e.button == 1) {
+				canvas.setFocus();
 				Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
 				if (entry != null)
 					entry.getValue().selected = true;
@@ -177,8 +181,13 @@ public class WaveformView implements IWaveformView {
 				if(sel instanceof StructuredSelection) {
 					if(((StructuredSelection)sel).isEmpty()) {
 						Entry<Integer, TrackEntry> entry = trackVerticalOffset.floorEntry(e.y);
-						setSelection(new StructuredSelection(entry.getValue()), false, false);
-						lastClickedEntry = entry.getValue();
+						if(entry!=null) {
+							setSelection(new StructuredSelection(entry.getValue()), false, false);
+							lastClickedEntry = entry.getValue();
+						} else {
+							setSelection(null);
+							lastClickedEntry = null;
+						}
 					} else {
 						@SuppressWarnings("unchecked")
 						long c = ((IStructuredSelection)sel).toList().stream().filter(x -> x instanceof TrackEntry).count();
@@ -193,7 +202,7 @@ public class WaveformView implements IWaveformView {
 						}
 					}
 				}
-				Menu topMenu = top.getMenu();
+				Menu topMenu = canvas.getMenu();
 				if (topMenu != null)
 					topMenu.setVisible(true);
 			}
@@ -242,8 +251,8 @@ public class WaveformView implements IWaveformView {
 				listener.onTrackEntryDoubleClickEvent(track);
 		}
 
-	};
-
+	}
+	
 	class WaveformMouseListener implements PaintListener, Listener {
 		Point start;
 		Point end;
@@ -365,6 +374,7 @@ public class WaveformView implements IWaveformView {
 				if ((e.stateMask & SWT.MODIFIER_MASK) != 0)
 					return; // don't react on modifier
 				if (e.button == 1) {
+					waveformCanvas.setFocus();
 					down = true;
 					initialSelected = waveformCanvas.getElementsAt(start);
 				} else if (e.button == 3) {
@@ -471,10 +481,13 @@ public class WaveformView implements IWaveformView {
 			}
 			paintStreamDropIndicator(event.gc);
 		});
-		nameList.addMouseListener(nameValueMouseListener);
+
+		nameList.addMouseListener(new ValueMouseListener(nameList));
+		nameList.addListener(SWT.MouseDown, event -> {
+	        if (event.button == 1) nameList.setFocus();
+	    });
 		nameListScrolled.setContent(nameList);
 		nameFill = createFill(namePane);
-		
 		createTextPane(valuePane, "Value");
 
 		valuePane.setBackground(SWTResourceManager.getColor(SWT.COLOR_WIDGET_BACKGROUND));
@@ -507,7 +520,11 @@ public class WaveformView implements IWaveformView {
 				paintValues(gc, rect);
 			}
 		});
-		valueList.addMouseListener(nameValueMouseListener);
+		valueList.addMouseListener(new ValueMouseListener(valueList));
+		valueList.addListener(SWT.MouseDown, event -> {
+	        if (event.button == 1) valueList.setFocus();
+	    });
+
 		valueListScrolled.setContent(valueList);
 		valueFill = createFill(valuePane);
 
