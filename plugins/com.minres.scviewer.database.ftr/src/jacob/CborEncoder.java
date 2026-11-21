@@ -3,7 +3,7 @@
  * 
  * (C) Copyright - 2013 - J.W. Janssen <j.w.janssen@lxtreme.nl>
  *
- * Licensed under Apache License v2.0.
+ * SPDX-License-Identifier: Apache-2.0
  */
 package jacob;
 

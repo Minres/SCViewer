@@ -1,3 +1,8 @@
+/*******************************************************************************
+ * Copyright (c) 2018-2026 MINRES Technologies GmbH and others.
+ *
+ * SPDX-License-Identifier: EPL-1.0
+ *******************************************************************************/
 package com.minres.scviewer.e4.application;
 
 public class AppModelId {

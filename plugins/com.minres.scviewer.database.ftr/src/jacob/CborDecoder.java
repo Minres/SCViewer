@@ -2,6 +2,9 @@
  * JACOB - CBOR implementation in Java.
  * 
  * (C) Copyright - 2013 - J.W. Janssen <j.w.janssen@lxtreme.nl>
+ * Copyright (c) 2023 MINRES Technologies GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
  */
 package jacob;
 
