@@ -36,6 +36,8 @@ Maven itself must run on JDK 25. Check the Java version in `mvn -version`; chang
 the target platform's JRE or a bundle manifest does not change Maven's JVM. For
 Eclipse Maven launches, select JDK 25 in the launch configuration's JRE tab.
 Maven 3.9.16 with JDK 25 is a validated combination for this repository.
+Maven 3.10.x needs the `maven.resolver.validation=mild` workaround in
+`.mvn/maven.config` while Tycho 5.0.4 injects nested jars with path classifiers.
 
 The Tycho version is centralized in the root POM's `tycho-version` property.
 `.mvn/jvm.config` opens `sun.nio.ch` for JRuby used by documentation generation;

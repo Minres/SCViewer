@@ -18,12 +18,18 @@ The viewer has the following features
 
 To build the plugins the Eclipse SDK or PDE can be used.
 
-The target platform uses Eclipse 2026-12 (currently a milestone) and a bundled
+The target platform uses Eclipse 2026-12 and a bundled
 Java 25 runtime. Run Maven with JDK 25 (`mvn -version`), then run `mvn verify`.
 For Eclipse launches, select JDK 25 and reload the target definition. The e4
 application and OPCoach preferences use Jakarta injection and lifecycle APIs.
 OPCoach reuses version 1.3.2 for its older Javax and newer Jakarta builds; refresh
 cached target artifacts when switching from the old target.
+
+Maven 3.10.x validates artifact coordinates more strictly. Tycho 5.0.4 generates
+classifiers containing paths for nested bundle jars, so `.mvn/maven.config` uses
+`maven.resolver.validation=mild` until the upstream Tycho fix is released
+([Tycho #6399](https://github.com/eclipse-tycho/tycho/issues/6399)). This can produce
+coordinate-validation warnings for nested jars; Maven 3.9.16 remains an alternative.
 
 Key Shortcuts
 =============
