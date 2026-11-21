@@ -27,58 +27,61 @@ Legend:
 * Middle Mouse Button: MMB
 * Mouse Scroll wheel: MScrl
 * Context any means Name List, Value List or Waveform
-
-| Input      | Modifier   | Context  | Action                            |
-|------------|------------|----------|-----------------------------------|
-| Key Q      | Ctrl       | any      | Quite the application             |
-| F1         |            | any      | Open help                         |
-| Key O      | Ctrl       | Waveform | Open waveform database file       |
-| Key R      | Ctrl       | Waveform | Reload the actual waveform file   |
-| Key L      | Ctrl       | Waveform | Open scviewer config file         |
-| Key S      | Ctrl       | Waveform | Save scviewer config file         |
-| Key ,      | Ctrl       | any      | Open preferences dialog           |
-| Key A      | Ctrl       | any      | Select all                        |
-| Key +      | Ctrl       | Waveform | Zoom in                           |
-| Key -      | Ctrl       | Waveform | Zoom out                          |
-| Key G      | Ctrl       | Waveform | Group selected tracks             |
-| Key G      | Ctrl-Shift | Waveform | Ungroup selected tracks           |
-| LMB click  |            | any      | select                            |
-| LMB click  | Shift      | Waveform | move selected marker to position  |
-| LMB click  | Control    | Waveform | move cursor to position           |
-| LMB drag   |            | Waveform | zoom to range                     |
-| MMB click  |            | Waveform | move selected marker to position  |
-| MScrl      |            | any      | scroll window up/down             |
-| MScrl      | Shift      | any      | scroll window left/right          |
-| MScrl      | Control    | Waveform | zoom in/out                       |
-| Key left   |            | Waveform | scroll window to the left (slow)  |
-| Key right  |            | Waveform | scroll window to the right (slow) |
-| Key left   | Shift      | Waveform | scroll window to the left (fast)  |
-| Key right  | Shift      | Waveform | scroll window to the right (fast) |
-| Key up     |            | Waveform | move selection up                 |
-| Key down   |            | Waveform | move selection down               |
-| Key up     | Control    | Waveform | move selected track up            |
-| Key down   | Control    | Waveform | move selected track down          |
-| Key +      | Control    | Waveform | zoom in                           |
-| Key -      | Control    | Waveform | zoom out                          |
-| Key Pos1   |            | Waveform | jump to selected marker           |
-| Key End    |            | Waveform | jump to cursor                    |
-| Key Del    |            | any      | delete selected entries           |
-| LMB click  |            | ZoomBar  | increment/decrement 1 page        |
-| LMB drag   |            | ZoomBar  | drag both markers (pan)           |
-| LMB drag   | Control    | ZoomBar  | drag one marker (zoom)            |
-| MMB drag   |            | ZoomBar  | drag one marker (zoom)            |
-| xMB dclick |            | ZoomBar  | pan to position                   |
-| MScrl      |            | ZoomBar  | scroll window left/right          |
-| MScrl      | Shift      | ZoomBar  | scroll window left/right double speed |
-| MScrl      | Control    | ZoomBar  | zoom in/out                       |
-| Key left   |            | ZoomBar  | scroll window to the left (slow)  |
-| Key right  |            | ZoomBar  | scroll window to the right (slow) |
-| Key up     |            | ZoomBar  | scroll window to the left (slow)  |
-| Key down   |            | ZoomBar  | scroll window to the right (slow) |
-| Key PgUp   |            | ZoomBar  | scroll window to the left (fast)  |
-| Key PgDown |            | ZoomBar  | scroll window to the right (fast) |
-| Key Pos1   |            | ZoomBar  | scroll to begin                   |
-| Key End    |            | ZoomBar  | scroll to end                     |
+       
+| Input      | Modifier   | Context  | Action                                   |
+|------------|------------|----------|------------------------------------------|
+| Key Q      | Ctrl       | any      | Quite the application                    |
+| F1         |            | any      | Open help                                |
+| Key O      | Ctrl       | Waveform | Open waveform database file              |
+| Key R      | Ctrl       | Waveform | Reload the actual waveform file          |
+| Key L      | Ctrl       | Waveform | Open scviewer config file                |
+| Key S      | Ctrl       | Waveform | Save scviewer config file                |
+| Key ,      | Ctrl       | any      | Open preferences dialog                  |
+| Key A      | Ctrl       | any      | Select all                               |
+| Key +      | Ctrl       | Waveform | Zoom in                                  |
+| Key -      | Ctrl       | Waveform | Zoom out                                 |
+| Key G      | ALt        | Waveform | Group selected tracks                    |
+| Key G      | Alt-Shift  | Waveform | Ungroup selected tracks                  |
+| Key C      | ALt        | Waveform | Combine selected bits to new bit vector  |
+| Key S      | ALt        | Waveform | Add a separtor before the selected track |
+| Key S      | ALt-Shift  | Waveform | Add a separtor after the selected track  |
+| LMB click  |            | any      | select                                   |
+| LMB click  | Shift      | Waveform | move selected marker to position         |
+| LMB click  | Control    | Waveform | move cursor to position                  |
+| LMB drag   |            | Waveform | zoom to range                            |
+| MMB click  |            | Waveform | move selected marker to position         |
+| MScrl      |            | any      | scroll window up/down                    |
+| MScrl      | Shift      | any      | scroll window left/right                 |
+| MScrl      | Control    | Waveform | zoom in/out                              |
+| Key left   |            | Waveform | scroll window to the left (slow)         |
+| Key right  |            | Waveform | scroll window to the right (slow)        |
+| Key left   | Shift      | Waveform | scroll window to the left (fast)         |
+| Key right  | Shift      | Waveform | scroll window to the right (fast)        |
+| Key up     |            | Waveform | move selection up                        |
+| Key down   |            | Waveform | move selection down                      |
+| Key up     | Control    | Waveform | move selected track up                   |
+| Key down   | Control    | Waveform | move selected track down                 |
+| Key +      | Control    | Waveform | zoom in                                  |
+| Key -      | Control    | Waveform | zoom out                                 |
+| Key Pos1   |            | Waveform | jump to selected marker                  |
+| Key End    |            | Waveform | jump to cursor                           |
+| Key Del    |            | any      | delete selected entries                  |
+| LMB click  |            | ZoomBar  | increment/decrement 1 page               |
+| LMB drag   |            | ZoomBar  | drag both markers (pan)                  |
+| LMB drag   | Control    | ZoomBar  | drag one marker (zoom)                   |
+| MMB drag   |            | ZoomBar  | drag one marker (zoom)                   |
+| xMB dclick |            | ZoomBar  | pan to position                          |
+| MScrl      |            | ZoomBar  | scroll window left/right                 |
+| MScrl      | Shift      | ZoomBar  | scroll window left/right double speed    |
+| MScrl      | Control    | ZoomBar  | zoom in/out                              |
+| Key left   |            | ZoomBar  | scroll window to the left (slow)         |
+| Key right  |            | ZoomBar  | scroll window to the right (slow)        |
+| Key up     |            | ZoomBar  | scroll window to the left (slow)         |
+| Key down   |            | ZoomBar  | scroll window to the right (slow)        |
+| Key PgUp   |            | ZoomBar  | scroll window to the left (fast)         |
+| Key PgDown |            | ZoomBar  | scroll window to the right (fast)        |
+| Key Pos1   |            | ZoomBar  | scroll to begin                          |
+| Key End    |            | ZoomBar  | scroll to end                            |
 
 
 Track groups
@@ -125,8 +128,10 @@ signals. Removing a source track from the view does not remove its recorded data
 or invalidate the bus. If a recording or source bit is missing when settings are
 loaded, the affected bus is skipped and reported while other tracks are restored.
 
-Embedded Help
-=============
+Development Notes
+=================
+
+## Embedded Help
 
 The legacy Jasper JSP loader uses `File.toURL()` for its generated-class directory.
 A PDE configuration directory containing a literal percent escape (such as
