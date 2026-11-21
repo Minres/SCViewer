@@ -465,6 +465,32 @@ public class WaveformScrollTest {
         assertEquals(List.of(bus), view.getStreamList());
     }
 
+    @Test
+    public void groupingExpandedBitsKeepsTheVectorIntactAndSelectsTheNewGroup() {
+        var source = new BitVectorExpansionTest.Signal("bus", 3);
+        TrackEntry bus = new TrackEntry(source, null);
+        bus.setExpanded(true);
+        view.getStreamList().add(bus);
+        view.update();
+        var bits = List.copyOf(bus.waveforms);
+        view.setSelection(new StructuredSelection(List.of(bits.get(2), bits.get(0))));
+        TrackEntry group = view.groupSelectedTracks("bits");
+        assertNotNull(group);
+        assertEquals(List.of(bus, group), view.getStreamList());
+        assertEquals(bits, bus.waveforms);
+        assertSame(group, ((StructuredSelection) view.getSelection()).getFirstElement());
+        assertSame(bits.get(0).waveform, group.waveforms.get(0).waveform);
+        assertSame(bits.get(2).waveform, group.waveforms.get(1).waveform);
+        assertNotSame(bits.get(0), group.waveforms.get(0));
+        assertNotSame(bits.get(2), group.waveforms.get(1));
+        view.setGroupExpanded(bus, false);
+        view.setGroupExpanded(bus, true);
+        assertEquals(bits, bus.waveforms);
+        view.ungroupTracks(group);
+        assertEquals(bits, bus.waveforms);
+        assertEquals(List.of(bus, group.waveforms.get(0), group.waveforms.get(1)), view.getStreamList());
+    }
+
     private Point origin() {
         try { return (Point) canvas.getClass().getMethod("getOrigin").invoke(canvas); }
         catch (ReflectiveOperationException e) { throw new AssertionError(e); }

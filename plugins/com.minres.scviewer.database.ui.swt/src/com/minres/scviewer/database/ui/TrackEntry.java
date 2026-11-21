@@ -134,11 +134,35 @@ public class TrackEntry {
 		if (siblings == null) return null;
 		List<TrackEntry> members = siblings.stream()
 				.filter(entry -> selected.stream().anyMatch(track -> track == entry)).toList();
+		TrackEntry owner = parentOf(roots, siblings);
+		if (owner != null && owner.isBitVector()) {
+			List<TrackEntry> copies = new ArrayList<>();
+			for (TrackEntry member : members) {
+				TrackEntry copy = new TrackEntry(member.waveform, styles);
+				copy.valueDisplay = member.valueDisplay;
+				copy.waveDisplay = member.waveDisplay;
+				copies.add(copy);
+			}
+			TrackEntry group = group(name, copies, styles);
+			List<TrackEntry> destination = siblingsOf(roots, owner);
+			destination.add(destination.indexOf(owner) + 1, group);
+			return group;
+		}
 		int index = siblings.indexOf(members.get(0));
 		TrackEntry group = group(name, members, styles);
 		siblings.removeAll(members);
 		siblings.add(index, group);
 		return group;
+	}
+
+	/** Find the display parent owning a particular child list. */
+	private static TrackEntry parentOf(List<TrackEntry> roots, List<TrackEntry> children) {
+		for (TrackEntry entry : roots) {
+			if (entry.waveforms == children) return entry;
+			TrackEntry parent = parentOf(entry.waveforms, children);
+			if (parent != null) return parent;
+		}
+		return null;
 	}
 
 	public static boolean ungroupTracks(List<TrackEntry> roots, TrackEntry group) {
