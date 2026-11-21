@@ -3,6 +3,19 @@
 
 In this section you will find detailed descriptions of all GUI and menu elements of the SCViewer including their functions and keyboard shortcuts.
 
+[#_trackgroups]
+=== Track groups
+
+In the track name pane, select tracks and press Ctrl+G (Command+G on macOS)
+to create a named group. Tracks, separators, and existing groups can be grouped
+when they share a parent; selecting members within a group creates a subgroup. Click the disclosure arrow or double-click its header
+to collapse or expand it. Select a group and press Ctrl+Shift+G
+(Command+Shift+G on macOS) to ungroup it without removing its tracks.
+Settings files and persisted viewer state preserve group names, membership, nesting,
+and expansion state, including tracks inside collapsed groups. Older settings files
+continue to load as an ordinary list of tracks.
+
+[#_bitvector_expansion]
 === Bitvector expansion
 
 Click the disclosure arrow beside a multi-bit signal in the waveform track list,
@@ -12,6 +25,7 @@ bit 0 denoting the least significant position. Click again to collapse the bits.
 Bit tracks show binary values, including unknown (`x`) and high-impedance (`z`)
 states. Settings files preserve the expansion state and individual bit tracks.
 
+[#_bitcombination]
 === Combining single bits
 
 Select at least two single-bit signal tracks and choose *Combine bits…* from the
@@ -56,8 +70,11 @@ Legend:
 | Key A      | Ctrl       | any      | Select all
 | Key +      | Ctrl       | Waveform | Zoom in
 | Key -      | Ctrl       | Waveform | Zoom out
-| Key G      | Ctrl       | Waveform | Group selected tracks
-| Key G      | Ctrl-Shift | Waveform | Ungroup selected tracks
+| Key G      | ALt        | Waveform | Group selected tracks
+| Key G      | Alt-Shift  | Waveform | Ungroup selected tracks
+| Key C      | ALt        | Waveform | Combine selected bits to new bit vector
+| Key S      | ALt        | Waveform | Add a separtor before the selected track
+| Key S      | ALt-Shift  | Waveform | Add a separtor after the selected track
 | LMB click  |            | any      | select                            
 | LMB click  | Shift      | Waveform | move selected marker to position  
 | LMB click  | Control    | Waveform | move cursor to position           

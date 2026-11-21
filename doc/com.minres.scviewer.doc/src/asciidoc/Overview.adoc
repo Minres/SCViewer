@@ -4,10 +4,11 @@
 [#_overview]
 === SCViewer overview
 
-SCViewer is composed of a set of eclipse plugins to display VCD and transaction streams 
-created by the SystemC VCD trace implementation and the SystemC Verification Library (SCV).
+SCViewer is a Eclipse based tool to display VCD, FST, and transaction streams. 
+These traces can created by the SystemC VCD trace implementation and the SystemC Verification Library (SCV) as well as the FST and FTR (LWTR) implementations of the SystemC Components library.
 For further description of the SCV please refer to 
 http://www.accellera.org/activities/committees/systemc-verification.
+For FST and FTR please have a look at https://github.com/Minres/SystemC-Components and https://github.com/Minres/LWTR4SC.
 
 
 [#_features]
@@ -16,10 +17,17 @@ http://www.accellera.org/activities/committees/systemc-verification.
 Features include:
 
 * support of VCD files (compressed and uncompressed)
-** real numbers
-** showing vectors and real numbers as analog (step-wise & continuous)
-* various value representations of bit vectors
+* support of FST files 
 * support of SCV transaction recordings in various formats
 ** text log files (compressed and uncompressed)
+** FTR files of LWTR (compressed and uncompressed)
 ** sqlite based 
+* Waveform visualization features
+** various value representations of bit vectors (signed, unsigned, hex, bit)
+** real numbers
+** showing vectors and real numbers as analog (step-wise & continuous)
+** grouping of signals and transactions
+** combining signals and transactions to new waveforms
+** visualization of transaction generators as trace
+** inspection of transaction properties
 ** visualization of transaction relations
