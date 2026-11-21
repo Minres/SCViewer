@@ -185,10 +185,24 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
     private LatestJob<PreparedVector> vectorJob;
     private LatestJob<PreparedSettings> settingsJob;
     private com.minres.scviewer.database.ui.AsyncTransactionData transactionSnapshots;
+    private java.util.function.Consumer<ITx> hoverUpdate;
     private com.minres.scviewer.database.ui.AsyncTransactionData.Snapshot transactionSnapshot(ITx tx) {
         if (transactionSnapshots == null) transactionSnapshots = new com.minres.scviewer.database.ui.AsyncTransactionData(
-                this::dispatchSettings, changed -> { if (!disposed && eventBroker != null) eventBroker.post(ACTIVE_WAVEFORMVIEW, this); });
+                this::dispatchSettings, changed -> {
+                    if (disposed) return;
+                    if (hoverUpdate != null) hoverUpdate.accept(changed);
+                    if (eventBroker != null) eventBroker.post(ACTIVE_WAVEFORMVIEW, this);
+                });
         return transactionSnapshots.get(tx);
+    }
+
+    private void refreshHoverWhenReady(Composite parent, ITx transaction, Runnable refresh) {
+        java.util.function.Consumer<ITx> update = changed -> {
+            if (changed == transaction && !parent.isDisposed()) refresh.run();
+        };
+        hoverUpdate = update;
+        parent.addDisposeListener(event -> { if (hoverUpdate == update) hoverUpdate = null; });
+        refresh.run();
     }
     private record SettingsWrite(long request, ViewerSettings settings, Path file) { }
     private final java.util.Queue<SettingsWrite> settingsWriteQueue = new java.util.concurrent.ConcurrentLinkedQueue<>();
@@ -432,26 +446,31 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 						final TableColumn valueCol = new TableColumn(table, SWT.LEFT);
 						valueCol.setText("Value");
 
-						for (ITxAttribute iTxAttribute : transactionSnapshot(tx).attributes()) {
-							String value = iTxAttribute.getValue().toString();
-							if((DataType.UNSIGNED == iTxAttribute.getDataType() || DataType.INTEGER==iTxAttribute.getDataType()) && !"0".equals(value)) {
-								try {
-									value += " [0x"+Long.toHexString(Long.parseLong(iTxAttribute.getValue().toString()))+"]";
-								} catch(NumberFormatException e) { }
+						refreshHoverWhenReady(parent, tx, () -> {
+							table.removeAll();
+							for (ITxAttribute iTxAttribute : transactionSnapshot(tx).attributes()) {
+								String value = iTxAttribute.getValue().toString();
+								if((DataType.UNSIGNED == iTxAttribute.getDataType() || DataType.INTEGER==iTxAttribute.getDataType()) && !"0".equals(value)) {
+									try {
+										value += " [0x"+Long.toHexString(Long.parseLong(iTxAttribute.getValue().toString()))+"]";
+									} catch(NumberFormatException e) { }
+								}
+								TableItem item = new TableItem(table, SWT.NONE);
+								item.setText(0, iTxAttribute.getName());
+								item.setText(1, value);
 							}
-							TableItem item = new TableItem(table, SWT.NONE);
-							item.setText(0, iTxAttribute.getName());
-							item.setText(1, value);
-						}
-						if(table.getHeaderVisible()) {
-							// add dummy row to get make last row visible
-							TableItem item = new TableItem(table, SWT.NONE);
-							item.setText(0, "");
-							item.setText(1, "");
-						}
-						nameCol.pack();
-						valueCol.pack();
-						table.setSize(table.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+							if(table.getHeaderVisible()) {
+								// add dummy row to get make last row visible
+								TableItem item = new TableItem(table, SWT.NONE);
+								item.setText(0, "");
+								item.setText(1, "");
+							}
+							nameCol.pack();
+							valueCol.pack();
+							table.setSize(table.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+							parent.layout(true, true);
+							parent.pack();
+						});
 						parent.addPaintListener( e -> {
 							Rectangle area = parent.getClientArea();
 							valueCol.setWidth(area.width - nameCol.getWidth());
@@ -482,6 +501,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 	public void closeDatabase() {
 		if (disposed) return;
 		disposed = true;
+        hoverUpdate = null;
         if (vectorJob != null) vectorJob.close();
         if (settingsJob != null) settingsJob.close();
         if (transactionSnapshots != null) transactionSnapshots.close();
