@@ -32,10 +32,10 @@ mvn -version
 mvn verify
 ```
 
-Maven itself must run on JDK 21. Check the Java version in `mvn -version`; changing
+Maven itself must run on JDK 25. Check the Java version in `mvn -version`; changing
 the target platform's JRE or a bundle manifest does not change Maven's JVM. For
-Eclipse Maven launches, select JDK 21 in the launch configuration's JRE tab.
-Maven 3.9.16 with JDK 21 is a validated combination for this repository.
+Eclipse Maven launches, select JDK 25 in the launch configuration's JRE tab.
+Maven 3.9.16 with JDK 25 is a validated combination for this repository.
 
 The Tycho version is centralized in the root POM's `tycho-version` property.
 `.mvn/jvm.config` opens `sun.nio.ch` for JRuby used by documentation generation;
@@ -83,9 +83,9 @@ Report the command, result, and any remaining warnings or untested behavior.
 - Perform SWT widget operations on the UI thread. Keep expensive loading and
   querying off it; dispose resources, detach listeners, and cancel background work
   when their owning view or database closes.
-- Preserve compatibility with the selected Eclipse platform. It currently uses
-  `javax.inject`; introducing `jakarta.inject` requires a coordinated platform
-  migration rather than an isolated import replacement.
+- Preserve compatibility with the Eclipse 2026-12 target. Use `jakarta.inject`
+  and `jakarta.annotation` for e4 injection and lifecycle annotations; keep bundle
+  imports and the OPCoach preferences build aligned with those namespaces.
 - FST native sources and CMake scripts live under
   `plugins/com.minres.scviewer.database.fst/csrc/fst/`. Native builds are separate
   from the Java reactor; rebuild platform libraries only when the change requires
@@ -95,9 +95,9 @@ Report the command, result, and any remaining warnings or untested behavior.
 
 - Keep the target definition, bundle execution environments, product JRE, and
   Maven build JDK compatible. Check dependency resolution after target changes.
-- The Orbit repository selection avoids an obsolete Felix SCR provider that
-  conflicts with Eclipse's Declarative Services API. Preserve that compatibility
-  when changing repository versions.
+- Use the platform's SimRel builds of Commons libraries, SLF4J, and Logback.
+  Avoid mixing old Orbit SCR providers with the current Declarative Services API.
+  Commons Compress's optional IO, Lang, and Codec imports must be present at runtime.
 - Publish source bundles using `plugin-source` and the update site's
   `includeAllSources`; do not reintroduce the deprecated `feature-source` goal or
   generated source-feature references in `category.xml`.
@@ -106,8 +106,8 @@ Report the command, result, and any remaining warnings or untested behavior.
 - Edit help content in `doc/com.minres.scviewer.doc/src/asciidoc/`. The documentation
   build copies DocBook intermediates into `src/docbkx/` and generates files inside
   the help bundle; review resulting diffs rather than hand-editing generated HTML.
-- Read `README.md` for launch guidance, including the embedded-help configuration
-  directory restriction on spaces and percent escapes.
+- Read `README.md` for launch guidance, including target-cache refresh and
+  configuration-directory restrictions for older embedded-help runtimes.
 - Preserve existing user changes and local recording fixtures. Do not include
   unrelated untracked inputs, generated `target/` contents, or rebuilt native
   binaries in a change.

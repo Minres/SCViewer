@@ -77,7 +77,7 @@
 						</artifact>
 					</target>
 					<executionEnvironment>
-						org.eclipse.justj.openjdk.hotspot.jre.minimal-21</executionEnvironment>
+						org.eclipse.justj.openjdk.hotspot.jre.minimal-25</executionEnvironment>
 					<environments>
 						<environment>
 							<os>linux</os>
@@ -113,7 +113,7 @@
 				<configuration>
 					<excludes>
 						<plugin id="com.google.guava" />
-						<plugin id="org.hamcrest.core" />
+						<plugin id="org.hamcrest" />
 						<plugin id="org.junit" />
 						<plugin id="com.minres.scviewer.e4.product" />
 						<plugin id="org.eclipse.core.filesystem.linux.x86_64" />

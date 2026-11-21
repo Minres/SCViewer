@@ -16,6 +16,9 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.eclipse.e4.core.contexts.ContextInjectionFactory;
+import org.eclipse.e4.core.contexts.EclipseContextFactory;
+import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.viewers.ISelection;
@@ -26,6 +29,7 @@ import com.minres.scviewer.database.IWaveform;
 import com.minres.scviewer.database.IWaveformDb;
 import com.minres.scviewer.database.WaveformType;
 import com.minres.scviewer.database.ui.TrackEntry;
+import com.minres.scviewer.database.ui.ZoomKind;
 import com.minres.scviewer.e4.application.parts.DesignBrowser;
 import com.minres.scviewer.e4.application.parts.WaveformViewer;
 
@@ -70,6 +74,32 @@ public class CommandHandlersTest {
     private EPartService parts(AtomicReference<MPart> active) {
         return (EPartService) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{EPartService.class},
                 (proxy, method, args) -> method.getName().equals("getActivePart") ? active.get() : null);
+    }
+
+    @Test
+    public void preferencesBundleUsesThePlatformInjectionNamespace() {
+        // OPCoach published Javax and Jakarta builds with the same bundle version.
+        var bundle = org.eclipse.core.runtime.Platform.getBundle("com.opcoach.e4.preferences");
+        assertNotNull(bundle);
+        assertTrue("Refresh the cached OPCoach 1.3.2 artifact from the target repository",
+                bundle.getHeaders().get("Import-Package").contains("jakarta.inject"));
+    }
+
+    @Test
+    public void zoomCommandResolvesItsNamedParameterThroughPlatformInjection() {
+        AtomicReference<ZoomKind> zoom = new AtomicReference<>();
+        Viewer viewer = new Viewer() {
+            @Override public void zoom(ZoomKind kind) { zoom.set(kind); }
+        };
+        var context = EclipseContextFactory.create();
+        try {
+            context.set(EPartService.class, parts(new AtomicReference<>(part(viewer))));
+            context.set(ZoomHandler.PARAMTER_ID, "in");
+            ContextInjectionFactory.invoke(new ZoomHandler(), Execute.class, context);
+            assertEquals(ZoomKind.IN, zoom.get());
+        } finally {
+            context.dispose();
+        }
     }
 
     @Test

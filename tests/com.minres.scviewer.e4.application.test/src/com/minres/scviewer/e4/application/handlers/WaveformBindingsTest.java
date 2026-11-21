@@ -21,6 +21,8 @@ import org.eclipse.e4.core.contexts.EclipseContextFactory;
 import org.eclipse.e4.ui.bindings.internal.BindingTable;
 import org.eclipse.e4.ui.bindings.internal.BindingTableManager;
 import org.eclipse.e4.ui.bindings.internal.ContextSet;
+import org.eclipse.e4.ui.model.application.MApplication;
+import org.eclipse.e4.ui.model.application.MApplicationFactory;
 import org.eclipse.jface.bindings.Binding;
 import org.eclipse.jface.bindings.keys.KeyBinding;
 import org.eclipse.jface.bindings.keys.KeySequence;
@@ -37,9 +39,12 @@ public class WaveformBindingsTest {
         ContextSet.setComparator(new ContextSet.CComp(contexts));
         var context = EclipseContextFactory.create();
         try {
+            var application = MApplicationFactory.INSTANCE.createApplication();
+            application.setContext(context);
+            context.set(MApplication.class, application);
             var manager = ContextInjectionFactory.make(BindingTableManager.class, context);
-            var windowTable = new BindingTable(window);
-            var waveformTable = new BindingTable(waveform);
+            var windowTable = new BindingTable(window, application);
+            var waveformTable = new BindingTable(waveform, application);
             manager.addTable(windowTable); manager.addTable(waveformTable);
             var commands = new CommandManager();
             var category = commands.getCategory("test"); category.define("test", "");

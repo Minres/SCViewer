@@ -18,6 +18,13 @@ The viewer has the following features
 
 To build the plugins the Eclipse SDK or PDE can be used.
 
+The target platform uses Eclipse 2026-12 (currently a milestone) and a bundled
+Java 25 runtime. Run Maven with JDK 25 (`mvn -version`), then run `mvn verify`.
+For Eclipse launches, select JDK 25 and reload the target definition. The e4
+application and OPCoach preferences use Jakarta injection and lifecycle APIs.
+OPCoach reuses version 1.3.2 for its older Javax and newer Jakarta builds; refresh
+cached target artifacts when switching from the old target.
+
 Key Shortcuts
 =============
 
@@ -133,7 +140,8 @@ Development Notes
 
 ## Embedded Help
 
-The legacy Jasper JSP loader uses `File.toURL()` for its generated-class directory.
+Older target platforms use a legacy Jasper JSP loader that calls `File.toURL()`
+for its generated-class directory.
 A PDE configuration directory containing a literal percent escape (such as
 `scviewer.product%20issue3`) can therefore produce HTTP 500 / `PWC6034` /
 `ClassNotFoundException: org.apache.jsp.index_jsp` even when the class was compiled.

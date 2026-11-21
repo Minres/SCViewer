@@ -46,14 +46,14 @@
          unpack="false"/>
 
    <plugin
-         id="org.apache.lucene.analyzers-common"
+         id="org.apache.lucene.analysis-common"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.apache.lucene.analyzers-smartcn"
+         id="org.apache.lucene.analysis-smartcn"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -67,7 +67,7 @@
          unpack="false"/>
 
    <plugin
-         id="javax.el"
+         id="org.mortbay.jasper.mortbay-apache-el"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -109,7 +109,7 @@
          unpack="false"/>
 
    <plugin
-         id="org.apache.jasper.glassfish"
+         id="org.mortbay.jasper.mortbay-apache-jsp"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -144,7 +144,7 @@
          unpack="false"/>
 
    <plugin
-         id="org.eclipse.jetty.servlet"
+         id="org.eclipse.jetty.ee8.servlet"
          download-size="0"
          install-size="0"
          version="0.0.0"
@@ -164,14 +164,5 @@
          version="0.0.0"
          unpack="false"/>
 
-   <plugin
-         id="org.eclipse.equinox.security.win32.x86_64"
-         os="win32"
-         arch="x86_64"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"
-         unpack="false"/>
 
 </feature>

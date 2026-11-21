@@ -12,7 +12,7 @@ package com.minres.scviewer.e4.application.handlers;
 
 import java.io.File;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 import org.eclipse.e4.core.di.annotations.CanExecute;
 import org.eclipse.e4.core.di.annotations.Execute;

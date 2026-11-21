@@ -13,7 +13,7 @@ package com.minres.scviewer.e4.application.elements;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.eclipse.e4.core.di.annotations.Evaluate;
 import org.eclipse.e4.ui.di.AboutToHide;

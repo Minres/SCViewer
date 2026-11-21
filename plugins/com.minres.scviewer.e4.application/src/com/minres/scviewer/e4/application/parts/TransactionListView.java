@@ -10,7 +10,7 @@
  *******************************************************************************/
 package com.minres.scviewer.e4.application.parts;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.ui.di.Focus;
