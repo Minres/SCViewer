@@ -52,7 +52,7 @@
 							<workingDirectory>${software.download.area}</workingDirectory>
 							<arguments>
 								<argument>-c</argument>
-								<argument>if [ -d SCViewer-GHP ]; then cd SCViewer-GHP; git pull; else git clone -v --branch gh-pages https://git.minres.com/VP-Tools/SCViewer.git SCViewer-GHP; fi</argument>
+								<argument>if [ -d SCViewer-GHP ]; then cd SCViewer-GHP; git pull --no-rebase --ff-only; else git clone -v --branch gh-pages https://git.minres.com/VP-Tools/SCViewer.git SCViewer-GHP; fi</argument>
 							</arguments>
 							<environmentVariables>
 								<LANG>en_US</LANG>
@@ -60,10 +60,14 @@
 						</configuration>
 					</plugin>
  					<plugin>
-						<groupId>org.eclipse.tycho.extras</groupId>
-						<artifactId>tycho-eclipserun-plugin</artifactId>
+						<groupId>org.eclipse.tycho</groupId>
+						<artifactId>tycho-eclipse-plugin</artifactId>
 						<version>${tycho-version}</version>
 						<configuration>
+							<!-- The 2021-12 Ant runner installs a SecurityManager on JDK 21. -->
+							<jvmArgs>
+								<arg>-Djava.security.manager=allow</arg>
+							</jvmArgs>
 							<!-- IMPORTANT: DO NOT split the arg line -->
 							<appArgLine>-application org.eclipse.ant.core.antRunner -buildfile packaging-p2-composite.ant p2.composite.add -Dsite.label="SCViewer Software Repository" -Dproject.build.directory=${project.build.directory} -DmajorMinorVersion=${parsedVersion.majorVersion}.${parsedVersion.minorVersion} -DunqualifiedVersion=${unqualifiedVersion} -Dsoftware.download.area="${software.download.area}/SCViewer-GHP/repository"</appArgLine>
 							<repositories>
