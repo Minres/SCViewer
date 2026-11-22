@@ -4,31 +4,116 @@
 [#_overview]
 === SCViewer overview
 
-SCViewer is a Eclipse based tool to display VCD, FST, and transaction streams. 
-These traces can created by the SystemC VCD trace implementation and the SystemC Verification Library (SCV) as well as the FST and FTR (LWTR) implementations of the SystemC Components library.
-For further description of the SCV please refer to 
-http://www.accellera.org/activities/committees/systemc-verification.
-For FST and FTR please have a look at https://github.com/Minres/SystemC-Components and https://github.com/Minres/LWTR4SC.
+SCViewer is an Eclipse-based tool for exploring signal waveforms and transaction
+recordings from simulations. It is available as a standalone application and as
+Eclipse plug-ins. Signals and transactions can be displayed together on a common
+time axis, making it possible to compare changes in signal values with the
+operations recorded by a transaction stream. Multiple recording files can be
+loaded into the same waveform viewer.
 
+Signal traces describe how digital or real-valued signals change over time.
+SCViewer supports VCD and FST recordings, including traces produced by SystemC.
+Transaction recordings describe individual operations, their timing, attributes,
+and relationships to other operations. Supported transaction formats include
+SCV text and SQLite recordings, and the FTR format used by LWTR.
+
+After opening a recording, use the design browser to explore its hierarchy and
+filter the available signals and transaction streams by name. Add the items of
+interest to the waveform viewer, where the track names, values, and traces are
+shown side by side. The value pane displays signal values at the cursor position.
+Zooming, scrolling, and moving the cursor and markers help locate events and
+compare their timing.
+
+The displayed tracks can be arranged to suit the investigation. Use
+<<_trackgroups,named groups>> and separators to organize related signals and
+transactions. Expand a <<_bitvector_expansion,bitvector>> to inspect its individual
+bits while keeping the bus visible, or expand a transaction stream to show its
+<<_generator_expansion,generator traces>> beneath it. Each generator trace shows
+only that generator's transactions. Grouping these child tracks or dragging them
+out of their parent creates display copies, leaving the original children in
+place. Selected single-bit tracks can also be <<_bitcombination,combined into a
+new named bitvector>> with a chosen bit order.
+
+Select a transaction to inspect its attributes in the transaction details view,
+or hover over it for a floating information window. Transaction relations show
+connections between recorded operations and help follow activity across streams.
+Signal display formats can be changed to suit the data, including numeric bitvector
+representations and analog-style plots for numeric values.
+
+Save the viewer layout in a settings file to return to the same investigation
+later. Settings retain recording references, track order and groups, expansion
+states, display formats, combined bitvector definitions, and cursor and marker
+positions. Changing the layout, creating display copies, or removing a track from
+the viewer does not modify the recorded data.
+
+For information about producing transaction recordings, see the
+http://www.accellera.org/activities/committees/systemc-verification[SystemC Verification Library (SCV)].
+The https://github.com/Minres/SystemC-Components[SystemC Components library] and
+https://github.com/Minres/LWTR4SC[LWTR4SC] provide further information about FST and
+FTR recording support.
 
 [#_features]
 === SCViewer features
 
-Features include:
+SCViewer provides the following features for exploring recordings, organizing
+traces, and inspecting signal and transaction activity.
 
-* loading of multiple trace files into the same waveform viewer
-** VCD files (compressed and uncompressed)
-** FST files 
-** SCV/LWTR transaction recordings in various formats
-*** text log files (compressed and uncompressed)
-*** FTR files of LWTR (compressed and uncompressed)
-*** sqlite based 
-* Waveform visualization features
-** various value representations of bit vectors (signed, unsigned, hex, bit)
-** real numbers
-** showing vectors and real numbers as analog (step-wise & continuous)
-** grouping of signals and transactions
-** combining signals and transactions to new waveforms
-** visualization of transaction generators as trace
-** inspection of transaction properties
-** visualization of transaction relations
+* Recording formats and file handling
+** Loading multiple recording files into the same waveform viewer
+** VCD signal traces, compressed or uncompressed
+** FST signal traces
+** SCV transaction recordings in compressed or uncompressed text form, or in SQLite databases
+** LWTR transaction recordings in FTR format, compressed or uncompressed
+** Reloading recordings after their files have changed
+* Browsing and selecting recorded data
+** Hierarchical browsing of available signals and transaction streams
+** Name filters for finding items in the design browser
+** Adding selected signals, streams, and generators to the waveform viewer
+** Displaying signals and transactions together on a common time axis
+* Signal and bitvector visualization
+** Digital and real-valued signals
+** Hexadecimal, binary, signed, and unsigned representations of bitvector values
+** Signal values displayed at the cursor position
+** Analog-style plots of vectors and real numbers, using step-wise or continuous display
+** Expansion of a bus into individual bit traces while retaining the bus row
+** Display of unknown (`x`) and high-impedance (`z`) bit values
+** Combination of single-bit tracks into a named bitvector with a chosen bit order
+** Expansion and value formatting of combined bitvectors, as for recorded buses
+* Track organization
+** Reordering tracks by dragging them or using navigation commands
+** Named groups and nested groups containing signals, transactions, and separators
+** Collapsing and expanding groups without losing their contents
+** Separators before or after selected tracks
+** Display copies when grouping expanded bits or generator traces, or dragging them out of their parent
+** Retention of the original bit or generator children under their source waveform
+** Renaming groups and combined bitvectors to describe the current investigation
+* Transaction inspection
+** Transaction streams with concurrent operations displayed in separate lanes
+** Expansion of a stream into child generator traces while retaining the aggregate stream row
+** Generator traces showing only the transactions recorded by that generator
+** Selection of individual transactions in the waveform viewer
+** Properties, attributes, and incoming and outgoing relations in the transaction details view
+** Filtering of transaction details by name
+** Transaction searches using attribute values, including numeric values and string patterns
+** Relation arrows between transactions and selection of the relation type to display
+** Floating hover windows for transaction attributes, with scrolling when the content exceeds the screen
+* Time navigation
+** Zooming in and out, showing the full recording, and zooming between the cursor and a marker
+** Dragging over a waveform range to zoom into that interval
+** Horizontal panning and vertical scrolling through tracks
+** Cursor and marker positioning to identify points of interest
+** Navigation to previous and next signal events or transactions
+** Zoom-bar controls for panning and changing the visible time range
+** Keyboard shortcuts, toolbar actions, and track context menus
+* Saved settings and reusable layouts
+** Saving and loading the active viewer's settings
+** Recording references, track order, groups, nesting, and separators retained in settings files
+** Retention of display formats, cursor and marker positions, zoom, and scroll position on the time axis
+** Saved bitvector and generator expansion states, including children of collapsed parents
+** Saved combined bitvector definitions, input ordering, and names
+** Independent display copies retained when restoring a layout
+** Reporting of missing waveforms when restoring settings
+** Layout changes that leave the original recorded data unchanged
+
+See <<_reference>> for instructions on using these features and the available
+keyboard shortcuts.
