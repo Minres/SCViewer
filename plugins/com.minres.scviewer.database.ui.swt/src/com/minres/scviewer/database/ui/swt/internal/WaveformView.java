@@ -1483,10 +1483,12 @@ public class WaveformView implements IWaveformView {
 				location.before() != null && TrackEntry.siblingsOf(List.of(track), location.before()) != null);
 	}
 
-	private boolean isBitVectorChildren(List<TrackEntry> entries, List<TrackEntry> children) {
+	private boolean isWaveformChild(List<TrackEntry> entries, List<TrackEntry> children, TrackEntry track) {
 		for (TrackEntry entry : entries) {
-			if (entry.waveforms == children) return entry.isBitVector();
-			if (isBitVectorChildren(entry.waveforms, children)) return true;
+			if (entry.waveforms == children) return track.waveform != null && (
+					(entry.isBitVector() && track.waveform.getWidth() == 1 && track.waveform.isBitVector())
+					|| (entry.isTransactionStream() && track.waveform.getType() == WaveformType.GENERATOR));
+			if (isWaveformChild(entry.waveforms, children, track)) return true;
 		}
 		return false;
 	}
@@ -1496,10 +1498,9 @@ public class WaveformView implements IWaveformView {
 		boolean copied = false;
 		for (TrackEntry track : tracks) {
 			List<TrackEntry> siblings = TrackEntry.siblingsOf(streams, track);
-			if (siblings != location.siblings() && isBitVectorChildren(streams, siblings)
-					&& track.waveform != null && track.waveform.getWidth() == 1 && track.waveform.isBitVector()) {
-				// A bit belongs to its expanded vector. Extract an independent display
-				// entry while sharing the read-only projection of the recorded data.
+			if (siblings != location.siblings() && isWaveformChild(streams, siblings, track)) {
+				// Bits and generators remain children of their source waveform.
+				// Extract an independent display entry sharing the recorded data.
 				TrackEntry copy = new TrackEntry(track.waveform, styleProvider);
 				copy.valueDisplay = track.valueDisplay;
 				copy.waveDisplay = track.waveDisplay;

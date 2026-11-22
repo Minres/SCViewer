@@ -840,7 +840,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 			TrackEntry entry = waveformPane.addWaveform(track.waveform(), -1);
 			entry.valueDisplay = track.settings().valueDisplay();
 			entry.waveDisplay = track.settings().waveDisplay();
-			if (track.settings().group() || entry.isBitVector()) entry.hierState = track.settings().expanded()
+			if (track.settings().group() || entry.isExpandable()) entry.hierState = track.settings().expanded()
 					? TrackEntry.HierState.OPENED : TrackEntry.HierState.CLOSED;
 			entries.put(track.settings(), entry);
 			if (track.settings().selected()) selectedTracks.add(entry);
@@ -851,7 +851,7 @@ public class WaveformViewer implements IPreferenceChangeListener, DisposeListene
 			TrackEntry child = entries.get(track);
 			TrackEntry parent = entries.get(settings.tracks().get(track.parent()));
 			if (child != null && parent != null) {
-				waveformPane.getStreamList().remove(child);
+				waveformPane.getStreamList().removeIf(candidate -> candidate == child);
 				parent.waveforms.add(child);
 			}
 		}

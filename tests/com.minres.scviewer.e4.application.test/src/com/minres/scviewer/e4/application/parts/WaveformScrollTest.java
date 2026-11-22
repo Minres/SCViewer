@@ -157,6 +157,36 @@ public class WaveformScrollTest {
     }
 
     @Test
+    public void transactionStreamDisclosureCreatesGeneratorPaintersAndDoubleClickCollapsesThem() throws Exception {
+        var source = GeneratorExpansionTest.stream();
+        TrackEntry stream = view.addWaveform(source, -1);
+        view.update();
+        assertEquals(TrackEntry.HierState.CLOSED, stream.hierState);
+        Event click = new Event(); click.button = 1; click.x = 6; click.y = 10;
+        view.getNameControl().notifyListeners(SWT.MouseUp, click);
+        drainEvents();
+        assertEquals(TrackEntry.HierState.OPENED, stream.hierState);
+        assertEquals(3, TrackEntry.visibleTracks(view.getStreamList()).size());
+        var field = canvas.getClass().getDeclaredField("wave2painterMap");
+        field.setAccessible(true);
+        var painters = (java.util.Map<?, ?>) field.get(canvas);
+        for (TrackEntry generator : stream.waveforms) {
+            assertEquals("StreamPainter", painters.get(generator.waveform).getClass().getSimpleName());
+            assertTrue(generator.height > 0);
+            assertTrue(generator.vOffset >= stream.height);
+        }
+        TrackEntry first = stream.waveforms.get(0);
+        Event doubleClick = new Event(); doubleClick.button = 1; doubleClick.x = 50; doubleClick.y = 10;
+        view.getNameControl().notifyListeners(SWT.MouseDoubleClick, doubleClick);
+        drainEvents();
+        assertEquals(TrackEntry.HierState.CLOSED, stream.hierState);
+        assertEquals(List.of(stream), TrackEntry.visibleTracks(view.getStreamList()));
+        view.getNameControl().notifyListeners(SWT.MouseUp, click);
+        drainEvents();
+        assertSame(first, stream.waveforms.get(0));
+    }
+
+    @Test
     public void combinesInRequestedOrderWithoutRemovingSourcesAndSupportsExpansion() throws Exception {
         var inputs = scalarInputs();
         TrackEntry tail = view.addWaveform(new EmptyWaveform("tail"), -1);
@@ -425,6 +455,107 @@ public class WaveformScrollTest {
             assertEquals(bits, bus.waveforms);
             assertSame(copy, view.getStreamList().get(2));
         }
+    }
+
+    @Test
+    public void draggingGeneratorOutOfItsStreamCreatesAnIndependentDisplayCopy() {
+        for (boolean nested : List.of(false, true)) {
+            view.getStreamList().clear();
+            TrackEntry stream = new TrackEntry(GeneratorExpansionTest.stream(), null);
+            stream.setExpanded(true);
+            TrackEntry root = nested ? TrackEntry.group("outer", List.of(stream), null) : stream;
+            TrackEntry tail = new TrackEntry(new EmptyWaveform("tail"), null);
+            view.getStreamList().addAll(List.of(root, tail));
+            view.update();
+            var generators = List.copyOf(stream.waveforms);
+            TrackEntry original = generators.get(0);
+            original.valueDisplay = TrackEntry.ValueDisplay.SIGNED;
+            original.waveDisplay = TrackEntry.WaveDisplay.STEP_WISE;
+            view.setSelection(new StructuredSelection(original));
+            moveTracks(List.of(original), dropLocation(tail.vOffset));
+            assertEquals(generators, stream.waveforms);
+            TrackEntry copy = view.getStreamList().get(1);
+            assertNotSame(original, copy);
+            assertSame(original.waveform, copy.waveform);
+            assertEquals(original.valueDisplay, copy.valueDisplay);
+            assertEquals(original.waveDisplay, copy.waveDisplay);
+            assertSame(copy, ((StructuredSelection) view.getSelection()).getFirstElement());
+            copy.valueDisplay = TrackEntry.ValueDisplay.BINARY;
+            assertEquals(TrackEntry.ValueDisplay.SIGNED, original.valueDisplay);
+            moveTracks(List.of(copy), dropLocation(10000));
+            assertEquals(List.of(root, tail, copy), view.getStreamList());
+            assertEquals(generators, stream.waveforms);
+            view.setGroupExpanded(stream, false);
+            view.setGroupExpanded(stream, true);
+            assertSame(original, stream.waveforms.get(0));
+        }
+    }
+
+    @Test
+    public void draggingGeneratorsAndAnOrdinaryTrackIntoAGroupKeepsTheGeneratorChildren() {
+        TrackEntry stream = new TrackEntry(GeneratorExpansionTest.stream(), null);
+        stream.setExpanded(true);
+        TrackEntry ordinary = new TrackEntry(new EmptyWaveform("ordinary"), null);
+        TrackEntry anchor = new TrackEntry(new EmptyWaveform("anchor"), null);
+        TrackEntry destination = TrackEntry.group("destination", List.of(anchor), null);
+        view.getStreamList().addAll(List.of(stream, ordinary, destination));
+        view.update();
+        var generators = List.copyOf(stream.waveforms);
+        moveTracks(List.of(generators.get(0), generators.get(1), ordinary), dropLocation(anchor.vOffset));
+        assertEquals(generators, stream.waveforms);
+        assertEquals(List.of(stream, destination), view.getStreamList());
+        assertEquals(4, destination.waveforms.size());
+        for (int i = 0; i < 2; i++) {
+            assertNotSame(generators.get(i), destination.waveforms.get(i));
+            assertSame(generators.get(i).waveform, destination.waveforms.get(i).waveform);
+        }
+        assertSame(ordinary, destination.waveforms.get(2));
+        assertSame(anchor, destination.waveforms.get(3));
+    }
+
+    @Test
+    public void reorderingGeneratorsWithinTheirStreamMovesOriginalChildren() {
+        TrackEntry stream = new TrackEntry(GeneratorExpansionTest.stream(), null);
+        stream.setExpanded(true);
+        view.getStreamList().add(stream);
+        view.update();
+        var generators = List.copyOf(stream.waveforms);
+        moveTracks(List.of(generators.get(1)), dropLocation(generators.get(0).vOffset));
+        assertSame(generators.get(1), stream.waveforms.get(0));
+        assertSame(generators.get(0), stream.waveforms.get(1));
+        assertEquals(List.of(stream), view.getStreamList());
+    }
+
+    @Test
+    public void groupingGeneratorChildrenAndMovingTheGroupOutKeepsTheStreamIntact() {
+        TrackEntry stream = new TrackEntry(GeneratorExpansionTest.stream(), null);
+        stream.setExpanded(true);
+        var generators = List.copyOf(stream.waveforms);
+        generators.get(0).waveDisplay = TrackEntry.WaveDisplay.STEP_WISE;
+        TrackEntry outer = TrackEntry.group("outer", List.of(stream), null);
+        view.getStreamList().add(outer);
+        view.update();
+        view.setSelection(new StructuredSelection(List.of(generators.get(1), generators.get(0))));
+        TrackEntry group = view.groupSelectedTracks("generators");
+        assertNotNull(group);
+        assertEquals(List.of(stream, group), outer.waveforms);
+        assertSame(group, ((StructuredSelection) view.getSelection()).getFirstElement());
+        assertEquals(generators, stream.waveforms);
+        for (int i = 0; i < 2; i++) {
+            assertNotSame(generators.get(i), group.waveforms.get(i));
+            assertSame(generators.get(i).waveform, group.waveforms.get(i).waveform);
+            assertEquals(generators.get(i).waveDisplay, group.waveforms.get(i).waveDisplay);
+        }
+        moveTracks(List.of(group), dropLocation(10000));
+        assertEquals(List.of(outer, group), view.getStreamList());
+        assertEquals(List.of(stream), outer.waveforms);
+        assertEquals(generators, stream.waveforms);
+        view.setGroupExpanded(stream, false);
+        view.setGroupExpanded(stream, true);
+        assertEquals(generators, stream.waveforms);
+        view.ungroupTracks(group);
+        assertEquals(List.of(outer, group.waveforms.get(0), group.waveforms.get(1)), view.getStreamList());
+        assertEquals(generators, stream.waveforms);
     }
 
     @Test

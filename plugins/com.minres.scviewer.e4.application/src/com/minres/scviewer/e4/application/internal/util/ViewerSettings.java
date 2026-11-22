@@ -125,7 +125,7 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
             if (track.group()) {
                 state.put(key + ".GROUP", "true");
             }
-            if (track.group() || track.type() == WaveformType.SIGNAL) {
+            if (track.group() || track.type() == WaveformType.SIGNAL || track.type() == WaveformType.STREAM) {
                 state.put(key + ".EXPANDED", Boolean.toString(track.expanded()));
             }
             if (track.type() != null) state.put(key + WAVEFORM_TYPE, track.type().name());
@@ -175,13 +175,17 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
                     : enumeration(state, key + WAVEFORM_TYPE, WaveformType.class, null);
             Long parent = number(state, key + ".PARENT");
             if (parent != null && (parent < 0 || parent >= i || !(tracks.get(parent.intValue()).group()
-                    || tracks.get(parent.intValue()).type() == WaveformType.SIGNAL)))
-                throw invalid(key + ".PARENT", "must reference an earlier group or signal");
+                    || tracks.get(parent.intValue()).type() == WaveformType.SIGNAL
+                    || tracks.get(parent.intValue()).type() == WaveformType.STREAM)))
+                throw invalid(key + ".PARENT", "must reference an earlier group, signal, or stream");
+            if (parent != null && tracks.get(parent.intValue()).type() == WaveformType.STREAM
+                    && type != WaveformType.GENERATOR)
+                throw invalid(key + ".PARENT", "stream children must be generators");
             boolean group = Boolean.TRUE.equals(bool(state, key + ".GROUP"));
             Boolean expanded = bool(state, key + ".EXPANDED");
             if (group && type != WaveformType.EMPTY) throw invalid(key + WAVEFORM_TYPE, "group must have EMPTY type");
-            if (!group && expanded != null && type != WaveformType.SIGNAL)
-                throw invalid(key + ".EXPANDED", "requires a group or signal");
+            if (!group && expanded != null && type != WaveformType.SIGNAL && type != WaveformType.STREAM)
+                throw invalid(key + ".EXPANDED", "requires a group, signal, or stream");
             tracks.add(new Track(name, type,
                     enumeration(state, key + VALUE_DISPLAY, ValueDisplay.class, ValueDisplay.DEFAULT),
                     enumeration(state, key + WAVE_DISPLAY, WaveDisplay.class, WaveDisplay.DEFAULT),
@@ -264,12 +268,15 @@ public record ViewerSettings(List<Track> tracks, List<Long> cursors, Long scale,
             }
         }
         if (database == null) return null;
-        int separator = name.lastIndexOf('.');
-        if (separator <= 0 || separator == name.length() - 1) return null;
-        IWaveform parent = database.getStreamByName(name.substring(0, separator));
-        if (parent == null) return null;
-        return parent.getChildNodes().stream().filter(IWaveform.class::isInstance).map(IWaveform.class::cast)
-                .filter(child -> name.substring(separator + 1).equals(child.getName())).findFirst().orElse(null);
+        for (int separator = name.lastIndexOf('.'); separator > 0; separator = name.lastIndexOf('.', separator - 1)) {
+            IWaveform parent = database.getStreamByName(name.substring(0, separator));
+            if (parent == null) continue;
+            String childName = name.substring(separator + 1);
+            IWaveform child = parent.getChildNodes().stream().filter(IWaveform.class::isInstance).map(IWaveform.class::cast)
+                    .filter(candidate -> childName.equals(candidate.getName())).findFirst().orElse(null);
+            if (child != null) return child;
+        }
+        return null;
     }
 
     public static ITx findTransaction(IWaveform waveform, long id) {

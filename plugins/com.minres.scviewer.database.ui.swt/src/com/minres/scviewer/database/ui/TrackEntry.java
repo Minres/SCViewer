@@ -61,8 +61,7 @@ public class TrackEntry {
 		this.waveform = waveform;
 		this.bitVector = isBitVector(waveform);
 		this.styleProvider=styleProvider;
-		this.hierState = (waveform!=null && waveform.getChildNodes().size()>0)?HierState.CLOSED:HierState.NONE;
-		if (isBitVector()) this.hierState = HierState.CLOSED;
+		this.hierState = isExpandable() ? HierState.CLOSED : HierState.NONE;
 	}
 
 	public TrackEntry(TrackEntry[] waveform, IWaveformStyleProvider styleProvider) {
@@ -94,15 +93,25 @@ public class TrackEntry {
     }
 
 	public boolean isExpandable() {
-		return isGroup() || isBitVector();
+		return isGroup() || isBitVector() || (isTransactionStream() && waveform.getChildNodes().stream()
+				.anyMatch(child -> child instanceof IWaveform generator && generator.getType() == WaveformType.GENERATOR));
 	}
 
-	/** Create bit tracks only on the first expansion, preserving their display settings on collapse. */
+	public boolean isTransactionStream() {
+		return waveform != null && waveform.getType() == WaveformType.STREAM;
+	}
+
+	/** Create child tracks lazily, preserving their display settings on collapse. */
 	public void setExpanded(boolean expanded) {
 		if (!isExpandable()) return;
 		if (expanded && isBitVector() && waveforms.isEmpty()) {
 			for (int bit = waveform.getWidth() - 1; bit >= 0; bit--)
 				waveforms.add(new TrackEntry(new BitWaveform(waveform, bit), styleProvider));
+		}
+		if (expanded && isTransactionStream() && waveforms.isEmpty()) {
+			for (var child : waveform.getChildNodes())
+				if (child instanceof IWaveform generator && generator.getType() == WaveformType.GENERATOR)
+					waveforms.add(new TrackEntry(generator, styleProvider));
 		}
 		hierState = expanded ? HierState.OPENED : HierState.CLOSED;
 	}
@@ -133,7 +142,7 @@ public class TrackEntry {
 		List<TrackEntry> members = siblings.stream()
 				.filter(entry -> selected.stream().anyMatch(track -> track == entry)).toList();
 		TrackEntry owner = parentOf(roots, siblings);
-		if (owner != null && owner.isBitVector()) {
+		if (owner != null && (owner.isBitVector() || owner.isTransactionStream())) {
 			List<TrackEntry> copies = new ArrayList<>();
 			for (TrackEntry member : members) {
 				TrackEntry copy = new TrackEntry(member.waveform, styles);
