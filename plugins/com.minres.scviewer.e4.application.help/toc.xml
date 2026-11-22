@@ -7,7 +7,8 @@
    <topic label="Reference" href="ch02.html">
       <topic label="Track groups" href="ch02.html#_trackgroups"/>
       <topic label="Bitvector expansion" href="ch02s02.html"/>
-      <topic label="Combining single bits" href="ch02s03.html"/>
-      <topic label="Key Shortcuts" href="ch02s04.html"/>
+      <topic label="Transaction generator traces" href="ch02s03.html"/>
+      <topic label="Combining single bits" href="ch02s04.html"/>
+      <topic label="Key Shortcuts" href="ch02s05.html"/>
    </topic>
 </toc>

@@ -16,12 +16,13 @@ For FST and FTR please have a look at https://github.com/Minres/SystemC-Componen
 
 Features include:
 
-* support of VCD files (compressed and uncompressed)
-* support of FST files 
-* support of SCV transaction recordings in various formats
-** text log files (compressed and uncompressed)
-** FTR files of LWTR (compressed and uncompressed)
-** sqlite based 
+* loading of multiple trace files into the same waveform viewer
+** VCD files (compressed and uncompressed)
+** FST files 
+** SCV/LWTR transaction recordings in various formats
+*** text log files (compressed and uncompressed)
+*** FTR files of LWTR (compressed and uncompressed)
+*** sqlite based 
 * Waveform visualization features
 ** various value representations of bit vectors (signed, unsigned, hex, bit)
 ** real numbers
