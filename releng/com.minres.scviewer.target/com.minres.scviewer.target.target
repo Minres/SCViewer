@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde version="3.8"?>
-<target name="com.minres.scviewer.target" sequenceNumber="140">
+<target name="com.minres.scviewer.target" sequenceNumber="141">
 <locations>
 	<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-		<repository location="https://download.eclipse.org/releases/2026-12/"/>
+		<repository location="https://download.eclipse.org/releases/2026-09/"/>
 		<unit id="org.eclipse.equinox.executable.feature.group" version="0.0.0"/>
 		<unit id="org.eclipse.equinox.p2.sdk.feature.jar" version="0.0.0"/> <!-- needed by Linux exectable-->
 		<unit id="org.eclipse.equinox.sdk.feature.group" version="0.0.0"/>

@@ -85,7 +85,7 @@ Report the command, result, and any remaining warnings or untested behavior.
 - Perform SWT widget operations on the UI thread. Keep expensive loading and
   querying off it; dispose resources, detach listeners, and cancel background work
   when their owning view or database closes.
-- Preserve compatibility with the Eclipse 2026-12 target. Use `jakarta.inject`
+- Preserve compatibility with the Eclipse 2026-09 target. Use `jakarta.inject`
   and `jakarta.annotation` for e4 injection and lifecycle annotations; keep bundle
   imports and the OPCoach preferences build aligned with those namespaces.
 - FST native sources and CMake scripts live under

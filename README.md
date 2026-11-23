@@ -14,11 +14,9 @@ The viewer has the following features
  - sqlite based 
  - visualization of transaction relations
 
-> If you encounter issue when running on Linux please try running as `SWT_GTK3=0 scviewer` as there exist issues wiht GTK3.
-
 To build the plugins the Eclipse SDK or PDE can be used.
 
-The target platform uses Eclipse 2026-12 and a bundled
+The target platform uses Eclipse 2026-09 and a bundled
 Java 25 runtime. Run Maven with JDK 25 (`mvn -version`), then run `mvn verify`.
 For Eclipse launches, select JDK 25 and reload the target definition. The e4
 application and OPCoach preferences use Jakarta injection and lifecycle APIs.
